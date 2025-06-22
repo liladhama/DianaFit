@@ -1,0 +1,87 @@
+[
+  {
+    "id": 1,
+    "type": "welcome",
+    "title": "Привет! Давай найдём твою стартовую точку A.",
+    "button": "Начать"
+  },
+  {
+    "id": 2,
+    "type": "choice",
+    "title": "Твой пол?",
+    "options": ["Мужской", "Женский"],
+    "key": "sex"
+  },
+  {
+    "id": 3,
+    "type": "slider",
+    "title": "Сколько тебе лет?",
+    "min": 14,
+    "max": 65,
+    "key": "age"
+  },
+  {
+    "id": 4,
+    "type": "slider",
+    "title": "Твой рост (см)?",
+    "min": 140,
+    "max": 210,
+    "key": "height_cm"
+  },
+  {
+    "id": 5,
+    "type": "slider",
+    "title": "Твой вес (кг)?",
+    "min": 40,
+    "max": 160,
+    "key": "weight_kg"
+  },
+  {
+    "id": 6,
+    "type": "radio",
+    "title": "Цель похудения?",
+    "options": ["-0.5 кг/нед", "-0.75 кг/нед", "-1 кг/нед"],
+    "key": "target_loss_rate"
+  },
+  {
+    "id": 7,
+    "type": "toggle",
+    "title": "Где будешь тренироваться?",
+    "options": ["Зал", "Дом"],
+    "key": "gym_or_home"
+  },
+  {
+    "id": 8,
+    "type": "radio",
+    "title": "Твой опыт тренировок?",
+    "options": ["Новичок", "1-2 года", "3+ лет"],
+    "key": "training_level"
+  },
+  {
+    "id": 9,
+    "type": "icons",
+    "title": "Твоя активность на работе?",
+    "options": ["Сидя", "Стоя", "Ходьба", "Физ. труд", "Спорт"],
+    "key": "activity_coef"
+  },
+  {
+    "id": 10,
+    "type": "slider",
+    "title": "Сколько шагов в день?",
+    "min": 0,
+    "max": 20000,
+    "key": "daily_steps"
+  },
+  {
+    "id": 11,
+    "type": "checkbox",
+    "title": "Пищевые ограничения?",
+    "options": ["Вегетарианство", "Лактоза", "Глютен", "Орехи", "Нет"],
+    "key": "diet_flags"
+  },
+  {
+    "id": 12,
+    "type": "finish",
+    "title": "Спасибо! Считаю твой план..."
+  }
+]
