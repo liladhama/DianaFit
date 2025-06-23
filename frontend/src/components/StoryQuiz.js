@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import quizConfig from '../quizConfig.json';
 import WheelPicker from './WheelPicker';
+import CustomSlider from './CustomSlider';
 
 function ProgressBar({ current, total }) {
   return (
@@ -53,13 +54,12 @@ export default function StoryQuiz({ onFinish }) {
         </div>
       );
     }
-    if (slide.type === 'slider') {
+    if (slide.type === 'slider' && slide.key !== 'age') {
       const value = answers[slide.key] ?? slide.min;
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '32px 0' }}>
-          <input type="range" min={slide.min} max={slide.max} value={value} onChange={e => setAnswers(a => ({ ...a, [slide.key]: Number(e.target.value) }))} style={{ width: 260, height: 32, accentColor: '#6366f1' }} />
-          <div style={{ marginTop: 12, fontSize: 22, fontWeight: 600 }}>{value} {slide.unit}</div>
-          <button className="quiz-btn" style={{marginTop: 20, fontSize: 20, padding: '14px 32px', borderRadius: 12}} onClick={handleNext}>Дальше</button>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '32px 0', width: '100%' }}>
+          <CustomSlider value={value} min={slide.min} max={slide.max} unit={slide.unit} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} />
+          <button className="quiz-btn" style={{ marginTop: 28, fontSize: 20, padding: '14px 32px', borderRadius: 12, width: '100%' }} onClick={handleNext}>Дальше</button>
         </div>
       );
     }
