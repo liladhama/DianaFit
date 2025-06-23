@@ -18,13 +18,20 @@ function App() {
     setAnswers(quizAnswers);
     // Отправляем профиль на backend для генерации программы
     const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo-user';
-    const res = await fetch(`${API_URL}/api/program`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, profile: quizAnswers })
-    });
-    const data = await res.json();
-    setProgramId(data.programId);
+    try {
+      const res = await fetch(`${API_URL}/api/program`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, profile: quizAnswers })
+      });
+      if (!res.ok) {
+        throw new Error('Ошибка сервера: ' + res.status);
+      }
+      const data = await res.json();
+      setProgramId(data.programId);
+    } catch (e) {
+      alert('Ошибка при генерации программы: ' + e.message);
+    }
   }
 
   return (
