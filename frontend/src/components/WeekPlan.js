@@ -4,6 +4,10 @@ import DayBlock from './DayBlock';
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dianafit.onrender.com';
 
 export default function WeekPlan({ programId, week = 1 }) {
+  useEffect(() => {
+    console.log('WeekPlan mounted', programId);
+  }, []);
+
   const [weekData, setWeekData] = useState(null);
 
   useEffect(() => {

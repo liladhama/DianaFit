@@ -36,6 +36,7 @@ function App() {
   }
 
   return (
+    console.log('App render', { programId, answers }),
     <div style={{
       height: '100vh',
       width: '100vw',
