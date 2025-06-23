@@ -48,7 +48,24 @@ export default function WeekPlan({ programId, week = 1 }) {
 
   return (
     <div style={{ maxWidth: 420, margin: '0 auto', padding: 16 }}>
-      <button onClick={() => setMode('today')} style={{ marginBottom: 16, padding: '8px 16px', borderRadius: 8, background: '#e0e7ff', border: 'none', fontWeight: 600, cursor: 'pointer' }}>Текущий день</button>
+      <button
+        onClick={() => setMode('today')}
+        style={{
+          marginBottom: 16,
+          width: '100%',
+          padding: '18px 0',
+          borderRadius: 12,
+          background: '#e0e7ff',
+          border: 'none',
+          fontWeight: 700,
+          fontSize: 22,
+          cursor: 'pointer',
+          boxShadow: '0 2px 8px #e0e7ff44',
+          transition: 'background 0.2s'
+        }}
+      >
+        Текущий день
+      </button>
       {weekStats && (
         <div style={{ background: '#e0e7ff', borderRadius: 12, padding: 12, marginBottom: 16, textAlign: 'center', fontSize: 16 }}>
           <b>Прогресс недели:</b><br />
