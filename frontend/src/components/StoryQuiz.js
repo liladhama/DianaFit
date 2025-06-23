@@ -116,7 +116,7 @@ export default function StoryQuiz({ onFinish }) {
       background: 'transparent',
       borderRadius: 0,
       boxShadow: 'none',
-      padding: '32px 0 0 0',
+      padding: '32px 16px 0 16px', // добавлен горизонтальный padding
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
