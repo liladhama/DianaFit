@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import StoryQuiz from './components/StoryQuiz';
 
 function App() {
   useEffect(() => {
@@ -15,13 +16,11 @@ function App() {
       display: 'flex',
       flexDirection: 'column',
       position: 'relative',
-      alignItems: 'center',
-      justifyContent: 'center',
       background: '#fff',
-      fontSize: 24,
-      color: '#222'
+      justifyContent: 'center',
+      alignItems: 'center'
     }}>
-      Приложение работает!
+      <StoryQuiz />
     </div>
   );
 }
