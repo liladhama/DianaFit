@@ -9,14 +9,15 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025 })
   useEffect(() => {
     const idx = years.indexOf(value);
     if (listRef.current && idx >= 0) {
-      // Центрируем выбранный элемент
-      const offset = idx * ITEM_HEIGHT - Math.floor(VISIBLE_ITEMS / 2) * ITEM_HEIGHT;
-      listRef.current.scrollTo({ top: offset, behavior: 'smooth' });
+      // Новый расчёт: scrollTop = idx * ITEM_HEIGHT
+      // Но чтобы выбранный был по центру, нужно вычесть половину видимых элементов
+      const offset = idx * ITEM_HEIGHT;
+      listRef.current.scrollTop = offset;
     }
   }, [value]);
 
   function handleScroll(e) {
-    const idx = Math.round(e.target.scrollTop / ITEM_HEIGHT + Math.floor(VISIBLE_ITEMS / 2));
+    const idx = Math.round(e.target.scrollTop / ITEM_HEIGHT);
     const newValue = years[idx];
     if (newValue !== value && newValue !== undefined) onChange(newValue);
   }
@@ -36,6 +37,7 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025 })
           msOverflowStyle: 'none',
           WebkitOverflowScrolling: 'touch',
         }}
+        className="wheelpicker-scroll"
       >
         {paddingItems.map((_, i) => <div key={'pad-top-' + i} style={{ height: ITEM_HEIGHT }} />)}
         {years.map((y, i) => (
@@ -75,6 +77,9 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025 })
         alignItems: 'center',
         justifyContent: 'center',
       }} />
+      <style>{`
+        .wheelpicker-scroll::-webkit-scrollbar { display: none; }
+      `}</style>
     </div>
   );
 }
