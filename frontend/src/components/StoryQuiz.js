@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import quizConfig from '../quizConfig.json';
 import WheelPicker from './WheelPicker';
 import CustomSlider from './CustomSlider';
+import IconSelector from './IconSelector';
 
 function ProgressBar({ current, total }) {
   return (
@@ -63,12 +64,11 @@ export default function StoryQuiz({ onFinish }) {
         </div>
       );
     }
-    if (slide.type === 'icons') {
+    if (slide.type === 'icons' || (slide.type === 'choice' && slide.options && slide.options.length > 2)) {
+      const value = answers[slide.key];
       return (
-        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', margin: '32px 0' }}>
-          {slide.options.map(opt => (
-            <button className="quiz-btn" style={{fontSize: 20, padding: '14px 28px', borderRadius: 12}} key={opt.value} onClick={() => handleAnswer(slide.key, opt.value)}>{opt.label}</button>
-          ))}
+        <div style={{ width: '100%' }}>
+          <IconSelector options={slide.options} value={value} onChange={v => handleAnswer(slide.key, v)} />
         </div>
       );
     }
