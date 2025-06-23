@@ -3,8 +3,6 @@ import React, { useState } from 'react';
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dianafit.onrender.com';
 
 export default function TodayBlock({ day, onBackToWeek }) {
-  // day: объект дня из weekData.days
-  // Состояния для упражнений и приёмов пищи
   const [completedExercises, setCompletedExercises] = useState(
     day.workout?.exercises.map((ex, i) => day.completedExercises?.[i] || false) || []
   );
@@ -12,7 +10,6 @@ export default function TodayBlock({ day, onBackToWeek }) {
     day.meals?.map((m, i) => day.completedMealsArr?.[i] || false) || []
   );
 
-  // Генерация списка продуктов из меню (примитивно)
   const products = day.meals
     ? Array.from(new Set(day.meals.flatMap(m => m.menu.split(/,| /).map(s => s.trim()).filter(Boolean))))
     : [];
@@ -45,39 +42,52 @@ export default function TodayBlock({ day, onBackToWeek }) {
 
   return (
     <div style={{
-      background: '#f8fafc',
+      background: '#fff',
       borderRadius: 16,
       padding: 24,
       marginBottom: 24,
       boxShadow: '0 2px 8px #e0e7ff44',
       maxWidth: 420,
       margin: '0 auto 24px auto',
-      position: 'relative'
+      position: 'relative',
+      textAlign: 'left'
     }}>
-      <button
-        onClick={onBackToWeek}
-        style={{
-          position: 'absolute', left: 24, top: 24, padding: '6px 16px', borderRadius: 8, background: '#e0e7ff', border: 'none', fontWeight: 600, cursor: 'pointer', fontSize: 16
-        }}
-      >К неделе</button>
-      <h2 style={{ marginBottom: 12, marginTop: 0, textAlign: 'center' }}>Сегодня: {day.title} <span style={{fontSize:14, color:'#888'}}>({day.date})</span></h2>
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 18 }}>
+        <button
+          onClick={onBackToWeek}
+          style={{
+            fontSize: 22,
+            padding: '12px 32px',
+            borderRadius: 12,
+            background: '#e0e7ff',
+            border: 'none',
+            fontWeight: 700,
+            cursor: 'pointer',
+            boxShadow: '0 2px 8px #e0e7ff44',
+            margin: 0
+          }}
+        >К неделе</button>
+      </div>
+      <div style={{ marginBottom: 18 }}>
+        <span style={{ fontSize: 26, fontWeight: 700 }}>День {day.title.replace(/\D/g, '')}</span>
+        <span style={{ fontSize: 16, color: '#888', marginLeft: 10 }}>({day.date})</span>
+      </div>
       {day.workout ? (
-        <div style={{ marginBottom: 16 }}>
+        <div style={{ marginBottom: 18 }}>
           <b>Тренировка:</b> {day.workout.title}
-          <ul style={{ margin: '8px 0 0 16px' }}>
+          <ul style={{ margin: '8px 0 0 0', padding: 0, listStyle: 'none' }}>
             {day.workout.exercises.map((ex, i) => (
               <li key={i} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
                 <input type="checkbox" checked={completedExercises[i]} onChange={() => handleExerciseChange(i)} style={{ marginRight: 8 }} />
                 <span>{ex}</span>
-                {/* Можно добавить подробности, если есть: <span style={{marginLeft:8, color:'#888'}}>({ex.details})</span> */}
               </li>
             ))}
           </ul>
         </div>
       ) : <div style={{ marginBottom: 16, color: '#888' }}>Сегодня нет тренировки</div>}
-      <div style={{ marginBottom: 16 }}>
+      <div style={{ marginBottom: 18 }}>
         <b>Меню на день:</b>
-        <ul style={{ margin: '8px 0 0 16px' }}>
+        <ul style={{ margin: '8px 0 0 0', padding: 0, listStyle: 'none' }}>
           {day.meals && day.meals.map((meal, i) => (
             <li key={i} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
               <input type="checkbox" checked={completedMeals[i]} onChange={() => handleMealChange(i)} style={{ marginRight: 8 }} />
@@ -86,9 +96,9 @@ export default function TodayBlock({ day, onBackToWeek }) {
           ))}
         </ul>
       </div>
-      <div>
+      <div style={{ marginTop: 32 }}>
         <b>Список продуктов:</b>
-        <ul style={{ margin: '8px 0 0 16px' }}>
+        <ul style={{ margin: '8px 0 0 18px' }}>
           {products.map((p, i) => <li key={i}>{p}</li>)}
         </ul>
       </div>
