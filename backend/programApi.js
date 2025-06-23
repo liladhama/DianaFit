@@ -1,5 +1,5 @@
 // Заглушка API для генерации и выдачи недельного плана
-const express = require('express');
+import express from 'express';
 const router = express.Router();
 
 // В памяти (для примера)
@@ -43,4 +43,4 @@ router.get('/program/week', (req, res) => {
   });
 });
 
-module.exports = router;
+export default router;
