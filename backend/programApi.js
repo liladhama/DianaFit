@@ -43,4 +43,16 @@ router.get('/program/week', (req, res) => {
   });
 });
 
+// PATCH /api/program/day-complete
+router.patch('/program/day-complete', (req, res) => {
+  const { programId, date, completedWorkout, completedMeals } = req.body;
+  const program = programs[programId];
+  if (!program) return res.status(404).json({ error: 'not found' });
+  const day = program.days.find(d => d.date === date);
+  if (!day) return res.status(404).json({ error: 'day not found' });
+  if (typeof completedWorkout === 'boolean') day.completedWorkout = completedWorkout;
+  if (typeof completedMeals === 'boolean') day.completedMeals = completedMeals;
+  res.json({ success: true });
+});
+
 export default router;

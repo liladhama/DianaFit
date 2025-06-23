@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 
+const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dianafit.onrender.com';
+
 export default function TodayBlock({ day }) {
   // day: объект дня из weekData.days
   const [workoutDone, setWorkoutDone] = useState(day.completedWorkout || false);
@@ -9,6 +11,33 @@ export default function TodayBlock({ day }) {
   const products = day.meals
     ? Array.from(new Set(day.meals.flatMap(m => m.menu.split(/,| /).map(s => s.trim()).filter(Boolean))))
     : [];
+
+  // Получаем programId из day (или пробрасывать через props)
+  const programId = day.programId;
+
+  async function handleWorkoutChange(e) {
+    const checked = e.target.checked;
+    setWorkoutDone(checked);
+    if (programId) {
+      await fetch(`${API_URL}/api/program/day-complete`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ programId, date: day.date, completedWorkout: checked })
+      });
+    }
+  }
+
+  async function handleMealsChange(e) {
+    const checked = e.target.checked;
+    setMealsDone(checked);
+    if (programId) {
+      await fetch(`${API_URL}/api/program/day-complete`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ programId, date: day.date, completedMeals: checked })
+      });
+    }
+  }
 
   return (
     <div style={{
@@ -28,7 +57,7 @@ export default function TodayBlock({ day }) {
             {day.workout.exercises.map((ex, i) => <li key={i}>{ex}</li>)}
           </ul>
           <label style={{ display: 'block', marginTop: 8 }}>
-            <input type="checkbox" checked={workoutDone} onChange={e => setWorkoutDone(e.target.checked)} /> Выполнил тренировку
+            <input type="checkbox" checked={workoutDone} onChange={handleWorkoutChange} /> Выполнил тренировку
           </label>
         </div>
       ) : <div style={{ marginBottom: 16, color: '#888' }}>Сегодня нет тренировки</div>}
@@ -38,7 +67,7 @@ export default function TodayBlock({ day }) {
           {day.meals && day.meals.map((meal, i) => <li key={i}><b>{meal.type}:</b> {meal.menu}</li>)}
         </ul>
         <label style={{ display: 'block', marginTop: 8 }}>
-          <input type="checkbox" checked={mealsDone} onChange={e => setMealsDone(e.target.checked)} /> Выполнил питание
+          <input type="checkbox" checked={mealsDone} onChange={handleMealsChange} /> Выполнил питание
         </label>
       </div>
       <div>
