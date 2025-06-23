@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import DayBlock from './DayBlock';
+import TodayBlock from './TodayBlock';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dianafit.onrender.com';
 
@@ -26,8 +27,13 @@ export default function WeekPlan({ programId, week = 1 }) {
 
   if (!weekData) return <div>Загрузка недели…</div>;
 
+  // Определяем текущий день (по дате)
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const today = weekData.days.find(d => d.date === todayStr) || weekData.days[0];
+
   return (
     <div style={{ maxWidth: 420, margin: '0 auto', padding: 16 }}>
+      <TodayBlock day={today} />
       <h2 style={{ textAlign: 'center', marginBottom: 24 }}>Неделя с {weekData.weekStart}</h2>
       {weekData.days.map(day => (
         <DayBlock key={day.date} day={day} onToggle={handleToggle} />
