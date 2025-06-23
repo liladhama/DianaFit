@@ -1,20 +1,19 @@
 import React, { useRef, useEffect } from 'react';
 
-export default function WheelPicker({ value, onChange, min = 1950, max = 2025 }) {
+export default function WheelPicker({ value, onChange, min = 1950, max = 2025, years: customYears, labels }) {
   const ITEM_HEIGHT = 44;
   const VISIBLE_ITEMS = 5; // нечетное число для симметрии
   const listRef = useRef();
-  const years = Array.from({ length: max - min + 1 }, (_, i) => min + i);
+  // Если передан массив years (например, даты), используем его, иначе стандартный диапазон
+  const years = customYears || Array.from({ length: max - min + 1 }, (_, i) => min + i);
 
   useEffect(() => {
     const idx = years.indexOf(value);
     if (listRef.current && idx >= 0) {
-      // Новый расчёт: scrollTop = idx * ITEM_HEIGHT
-      // Но чтобы выбранный был по центру, нужно вычесть половину видимых элементов
       const offset = idx * ITEM_HEIGHT;
       listRef.current.scrollTop = offset;
     }
-  }, [value]);
+  }, [value, years]);
 
   function handleScroll(e) {
     const idx = Math.round(e.target.scrollTop / ITEM_HEIGHT);
@@ -26,7 +25,7 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025 })
   const paddingItems = Array(Math.floor(VISIBLE_ITEMS / 2)).fill(null);
 
   return (
-    <div style={{ height: ITEM_HEIGHT * VISIBLE_ITEMS, overflow: 'hidden', width: 120, margin: '0 auto', position: 'relative', background: '#fff' }}>
+    <div style={{ height: ITEM_HEIGHT * VISIBLE_ITEMS, overflow: 'hidden', width: 180, margin: '0 auto', position: 'relative', background: '#fff' }}>
       <div
         ref={listRef}
         onScroll={handleScroll}
@@ -55,7 +54,7 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025 })
               opacity: Math.abs(years.indexOf(value) - i) > 2 ? 0.3 : 1
             }}
           >
-            {y}
+            {labels ? labels[i] : y}
           </div>
         ))}
         {paddingItems.map((_, i) => <div key={'pad-bot-' + i} style={{ height: ITEM_HEIGHT }} />)}

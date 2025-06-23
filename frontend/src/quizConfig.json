@@ -119,10 +119,10 @@
   },
   {
     "id": 7.1,
-    "type": "date",
+    "type": "date-wheel",
     "title": "Когда начнём?",
     "key": "start_date",
-    "placeholder": "Выберите дату старта"
+    "options": []
   },
   {
     "id": 13,

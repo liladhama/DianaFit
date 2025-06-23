@@ -114,6 +114,33 @@ export default function StoryQuiz({ onFinish }) {
     if (slide.type === 'finish') {
       return <div style={{ margin: '40px 0', textAlign: 'center', fontSize: 22 }}>Считаю твою программу…<br /><span className="loader" /></div>;
     }
+    if (slide.type === 'date-wheel') {
+      // Колесо с вариантами: завтра, послезавтра, ближайшие 5 дней
+      const today = new Date();
+      const options = Array.from({ length: 5 }, (_, i) => {
+        const d = new Date(today.getTime() + (i + 1) * 24 * 60 * 60 * 1000);
+        return {
+          label: i === 0 ? 'Завтра' : i === 1 ? 'Послезавтра' : d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
+          value: d.toISOString().slice(0, 10)
+        };
+      });
+      const value = answers[slide.key] ?? options[0].value;
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '60vh', justifyContent: 'center' }}>
+          <div style={{ fontWeight: 700, fontSize: 28, marginBottom: 32, textAlign: 'center' }}>{slide.title}</div>
+          <WheelPicker
+            value={value}
+            onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))}
+            min={0}
+            max={options.length - 1}
+            // Переопределяем years на массив дат
+            years={options.map(o => o.value)}
+            labels={options.map(o => o.label)}
+          />
+          <button className="quiz-btn" style={{ marginTop: 32, fontSize: 20, padding: '14px 32px', borderRadius: 12 }} onClick={handleNext}>Дальше</button>
+        </div>
+      );
+    }
     return null;
   }
 
