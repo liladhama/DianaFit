@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import DayBlock from './DayBlock';
 
+const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dianafit.onrender.com';
+
 export default function WeekPlan({ programId, week = 1 }) {
   const [weekData, setWeekData] = useState(null);
 
   useEffect(() => {
-    fetch(`/api/program/week?programId=${programId}&week=${week}`)
+    fetch(`${API_URL}/api/program/week?programId=${programId}&week=${week}`)
       .then(r => r.json())
       .then(setWeekData);
   }, [programId, week]);
