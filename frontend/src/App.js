@@ -15,6 +15,7 @@ function App() {
   }, []);
 
   async function handleQuizFinish(quizAnswers) {
+    console.log('handleQuizFinish', quizAnswers);
     setAnswers(quizAnswers);
     // Отправляем профиль на backend для генерации программы
     const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo-user';
