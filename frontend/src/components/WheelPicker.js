@@ -25,7 +25,7 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025 })
   const paddingItems = Array(Math.floor(VISIBLE_ITEMS / 2)).fill(null);
 
   return (
-    <div style={{ height: ITEM_HEIGHT * VISIBLE_ITEMS, overflow: 'hidden', width: 120, margin: '0 auto', position: 'relative' }}>
+    <div style={{ height: ITEM_HEIGHT * VISIBLE_ITEMS, overflow: 'hidden', width: 120, margin: '0 auto', position: 'relative', background: '#fff' }}>
       <div
         ref={listRef}
         onScroll={handleScroll}
@@ -58,6 +58,7 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025 })
         ))}
         {paddingItems.map((_, i) => <div key={'pad-bot-' + i} style={{ height: ITEM_HEIGHT }} />)}
       </div>
+      {/* Overlay с двумя линиями и фоном для центральной области */}
       <div style={{
         position: 'absolute',
         top: ITEM_HEIGHT * Math.floor(VISIBLE_ITEMS / 2),
@@ -67,7 +68,12 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025 })
         borderTop: '2px solid #e0e7ff',
         borderBottom: '2px solid #e0e7ff',
         pointerEvents: 'none',
-        boxSizing: 'border-box'
+        boxSizing: 'border-box',
+        background: 'rgba(224,231,255,0.08)',
+        zIndex: 2,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }} />
     </div>
   );
