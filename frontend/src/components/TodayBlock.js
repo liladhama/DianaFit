@@ -127,20 +127,7 @@ export default function TodayBlock({ day, onBackToWeek }) {
         </ul>
       </div>
       <div style={{ marginTop: 32 }}>
-        <button
-          onClick={handleAnalyzeClick}
-          style={{
-            fontSize: 18,
-            padding: '10px 24px',
-            borderRadius: 10,
-            background: '#e0e7ff',
-            border: 'none',
-            fontWeight: 600,
-            cursor: 'pointer',
-            marginBottom: 12
-          }}
-          disabled={loadingAI}
-        >{loadingAI ? 'Анализируем...' : 'Получить анализ дня от ИИ'}</button>
+        {/* Кнопка анализа дня от ИИ временно убрана */}
         {aiAnalysis && (
           <div style={{ background: '#f1f5f9', borderRadius: 10, padding: 16, marginTop: 8, color: '#222', fontSize: 16 }}>
             <b>Анализ и совет от ИИ:</b><br />
