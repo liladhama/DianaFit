@@ -49,9 +49,17 @@ export default function StoryQuiz({ onFinish }) {
       const maxYear = currentYear - 14;
       const value = answers[slide.key] ?? (currentYear - 25);
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '32px 0' }}>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '70vh',
+          width: '100%',
+        }}>
+          <div style={{ fontWeight: 700, fontSize: 28, marginBottom: 32, textAlign: 'center' }}>{slide.title}</div>
           <WheelPicker value={value} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} min={minYear} max={maxYear} />
-          <button className="quiz-btn" style={{ marginTop: 20, fontSize: 20, padding: '14px 32px', borderRadius: 12 }} onClick={handleNext}>Дальше</button>
+          <button className="quiz-btn" style={{ marginTop: 32, fontSize: 20, padding: '14px 32px', borderRadius: 12 }} onClick={handleNext}>Дальше</button>
         </div>
       );
     }
