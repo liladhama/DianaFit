@@ -31,12 +31,14 @@ export default function StoryQuiz({ onFinish }) {
   }
 
   function handleAnswer(key, value) {
+    console.log('handleAnswer', { key, value });
     setAnswers(a => ({ ...a, [key]: value }));
     setTimeout(handleNext, 200);
   }
 
   // UI-контролы по типу слайда
   function renderControl() {
+    console.log('renderControl', slide.type);
     if (slide.type === 'welcome') {
       return <button className="quiz-btn" style={{fontSize: 20, padding: '16px 32px', borderRadius: 12}} onClick={handleNext}>Начать</button>;
     }
@@ -119,7 +121,8 @@ export default function StoryQuiz({ onFinish }) {
       );
     }
     if (slide.type === 'finish') {
-      return <div style={{ margin: '40px 0', textAlign: 'center', fontSize: 22 }}>Считаю твою программу…<br /><span className="loader" /></div>;
+      setTimeout(handleNext, 500); // авто-завершение через 0.5 сек
+      return <div style={{textAlign: 'center', fontSize: 22, margin: 32}}>{slide.title}</div>;
     }
     if (slide.type === 'date-wheel') {
       // Колесо с вариантами: завтра, послезавтра, ближайшие 5 дней
