@@ -39,7 +39,7 @@ export default function WeekPlan({ programId, week = 1 }) {
 
   if (mode === 'today') {
     return (
-      <div style={{ maxWidth: 420, margin: '0 auto', padding: 16 }}>
+      <div style={{ maxWidth: 420, margin: '0 auto', padding: 0, background: '#fff' }}>
         <TodayBlock day={todayWithProgramId} onBackToWeek={() => setMode('week')} />
       </div>
     );

@@ -36,45 +36,38 @@ app.get('/api/quiz-config', (req, res) => {
 // Принять ответы теста и вернуть план (заглушка)
 app.post('/api/calculate-plan', async (req, res) => {
   const answers = req.body;
-  // Пример: получить embedding пользователя (заглушка)
-  // В реальности: отправить prompt в AI API и получить embedding
   const userEmbedding = answers.embedding || Array(1536).fill(0); // TODO: заменить на реальный embedding
-
-  // Найти релевантные chunks
   const relevantChunks = findRelevantChunks(userEmbedding, 5);
 
-  // Сформировать системный prompt и сообщения для OpenAI
   const systemPrompt = `Ты — эксперт по похудению Диана. Используй знания из базы и ответы пользователя для составления персонального плана похудения на 8 недель. Форматируй ответ в виде JSON с неделями, днями, меню, тренировками и советами.`;
   const userPrompt = `Ответы пользователя: ${JSON.stringify(answers)}\n\nРелевантные знания:\n${relevantChunks.map(c => c.text).join('\n---\n')}`;
 
   try {
-    const aiResponse = await callOpenAI([
+    const aiResponse = await callMistralAI([
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ]);
-    res.json({
-      plan: aiResponse
-    });
+    res.json({ plan: aiResponse });
   } catch (e) {
     res.status(500).json({ error: 'AI error', details: e.message });
   }
 });
 
-async function callOpenAI(messages) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+async function callMistralAI(messages) {
+  const apiKey = 'AqUS2WOIZAR0Np79SnK4Zq2YmeQpqEvh';
+  const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: 'gpt-4o',
+      model: 'mistral-medium',
       messages,
       temperature: 0.3
     })
   });
-  if (!response.ok) throw new Error('OpenAI API error');
+  if (!response.ok) throw new Error('Mistral API error');
   const data = await response.json();
   return data.choices[0].message.content;
 }
