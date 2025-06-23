@@ -15,10 +15,13 @@ function App() {
       display: 'flex',
       flexDirection: 'column',
       position: 'relative',
-      background: '#fff'
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#fff',
+      fontSize: 24,
+      color: '#222'
     }}>
-      <h1 style={{ textAlign: 'center', marginTop: 32 }}>ДианаFit Telegram Mini App</h1>
-      <p style={{ textAlign: 'center' }}>Приложение автоматически разворачивается на весь экран.</p>
+      Приложение работает!
     </div>
   );
 }
