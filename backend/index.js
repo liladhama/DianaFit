@@ -5,11 +5,17 @@ import { loadKnowledgeBase, findRelevantChunks } from './knowledgeBase.js';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import programApi from './programApi.js';
+import cors from 'cors';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+
+app.use(cors({
+  origin: 'https://diana-fit.vercel.app',
+  credentials: true
+}));
 
 app.use(express.json());
 app.use('/api', programApi);
