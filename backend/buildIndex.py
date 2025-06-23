@@ -6,7 +6,7 @@ from tqdm import tqdm
 import numpy as np
 
 # Укажите свой OpenAI API ключ
-OPENAI_API_KEY = "***REMOVED***"
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 openai.api_key = OPENAI_API_KEY
 
 CHUNKS_PATH = "knowledge_base_chunks.jsonl"
