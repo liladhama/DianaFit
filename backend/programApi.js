@@ -62,13 +62,15 @@ router.get('/program/week-stats', (req, res) => {
 
 // PATCH /api/program/day-complete
 router.patch('/program/day-complete', (req, res) => {
-  const { programId, date, completedWorkout, completedMeals } = req.body;
+  const { programId, date, completedWorkout, completedMeals, completedExercises, completedMealsArr } = req.body;
   const program = programs[programId];
   if (!program) return res.status(404).json({ error: 'not found' });
   const day = program.days.find(d => d.date === date);
   if (!day) return res.status(404).json({ error: 'day not found' });
   if (typeof completedWorkout === 'boolean') day.completedWorkout = completedWorkout;
   if (typeof completedMeals === 'boolean') day.completedMeals = completedMeals;
+  if (Array.isArray(completedExercises)) day.completedExercises = completedExercises;
+  if (Array.isArray(completedMealsArr)) day.completedMealsArr = completedMealsArr;
   res.json({ success: true });
 });
 

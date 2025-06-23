@@ -40,8 +40,7 @@ export default function WeekPlan({ programId, week = 1 }) {
   if (mode === 'today') {
     return (
       <div style={{ maxWidth: 420, margin: '0 auto', padding: 16 }}>
-        <button onClick={() => setMode('week')} style={{ marginBottom: 16, padding: '8px 16px', borderRadius: 8, background: '#e0e7ff', border: 'none', fontWeight: 600, cursor: 'pointer' }}>К неделе</button>
-        <TodayBlock day={todayWithProgramId} />
+        <TodayBlock day={todayWithProgramId} onBackToWeek={() => setMode('week')} />
       </div>
     );
   }
