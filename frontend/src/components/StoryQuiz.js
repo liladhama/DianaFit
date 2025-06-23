@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import quizConfig from '../quizConfig.json';
 import WheelPicker from './WheelPicker';
 import CustomSlider from './CustomSlider';
@@ -13,6 +13,9 @@ function ProgressBar({ current, total }) {
 }
 
 export default function StoryQuiz({ onFinish }) {
+  useEffect(() => {
+    console.log('StoryQuiz mounted');
+  }, []);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const slide = quizConfig[step];
@@ -20,7 +23,10 @@ export default function StoryQuiz({ onFinish }) {
 
   function handleNext() {
     if (step < total - 1) setStep(step + 1);
-    else if (onFinish) onFinish(answers);
+    else if (onFinish) {
+      console.log('StoryQuiz onFinish', answers);
+      onFinish(answers);
+    }
   }
 
   function handleAnswer(key, value) {
