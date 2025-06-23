@@ -8,6 +8,13 @@
   },
   {
     "id": 2,
+    "type": "input",
+    "title": "Как тебя зовут?",
+    "key": "name",
+    "placeholder": "Введите имя"
+  },
+  {
+    "id": 3,
     "type": "choice",
     "title": "Твой пол",
     "key": "sex",
@@ -17,7 +24,7 @@
     ]
   },
   {
-    "id": 3,
+    "id": 4,
     "type": "slider",
     "title": "Твой возраст",
     "key": "age",
@@ -26,7 +33,7 @@
     "unit": "лет"
   },
   {
-    "id": 4,
+    "id": 5,
     "type": "slider",
     "title": "Рост",
     "key": "height_cm",
@@ -35,7 +42,7 @@
     "unit": "см"
   },
   {
-    "id": 5,
+    "id": 6,
     "type": "slider",
     "title": "Вес",
     "key": "weight_kg",
@@ -44,7 +51,7 @@
     "unit": "кг"
   },
   {
-    "id": 6,
+    "id": 7,
     "type": "radio",
     "title": "Цель похудения",
     "key": "target_loss_rate",
@@ -55,7 +62,7 @@
     ]
   },
   {
-    "id": 7,
+    "id": 8,
     "type": "toggle",
     "title": "Где будешь тренироваться?",
     "key": "gym_or_home",
@@ -65,7 +72,7 @@
     ]
   },
   {
-    "id": 8,
+    "id": 9,
     "type": "radio",
     "title": "Твой опыт тренировок",
     "key": "training_level",
@@ -76,7 +83,7 @@
     ]
   },
   {
-    "id": 9,
+    "id": 10,
     "type": "icons",
     "title": "Твоя активность на работе",
     "key": "activity_coef",
@@ -89,7 +96,7 @@
     ]
   },
   {
-    "id": 10,
+    "id": 11,
     "type": "slider",
     "title": "Шаги в день",
     "key": "daily_steps",
@@ -98,7 +105,7 @@
     "unit": "шагов"
   },
   {
-    "id": 11,
+    "id": 12,
     "type": "checkbox",
     "title": "Пищевые ограничения",
     "key": "diet_flags",
@@ -111,7 +118,7 @@
     ]
   },
   {
-    "id": 12,
+    "id": 13,
     "type": "finish",
     "title": "Считаю твою программу…",
     "animation": "progress-ring"

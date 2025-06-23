@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import quizConfig from '../quizConfig.json';
+import WheelPicker from './WheelPicker';
 
 function ProgressBar({ current, total }) {
   return (
@@ -39,6 +40,19 @@ export default function StoryQuiz({ onFinish }) {
         </div>
       );
     }
+    if (slide.type === 'slider' && slide.key === 'age') {
+      // wheel-picker для возраста (год рождения)
+      const currentYear = new Date().getFullYear();
+      const minYear = currentYear - 65;
+      const maxYear = currentYear - 14;
+      const value = answers[slide.key] ?? (currentYear - 25);
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '32px 0' }}>
+          <WheelPicker value={value} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} min={minYear} max={maxYear} />
+          <button className="quiz-btn" style={{ marginTop: 20, fontSize: 20, padding: '14px 32px', borderRadius: 12 }} onClick={handleNext}>Дальше</button>
+        </div>
+      );
+    }
     if (slide.type === 'slider') {
       const value = answers[slide.key] ?? slide.min;
       return (
@@ -71,6 +85,21 @@ export default function StoryQuiz({ onFinish }) {
             </label>
           ))}
           <button className="quiz-btn" style={{ marginTop: 18, fontSize: 20, padding: '14px 32px', borderRadius: 12 }} onClick={handleNext}>Дальше</button>
+        </div>
+      );
+    }
+    if (slide.type === 'input') {
+      return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '32px 0', width: '100%' }}>
+          <input
+            type="text"
+            placeholder={slide.placeholder || ''}
+            value={answers[slide.key] || ''}
+            onChange={e => setAnswers(a => ({ ...a, [slide.key]: e.target.value }))}
+            style={{ fontSize: 22, padding: '16px 20px', borderRadius: 12, border: '1px solid #e0e7ff', width: '80%', marginBottom: 24, outline: 'none' }}
+            autoFocus
+          />
+          <button className="quiz-btn" style={{ fontSize: 20, padding: '14px 32px', borderRadius: 12 }} onClick={handleNext} disabled={!answers[slide.key]}>Дальше</button>
         </div>
       );
     }
