@@ -1,31 +1,55 @@
 // Заглушка API для генерации и выдачи недельного плана
 import express from 'express';
 const router = express.Router();
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { spawnSync } from 'child_process';
 
 // В памяти (для примера)
 const programs = {};
 
-// POST /api/program — генерация и сохранение полной программы
-router.post('/program', (req, res) => {
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+// Загрузка объединённой базы знаний
+const knowledgeBasePath = path.join(__dirname, 'knowledge_base_full.jsonl');
+let knowledgeBaseChunks = [];
+try {
+  const fileContent = fs.readFileSync(knowledgeBasePath, 'utf-8');
+  knowledgeBaseChunks = fileContent
+    .split('\n')
+    .filter(Boolean)
+    .map(line => JSON.parse(line));
+} catch (e) {
+  console.error('Ошибка загрузки базы знаний:', e);
+}
+
+// POST /api/program — генерация и сохранение полной программы через ИИ
+router.post('/program', async (req, res) => {
   const { userId, profile } = req.body;
-  // Здесь должна быть логика генерации программы на основе базы знаний Дианы
-  // Пока просто создаём фейковую структуру
   const programId = userId + '-' + Date.now();
   const startDate = profile.start_date || new Date().toISOString().slice(0, 10);
-  const days = Array.from({ length: 60 }, (_, i) => {
-    const date = new Date(new Date(startDate).getTime() + i * 24 * 60 * 60 * 1000);
-    return {
-      date: date.toISOString().slice(0, 10),
-      title: `День ${i + 1}`,
-      workout: i % 2 === 0 ? { title: 'Тренировка', exercises: ['Приседания', 'Планка'] } : null,
-      meals: [
-        { type: 'Завтрак', menu: 'Овсянка, творог' },
-        { type: 'Обед', menu: 'Курица, овощи' },
-        { type: 'Ужин', menu: 'Рыба, салат' }
-      ],
-      completed: false
-    };
+
+  // Формируем строку с ответами пользователя для передачи в Python
+  const userProfileStr = JSON.stringify(profile, null, 2);
+  // Вызываем qa.py с режимом генерации плана (добавим обработку в qa.py)
+  const py = spawnSync('python', ['qa.py', '--plan', userProfileStr], {
+    cwd: __dirname,
+    encoding: 'utf-8'
   });
+  if (py.error) {
+    return res.status(500).json({ error: 'AI error', details: py.error.message });
+  }
+  if (py.status !== 0) {
+    return res.status(500).json({ error: 'AI error', details: py.stderr });
+  }
+  let plan;
+  try {
+    plan = JSON.parse(py.stdout);
+  } catch (e) {
+    return res.status(500).json({ error: 'AI error', details: 'Invalid JSON from AI', raw: py.stdout });
+  }
+  // Сохраняем план в памяти
+  const days = plan.days || [];
   programs[programId] = { userId, profile, days };
   res.json({ success: true, programId });
 });
