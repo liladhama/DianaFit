@@ -22,6 +22,7 @@ export default function StoryQuiz({ onFinish }) {
   const total = quizConfig.length;
 
   function handleNext() {
+    console.log('handleNext', { step, total });
     if (step < total - 1) setStep(step + 1);
     else if (onFinish) {
       console.log('StoryQuiz onFinish', answers);
