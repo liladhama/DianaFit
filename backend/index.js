@@ -6,11 +6,13 @@ import dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import programApi from './programApi.js';
 import cors from 'cors';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 app.use(cors({
   origin: 'https://diana-fit.vercel.app',
@@ -72,7 +74,21 @@ async function callMistralAI(messages) {
   return data.choices[0].message.content;
 }
 
-// Загрузка базы знаний при старте
+// Новый роут для поиска ответа через векторную базу и GPT
+app.post('/ask', async (req, res) => {
+  const question = req.body.question;
+  if (!question) return res.status(400).json({ error: 'No question provided' });
+
+  try {
+    // Вызов Python-скрипта qa.py
+    const { execSync } = await import('child_process');
+    const pyOutput = execSync(`python qa.py "${question.replace(/"/g, '\"')}"`, { encoding: 'utf-8', cwd: __dirname });
+    res.json({ answer: pyOutput.trim() });
+  } catch (e) {
+    res.status(500).json({ error: 'AI error', details: e.message });
+  }
+});
+
 loadKnowledgeBase();
 
 app.listen(PORT, () => {
