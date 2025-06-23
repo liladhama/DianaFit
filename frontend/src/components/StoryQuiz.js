@@ -22,7 +22,7 @@ export default function StoryQuiz({ onFinish }) {
   const total = quizConfig.length;
 
   function handleNext() {
-    console.log('handleNext', { step, total });
+    console.log('handleNext', { step, total, nextStep: step + 1 });
     if (step < total - 1) setStep(step + 1);
     else if (onFinish) {
       console.log('StoryQuiz onFinish', answers);
@@ -38,7 +38,7 @@ export default function StoryQuiz({ onFinish }) {
 
   // UI-контролы по типу слайда
   function renderControl() {
-    console.log('renderControl', slide.type);
+    console.log('renderControl', { step, slide });
     if (slide.type === 'welcome') {
       return <button className="quiz-btn" style={{fontSize: 20, padding: '16px 32px', borderRadius: 12}} onClick={handleNext}>Начать</button>;
     }
