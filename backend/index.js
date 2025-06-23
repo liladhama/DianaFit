@@ -4,6 +4,7 @@ import path from 'path';
 import { loadKnowledgeBase, findRelevantChunks } from './knowledgeBase.js';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
+import programApi from './programApi.js';
 
 dotenv.config();
 
@@ -11,6 +12,7 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 
 app.use(express.json());
+app.use('/api', programApi);
 
 app.get('/', (req, res) => {
   res.send('Backend работает!');

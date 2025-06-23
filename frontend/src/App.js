@@ -1,12 +1,29 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import StoryQuiz from './components/StoryQuiz';
+import WeekPlan from './components/WeekPlan';
 
 function App() {
+  const [programId, setProgramId] = useState(null);
+  const [answers, setAnswers] = useState(null);
+
   useEffect(() => {
     if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.expand) {
       window.Telegram.WebApp.expand();
     }
   }, []);
+
+  async function handleQuizFinish(quizAnswers) {
+    setAnswers(quizAnswers);
+    // Отправляем профиль на backend для генерации программы
+    const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo-user';
+    const res = await fetch('/api/program', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, profile: quizAnswers })
+    });
+    const data = await res.json();
+    setProgramId(data.programId);
+  }
 
   return (
     <div style={{
@@ -20,7 +37,11 @@ function App() {
       justifyContent: 'center',
       alignItems: 'center'
     }}>
-      <StoryQuiz />
+      {!programId ? (
+        <StoryQuiz onFinish={handleQuizFinish} />
+      ) : (
+        <WeekPlan programId={programId} />
+      )}
     </div>
   );
 }
