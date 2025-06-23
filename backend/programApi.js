@@ -43,6 +43,23 @@ router.get('/program/week', (req, res) => {
   });
 });
 
+// GET /api/program/week-stats?programId=...&week=1
+router.get('/program/week-stats', (req, res) => {
+  const { programId, week = 1 } = req.query;
+  const program = programs[programId];
+  if (!program) return res.status(404).json({ error: 'not found' });
+  const start = (week - 1) * 7;
+  const days = program.days.slice(start, start + 7);
+  const stats = {
+    total: days.length,
+    workoutDone: days.filter(d => d.completedWorkout).length,
+    mealsDone: days.filter(d => d.completedMeals).length,
+    workoutMissed: days.filter(d => d.workout && !d.completedWorkout).length,
+    mealsMissed: days.filter(d => d.meals && !d.completedMeals).length,
+  };
+  res.json(stats);
+});
+
 // PATCH /api/program/day-complete
 router.patch('/program/day-complete', (req, res) => {
   const { programId, date, completedWorkout, completedMeals } = req.body;

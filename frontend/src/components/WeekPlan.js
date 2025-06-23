@@ -10,11 +10,15 @@ export default function WeekPlan({ programId, week = 1 }) {
   }, []);
 
   const [weekData, setWeekData] = useState(null);
+  const [weekStats, setWeekStats] = useState(null);
 
   useEffect(() => {
     fetch(`${API_URL}/api/program/week?programId=${programId}&week=${week}`)
       .then(r => r.json())
       .then(setWeekData);
+    fetch(`${API_URL}/api/program/week-stats?programId=${programId}&week=${week}`)
+      .then(r => r.json())
+      .then(setWeekStats);
   }, [programId, week]);
 
   function handleToggle(date) {
@@ -35,6 +39,12 @@ export default function WeekPlan({ programId, week = 1 }) {
   return (
     <div style={{ maxWidth: 420, margin: '0 auto', padding: 16 }}>
       <TodayBlock day={todayWithProgramId} />
+      {weekStats && (
+        <div style={{ background: '#e0e7ff', borderRadius: 12, padding: 12, marginBottom: 16, textAlign: 'center', fontSize: 16 }}>
+          <b>Прогресс недели:</b><br />
+          Тренировки: {weekStats.workoutDone} из {weekStats.total} | Питание: {weekStats.mealsDone} из {weekStats.total}
+        </div>
+      )}
       <h2 style={{ textAlign: 'center', marginBottom: 24 }}>Неделя с {weekData.weekStart}</h2>
       {weekData.days.map(day => (
         <DayBlock key={day.date} day={day} onToggle={handleToggle} />
