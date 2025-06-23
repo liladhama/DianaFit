@@ -1,40 +1,48 @@
 import React, { useRef, useEffect } from 'react';
 
 export default function WheelPicker({ value, onChange, min = 1950, max = 2025 }) {
+  const ITEM_HEIGHT = 44;
+  const VISIBLE_ITEMS = 5; // нечетное число для симметрии
   const listRef = useRef();
   const years = Array.from({ length: max - min + 1 }, (_, i) => min + i);
 
   useEffect(() => {
     const idx = years.indexOf(value);
     if (listRef.current && idx >= 0) {
-      listRef.current.scrollTo({ top: idx * 44, behavior: 'smooth' });
+      // Центрируем выбранный элемент
+      const offset = idx * ITEM_HEIGHT - Math.floor(VISIBLE_ITEMS / 2) * ITEM_HEIGHT;
+      listRef.current.scrollTo({ top: offset, behavior: 'smooth' });
     }
   }, [value]);
 
   function handleScroll(e) {
-    const idx = Math.round(e.target.scrollTop / 44);
+    const idx = Math.round(e.target.scrollTop / ITEM_HEIGHT + Math.floor(VISIBLE_ITEMS / 2));
     const newValue = years[idx];
-    if (newValue !== value) onChange(newValue);
+    if (newValue !== value && newValue !== undefined) onChange(newValue);
   }
 
+  // Добавляем пустые элементы сверху и снизу для центрирования
+  const paddingItems = Array(Math.floor(VISIBLE_ITEMS / 2)).fill(null);
+
   return (
-    <div style={{ height: 220, overflow: 'hidden', width: 120, margin: '0 auto', position: 'relative' }}>
+    <div style={{ height: ITEM_HEIGHT * VISIBLE_ITEMS, overflow: 'hidden', width: 120, margin: '0 auto', position: 'relative' }}>
       <div
         ref={listRef}
         onScroll={handleScroll}
         style={{
-          height: 220,
+          height: ITEM_HEIGHT * VISIBLE_ITEMS,
           overflowY: 'scroll',
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
           WebkitOverflowScrolling: 'touch',
         }}
       >
+        {paddingItems.map((_, i) => <div key={'pad-top-' + i} style={{ height: ITEM_HEIGHT }} />)}
         {years.map((y, i) => (
           <div
             key={y}
             style={{
-              height: 44,
+              height: ITEM_HEIGHT,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -48,16 +56,18 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025 })
             {y}
           </div>
         ))}
+        {paddingItems.map((_, i) => <div key={'pad-bot-' + i} style={{ height: ITEM_HEIGHT }} />)}
       </div>
       <div style={{
         position: 'absolute',
-        top: 88,
+        top: ITEM_HEIGHT * Math.floor(VISIBLE_ITEMS / 2),
         left: 0,
         right: 0,
-        height: 44,
+        height: ITEM_HEIGHT,
         borderTop: '2px solid #e0e7ff',
         borderBottom: '2px solid #e0e7ff',
-        pointerEvents: 'none'
+        pointerEvents: 'none',
+        boxSizing: 'border-box'
       }} />
     </div>
   );
