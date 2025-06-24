@@ -23,6 +23,10 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025, y
     const idx = Math.round(e.target.scrollTop / ITEM_HEIGHT);
     const newValue = years[idx];
     if (newValue !== value && newValue !== undefined) onChange(newValue);
+    // Вибрация при каждом скролле (Android/Chrome)
+    if (window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate(10);
+    }
   }
 
   // Добавляем пустые элементы сверху и снизу для центрирования
@@ -33,6 +37,11 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025, y
       <div
         ref={listRef}
         onScroll={handleScroll}
+        onTouchEnd={() => {
+          if (window.navigator && window.navigator.vibrate) {
+            window.navigator.vibrate(15);
+          }
+        }}
         style={{
           height: ITEM_HEIGHT * VISIBLE_ITEMS,
           overflowY: 'scroll',
