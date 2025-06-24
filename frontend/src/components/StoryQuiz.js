@@ -16,15 +16,17 @@ function ProgressBar({ current, total }) {
 }
 
 export default function StoryQuiz({ onFinish }) {
-  useEffect(() => {
-    console.log('StoryQuiz mounted');
-  }, []);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [selectedGender, setSelectedGender] = useState(null);
+  const inputRef = useRef(null);
   const slide = quizConfig[step];
   const total = quizConfig.length;
+
+  useEffect(() => {
+    if (inputRef.current) inputRef.current.focus();
+  }, [step]);
 
   function handleNext() {
     console.log('handleNext', { step, total, nextStep: step + 1 });
@@ -62,7 +64,7 @@ export default function StoryQuiz({ onFinish }) {
   }
 
   // UI-контролы по типу слайда
-  function renderControl() {
+  function renderControl({ inputRef }) {
     console.log('renderControl', { step, slide });
     if (slide.type === 'welcome') {
       return (
@@ -296,60 +298,46 @@ export default function StoryQuiz({ onFinish }) {
     }
     if (slide.type === 'input') {
       return (
-        <>
-          <div style={{
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'flex-start',
-            minHeight: '100vh',
-            background: 'transparent',
-          }}>
-            <div style={{ marginTop: 120, width: 320, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 26, textAlign: 'center', marginBottom: 24, textTransform: 'uppercase', letterSpacing: 0.2 }}>
-                <span>{slide.title}</span>
-                <img src={require('../assets/quiz/heart2.png')} alt="heart" style={{ width: 38, height: 38, marginLeft: 12, marginBottom: 0 }} />
-              </div>
-              <input
-                type="text"
-                placeholder={slide.placeholder || ''}
-                value={answers[slide.key] || ''}
-                onChange={e => setAnswers(a => ({ ...a, [slide.key]: e.target.value }))}
-                onFocus={() => setIsInputFocused(true)}
-                onBlur={() => setIsInputFocused(false)}
-                style={{
-                  fontSize: 22,
-                  padding: '18px 20px',
-                  borderRadius: 24,
-                  border: 'none',
-                  width: 280,
-                  marginBottom: 32,
-                  outline: 'none',
-                  background: '#f6fafd',
-                  boxShadow: '0 0 32px 8px #2196f3cc',
-                  textAlign: 'center',
-                  color: '#222',
-                  fontWeight: 600
-                }}
-                autoFocus
-              />
+        <div style={{
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          minHeight: '100vh',
+          background: 'transparent',
+        }}>
+          <div style={{ marginTop: 120, width: 320, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 26, textAlign: 'center', marginBottom: 24, textTransform: 'uppercase', letterSpacing: 0.2 }}>
+              <span>{slide.title}</span>
+              <img src={require('../assets/quiz/heart2.png')} alt="heart" style={{ width: 38, height: 38, marginLeft: 12, marginBottom: 0 }} />
             </div>
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder={slide.placeholder || ''}
+              value={answers[slide.key] || ''}
+              onChange={e => setAnswers(a => ({ ...a, [slide.key]: e.target.value }))}
+              style={{
+                fontSize: 22,
+                padding: '18px 20px',
+                borderRadius: 24,
+                border: 'none',
+                width: 280,
+                marginBottom: 24,
+                outline: 'none',
+                background: '#f6fafd',
+                boxShadow: '0 0 32px 8px #2196f3cc',
+                textAlign: 'center',
+                color: '#222',
+                fontWeight: 600
+              }}
+            />
+            <button onClick={handleNext} style={{ background: 'none', border: 'none', padding: 0, cursor: answers[slide.key] ? 'pointer' : 'not-allowed', width: 320, display: 'flex', justifyContent: 'center' }} disabled={!answers[slide.key]}>
+              <img src={require('../assets/quiz/next-btn.png')} alt="Следующий" style={{ width: 320, height: 64, display: 'block', objectFit: 'cover', borderRadius: 16 }} />
+            </button>
           </div>
-          {isInputFocused ? (
-            <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: 24 }}>
-              <button onClick={handleNext} style={{ background: 'none', border: 'none', padding: 0, cursor: answers[slide.key] ? 'pointer' : 'not-allowed', width: 320, display: 'flex', justifyContent: 'center' }} disabled={!answers[slide.key]}>
-                <img src={require('../assets/quiz/next-btn.png')} alt="Следующий" style={{ width: 320, height: 64, display: 'block', objectFit: 'cover', borderRadius: 16 }} />
-              </button>
-            </div>
-          ) : (
-            <div style={{ position: 'fixed', left: 0, bottom: 140, width: '100vw', display: 'flex', justifyContent: 'center', zIndex: 1000 }}>
-              <button onClick={handleNext} style={{ background: 'none', border: 'none', padding: 0, cursor: answers[slide.key] ? 'pointer' : 'not-allowed', width: 320, display: 'flex', justifyContent: 'center' }} disabled={!answers[slide.key]}>
-                <img src={require('../assets/quiz/next-btn.png')} alt="Следующий" style={{ width: 320, height: 64, display: 'block', objectFit: 'cover', borderRadius: 16 }} />
-              </button>
-            </div>
-          )}
-        </>
+        </div>
       );
     }
     if (slide.type === 'finish') {
@@ -390,7 +378,7 @@ export default function StoryQuiz({ onFinish }) {
     <div style={{ width: '100vw', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'transparent', boxSizing: 'border-box', padding: '32px 16px 0 16px' }}>
       <ProgressBar current={step + 1} total={total} />
       {renderDots()}
-      {renderControl()}
+      {renderControl({ inputRef })}
     </div>
   );
 }

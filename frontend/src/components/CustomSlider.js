@@ -54,10 +54,12 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
       </div>
       {/* Вертикальный слайдер */}
       <div ref={sliderRef} style={{ height, position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center', touchAction: 'none' }}>
+        {/* Линейка (вертикальная линия) */}
+        <div style={{ position: 'absolute', left: 18, top: 0, width: 2, height: '100%', background: '#222', borderRadius: 1, zIndex: 1, opacity: 1 }} />
         {/* Деления */}
-        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginRight: 0 }}>
+        <div style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginRight: 0, position: 'relative', zIndex: 2 }}>
           {marksArr.map((m, i) => (
-            <div key={i} style={{ width: i % 5 === 0 ? 16 : 8, height: 2, background: '#e0e7ff', borderRadius: 1 }} />
+            <div key={i} style={{ width: i % 5 === 0 ? 16 : 8, height: 2, background: '#222', borderRadius: 1, opacity: 1, marginLeft: 0 }} />
           ))}
         </div>
         {/* Кастомный бегунок: палочка + круг + невидимая область */}

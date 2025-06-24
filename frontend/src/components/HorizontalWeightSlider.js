@@ -1,13 +1,8 @@
 import React, { useRef } from 'react';
 
 export default function HorizontalWeightSlider({ value, min, max, step = 1, unit = '', onChange }) {
-  // Генерируем деления
-  const marks = 21;
-  const markStep = Math.max(1, Math.round((max - min) / (marks - 1)));
-  const marksArr = Array.from({ length: marks }, (_, i) => min + i * markStep);
-
   // Позиция бегунка
-  const percent = ((value - min) / (max - min));
+  const percent = ((Number(value) - Number(min)) / (Number(max) - Number(min))) * 100;
   const sliderRef = useRef();
   const grabHeight = 64;
   const grabWidth = 64;
@@ -52,32 +47,34 @@ export default function HorizontalWeightSlider({ value, min, max, step = 1, unit
         <div style={{ position: 'absolute', left: 0, right: 0, top: 32, height: 2, background: '#e0e7ff', zIndex: 1 }} />
         {/* Деления */}
         <div style={{ position: 'absolute', left: 0, right: 0, top: 16, height: 32, display: 'flex', justifyContent: 'space-between', zIndex: 2 }}>
-          {marksArr.map((m, i) => (
+          {Array.from({ length: 21 }, (_, i) => (
             <div key={i} style={{ width: 2, height: i % 5 === 0 ? 32 : 16, background: '#b6c6e6', borderRadius: 1 }} />
           ))}
         </div>
-        {/* Бегунок */}
-        <div
-          style={{
-            position: 'absolute',
-            left: `calc(${percent}% - 32px)`,
-            top: 0,
-            width: grabWidth,
-            height: grabHeight,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            zIndex: 3,
-            pointerEvents: 'auto',
-            cursor: 'grab',
-            background: 'rgba(0,0,0,0)',
-          }}
-          onMouseDown={startDrag}
-          onTouchStart={startDrag}
-        >
-          <div style={{ width: 4, height: 48, background: '#2196f3', borderRadius: 2, marginTop: 8, boxShadow: '0 2px 8px #2196f366', zIndex: 2 }} />
+        {/* Кастомный бегунок — только один! */}
+        <div style={{
+          position: 'absolute',
+          left: `calc(${percent}% - 20px)`,
+          top: 12,
+          width: 40,
+          height: 40,
+          zIndex: 3,
+          pointerEvents: 'none',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <div style={{
+            width: 36,
+            height: 36,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #2196f3 60%, #90caf9 100%)',
+            boxShadow: '0 4px 16px #2196f399',
+            border: '3px solid #fff',
+            transition: 'box-shadow 0.2s',
+          }} />
         </div>
-        {/* Input range */}
+        {/* Input range — скрытый, только для drag! */}
         <input
           type="range"
           min={min}
@@ -94,9 +91,10 @@ export default function HorizontalWeightSlider({ value, min, max, step = 1, unit
             top: 0,
             zIndex: 4,
             accentColor: '#2196f3',
-            opacity: 0,
             cursor: 'pointer',
             touchAction: 'none',
+            pointerEvents: 'auto',
+            opacity: 0, // скрываем стандартный бегунок
           }}
         />
       </div>
