@@ -11,8 +11,8 @@ export default function DayBlock({ day, onToggle }) {
         <div style={{ padding: 16, borderTop: '1px solid #e0e7ff' }}>
           {day.workout && (
             <div style={{ marginBottom: 12 }}>
-              <b>Тренировка:</b> {day.workout.title}
-              <ul>{day.workout.exercises.map((ex, i) => <li key={i}>{ex}</li>)}</ul>
+              <b>Тренировка:</b> {day.workout.title || day.workout.name}
+              <ul>{day.workout.exercises.map((ex, i) => <li key={i}>{ex.name} — {ex.reps} раз</li>)}</ul>
             </div>
           )}
           <div>
