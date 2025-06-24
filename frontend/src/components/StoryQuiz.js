@@ -3,6 +3,7 @@ import quizConfig from '../quizConfig.json';
 import WheelPicker from './WheelPicker';
 import CustomSlider from './CustomSlider';
 import IconSelector from './IconSelector';
+import HorizontalWeightSlider from './HorizontalWeightSlider';
 import "../fonts/fonts.css";
 import "./StoryQuiz.css";
 
@@ -219,7 +220,31 @@ export default function StoryQuiz({ onFinish }) {
         </div>
       );
     }
-    if (slide.type === 'slider' && slide.key === 'height_cm') {
+    // Горизонтальный слайдер для веса
+    if (slide.type === 'slider' && slide.key === 'weight_kg') {
+      const value = answers[slide.key] ?? slide.min;
+      return (
+        <div style={{
+          minHeight: '100vh',
+          width: '100vw',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
+          boxSizing: 'border-box',
+          padding: '0 0 32px 0',
+        }}>
+          <div style={{ fontWeight: 700, fontSize: 28, margin: '48px 0 24px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>{slide.title}</div>
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 8, minHeight: 120 }}>
+            <HorizontalWeightSlider value={value} min={slide.min} max={slide.max} unit={slide.unit} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} />
+          </div>
+          <button className="quiz-btn age-btn" style={{ marginTop: 0, fontSize: 20, padding: '16px 0', borderRadius: 12, width: 320, maxWidth: '90vw', background: '#2196f3', color: '#fff', fontWeight: 700, boxShadow: '0 4px 16px 0 #2196f366', border: 'none' }} onClick={handleNext}>Следующий</button>
+        </div>
+      );
+    }
+    // Универсальный слайдер для всех остальных слайдов типа slider
+    if (slide.type === 'slider') {
       const value = answers[slide.key] ?? slide.min;
       return (
         <div style={{
