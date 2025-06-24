@@ -15,6 +15,10 @@ html, body, #root {
   overflow: hidden;
   font-family: 'Alte Haas Grotesk RUS', Arial, sans-serif;
   background: #fff;
+  /* Ключевые строки для поддержки мобильных браузеров */
+  height: 100dvh;
+  min-height: 100dvh;
+  max-height: 100dvh;
 }
 
 body {
@@ -33,12 +37,18 @@ body {
   background: #fff;
   overscroll-behavior: none;
   touch-action: none;
+  height: 100dvh;
+  min-height: 100dvh;
+  max-height: 100dvh;
 }
 
 #root {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  height: 100dvh;
+  min-height: 100dvh;
+  max-height: 100dvh;
 }
 
 code {
