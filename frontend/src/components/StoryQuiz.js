@@ -181,20 +181,42 @@ export default function StoryQuiz({ onFinish }) {
       const maxYear = currentYear - 14;
       const value = answers[slide.key] ?? (currentYear - 25);
       return (
-        <>
+        <div style={{
+          minHeight: '100vh',
+          width: '100vw',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
+          boxSizing: 'border-box',
+          padding: '0 0 32px 0',
+        }}>
+          <div style={{ fontWeight: 700, fontSize: 28, margin: '48px 0 24px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>{slide.title}</div>
           <div style={{
+            border: '2px solid #222',
+            borderRadius: 24,
+            background: 'rgba(255,255,255,0.85)',
+            boxShadow: '0 4px 32px 0 #b6d6ff44',
+            padding: 18,
+            marginBottom: 32,
             display: 'flex',
-            flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
-            minHeight: '70vh',
-            width: '100%',
+            gap: 18,
+            width: 320,
+            maxWidth: '96vw',
+            minHeight: 90
           }}>
-            <div style={{ fontWeight: 700, fontSize: 28, marginBottom: 32, textAlign: 'center' }}>{slide.title}</div>
-            <WheelPicker value={value} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} min={minYear} max={maxYear} />
-            <button className="quiz-btn" style={{ marginTop: 32, fontSize: 20, padding: '14px 32px', borderRadius: 12 }} onClick={handleNext}>Дальше</button>
+            <img src={require('../assets/welcome/cupcake.png')} alt="cupcake" style={{ width: 56, height: 56, borderRadius: 18, boxShadow: '0 0 24px 0 #ffb6d6', objectFit: 'cover' }} />
+            <div style={{ fontSize: 15, color: '#222', lineHeight: 1.3, fontWeight: 500 }}>
+              Это поможет мне подготовить тренировку, наиболее соответствующую твоей возрастной группе.
+            </div>
           </div>
-        </>
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+            <WheelPicker value={value} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} min={minYear} max={maxYear} />
+          </div>
+          <button className="quiz-btn age-btn" style={{ marginTop: 16, fontSize: 20, padding: '16px 0', borderRadius: 12, width: 320, maxWidth: '90vw', background: '#2196f3', color: '#fff', fontWeight: 700, boxShadow: '0 4px 16px 0 #2196f366', border: 'none' }} onClick={handleNext}>Следующий</button>
+        </div>
       );
     }
     if (slide.type === 'slider' && slide.key !== 'age') {

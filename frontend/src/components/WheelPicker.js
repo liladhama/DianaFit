@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 
 export default function WheelPicker({ value, onChange, min = 1950, max = 2025, years: customYears, labels }) {
-  const ITEM_HEIGHT = 44;
+  const ITEM_HEIGHT = 56; // Было 44, теперь больше для "увесистости"
   const VISIBLE_ITEMS = 5; // нечетное число для симметрии
   const listRef = useRef();
   // Если передан массив years (например, даты), используем его, иначе стандартный диапазон
@@ -11,7 +11,11 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025, y
     const idx = years.indexOf(value);
     if (listRef.current && idx >= 0) {
       const offset = idx * ITEM_HEIGHT;
-      listRef.current.scrollTop = offset;
+      listRef.current.scrollTo({ top: offset, behavior: 'smooth' });
+    }
+    // Вибрация при смене значения (только на поддерживаемых устройствах)
+    if (window.navigator && window.navigator.vibrate) {
+      window.navigator.vibrate(10);
     }
   }, [value, years]);
 
@@ -47,9 +51,11 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025, y
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              fontSize: y === value ? 28 : 20,
-              color: y === value ? '#222' : '#bbb',
-              fontWeight: y === value ? 700 : 400,
+              fontSize: y === value ? 32 : 22,
+              color: y === value ? '#2196f3' : '#888',
+              fontWeight: y === value ? 700 : 500,
+              background: y === value ? 'rgba(33,150,243,0.08)' : 'transparent',
+              borderRadius: y === value ? 18 : 0,
               transition: 'all 0.2s',
               opacity: Math.abs(years.indexOf(value) - i) > 2 ? 0.3 : 1
             }}
@@ -70,7 +76,8 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025, y
         borderBottom: '2px solid #e0e7ff',
         pointerEvents: 'none',
         boxSizing: 'border-box',
-        background: 'rgba(224,231,255,0.08)',
+        background: 'rgba(33,150,243,0.08)',
+        borderRadius: 18,
         zIndex: 2,
         display: 'flex',
         alignItems: 'center',
