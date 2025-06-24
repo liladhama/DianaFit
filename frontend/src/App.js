@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import StoryQuiz from './components/StoryQuiz';
 import WeekPlan from './components/WeekPlan';
+import SplashScreen from './components/SplashScreen';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dianafit.onrender.com';
 
@@ -36,7 +37,7 @@ function App() {
   }
 
   return (
-    console.log('App render', { programId, answers }),
+    // console.log('App render', { programId, answers }),
     <div style={{
       height: '100vh',
       width: '100vw',
@@ -48,6 +49,7 @@ function App() {
       justifyContent: 'center',
       alignItems: 'center'
     }}>
+      <SplashScreen />
       {!programId ? (
         <StoryQuiz onFinish={handleQuizFinish} />
       ) : (

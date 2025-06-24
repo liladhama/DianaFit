@@ -1,3 +1,5 @@
+@import url('./fonts/fonts.css');
+
 html, body, #root {
   width: 100vw;
   min-width: 0;
@@ -10,7 +12,7 @@ html, body, #root {
   box-sizing: border-box;
   overflow: hidden;
   background: #fff;
-  font-family: 'Segoe UI', 'San Francisco', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Alte Haas Grotesk RUS', Arial, sans-serif;
   -webkit-text-size-adjust: 100%;
   -ms-text-size-adjust: 100%;
   touch-action: manipulation;
@@ -18,7 +20,7 @@ html, body, #root {
 
 body {
   margin: 0;
-  font-family: 'Segoe UI', 'San Francisco', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', Arial, sans-serif;
+  font-family: 'Alte Haas Grotesk RUS', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: #fff;

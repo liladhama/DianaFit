@@ -1,0 +1,25 @@
+/* Neutral Face */
+@font-face {
+  font-family: 'Neutral Face';
+  src: url('./NeutralFace.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Alte Haas Grotesk RUS by Me Bold */
+@font-face {
+  font-family: 'Alte Haas Grotesk RUS';
+  src: url('./altehaasgroteskrusbyme_bold.otf') format('opentype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+/* Alte Haas Grotesk RUS by Me Regular (если появится) */
+/*
+@font-face {
+  font-family: 'Alte Haas Grotesk RUS';
+  src: url('./altehaasgroteskrusbyme_regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+*/
