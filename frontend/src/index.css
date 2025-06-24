@@ -13,7 +13,7 @@ html, body, #root {
   padding: 0;
   box-sizing: border-box;
   overflow: hidden;
-  font-family: 'Montserrat', 'Alte Haas Grotesk RUS', Arial, sans-serif;
+  font-family: 'Alte Haas Grotesk RUS', Arial, sans-serif;
   background: #fff;
 }
 
@@ -23,7 +23,7 @@ body {
   width: 100vw;
   height: 100vh;
   overflow: hidden;
-  font-family: 'Montserrat', 'Alte Haas Grotesk RUS', Arial, sans-serif;
+  font-family: 'Alte Haas Grotesk RUS', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background: #fff;
