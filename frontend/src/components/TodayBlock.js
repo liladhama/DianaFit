@@ -65,18 +65,7 @@ export default function TodayBlock({ day, onBackToWeek }) {
   }
 
   return (
-    <div style={{
-      background: '#fff',
-      borderRadius: 16,
-      padding: 24,
-      marginBottom: 24,
-      boxShadow: '0 2px 8px #e0e7ff44',
-      width: '100%',
-      maxWidth: 420,
-      position: 'relative',
-      textAlign: 'left',
-      margin: '24px auto 0 auto'
-    }}>
+    <div style={{ width: '100vw', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#fff' }}>
       <button
         onClick={onBackToWeek}
         style={{

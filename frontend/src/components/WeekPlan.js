@@ -39,14 +39,14 @@ export default function WeekPlan({ programId, week = 1 }) {
 
   if (mode === 'today') {
     return (
-      <div className="weekplan-fullscreen">
+      <div style={{ width: '100vw', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#fff' }}>
         <TodayBlock day={todayWithProgramId} onBackToWeek={() => setMode('week')} />
       </div>
     );
   }
 
   return (
-    <div className="weekplan-fullscreen">
+    <div style={{ width: '100vw', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#fff' }}>
       <button
         onClick={() => setMode('today')}
         style={{

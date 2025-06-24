@@ -9,7 +9,6 @@ html, body, #root {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  overflow: hidden;
   font-family: 'Alte Haas Grotesk RUS', Arial, sans-serif;
   background: #fff;
 }
@@ -20,7 +19,6 @@ body {
   width: 100vw;
   height: 100dvh;
   min-height: 100dvh;
-  overflow: hidden;
   font-family: 'Alte Haas Grotesk RUS', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -32,7 +30,6 @@ body {
 #root {
   width: 100vw;
   height: 100dvh;
-  overflow: hidden;
 }
 
 code {

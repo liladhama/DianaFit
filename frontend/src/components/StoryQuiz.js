@@ -155,19 +155,7 @@ export default function StoryQuiz({ onFinish }) {
   }
 
   return (
-    <div style={{
-      width: '100%',
-      minHeight: 320,
-      background: 'transparent',
-      borderRadius: 0,
-      boxShadow: 'none',
-      padding: '32px 16px 0 16px', // добавлен горизонтальный padding
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'flex-start',
-      boxSizing: 'border-box',
-    }}>
+    <div style={{ width: '100vw', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'transparent', boxSizing: 'border-box', padding: '32px 16px 0 16px' }}>
       <ProgressBar current={step + 1} total={total} />
       <div style={{ fontWeight: 700, fontSize: 24, margin: '24px 0 12px', textAlign: 'center' }}>{slide.title}</div>
       {slide.text && <div style={{ color: '#555', marginBottom: 16, textAlign: 'center' }}>{slide.text}</div>}
