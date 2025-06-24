@@ -13,7 +13,7 @@ function App() {
     if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.expand) {
       window.Telegram.WebApp.expand();
     }
-    const timer = setTimeout(() => setShowSplash(false), 3000);
+    const timer = setTimeout(() => setShowSplash(false), 4000); // 4 секунды
     return () => clearTimeout(timer);
   }, []);
 

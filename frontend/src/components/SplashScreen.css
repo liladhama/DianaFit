@@ -18,7 +18,7 @@
 }
 
 .splash-header-block {
-  margin-top: 110px;
+  margin-top: 60px;
   margin-left: -30px;
   position: relative;
   z-index: 2;
@@ -107,7 +107,7 @@
   flex-direction: row;
   align-items: flex-end;
   justify-content: flex-start;
-  margin-top: auto;
+  margin-top: 0;
   margin-bottom: 0;
   position: relative;
   gap: 0;
@@ -116,18 +116,18 @@
 .splash-diana {
   width: 370px;
   margin-left: 36px;
-  margin-bottom: -12px;
+  margin-bottom: 40px;
   z-index: 2;
   animation: pulse-slow 2.8s infinite;
 }
 
 .splash-yoga {
-  position: relative;
-  left: 0;
-  bottom: 0;
-  width: 82px;
-  margin-left: 0;
-  margin-bottom: 8px;
+  position: absolute;
+  left: 10px;
+  bottom: 160px;
+  width: 110px;
+  height: auto;
+  object-fit: contain;
   animation: pulse 2.2s infinite;
 }
 
