@@ -43,7 +43,7 @@ export default function StoryQuiz({ onFinish }) {
 
   function renderDots() {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginBottom: 32 }}>
+      <div style={{ display: showDots ? 'flex' : 'none', justifyContent: 'center', alignItems: 'center', gap: 8, margin: '0 0 24px 0' }}>
         {questionSlides.map((_, i) => (
           <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: i === questionIndex ? '#2563eb' : '#d1d5db', transition: 'background 0.2s' }} />
         ))}
@@ -86,7 +86,6 @@ export default function StoryQuiz({ onFinish }) {
     if (slide.type === 'choice' || slide.type === 'radio' || slide.type === 'toggle') {
       return (
         <>
-          {showDots && renderDots()}
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', margin: '32px 0' }}>
             {slide.options.map(opt => (
               <button className="quiz-btn" style={{fontSize: 20, padding: '14px 28px', borderRadius: 12}} key={opt.value} onClick={() => handleAnswer(slide.key, opt.value)}>{opt.label}</button>
@@ -103,7 +102,6 @@ export default function StoryQuiz({ onFinish }) {
       const value = answers[slide.key] ?? (currentYear - 25);
       return (
         <>
-          {showDots && renderDots()}
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -123,7 +121,6 @@ export default function StoryQuiz({ onFinish }) {
       const value = answers[slide.key] ?? slide.min;
       return (
         <>
-          {showDots && renderDots()}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '32px 0', width: '100%' }}>
             <CustomSlider value={value} min={slide.min} max={slide.max} unit={slide.unit} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} />
             <button className="quiz-btn" style={{ marginTop: 28, fontSize: 20, padding: '14px 32px', borderRadius: 12, width: '100%' }} onClick={handleNext}>Дальше</button>
@@ -135,7 +132,6 @@ export default function StoryQuiz({ onFinish }) {
       const value = answers[slide.key];
       return (
         <>
-          {showDots && renderDots()}
           <div style={{ width: '100%' }}>
             <IconSelector options={slide.options} value={value} onChange={v => handleAnswer(slide.key, v)} />
           </div>
@@ -146,7 +142,6 @@ export default function StoryQuiz({ onFinish }) {
       const value = answers[slide.key] ?? [];
       return (
         <>
-          {showDots && renderDots()}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '32px 0' }}>
             {slide.options.map(opt => (
               <label key={opt.value} style={{ margin: 8, fontSize: 20 }}>
@@ -201,9 +196,6 @@ export default function StoryQuiz({ onFinish }) {
               />
             </div>
           </div>
-          <div style={{ position: 'fixed', left: 0, bottom: 220, width: '100vw', display: 'flex', justifyContent: 'center', zIndex: 1000 }}>
-            {showDots && renderDots()}
-          </div>
           <div style={{ position: 'fixed', left: 0, bottom: 140, width: '100vw', display: 'flex', justifyContent: 'center', zIndex: 1000 }}>
             <button onClick={handleNext} style={{ background: 'none', border: 'none', padding: 0, cursor: answers[slide.key] ? 'pointer' : 'not-allowed', width: 320, display: 'flex', justifyContent: 'center' }} disabled={!answers[slide.key]}>
               <img src={require('../assets/quiz/next-btn.png')} alt="Следующий" style={{ width: 320, height: 64, display: 'block', objectFit: 'cover', borderRadius: 16 }} />
@@ -249,6 +241,7 @@ export default function StoryQuiz({ onFinish }) {
   return (
     <div style={{ width: '100vw', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'transparent', boxSizing: 'border-box', padding: '32px 16px 0 16px' }}>
       <ProgressBar current={step + 1} total={total} />
+      {renderDots()}
       {renderControl()}
     </div>
   );
