@@ -1,7 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 
 export default function WheelPicker({ value, onChange, min = 1950, max = 2025, years: customYears, labels }) {
-  const ITEM_HEIGHT = 56; // Было 44, теперь больше для "увесистости"
+  const ITEM_HEIGHT = 44; // Вернули стандартную высоту
   const VISIBLE_ITEMS = 5; // нечетное число для симметрии
   const listRef = useRef();
   // Если передан массив years (например, даты), используем его, иначе стандартный диапазон
@@ -11,11 +11,7 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025, y
     const idx = years.indexOf(value);
     if (listRef.current && idx >= 0) {
       const offset = idx * ITEM_HEIGHT;
-      listRef.current.scrollTo({ top: offset, behavior: 'smooth' });
-    }
-    // Вибрация при смене значения (только на поддерживаемых устройствах)
-    if (window.navigator && window.navigator.vibrate) {
-      window.navigator.vibrate(10);
+      listRef.current.scrollTop = offset;
     }
   }, [value, years]);
 
@@ -38,8 +34,10 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025, y
         ref={listRef}
         onScroll={handleScroll}
         onTouchEnd={() => {
-          if (window.navigator && window.navigator.vibrate) {
-            window.navigator.vibrate(15);
+          // Snap к ближайшему году после окончания скролла
+          if (listRef.current) {
+            const idx = Math.round(listRef.current.scrollTop / ITEM_HEIGHT);
+            listRef.current.scrollTo({ top: idx * ITEM_HEIGHT, behavior: 'auto' });
           }
         }}
         style={{
@@ -48,6 +46,7 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025, y
           scrollbarWidth: 'none',
           msOverflowStyle: 'none',
           WebkitOverflowScrolling: 'touch',
+          scrollSnapType: 'y mandatory',
         }}
         className="wheelpicker-scroll"
       >
@@ -66,7 +65,8 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025, y
               background: y === value ? 'rgba(33,150,243,0.08)' : 'transparent',
               borderRadius: y === value ? 18 : 0,
               transition: 'all 0.2s',
-              opacity: Math.abs(years.indexOf(value) - i) > 2 ? 0.3 : 1
+              opacity: Math.abs(years.indexOf(value) - i) > 2 ? 0.3 : 1,
+              scrollSnapAlign: 'center',
             }}
           >
             {labels ? labels[i] : y}
