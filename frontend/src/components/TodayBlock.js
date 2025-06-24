@@ -93,8 +93,10 @@ export default function TodayBlock({ day, onBackToWeek }) {
         }}
       >К неделе</button>
       <div style={{ marginBottom: 18, marginTop: 0 }}>
-        <span style={{ fontSize: 26, fontWeight: 700 }}>День {day.title.replace(/\D/g, '')}</span>
-        <span style={{ fontSize: 16, color: '#888', marginLeft: 10 }}>({day.date})</span>
+        <span style={{ fontSize: 26, fontWeight: 700 }}>
+          День {(day && typeof day.title === 'string' ? day.title.replace(/\D/g, '') : '')}
+        </span>
+        <span style={{ fontSize: 16, color: '#888', marginLeft: 10 }}>({day?.date || ''})</span>
       </div>
       {day.workout ? (
         <div style={{ marginBottom: 18 }}>
