@@ -100,12 +100,12 @@ export default function TodayBlock({ day, onBackToWeek }) {
       </div>
       {day.workout ? (
         <div style={{ marginBottom: 18 }}>
-          <b>Тренировка:</b> {day.workout.title}
+          <b>Тренировка:</b> {day.workout.title || day.workout.name}
           <ul style={{ margin: '8px 0 0 0', padding: 0, listStyle: 'none' }}>
             {day.workout.exercises.map((ex, i) => (
               <li key={i} style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}>
                 <input type="checkbox" checked={completedExercises[i]} onChange={() => handleExerciseChange(i)} style={{ marginRight: 8 }} />
-                <span>{ex}</span>
+                <span>{ex.name} — {ex.reps} раз</span>
               </li>
             ))}
           </ul>
