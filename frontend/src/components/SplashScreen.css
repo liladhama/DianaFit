@@ -10,15 +10,16 @@
   z-index: 9999;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: flex-start;
   background: url('../assets/welcome/background.png') no-repeat center center/cover;
   overflow: hidden;
   box-sizing: border-box;
+  padding-top: 96px; /* Смещаем всё содержимое ниже */
 }
 
 .splash-header-block {
-  margin-top: 60px;
+  margin-top: 72px; /* Было 48px, теперь ещё ниже */
   margin-left: -30px;
   position: relative;
   z-index: 2;
@@ -114,7 +115,7 @@
 }
 
 .splash-diana {
-  width: 370px;
+  width: 150px; /* Было 220px, теперь Диана ещё меньше */
   margin-left: 36px;
   margin-bottom: 40px;
   z-index: 2;
@@ -161,8 +162,8 @@
   .splash-container {
     height: 100vh;
   }
-  .splash-header-block { width: 98vw; margin-left: 2vw; }
+  .splash-header-block { width: 98vw; margin-left: 2vw; margin-top: 4px; }
   .splash-title-main { font-size: 2.2rem; }
   .splash-cupcake, .splash-heart, .splash-yoga { width: 44px; height: 44px; }
-  .splash-diana { width: 180px; }
+  .splash-diana { width: 80px; }
 }
