@@ -20,7 +20,7 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
         {value} <span style={{ fontSize: 22, fontWeight: 400 }}>{unit}</span>
       </div>
       {/* Вертикальный слайдер */}
-      <div style={{ height, position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center' }}>
+      <div style={{ height, position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center', touchAction: 'none' }}>
         {/* Деления */}
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginRight: 0 }}>
           {marksArr.map((m, i) => (
@@ -41,6 +41,7 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
               alignItems: 'center',
               zIndex: 3,
               transition: 'top 0.2s',
+              pointerEvents: 'none',
             }}
           >
             {/* Палочка влево от линейки */}
@@ -49,7 +50,7 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
             <div style={{ width: knobSize, height: knobSize, borderRadius: '50%', background: '#fff', border: '3px solid #22c55e', boxShadow: '0 2px 8px #22c55e33', marginLeft: -knobSize/2 }} />
           </div>
         </div>
-        {/* Скрытый input */}
+        {/* Скрытый input с увеличенной областью захвата */}
         <input
           type="range"
           min={min}
@@ -60,15 +61,16 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
           style={{
             writingMode: 'bt-lr',
             WebkitAppearance: 'slider-vertical',
-            width: stickLength + knobSize,
+            width: stickLength + knobSize + 30, // увеличить область захвата
             height,
             accentColor: '#22c55e',
             position: 'absolute',
-            left: 0,
+            left: -15, // чтобы захват был и левее
             top: 0,
             opacity: 0, // скрываем стандартный бегунок
-            zIndex: 2,
+            zIndex: 4,
             cursor: 'pointer',
+            touchAction: 'none',
           }}
         />
       </div>
