@@ -13,18 +13,6 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
-    // Диагностика размеров
-    setTimeout(() => {
-      console.log('window.innerHeight:', window.innerHeight);
-      console.log('document.documentElement.clientHeight:', document.documentElement.clientHeight);
-      const root = document.getElementById('root');
-      if (root) {
-        console.log('#root bounding:', root.getBoundingClientRect());
-      }
-    }, 1000);
-  }, [showSplash]);
-
   function handleQuizFinish(quizAnswers) {
     setAnswers(quizAnswers);
     // Здесь можно добавить логику для получения programId
@@ -32,7 +20,7 @@ function App() {
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', width: '100vw', background: '#fff', border: '4px solid red' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100vw', background: '#fff' }}>
       {showSplash ? (
         <SplashScreen />
       ) : !programId ? (

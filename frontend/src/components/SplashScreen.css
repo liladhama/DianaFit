@@ -5,7 +5,7 @@
 .splash-container {
   position: fixed;
   inset: 0;
-  height: 100dvh;
+  height: 100vh;
   width: 100vw;
   z-index: 9999;
   display: flex;
@@ -159,7 +159,7 @@
 
 @media (max-width: 500px) {
   .splash-container {
-    height: 100dvh;
+    height: 100vh;
   }
   .splash-header-block { width: 98vw; margin-left: 2vw; }
   .splash-title-main { font-size: 2.2rem; }
