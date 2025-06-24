@@ -9,6 +9,10 @@ function App() {
   const [answers, setAnswers] = useState(null);
 
   useEffect(() => {
+    // Автоматическое расширение окна Telegram WebApp
+    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.expand) {
+      window.Telegram.WebApp.expand();
+    }
     const timer = setTimeout(() => setShowSplash(false), 3000);
     return () => clearTimeout(timer);
   }, []);
