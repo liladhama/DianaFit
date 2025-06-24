@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import quizConfig from '../quizConfig.json';
 import WheelPicker from './WheelPicker';
 import CustomSlider from './CustomSlider';
@@ -18,6 +18,7 @@ export default function StoryQuiz({ onFinish }) {
   }, []);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
+  const [isInputFocused, setIsInputFocused] = useState(false);
   const slide = quizConfig[step];
   const total = quizConfig.length;
 
@@ -178,6 +179,8 @@ export default function StoryQuiz({ onFinish }) {
                 placeholder={slide.placeholder || ''}
                 value={answers[slide.key] || ''}
                 onChange={e => setAnswers(a => ({ ...a, [slide.key]: e.target.value }))}
+                onFocus={() => setIsInputFocused(true)}
+                onBlur={() => setIsInputFocused(false)}
                 style={{
                   fontSize: 22,
                   padding: '18px 20px',
@@ -196,11 +199,19 @@ export default function StoryQuiz({ onFinish }) {
               />
             </div>
           </div>
-          <div style={{ position: 'fixed', left: 0, bottom: 140, width: '100vw', display: 'flex', justifyContent: 'center', zIndex: 1000 }}>
-            <button onClick={handleNext} style={{ background: 'none', border: 'none', padding: 0, cursor: answers[slide.key] ? 'pointer' : 'not-allowed', width: 320, display: 'flex', justifyContent: 'center' }} disabled={!answers[slide.key]}>
-              <img src={require('../assets/quiz/next-btn.png')} alt="Следующий" style={{ width: 320, height: 64, display: 'block', objectFit: 'cover', borderRadius: 16 }} />
-            </button>
-          </div>
+          {isInputFocused ? (
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+              <button onClick={handleNext} style={{ background: 'none', border: 'none', padding: 0, cursor: answers[slide.key] ? 'pointer' : 'not-allowed', width: 320, display: 'flex', justifyContent: 'center' }} disabled={!answers[slide.key]}>
+                <img src={require('../assets/quiz/next-btn.png')} alt="Следующий" style={{ width: 320, height: 64, display: 'block', objectFit: 'cover', borderRadius: 16 }} />
+              </button>
+            </div>
+          ) : (
+            <div style={{ position: 'fixed', left: 0, bottom: 140, width: '100vw', display: 'flex', justifyContent: 'center', zIndex: 1000 }}>
+              <button onClick={handleNext} style={{ background: 'none', border: 'none', padding: 0, cursor: answers[slide.key] ? 'pointer' : 'not-allowed', width: 320, display: 'flex', justifyContent: 'center' }} disabled={!answers[slide.key]}>
+                <img src={require('../assets/quiz/next-btn.png')} alt="Следующий" style={{ width: 320, height: 64, display: 'block', objectFit: 'cover', borderRadius: 16 }} />
+              </button>
+            </div>
+          )}
         </>
       );
     }
