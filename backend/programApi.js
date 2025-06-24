@@ -10,18 +10,7 @@ import { spawnSync } from 'child_process';
 const programs = {};
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// Загрузка объединённой базы знаний
-const knowledgeBasePath = path.join(__dirname, 'knowledge_base_full.jsonl');
-let knowledgeBaseChunks = [];
-try {
-  const fileContent = fs.readFileSync(knowledgeBasePath, 'utf-8');
-  knowledgeBaseChunks = fileContent
-    .split('\n')
-    .filter(Boolean)
-    .map(line => JSON.parse(line));
-} catch (e) {
-  console.error('Ошибка загрузки базы знаний:', e);
-}
+// Удалена загрузка knowledge_base_full.jsonl, так как она не используется
 
 // POST /api/program — генерация и сохранение полной программы через ИИ
 router.post('/program', async (req, res) => {
