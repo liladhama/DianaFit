@@ -26,15 +26,18 @@ router.post('/program', async (req, res) => {
     encoding: 'utf-8'
   });
   if (py.error) {
+    console.error('Python spawn error:', py.error); // Логируем ошибку запуска Python
     return res.status(500).json({ error: 'AI error', details: py.error.message });
   }
   if (py.status !== 0) {
+    console.error('Python process stderr:', py.stderr); // Логируем stderr Python
     return res.status(500).json({ error: 'AI error', details: py.stderr });
   }
   let plan;
   try {
     plan = JSON.parse(py.stdout);
   } catch (e) {
+    console.error('Invalid JSON from AI:', py.stdout); // Логируем невалидный JSON
     return res.status(500).json({ error: 'AI error', details: 'Invalid JSON from AI', raw: py.stdout });
   }
   // Сохраняем план в памяти
