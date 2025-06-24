@@ -40,7 +40,39 @@ export default function StoryQuiz({ onFinish }) {
   function renderControl() {
     console.log('renderControl', { step, slide });
     if (slide.type === 'welcome') {
-      return <button className="quiz-btn" style={{fontSize: 20, padding: '16px 32px', borderRadius: 12}} onClick={handleNext}>Начать</button>;
+      return (
+        <div style={{
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          minHeight: '100vh',
+          background: 'transparent',
+        }}>
+          <div style={{ position: 'relative', marginTop: 32, marginBottom: 24, width: 320, height: 320, overflow: 'visible' }}>
+            <img src={require('../assets/quiz/circle-bg.png')} alt="Круглый фон" style={{ width: 320, height: 320, display: 'block', position: 'relative', zIndex: 1 }} />
+            <img src={require('../assets/quiz/diana-sit.png')} alt="Диана" style={{ position: 'absolute', left: -60, top: -10, width: 440, height: 480, objectFit: 'contain', zIndex: 2 }} />
+          </div>
+          <div style={{ marginTop: 64, width: 320, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ fontWeight: 700, fontSize: 24, textAlign: 'center', marginBottom: 8, textTransform: 'uppercase' }}>
+              ПРИВЕТ! Я ДИАНА <span role="img" aria-label="cupcake">🧁</span>
+            </div>
+            <div style={{ color: '#222', fontSize: 16, textAlign: 'center', marginBottom: 24, maxWidth: 320, minHeight: 44, lineHeight: 1.2, whiteSpace: 'pre-line' }}>
+              {`Давай найдём твою стартовую\nточку А и подберём персональную программу!`}
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginBottom: 32 }}>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#2563eb' }} />
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#d1d5db' }} />
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#d1d5db' }} />
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#d1d5db' }} />
+            </div>
+            <button onClick={handleNext} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', width: 320, display: 'flex', justifyContent: 'center' }}>
+              <img src={require('../assets/quiz/next-btn.png')} alt="Следующий" style={{ width: 320, height: 64, display: 'block', objectFit: 'cover', borderRadius: 16 }} />
+            </button>
+          </div>
+        </div>
+      );
     }
     if (slide.type === 'choice' || slide.type === 'radio' || slide.type === 'toggle') {
       return (
@@ -157,8 +189,6 @@ export default function StoryQuiz({ onFinish }) {
   return (
     <div style={{ width: '100vw', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'transparent', boxSizing: 'border-box', padding: '32px 16px 0 16px' }}>
       <ProgressBar current={step + 1} total={total} />
-      <div style={{ fontWeight: 700, fontSize: 24, margin: '24px 0 12px', textAlign: 'center' }}>{slide.title}</div>
-      {slide.text && <div style={{ color: '#555', marginBottom: 16, textAlign: 'center' }}>{slide.text}</div>}
       {renderControl()}
     </div>
   );
