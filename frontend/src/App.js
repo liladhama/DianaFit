@@ -20,7 +20,7 @@ function App() {
   }
 
   return (
-    <div className="app-root-fullscreen">
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100dvh', width: '100vw', background: '#fff' }}>
       {showSplash ? (
         <SplashScreen />
       ) : !programId ? (

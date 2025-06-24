@@ -54,19 +54,3 @@ body {
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
-
-.app-root-fullscreen {
-  height: 100dvh;
-  min-height: 100dvh;
-  width: 100vw;
-  min-width: 100vw;
-  position: fixed;
-  inset: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  background: #fff;
-  justify-content: center;
-  align-items: center;
-  z-index: 1;
-}
