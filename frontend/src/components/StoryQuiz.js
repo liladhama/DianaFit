@@ -3,6 +3,7 @@ import quizConfig from '../quizConfig.json';
 import WheelPicker from './WheelPicker';
 import CustomSlider from './CustomSlider';
 import IconSelector from './IconSelector';
+import HorizontalRuler from './HorizontalRuler';
 import "../fonts/fonts.css";
 import "./StoryQuiz.css";
 
@@ -219,15 +220,26 @@ export default function StoryQuiz({ onFinish }) {
         </div>
       );
     }
-    if (slide.type === 'slider' && slide.key !== 'age') {
+    if (slide.type === 'slider' && slide.key === 'height_cm') {
       const value = answers[slide.key] ?? slide.min;
       return (
-        <>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '32px 0', width: '100%' }}>
-            <CustomSlider value={value} min={slide.min} max={slide.max} unit={slide.unit} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} />
-            <button className="quiz-btn" style={{ marginTop: 28, fontSize: 20, padding: '14px 32px', borderRadius: 12, width: '100%' }} onClick={handleNext}>Дальше</button>
+        <div style={{
+          minHeight: '100vh',
+          width: '100vw',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
+          boxSizing: 'border-box',
+          padding: '0 0 32px 0',
+        }}>
+          <div style={{ fontWeight: 700, fontSize: 28, margin: '48px 0 24px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>{slide.title}</div>
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 8, minHeight: 420 }}>
+            <CustomSlider value={value} min={slide.min} max={slide.max} unit={slide.unit} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} height={380} />
           </div>
-        </>
+          <button className="quiz-btn age-btn" style={{ marginTop: 0, fontSize: 20, padding: '16px 0', borderRadius: 12, width: 320, maxWidth: '90vw', background: '#2196f3', color: '#fff', fontWeight: 700, boxShadow: '0 4px 16px 0 #2196f366', border: 'none' }} onClick={handleNext}>Следующий</button>
+        </div>
       );
     }
     if (slide.type === 'icons' || (slide.type === 'choice' && slide.options && slide.options.length > 2)) {
