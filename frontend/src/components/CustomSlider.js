@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 
 export default function CustomSlider({ value, min, max, step = 1, unit = '', onChange, height = 260 }) {
   const marks = 21;
@@ -6,12 +6,44 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
   const marksArr = Array.from({ length: marks }, (_, i) => min + i * markStep);
 
   // Размеры для бегунка и палочки
-  const knobSize = 20;
+  const knobSize = 28; // чуть больше для удобства
   const stickLength = 48;
 
   // Позиция бегунка (от 0 до height)
   const percent = ((value - min) / (max - min));
   const y = height - percent * height;
+
+  const sliderRef = useRef();
+
+  // Drag/touch обработчики для кастомного бегунка
+  function handleDrag(e) {
+    let clientY;
+    if (e.touches) {
+      clientY = e.touches[0].clientY;
+    } else {
+      clientY = e.clientY;
+    }
+    const rect = sliderRef.current.getBoundingClientRect();
+    let pos = clientY - rect.top;
+    pos = Math.max(0, Math.min(height, pos));
+    const newValue = Math.round((max - min) * (1 - pos / height) + min);
+    onChange(newValue);
+  }
+
+  function startDrag(e) {
+    e.preventDefault();
+    handleDrag(e);
+    window.addEventListener('mousemove', handleDrag);
+    window.addEventListener('touchmove', handleDrag);
+    window.addEventListener('mouseup', stopDrag);
+    window.addEventListener('touchend', stopDrag);
+  }
+  function stopDrag() {
+    window.removeEventListener('mousemove', handleDrag);
+    window.removeEventListener('touchmove', handleDrag);
+    window.removeEventListener('mouseup', stopDrag);
+    window.removeEventListener('touchend', stopDrag);
+  }
 
   return (
     <div style={{ height, maxHeight: 420, display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
@@ -20,37 +52,37 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
         {value} <span style={{ fontSize: 22, fontWeight: 400 }}>{unit}</span>
       </div>
       {/* Вертикальный слайдер */}
-      <div style={{ height, position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center', touchAction: 'none' }}>
+      <div ref={sliderRef} style={{ height, position: 'relative', display: 'flex', flexDirection: 'row', alignItems: 'center', touchAction: 'none' }}>
         {/* Деления */}
         <div style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', marginRight: 0 }}>
           {marksArr.map((m, i) => (
             <div key={i} style={{ width: i % 5 === 0 ? 16 : 8, height: 2, background: '#e0e7ff', borderRadius: 1 }} />
           ))}
         </div>
-        {/* Слайдер и кастомный бегунок */}
-        <div style={{ position: 'absolute', left: 0, top: 0, height: '100%', width: stickLength + knobSize, pointerEvents: 'none' }}>
-          {/* Кастомный бегунок: палочка + круг */}
-          <div
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: y - knobSize / 2,
-              width: stickLength + knobSize,
-              height: knobSize,
-              display: 'flex',
-              alignItems: 'center',
-              zIndex: 3,
-              transition: 'top 0.2s',
-              pointerEvents: 'none',
-            }}
-          >
-            {/* Палочка влево от линейки */}
-            <div style={{ width: stickLength, height: 4, background: '#22c55e', borderRadius: 2, marginRight: 0 }} />
-            {/* Круг */}
-            <div style={{ width: knobSize, height: knobSize, borderRadius: '50%', background: '#fff', border: '3px solid #22c55e', boxShadow: '0 2px 8px #22c55e33', marginLeft: -knobSize/2 }} />
-          </div>
+        {/* Кастомный бегунок: палочка + круг */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: y - knobSize / 2,
+            width: stickLength + knobSize,
+            height: knobSize,
+            display: 'flex',
+            alignItems: 'center',
+            zIndex: 3,
+            transition: 'top 0.2s',
+            cursor: 'grab',
+            pointerEvents: 'auto',
+          }}
+          onMouseDown={startDrag}
+          onTouchStart={startDrag}
+        >
+          {/* Палочка влево от линейки */}
+          <div style={{ width: stickLength, height: 4, background: '#22c55e', borderRadius: 2, marginRight: 0 }} />
+          {/* Круг */}
+          <div style={{ width: knobSize, height: knobSize, borderRadius: '50%', background: '#fff', border: '3px solid #22c55e', boxShadow: '0 2px 8px #22c55e33', marginLeft: -knobSize/2 }} />
         </div>
-        {/* Скрытый input с увеличенной областью захвата */}
+        {/* Скрытый input для совместимости с клавиатурой и accessibility */}
         <input
           type="range"
           min={min}
@@ -61,13 +93,13 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
           style={{
             writingMode: 'bt-lr',
             WebkitAppearance: 'slider-vertical',
-            width: stickLength + knobSize + 30, // увеличить область захвата
+            width: stickLength + knobSize + 30,
             height,
             accentColor: '#22c55e',
             position: 'absolute',
-            left: -15, // чтобы захват был и левее
+            left: -15,
             top: 0,
-            opacity: 0, // скрываем стандартный бегунок
+            opacity: 0,
             zIndex: 4,
             cursor: 'pointer',
             touchAction: 'none',
