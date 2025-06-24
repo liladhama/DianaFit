@@ -8,6 +8,7 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
   // Размеры для бегунка и палочки
   const knobSize = 28; // чуть больше для удобства
   const stickLength = 48;
+  const grabSize = 56; // невидимая область для drag
 
   // Позиция бегунка (от 0 до height)
   const percent = ((value - min) / (max - min));
@@ -59,14 +60,14 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
             <div key={i} style={{ width: i % 5 === 0 ? 16 : 8, height: 2, background: '#e0e7ff', borderRadius: 1 }} />
           ))}
         </div>
-        {/* Кастомный бегунок: палочка + круг */}
+        {/* Кастомный бегунок: палочка + круг + невидимая область */}
         <div
           style={{
             position: 'absolute',
             left: 0,
-            top: y - knobSize / 2,
-            width: stickLength + knobSize,
-            height: knobSize,
+            top: y - grabSize / 2,
+            width: stickLength + grabSize,
+            height: grabSize,
             display: 'flex',
             alignItems: 'center',
             zIndex: 3,
@@ -80,7 +81,9 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
           {/* Палочка влево от линейки */}
           <div style={{ width: stickLength, height: 4, background: '#22c55e', borderRadius: 2, marginRight: 0 }} />
           {/* Круг */}
-          <div style={{ width: knobSize, height: knobSize, borderRadius: '50%', background: '#fff', border: '3px solid #22c55e', boxShadow: '0 2px 8px #22c55e33', marginLeft: -knobSize/2 }} />
+          <div style={{ width: knobSize, height: knobSize, borderRadius: '50%', background: '#fff', border: '3px solid #22c55e', boxShadow: '0 2px 8px #22c55e33', marginLeft: -knobSize/2, zIndex: 2 }} />
+          {/* Невидимая область для drag */}
+          <div style={{ position: 'absolute', left: stickLength, top: 0, width: grabSize, height: grabSize, borderRadius: '50%', background: 'rgba(0,0,0,0)', zIndex: 1 }} />
         </div>
         {/* Скрытый input для совместимости с клавиатурой и accessibility */}
         <input
@@ -93,7 +96,7 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
           style={{
             writingMode: 'bt-lr',
             WebkitAppearance: 'slider-vertical',
-            width: stickLength + knobSize + 30,
+            width: stickLength + grabSize + 30,
             height,
             accentColor: '#22c55e',
             position: 'absolute',
