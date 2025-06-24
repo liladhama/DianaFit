@@ -22,7 +22,11 @@ function App() {
   return (
     <div style={{
       height: '100vh',
+      minHeight: '100vh',
       width: '100vw',
+      minWidth: '100vw',
+      maxHeight: '100vh',
+      maxWidth: '100vw',
       overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column',
