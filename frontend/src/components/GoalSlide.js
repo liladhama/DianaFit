@@ -1,6 +1,12 @@
 import React from "react";
 
 export default function GoalSlide({ onSelect, selected, options, onNext }) {
+  // При выборе варианта сразу вызываем onNext
+  function handleSelect(value) {
+    onSelect(value);
+    setTimeout(onNext, 200);
+  }
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -42,7 +48,7 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
           return (
             <button
               key={i}
-              onClick={() => onSelect(opt.value)}
+              onClick={() => handleSelect(opt.value)}
               style={{
                 width: 220,
                 padding: '18px 0',
@@ -65,13 +71,6 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
           );
         })}
       </div>
-      <button
-        className="quiz-btn age-btn"
-        style={{ marginTop: 0, fontSize: 20, padding: '16px 0', borderRadius: 12, width: 320, maxWidth: '90vw', background: '#2196f3', color: '#fff', fontWeight: 700, boxShadow: '0 4px 16px 0 #2196f366', border: 'none' }}
-        onClick={onNext}
-      >
-        Следующий
-      </button>
     </div>
   );
 }
