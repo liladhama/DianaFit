@@ -1,0 +1,18 @@
+.gender-btn {
+  background: #fff;
+  border: 2.5px solid #eaf4ff;
+  color: #222;
+  /* Эффект сияния всегда */
+  box-shadow: 0 0 32px 12px #2196f344, 0 0 32px 24px #90caf944, 0 0 64px 32px #2196f344;
+  transition: box-shadow 0.2s, border 0.2s, background 0.2s, color 0.2s;
+}
+
+.selected-gender {
+  background: #fff !important;
+  border: 2.5px solid #1976d2 !important;
+  color: #1976d2 !important;
+  box-shadow: 0 0 32px 16px #2196f3cc, 0 0 48px 32px #90caf9cc, 0 0 96px 48px #2196f3cc;
+  position: relative;
+  z-index: 10;
+  transition: box-shadow 0.2s, border 0.2s, background 0.2s, color 0.2s;
+}

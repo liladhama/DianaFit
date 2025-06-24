@@ -3,6 +3,8 @@ import quizConfig from '../quizConfig.json';
 import WheelPicker from './WheelPicker';
 import CustomSlider from './CustomSlider';
 import IconSelector from './IconSelector';
+import "../fonts/fonts.css";
+import "./StoryQuiz.css";
 
 function ProgressBar({ current, total }) {
   return (
@@ -19,6 +21,7 @@ export default function StoryQuiz({ onFinish }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [selectedGender, setSelectedGender] = useState(null);
   const slide = quizConfig[step];
   const total = quizConfig.length;
 
@@ -35,6 +38,11 @@ export default function StoryQuiz({ onFinish }) {
     console.log('handleAnswer', { key, value });
     setAnswers(a => ({ ...a, [key]: value }));
     setTimeout(handleNext, 200);
+  }
+
+  function handleGenderSelect(gender) {
+    setSelectedGender(gender);
+    handleAnswer('sex', gender);
   }
 
   // Индексы слайдов для точек: только вопросы (без welcome и finish)
@@ -80,6 +88,77 @@ export default function StoryQuiz({ onFinish }) {
             <button onClick={handleNext} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', width: 320, display: 'flex', justifyContent: 'center' }}>
               <img src={require('../assets/quiz/next-btn.png')} alt="Следующий" style={{ width: 320, height: 64, display: 'block', objectFit: 'cover', borderRadius: 16 }} />
             </button>
+          </div>
+        </div>
+      );
+    }
+    if ((slide.type === 'choice' || slide.type === 'radio' || slide.type === 'toggle') && slide.key === 'sex') {
+      return (
+        <div style={{
+          width: '100%',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          background: 'transparent',
+        }}>
+          <div style={{ marginTop: 64, width: 340, maxWidth: '96vw', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ fontWeight: 700, fontSize: 28, textAlign: 'center', marginBottom: 24, textTransform: 'uppercase', letterSpacing: 0, color: '#181818' }}>
+              ТВОЙ ПОЛ
+            </div>
+            <div style={{
+              border: '2px solid #222',
+              borderRadius: 24,
+              background: 'rgba(255,255,255,0.85)',
+              boxShadow: '0 4px 32px 0 #b6d6ff44',
+              padding: 18,
+              marginBottom: 48,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 18,
+              width: '100%',
+              maxWidth: 340,
+              minHeight: 90
+            }}>
+              <img src={require('../assets/welcome/cupcake.png')} alt="cupcake" style={{ width: 72, height: 72, borderRadius: 18, boxShadow: '0 0 24px 0 #ffb6d6', objectFit: 'cover' }} />
+              <div style={{ fontSize: 15, color: '#222', lineHeight: 1.3, fontWeight: 500 }}>
+                это поможет мне подобрать нагрузку и упражнения, которые наилучшим образом учитывают физиологические особенности твоего организма.
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 32, justifyContent: 'center', width: '100%' }}>
+              {slide.options.map(opt => {
+                const isSelected = answers[slide.key] === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    className={isSelected ? 'selected-gender' : 'gender-btn'}
+                    style={{
+                      fontSize: 20,
+                      padding: '18px 32px',
+                      borderRadius: 24,
+                      minWidth: 120,
+                      fontWeight: 700,
+                      transition: 'all 0.18s',
+                      cursor: 'pointer',
+                      outline: 'none',
+                      // Только для НЕвыбранной кнопки задаём цвет, бордер и фон
+                      ...(isSelected ? {} : {
+                        background: '#fff',
+                        border: '2.5px solid #eaf4ff',
+                        color: '#222',
+                      })
+                    }}
+                    onClick={() => {
+                      setAnswers(a => ({ ...a, [slide.key]: opt.value }));
+                      setTimeout(handleNext, 200);
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       );
