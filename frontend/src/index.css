@@ -13,6 +13,10 @@ html, body, #root {
   background: #fff;
 }
 
+html {
+  background: #ffdddd !important;
+}
+
 body {
   margin: 0;
   padding: 0;
@@ -22,7 +26,7 @@ body {
   font-family: 'Alte Haas Grotesk RUS', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #fff;
+  background: #ddffdd !important;
   overscroll-behavior: none;
   touch-action: none;
 }
@@ -30,6 +34,7 @@ body {
 #root {
   width: 100vw;
   height: 100dvh;
+  background: #ddddff !important;
 }
 
 code {
