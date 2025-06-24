@@ -115,9 +115,9 @@
 }
 
 .splash-diana {
-  width: 150px; /* Было 220px, теперь Диана ещё меньше */
+  width: 340px;
   margin-left: 36px;
-  margin-bottom: 40px;
+  margin-bottom: 100px; /* Было 40px, теперь Диана ниже */
   z-index: 2;
   animation: pulse-slow 2.8s infinite;
 }
