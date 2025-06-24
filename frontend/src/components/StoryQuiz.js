@@ -36,6 +36,21 @@ export default function StoryQuiz({ onFinish }) {
     setTimeout(handleNext, 200);
   }
 
+  // Индексы слайдов для точек: только вопросы (без welcome и finish)
+  const questionSlides = quizConfig.filter(s => !['welcome', 'finish'].includes(s.type));
+  const questionIndex = questionSlides.findIndex(s => String(s.id) === String(slide.id));
+  const showDots = questionIndex !== -1;
+
+  function renderDots() {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginBottom: 32 }}>
+        {questionSlides.map((_, i) => (
+          <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: i === questionIndex ? '#2563eb' : '#d1d5db', transition: 'background 0.2s' }} />
+        ))}
+      </div>
+    );
+  }
+
   // UI-контролы по типу слайда
   function renderControl() {
     console.log('renderControl', { step, slide });
@@ -61,12 +76,6 @@ export default function StoryQuiz({ onFinish }) {
             <div style={{ color: '#222', fontSize: 16, textAlign: 'center', marginBottom: 24, maxWidth: 320, minHeight: 44, lineHeight: 1.2, whiteSpace: 'pre-line' }}>
               {`Давай найдём твою стартовую\nточку А и подберём персональную программу!`}
             </div>
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8, marginBottom: 32 }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#2563eb' }} />
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#d1d5db' }} />
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#d1d5db' }} />
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#d1d5db' }} />
-            </div>
             <button onClick={handleNext} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', width: 320, display: 'flex', justifyContent: 'center' }}>
               <img src={require('../assets/quiz/next-btn.png')} alt="Следующий" style={{ width: 320, height: 64, display: 'block', objectFit: 'cover', borderRadius: 16 }} />
             </button>
@@ -76,11 +85,14 @@ export default function StoryQuiz({ onFinish }) {
     }
     if (slide.type === 'choice' || slide.type === 'radio' || slide.type === 'toggle') {
       return (
-        <div style={{ display: 'flex', gap: 16, justifyContent: 'center', margin: '32px 0' }}>
-          {slide.options.map(opt => (
-            <button className="quiz-btn" style={{fontSize: 20, padding: '14px 28px', borderRadius: 12}} key={opt.value} onClick={() => handleAnswer(slide.key, opt.value)}>{opt.label}</button>
-          ))}
-        </div>
+        <>
+          {showDots && renderDots()}
+          <div style={{ display: 'flex', gap: 16, justifyContent: 'center', margin: '32px 0' }}>
+            {slide.options.map(opt => (
+              <button className="quiz-btn" style={{fontSize: 20, padding: '14px 28px', borderRadius: 12}} key={opt.value} onClick={() => handleAnswer(slide.key, opt.value)}>{opt.label}</button>
+            ))}
+          </div>
+        </>
       );
     }
     if (slide.type === 'slider' && slide.key === 'age') {
@@ -90,66 +102,114 @@ export default function StoryQuiz({ onFinish }) {
       const maxYear = currentYear - 14;
       const value = answers[slide.key] ?? (currentYear - 25);
       return (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          minHeight: '70vh',
-          width: '100%',
-        }}>
-          <div style={{ fontWeight: 700, fontSize: 28, marginBottom: 32, textAlign: 'center' }}>{slide.title}</div>
-          <WheelPicker value={value} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} min={minYear} max={maxYear} />
-          <button className="quiz-btn" style={{ marginTop: 32, fontSize: 20, padding: '14px 32px', borderRadius: 12 }} onClick={handleNext}>Дальше</button>
-        </div>
+        <>
+          {showDots && renderDots()}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            minHeight: '70vh',
+            width: '100%',
+          }}>
+            <div style={{ fontWeight: 700, fontSize: 28, marginBottom: 32, textAlign: 'center' }}>{slide.title}</div>
+            <WheelPicker value={value} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} min={minYear} max={maxYear} />
+            <button className="quiz-btn" style={{ marginTop: 32, fontSize: 20, padding: '14px 32px', borderRadius: 12 }} onClick={handleNext}>Дальше</button>
+          </div>
+        </>
       );
     }
     if (slide.type === 'slider' && slide.key !== 'age') {
       const value = answers[slide.key] ?? slide.min;
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '32px 0', width: '100%' }}>
-          <CustomSlider value={value} min={slide.min} max={slide.max} unit={slide.unit} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} />
-          <button className="quiz-btn" style={{ marginTop: 28, fontSize: 20, padding: '14px 32px', borderRadius: 12, width: '100%' }} onClick={handleNext}>Дальше</button>
-        </div>
+        <>
+          {showDots && renderDots()}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '32px 0', width: '100%' }}>
+            <CustomSlider value={value} min={slide.min} max={slide.max} unit={slide.unit} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} />
+            <button className="quiz-btn" style={{ marginTop: 28, fontSize: 20, padding: '14px 32px', borderRadius: 12, width: '100%' }} onClick={handleNext}>Дальше</button>
+          </div>
+        </>
       );
     }
     if (slide.type === 'icons' || (slide.type === 'choice' && slide.options && slide.options.length > 2)) {
       const value = answers[slide.key];
       return (
-        <div style={{ width: '100%' }}>
-          <IconSelector options={slide.options} value={value} onChange={v => handleAnswer(slide.key, v)} />
-        </div>
+        <>
+          {showDots && renderDots()}
+          <div style={{ width: '100%' }}>
+            <IconSelector options={slide.options} value={value} onChange={v => handleAnswer(slide.key, v)} />
+          </div>
+        </>
       );
     }
     if (slide.type === 'checkbox') {
       const value = answers[slide.key] ?? [];
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '32px 0' }}>
-          {slide.options.map(opt => (
-            <label key={opt.value} style={{ margin: 8, fontSize: 20 }}>
-              <input type="checkbox" style={{width: 22, height: 22, marginRight: 8}} checked={value.includes(opt.value)} onChange={e => {
-                const newArr = e.target.checked ? [...value, opt.value] : value.filter(v => v !== opt.value);
-                setAnswers(a => ({ ...a, [slide.key]: newArr }));
-              }} /> {opt.label}
-            </label>
-          ))}
-          <button className="quiz-btn" style={{ marginTop: 18, fontSize: 20, padding: '14px 32px', borderRadius: 12 }} onClick={handleNext}>Дальше</button>
-        </div>
+        <>
+          {showDots && renderDots()}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '32px 0' }}>
+            {slide.options.map(opt => (
+              <label key={opt.value} style={{ margin: 8, fontSize: 20 }}>
+                <input type="checkbox" style={{width: 22, height: 22, marginRight: 8}} checked={value.includes(opt.value)} onChange={e => {
+                  const newArr = e.target.checked ? [...value, opt.value] : value.filter(v => v !== opt.value);
+                  setAnswers(a => ({ ...a, [slide.key]: newArr }));
+                }} /> {opt.label}
+              </label>
+            ))}
+            <button className="quiz-btn" style={{ marginTop: 18, fontSize: 20, padding: '14px 32px', borderRadius: 12 }} onClick={handleNext}>Дальше</button>
+          </div>
+        </>
       );
     }
     if (slide.type === 'input') {
       return (
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', margin: '32px 0', width: '100%' }}>
-          <input
-            type="text"
-            placeholder={slide.placeholder || ''}
-            value={answers[slide.key] || ''}
-            onChange={e => setAnswers(a => ({ ...a, [slide.key]: e.target.value }))}
-            style={{ fontSize: 22, padding: '16px 20px', borderRadius: 12, border: '1px solid #e0e7ff', width: '80%', marginBottom: 24, outline: 'none' }}
-            autoFocus
-          />
-          <button className="quiz-btn" style={{ fontSize: 20, padding: '14px 32px', borderRadius: 12 }} onClick={handleNext} disabled={!answers[slide.key]}>Дальше</button>
-        </div>
+        <>
+          <div style={{
+            width: '100%',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            minHeight: '100vh',
+            background: 'transparent',
+          }}>
+            <div style={{ marginTop: 120, width: 320, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 26, textAlign: 'center', marginBottom: 24, textTransform: 'uppercase', letterSpacing: 0.2 }}>
+                <span>{slide.title}</span>
+                <img src={require('../assets/quiz/heart2.png')} alt="heart" style={{ width: 38, height: 38, marginLeft: 12, marginBottom: 0 }} />
+              </div>
+              <input
+                type="text"
+                placeholder={slide.placeholder || ''}
+                value={answers[slide.key] || ''}
+                onChange={e => setAnswers(a => ({ ...a, [slide.key]: e.target.value }))}
+                style={{
+                  fontSize: 22,
+                  padding: '18px 20px',
+                  borderRadius: 24,
+                  border: 'none',
+                  width: 280,
+                  marginBottom: 32,
+                  outline: 'none',
+                  background: '#f6fafd',
+                  boxShadow: '0 0 32px 8px #2196f3cc',
+                  textAlign: 'center',
+                  color: '#222',
+                  fontWeight: 600
+                }}
+                autoFocus
+              />
+            </div>
+          </div>
+          <div style={{ position: 'fixed', left: 0, bottom: 220, width: '100vw', display: 'flex', justifyContent: 'center', zIndex: 1000 }}>
+            {showDots && renderDots()}
+          </div>
+          <div style={{ position: 'fixed', left: 0, bottom: 140, width: '100vw', display: 'flex', justifyContent: 'center', zIndex: 1000 }}>
+            <button onClick={handleNext} style={{ background: 'none', border: 'none', padding: 0, cursor: answers[slide.key] ? 'pointer' : 'not-allowed', width: 320, display: 'flex', justifyContent: 'center' }} disabled={!answers[slide.key]}>
+              <img src={require('../assets/quiz/next-btn.png')} alt="Следующий" style={{ width: 320, height: 64, display: 'block', objectFit: 'cover', borderRadius: 16 }} />
+            </button>
+          </div>
+        </>
       );
     }
     if (slide.type === 'finish') {
