@@ -1,0 +1,128 @@
+[
+  {
+    "id": 1,
+    "type": "welcome",
+    "title": "Привет! Я Диана 👋",
+    "text": "Давай найдём твою стартовую точку A и подберём персональную программу!",
+    "button": "Начать"
+  },
+  {
+    "id": 2,
+    "type": "input",
+    "title": "Как тебя зовут?",
+    "key": "name",
+    "placeholder": "Введите имя"
+  },
+  {
+    "id": 3,
+    "type": "choice",
+    "title": "Твой пол",
+    "key": "sex",
+    "options": [
+      { "label": "Девушка", "value": "female" },
+      { "label": "Парень", "value": "male" }
+    ]
+  },
+  {
+    "id": 4,
+    "type": "slider",
+    "title": "Твой возраст",
+    "key": "age",
+    "min": 14,
+    "max": 65,
+    "unit": "лет"
+  },
+  {
+    "id": 5,
+    "type": "slider",
+    "title": "Рост",
+    "key": "height_cm",
+    "min": 140,
+    "max": 210,
+    "unit": "см"
+  },
+  {
+    "id": 6,
+    "type": "slider",
+    "title": "Вес",
+    "key": "weight_kg",
+    "min": 40,
+    "max": 160,
+    "unit": "кг"
+  },
+  {
+    "id": 7,
+    "type": "custom",
+    "title": "Твоя цель",
+    "key": "goal_weight_loss"
+  },
+  {
+    "id": 8,
+    "type": "toggle",
+    "title": "Где будешь тренироваться?",
+    "key": "gym_or_home",
+    "options": [
+      { "label": "Зал", "value": "gym" },
+      { "label": "Дом", "value": "home" }
+    ]
+  },
+  {
+    "id": 9,
+    "type": "radio",
+    "title": "Твой опыт тренировок",
+    "key": "training_level",
+    "options": [
+      { "label": "Новичок", "value": "beginner" },
+      { "label": "1-2 года", "value": "intermediate" },
+      { "label": "3+ лет", "value": "advanced" }
+    ]
+  },
+  {
+    "id": 10,
+    "type": "icons",
+    "title": "Твоя активность на работе",
+    "key": "activity_coef",
+    "options": [
+      { "label": "Сидя", "value": 1.2 },
+      { "label": "Стоя", "value": 1.375 },
+      { "label": "Много хожу", "value": 1.55 },
+      { "label": "Иногда физ. труд", "value": 1.725 },
+      { "label": "Физ. труд", "value": 1.9 }
+    ]
+  },
+  {
+    "id": 11,
+    "type": "slider",
+    "title": "Шаги в день",
+    "key": "daily_steps",
+    "min": 0,
+    "max": 20000,
+    "unit": "шагов"
+  },
+  {
+    "id": 12,
+    "type": "checkbox",
+    "title": "Пищевые ограничения",
+    "key": "diet_flags",
+    "options": [
+      { "label": "Вегетарианство", "value": "veggie" },
+      { "label": "Лактоза", "value": "lactose" },
+      { "label": "Глютен", "value": "gluten" },
+      { "label": "Орехи", "value": "nuts" },
+      { "label": "Другое", "value": "other" }
+    ]
+  },
+  {
+    "id": 7.1,
+    "type": "date-wheel",
+    "title": "Когда начнём?",
+    "key": "start_date",
+    "options": []
+  },
+  {
+    "id": 13,
+    "type": "finish",
+    "title": "Считаю твою программу…",
+    "animation": "progress-ring"
+  }
+]

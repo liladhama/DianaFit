@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import quizConfig from '../quizConfig.json';
+// import quizConfig from '../quizConfig.json';
 import WheelPicker from './WheelPicker';
 import CustomSlider from './CustomSlider';
 import IconSelector from './IconSelector';
 import HorizontalWeightSlider from './HorizontalWeightSlider';
+import GoalSlide from './GoalSlide'; // Импортируем новый компонент
 import "../fonts/fonts.css";
 import "./StoryQuiz.css";
 
@@ -20,15 +21,23 @@ export default function StoryQuiz({ onFinish }) {
   const [answers, setAnswers] = useState({});
   const [isInputFocused, setIsInputFocused] = useState(false);
   const [selectedGender, setSelectedGender] = useState(null);
+  const [quizConfig, setQuizConfig] = useState(null);
   const inputRef = useRef(null);
-  const slide = quizConfig[step];
-  const total = quizConfig.length;
+  const slide = quizConfig ? quizConfig[step] : null;
+  const total = quizConfig ? quizConfig.length : 0;
+
+  useEffect(() => {
+    fetch('/quizConfig.json')
+      .then(res => res.json())
+      .then(setQuizConfig);
+  }, []);
 
   useEffect(() => {
     if (inputRef.current) inputRef.current.focus();
   }, [step]);
 
   function handleNext() {
+    if (!quizConfig) return;
     console.log('handleNext', { step, total, nextStep: step + 1 });
     if (step < total - 1) setStep(step + 1);
     else if (onFinish) {
@@ -49,8 +58,8 @@ export default function StoryQuiz({ onFinish }) {
   }
 
   // Индексы слайдов для точек: только вопросы (без welcome и finish)
-  const questionSlides = quizConfig.filter(s => !['welcome', 'finish'].includes(s.type));
-  const questionIndex = questionSlides.findIndex(s => String(s.id) === String(slide.id));
+  const questionSlides = quizConfig ? quizConfig.filter(s => !['welcome', 'finish'].includes(s.type)) : [];
+  const questionIndex = slide ? questionSlides.findIndex(s => String(s.id) === String(slide.id)) : -1;
   const showDots = questionIndex !== -1;
 
   function renderDots() {
@@ -371,8 +380,27 @@ export default function StoryQuiz({ onFinish }) {
         </div>
       );
     }
+    // Слайд "Твоя цель" (пример с кастомным оформлением)
+    if (slide.key === 'goal_weight_loss') {
+      const options = [
+        { label: '-3 кг за месяц', value: 3 },
+        { label: '-4 кг за месяц', value: 4 },
+        { label: '-5 кг за месяц', value: 5 },
+      ];
+      const value = answers[slide.key];
+      return (
+        <GoalSlide
+          options={options}
+          selected={value}
+          onSelect={v => setAnswers(a => ({ ...a, [slide.key]: v }))}
+          onNext={handleNext}
+        />
+      );
+    }
     return null;
   }
+
+  if (!quizConfig) return <div>Загрузка...</div>;
 
   return (
     <div style={{ width: '100vw', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'transparent', boxSizing: 'border-box', padding: '32px 16px 0 16px' }}>
