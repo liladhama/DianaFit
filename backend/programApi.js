@@ -18,30 +18,28 @@ router.post('/program', async (req, res) => {
   const programId = userId + '-' + Date.now();
   const startDate = profile.start_date || new Date().toISOString().slice(0, 10);
 
-  // Формируем строку с ответами пользователя для передачи в Python
-  const userProfileStr = JSON.stringify(profile, null, 2);
-  // Вызываем qa.py с режимом генерации плана (добавим обработку в qa.py)
-  const py = spawnSync('python', ['qa.py', '--plan', userProfileStr], {
-    cwd: __dirname,
-    encoding: 'utf-8'
-  });
-  if (py.error) {
-    console.error('Python spawn error:', py.error); // Логируем ошибку запуска Python
-    return res.status(500).json({ error: 'AI error', details: py.error.message });
-  }
-  if (py.status !== 0) {
-    console.error('Python process stderr:', py.stderr); // Логируем stderr Python
-    return res.status(500).json({ error: 'AI error', details: py.stderr });
-  }
-  let plan;
-  try {
-    plan = JSON.parse(py.stdout);
-  } catch (e) {
-    console.error('Invalid JSON from AI:', py.stdout); // Логируем невалидный JSON
-    return res.status(500).json({ error: 'AI error', details: 'Invalid JSON from AI', raw: py.stdout });
-  }
-  // Сохраняем план в памяти
-  const days = plan.days || [];
+  // --- ЗАГЛУШКА: возвращаем фейковый план без вызова ИИ ---
+  const days = Array.from({ length: 7 }).map((_, i) => ({
+    title: `День ${i + 1}`,
+    date: new Date(Date.now() + i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+    workout: {
+      name: 'Тренировка дома',
+      exercises: [
+        { name: 'Приседания', reps: 15 },
+        { name: 'Отжимания', reps: 10 },
+        { name: 'Планка', reps: 30 }
+      ]
+    },
+    meals: [
+      { name: 'Завтрак', menu: 'Овсянка, банан, чай' },
+      { name: 'Обед', menu: 'Курица, гречка, салат' },
+      { name: 'Ужин', menu: 'Творог, яблоко' }
+    ],
+    completedWorkout: false,
+    completedMeals: false,
+    completedExercises: [false, false, false],
+    completedMealsArr: [false, false, false]
+  }));
   programs[programId] = { userId, profile, days };
   res.json({ success: true, programId });
 });
