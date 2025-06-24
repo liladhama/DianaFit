@@ -3,7 +3,6 @@ import quizConfig from '../quizConfig.json';
 import WheelPicker from './WheelPicker';
 import CustomSlider from './CustomSlider';
 import IconSelector from './IconSelector';
-import HorizontalRuler from './HorizontalRuler';
 import "../fonts/fonts.css";
 import "./StoryQuiz.css";
 
