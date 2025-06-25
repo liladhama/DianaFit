@@ -12,7 +12,7 @@ const SplashScreen = () => {
       </div>
       <div className="splash-bottom-block">
         <img src={require('../assets/welcome/dumbbell2.png')} alt="dumbbell" className="splash-dumbbell-pulse" style={{position: 'absolute', left: '40px', bottom: '370px', width: '90px', height: '90px', objectFit: 'contain', animation: 'pulse 1.5s infinite'}} />
-        <img src={require('../assets/welcome/diana.png')} alt="Диана" className="splash-diana" style={{width: '340px', minWidth: '340px', height: 'auto', maxWidth: 'none', display: 'block', objectFit: 'contain', marginLeft: '110px', marginTop: '60px'}} />
+        <img src={require('../assets/welcome/diana.png')} alt="Диана" className="splash-diana" style={{width: '390px', minWidth: '390px', height: 'auto', maxWidth: 'none', display: 'block', objectFit: 'contain', marginLeft: '110px', marginTop: '100px'}} />
         <img src={require('../assets/welcome/yoga-mat.png')} alt="йога коврик" className="splash-yoga" style={{position: 'absolute', left: '10px', bottom: '200px', width: '110px', height: 'auto', objectFit: 'contain'}} />
       </div>
     </div>

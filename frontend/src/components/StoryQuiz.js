@@ -58,13 +58,13 @@ export default function StoryQuiz({ onFinish }) {
   }
 
   // Индексы слайдов для точек: только вопросы (без welcome и finish)
-  const questionSlides = quizConfig ? quizConfig.filter(s => !['welcome', 'finish'].includes(s.type)) : [];
+  const questionSlides = quizConfig ? quizConfig.filter(s => !['welcome', 'finish', 'daily_steps'].includes(s.type) && s.key !== 'daily_steps') : [];
   const questionIndex = slide ? questionSlides.findIndex(s => String(s.id) === String(slide.id)) : -1;
   const showDots = questionIndex !== -1;
 
   function renderDots() {
     return (
-      <div style={{ display: showDots ? 'flex' : 'none', justifyContent: 'center', alignItems: 'center', gap: 8, margin: '0 0 24px 0' }}>
+      <div style={{ display: showDots ? 'flex' : 'none', justifyContent: 'center', alignItems: 'center', gap: 8, margin: '0 0 24px 0', position: 'absolute', top: 12, left: 0, right: 0, width: '100vw', zIndex: 10 }}>
         {questionSlides.map((_, i) => (
           <div key={i} style={{ width: 10, height: 10, borderRadius: '50%', background: i === questionIndex ? '#2563eb' : '#d1d5db', transition: 'background 0.2s' }} />
         ))}
@@ -392,30 +392,33 @@ export default function StoryQuiz({ onFinish }) {
           alignItems: 'center',
           background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
           boxSizing: 'border-box',
-          padding: '32px 16px 16px 16px'
+          padding: '32px 16px 16px 16px',
+          position: 'relative'
         }}>
-          <div style={{ fontWeight: 700, fontSize: 28, margin: '48px 0 24px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>{slide.title}</div>
+          <div style={{ fontWeight: 700, fontSize: 28, margin: '24px 0 12px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>{slide.title}</div>
           <div style={{
             border: '2px solid #222',
             borderRadius: 18,
             background: '#fff',
             boxShadow: 'none',
-            padding: '16px 18px',
-            marginBottom: 48,
+            padding: '18px 18px',
+            marginBottom: 24,
             display: 'flex',
             alignItems: 'center',
-            gap: 18,
+            gap: 12,
             width: '100%',
             maxWidth: 340,
             minHeight: 80,
-            position: 'relative'
+            position: 'relative',
+            marginTop: 0,
+            overflow: 'visible'
           }}>
             <img src={require('../assets/welcome/cupcake2.png')} alt="cupcake" style={{ width: 80, height: 80, borderRadius: 16, filter: 'drop-shadow(0 0 0px #ffb86a) drop-shadow(0 0 8px #ffb86a) drop-shadow(0 0 18px #ffb86a) drop-shadow(0 0 32px #ffe0b3) drop-shadow(0 0 56px #fff0e0)', objectFit: 'cover' }} />
             <div style={{ fontSize: 14, color: '#222', lineHeight: 1.15, fontWeight: 500, marginLeft: 8, marginRight: 0, padding: 0, marginTop: 0, marginBottom: 0 }}>
               Это поможет мне подготовить тренировку, наиболее соответствующую твоей возрастной группе.
             </div>
           </div>
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 32, background: 'none', boxShadow: 'none', border: 'none' }}>
             <WheelPicker value={value} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} min={minYear} max={maxYear} />
           </div>
           <button className="quiz-btn age-btn" style={{ marginTop: 16, fontSize: 20, padding: '16px 0', borderRadius: 12, width: 320, maxWidth: '90vw', background: '#2196f3', color: '#fff', fontWeight: 700, boxShadow: '0 4px 16px 0 #2196f366', border: 'none' }} onClick={handleNext}>Следующий</button>
