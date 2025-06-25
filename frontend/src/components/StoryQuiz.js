@@ -325,9 +325,11 @@ export default function StoryQuiz({ onFinish }) {
               width: '100%',
               maxWidth: 340,
               minHeight: 80,
-              position: 'relative'
+              position: 'relative',
+              overflow: 'visible', // Исправлено: чтобы свечение не обрезалось
+              zIndex: 2 // Исправлено: чтобы свечение было поверх
             }}>
-              <img src={require('../assets/welcome/cupcake.png')} alt="cupcake" style={{ width: 80, height: 80, objectFit: 'cover', filter: 'drop-shadow(0 0 0px #ff6a6a) drop-shadow(0 0 8px #ff6a6a) drop-shadow(0 0 18px #ff6a6a) drop-shadow(0 0 32px #ffb3b3) drop-shadow(0 0 56px #ffe0e0)', borderRadius: 16 }} />
+              <img src={require('../assets/welcome/cupcake.png')} alt="cupcake" style={{ width: 80, height: 80, objectFit: 'cover', filter: 'drop-shadow(0 0 0px #ff6a6a) drop-shadow(0 0 8px #ff6a6a) drop-shadow(0 0 18px #ff6a6a) drop-shadow(0 0 32px #ffb3b3) drop-shadow(0 0 56px #ffe0e0)', borderRadius: 16, overflow: 'visible', zIndex: 3 }} />
               <div style={{ fontSize: 14, color: '#222', lineHeight: 1.15, fontWeight: 500, marginLeft: 8, marginRight: 0, padding: 0, marginTop: 0, marginBottom: 0 }}>
                 это поможет мне подобрать нагрузку и упражнения, которые наилучшим образом учитывают физиологические особенности твоего организма.
               </div>
@@ -411,9 +413,10 @@ export default function StoryQuiz({ onFinish }) {
             minHeight: 80,
             position: 'relative',
             marginTop: 0,
-            overflow: 'visible'
+            overflow: 'visible', // Исправлено: чтобы свечение не обрезалось
+            zIndex: 2 // Исправлено: чтобы свечение было поверх
           }}>
-            <img src={require('../assets/welcome/cupcake2.png')} alt="cupcake" style={{ width: 80, height: 80, borderRadius: 16, filter: 'drop-shadow(0 0 0px #ffb86a) drop-shadow(0 0 8px #ffb86a) drop-shadow(0 0 18px #ffb86a) drop-shadow(0 0 32px #ffe0b3) drop-shadow(0 0 56px #fff0e0)', objectFit: 'cover' }} />
+            <img src={require('../assets/welcome/cupcake2.png')} alt="cupcake" style={{ width: 80, height: 80, borderRadius: 16, filter: 'drop-shadow(0 0 0px #ffb86a) drop-shadow(0 0 8px #ffb86a) drop-shadow(0 0 18px #ffb86a) drop-shadow(0 0 32px #ffe0b3) drop-shadow(0 0 56px #fff0e0)', objectFit: 'cover', overflow: 'visible', zIndex: 3 }} />
             <div style={{ fontSize: 14, color: '#222', lineHeight: 1.15, fontWeight: 500, marginLeft: 8, marginRight: 0, padding: 0, marginTop: 0, marginBottom: 0 }}>
               Это поможет мне подготовить тренировку, наиболее соответствующую твоей возрастной группе.
             </div>

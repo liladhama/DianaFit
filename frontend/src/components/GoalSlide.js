@@ -37,9 +37,10 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
         minHeight: 80,
         position: 'relative',
         gap: 18,
-        overflow: 'visible'
+        overflow: 'visible', // Исправлено: чтобы свечение не обрезалось
+        zIndex: 2 // Исправлено: чтобы свечение было поверх
       }}>
-        <img src={require('../assets/welcome/cupcake3.png')} alt="cake" style={{ width: 80, height: 80, borderRadius: 16, filter: 'drop-shadow(0 0 0px #a86a3d) drop-shadow(0 0 8px #a86a3d) drop-shadow(0 0 18px #a86a3d) drop-shadow(0 0 32px #ffe0b3) drop-shadow(0 0 56px #fff0e0)', objectFit: 'cover' }} />
+        <img src={require('../assets/welcome/cupcake3.png')} alt="cake" style={{ width: 80, height: 80, borderRadius: 16, filter: 'drop-shadow(0 0 0px #a86a3d) drop-shadow(0 0 8px #a86a3d) drop-shadow(0 0 18px #a86a3d) drop-shadow(0 0 18px #ffe0b3) drop-shadow(0 0 24px #fff0e0)', objectFit: 'cover', overflow: 'visible', zIndex: 3 }} />
         <div style={{ fontSize: 14, color: '#222', lineHeight: 1.15, fontWeight: 500, marginLeft: 8, marginRight: 0, padding: 0, marginTop: 0, marginBottom: 0 }}>
           Плавное снижение веса — это безопасный путь и лучшая форма: улучшается самочувствие, снижается давление и риск диабета, уходит жир.
         </div>
