@@ -74,7 +74,200 @@ export default function StoryQuiz({ onFinish }) {
 
   // UI-контролы по типу слайда
   function renderControl({ inputRef }) {
-    console.log('renderControl', { step, slide });
+    console.log('DEBUG slide', slide); // <--- debug вывод для диагностики шага
+    console.log('DEBUG step', step);
+    // Кастомный слайд "Где будешь тренироваться?" — СТАВИМ ПЕРВЫМ!
+    if (slide && slide.key === 'gym_or_home') {
+      const options = [
+        { label: 'Зал', value: 'gym' },
+        { label: 'Дом', value: 'home' }
+      ];
+      return (
+        <div style={{
+          width: '100vw',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
+        }}>
+          <div style={{ marginTop: 48, width: 340, maxWidth: '96vw', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ fontWeight: 700, fontSize: 28, textAlign: 'left', marginBottom: 24, textTransform: 'uppercase', letterSpacing: 0, color: '#181818', alignSelf: 'flex-start', lineHeight: 1.05 }}>
+              ГДЕ БУДЕШЬ<br />ТРЕНИРОВАТЬСЯ
+            </div>
+            <div style={{
+              border: '2px solid #b3c6e0',
+              borderRadius: 24,
+              background: '#fff',
+              boxShadow: '0 4px 32px 0 #b6d6ff44',
+              padding: '16px 20px',
+              marginBottom: 48,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 4,
+              width: '100%',
+              maxWidth: 300,
+              minHeight: 80,
+              height: 80
+            }}>
+              <img src={require('../assets/quiz/dumbbell.png')} alt="dumbbell" style={{ width: 88, height: 88, borderRadius: 16, objectFit: 'cover', marginRight: 4 }} />
+              <div style={{ fontSize: 13, color: '#7a7a7a', lineHeight: 1.3, fontWeight: 500 }}>
+                Я подберу эффективный комплекс под твои условия, чтобы тренировки приносили результат и удовольствие.
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 32, justifyContent: 'center', width: '100%', marginTop: 32 }}>
+              {options.map(opt => {
+                const isSelected = answers[slide.key] === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    className={isSelected ? 'selected-gender' : 'gender-btn'}
+                    style={{
+                      fontSize: 20,
+                      padding: '18px 32px',
+                      borderRadius: 24,
+                      minWidth: 120,
+                      fontWeight: 700,
+                      transition: 'all 0.18s',
+                      cursor: 'pointer',
+                      outline: 'none',
+                      margin: '0 8px',
+                      background: 'transparent',
+                    }}
+                    onClick={() => handleAnswer(slide.key, opt.value)}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    // Кастомный слайд "Твой опыт тренировок" по референсу — СТАВИМ ПЕРВЫМ!
+    if (slide && slide.key === 'training_level') {
+      const options = [
+        { label: 'новичок', value: 'beginner' },
+        { label: '1-2 года', value: 'intermediate' },
+        { label: '3+ лет', value: 'advanced' },
+      ];
+      return (
+        <div style={{
+          width: '100vw',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
+        }}>
+          <div style={{ marginTop: 48, width: 340, maxWidth: '96vw', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ fontWeight: 700, fontSize: 28, textAlign: 'left', marginBottom: 24, textTransform: 'uppercase', letterSpacing: 0, color: '#181818', alignSelf: 'flex-start', lineHeight: 1.05 }}>
+              ТВОЙ ОПЫТ<br />ТРЕНИРОВОК
+            </div>
+            <div style={{
+              border: '1.5px solid #222',
+              borderRadius: 24,
+              background: '#fff',
+              boxShadow: 'none',
+              padding: '6px 10px',
+              marginBottom: 48,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              width: '100%',
+              maxWidth: 340,
+              minHeight: 0,
+              position: 'relative'
+            }}>
+              <img src={require('../assets/welcome/yoga-mat.png')} alt="yoga-mat" style={{ width: 90, height: 90, objectFit: 'contain', borderRadius: 16, marginRight: 2, marginLeft: -8 }} />
+              <div style={{ fontSize: 14, color: '#222', lineHeight: 1.18, fontWeight: 500, marginLeft: 0, marginRight: 0, padding: '4px 0', marginTop: 0, marginBottom: 0 }}>
+                Опыт в тренировках помогает избегать перегрузок и травм. Постепенное увеличение нагрузки делает занятия безопасными и приятными, а тело быстрее привыкает к новому ритму.
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 24, width: '100%', marginTop: 0 }}>
+              {options.map(opt => {
+                const isSelected = answers[slide.key] === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    className={isSelected ? 'selected-gender' : 'gender-btn'}
+                    style={{
+                      fontSize: 20,
+                      padding: '18px 0',
+                      borderRadius: 32,
+                      width: 200,
+                      fontWeight: 700,
+                      background: 'transparent',
+                      margin: '0 auto',
+                      letterSpacing: 0.2,
+                      textTransform: 'none',
+                    }}
+                    onClick={() => handleAnswer(slide.key, opt.value)}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+    // Кастомный слайд "Твоя бытовая активность" по референсу — СТАВИМ ВТОРЫМ!
+    if (slide && slide.key === 'activity_coef') {
+      const options = [
+        { label: 'Нет\nактивности', value: 1.2 },
+        { label: 'Лёгкая', value: 1.375 },
+        { label: 'Средняя', value: 1.55 },
+        { label: 'Интенсив', value: 1.725 },
+      ];
+      return (
+        <div style={{
+          width: '100vw',
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
+        }}>
+          <div style={{ marginTop: 48, width: 340, maxWidth: '96vw', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ fontWeight: 700, fontSize: 28, textAlign: 'left', marginBottom: 48, textTransform: 'uppercase', letterSpacing: 0, color: '#181818', alignSelf: 'flex-start', lineHeight: 1.05 }}>
+              ТВОЯ БЫТОВАЯ<br />АКТИВНОСТЬ
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 28, width: '100%', marginTop: 0 }}>
+              {options.map(opt => {
+                const isSelected = answers[slide.key] === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    className={isSelected ? 'selected-gender' : 'gender-btn'}
+                    style={{
+                      fontSize: 20,
+                      padding: '18px 0',
+                      borderRadius: 32,
+                      width: 200,
+                      fontWeight: 700,
+                      background: 'transparent',
+                      margin: '0 auto',
+                      letterSpacing: 0.2,
+                      textTransform: 'none',
+                      whiteSpace: 'pre-line',
+                    }}
+                    onClick={() => handleAnswer(slide.key, opt.value)}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
     if (slide.type === 'welcome') {
       return (
         <div style={{
@@ -121,24 +314,25 @@ export default function StoryQuiz({ onFinish }) {
             </div>
             <div style={{
               border: '2px solid #222',
-              borderRadius: 24,
-              background: 'rgba(255,255,255,0.85)',
-              boxShadow: '0 4px 32px 0 #b6d6ff44',
-              padding: 18,
+              borderRadius: 18,
+              background: '#fff',
+              boxShadow: 'none',
+              padding: '16px 18px',
               marginBottom: 48,
               display: 'flex',
               alignItems: 'center',
               gap: 18,
               width: '100%',
               maxWidth: 340,
-              minHeight: 90
+              minHeight: 80,
+              position: 'relative'
             }}>
-              <img src={require('../assets/welcome/cupcake.png')} alt="cupcake" style={{ width: 72, height: 72, borderRadius: 18, boxShadow: '0 0 24px 0 #ffb6d6', objectFit: 'cover' }} />
-              <div style={{ fontSize: 15, color: '#222', lineHeight: 1.3, fontWeight: 500 }}>
+              <img src={require('../assets/welcome/cupcake.png')} alt="cupcake" style={{ width: 80, height: 80, objectFit: 'cover', filter: 'drop-shadow(0 0 0px #ff6a6a) drop-shadow(0 0 8px #ff6a6a) drop-shadow(0 0 18px #ff6a6a) drop-shadow(0 0 32px #ffb3b3) drop-shadow(0 0 56px #ffe0e0)', borderRadius: 16 }} />
+              <div style={{ fontSize: 14, color: '#222', lineHeight: 1.15, fontWeight: 500, marginLeft: 8, marginRight: 0, padding: 0, marginTop: 0, marginBottom: 0 }}>
                 это поможет мне подобрать нагрузку и упражнения, которые наилучшим образом учитывают физиологические особенности твоего организма.
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 32, justifyContent: 'center', width: '100%' }}>
+            <div style={{ display: 'flex', gap: 32, justifyContent: 'center', width: '100%', marginTop: 32 }}>
               {slide.options.map(opt => {
                 const isSelected = answers[slide.key] === opt.value;
                 return (
@@ -161,10 +355,7 @@ export default function StoryQuiz({ onFinish }) {
                         color: '#222',
                       })
                     }}
-                    onClick={() => {
-                      setAnswers(a => ({ ...a, [slide.key]: opt.value }));
-                      setTimeout(handleNext, 200);
-                    }}
+                    onClick={() => handleAnswer(slide.key, opt.value)}
                   >
                     {opt.label}
                   </button>
@@ -199,28 +390,28 @@ export default function StoryQuiz({ onFinish }) {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'flex-start',
           background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
           boxSizing: 'border-box',
-          padding: '0 0 32px 0',
+          padding: '32px 16px 16px 16px'
         }}>
           <div style={{ fontWeight: 700, fontSize: 28, margin: '48px 0 24px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>{slide.title}</div>
           <div style={{
             border: '2px solid #222',
-            borderRadius: 24,
-            background: 'rgba(255,255,255,0.85)',
-            boxShadow: '0 4px 32px 0 #b6d6ff44',
-            padding: 18,
-            marginBottom: 32,
+            borderRadius: 18,
+            background: '#fff',
+            boxShadow: 'none',
+            padding: '16px 18px',
+            marginBottom: 48,
             display: 'flex',
             alignItems: 'center',
             gap: 18,
-            width: 320,
-            maxWidth: '96vw',
-            minHeight: 90
+            width: '100%',
+            maxWidth: 340,
+            minHeight: 80,
+            position: 'relative'
           }}>
-            <img src={require('../assets/welcome/cupcake.png')} alt="cupcake" style={{ width: 56, height: 56, borderRadius: 18, boxShadow: '0 0 24px 0 #ffb6d6', objectFit: 'cover' }} />
-            <div style={{ fontSize: 15, color: '#222', lineHeight: 1.3, fontWeight: 500 }}>
+            <img src={require('../assets/welcome/cupcake2.png')} alt="cupcake" style={{ width: 80, height: 80, borderRadius: 16, filter: 'drop-shadow(0 0 0px #ffb86a) drop-shadow(0 0 8px #ffb86a) drop-shadow(0 0 18px #ffb86a) drop-shadow(0 0 32px #ffe0b3) drop-shadow(0 0 56px #fff0e0)', objectFit: 'cover' }} />
+            <div style={{ fontSize: 14, color: '#222', lineHeight: 1.15, fontWeight: 500, marginLeft: 8, marginRight: 0, padding: 0, marginTop: 0, marginBottom: 0 }}>
               Это поможет мне подготовить тренировку, наиболее соответствующую твоей возрастной группе.
             </div>
           </div>
@@ -241,10 +432,9 @@ export default function StoryQuiz({ onFinish }) {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'flex-start',
           background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
           boxSizing: 'border-box',
-          padding: '0 0 32px 0',
+          padding: '32px 16px 16px 16px'
         }}>
           <div style={{ fontWeight: 700, fontSize: 28, margin: '48px 0 24px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>{slide.title}</div>
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 8, minHeight: 120 }}>
@@ -264,10 +454,9 @@ export default function StoryQuiz({ onFinish }) {
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          justifyContent: 'flex-start',
           background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
           boxSizing: 'border-box',
-          padding: '0 0 32px 0',
+          padding: '32px 16px 16px 16px'
         }}>
           <div style={{ fontWeight: 700, fontSize: 28, margin: '48px 0 24px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>{slide.title}</div>
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 8, minHeight: 420 }}>
@@ -403,7 +592,7 @@ export default function StoryQuiz({ onFinish }) {
   if (!quizConfig) return <div>Загрузка...</div>;
 
   return (
-    <div style={{ width: '100vw', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'transparent', boxSizing: 'border-box', padding: '32px 16px 0 16px' }}>
+    <div style={{ width: '100vw', minWidth: '100vw', maxWidth: '100vw', minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)', boxSizing: 'border-box', padding: '32px 16px 0 16px', margin: 0, overflowX: 'hidden' }}>
       <ProgressBar current={step + 1} total={total} />
       {renderDots()}
       {renderControl({ inputRef })}

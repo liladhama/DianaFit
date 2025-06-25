@@ -16,11 +16,11 @@ html, body, #root {
   -ms-text-size-adjust: 100%;
   touch-action: manipulation;
   font-family: 'Alte Haas Grotesk RUS', Arial, sans-serif;
-  background: #fff;
+  background: linear-gradient(180deg, #f8fbff 0%, #d6eaff 100%) !important;
 }
 
 html {
-  background: #ffdddd !important;
+  background: linear-gradient(180deg, #f8fbff 0%, #d6eaff 100%) !important;
 }
 
 body {
@@ -32,7 +32,7 @@ body {
   font-family: 'Alte Haas Grotesk RUS', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #ddffdd !important;
+  background: transparent !important;
   color: #222;
   overflow: hidden;
   position: fixed;
@@ -43,9 +43,106 @@ body {
 #root {
   width: 100vw;
   height: 100vh;
-  background: #ddddff !important;
+  background: transparent !important;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+/* --- WhereTrainSlide точное позиционирование и стилизация под макет --- */
+
+/* Кнопки выбора */
+.where-train-btn {
+  width: 180px;
+  height: 60px;
+  border-radius: 32px;
+  border: none;
+  font-size: 24px;
+  font-weight: 700;
+  font-family: 'Montserrat', Arial, sans-serif;
+  color: #bfc8d3;
+  background: #fff;
+  box-shadow: 0 0 32px 8px #2196f322, 0 0 32px 16px #90caf922, 0 0 64px 32px #2196f311;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 0;
+}
+.where-train-btn.active {
+  color: #181818;
+  box-shadow: 0 0 32px 8px #2196f366, 0 0 32px 16px #90caf966, 0 0 64px 32px #2196f344;
+}
+
+/* Кнопка "Следующий" */
+.where-train-next {
+  width: 92%;
+  height: 52px;
+  border-radius: 10px;
+  background: #1890ff;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  font-family: 'Montserrat', Arial, sans-serif;
+  border: none;
+  box-shadow: 0 4px 16px 0 #2196f344;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin: 0 auto;
+  display: block;
+}
+.where-train-next:disabled {
+  background: #b8d6f6;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Блок с иконкой и описанием */
+.where-train-info {
+  display: flex;
+  align-items: center;
+  background: #fff;
+  border: 2px solid #b8d6f6;
+  border-radius: 28px;
+  padding: 18px 20px 18px 16px;
+  margin-bottom: 48px;
+  box-shadow: 0 2px 16px 0 #eaf4ff;
+}
+.where-train-img {
+  width: 56px;
+  height: 56px;
+  margin-right: 18px;
+}
+.where-train-desc {
+  color: #7a8ca3;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+  font-family: 'Montserrat', Arial, sans-serif;
+  text-align: left;
+}
+
+.where-train-title {
+  font-family: 'Neutral Face', Montserrat, Arial, sans-serif;
+  font-weight: 900;
+  font-size: 32px;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  color: #181818;
+  margin: 0;
+  margin-bottom: 28px;
+  text-align: left;
+}
+
+.where-train-slide {
+  min-height: 100vh;
+  width: 100vw;
+  background: linear-gradient(180deg, #f8fbff 0%, #d6eaff 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0;
+  box-sizing: border-box;
+  position: relative;
 }

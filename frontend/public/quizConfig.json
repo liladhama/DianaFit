@@ -91,15 +91,6 @@
     ]
   },
   {
-    "id": 11,
-    "type": "slider",
-    "title": "Шаги в день",
-    "key": "daily_steps",
-    "min": 0,
-    "max": 20000,
-    "unit": "шагов"
-  },
-  {
     "id": 12,
     "type": "checkbox",
     "title": "Пищевые ограничения",

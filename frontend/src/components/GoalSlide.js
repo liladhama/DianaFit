@@ -28,17 +28,18 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
         alignItems: 'center',
         background: '#fff',
         border: '2px solid #222',
-        borderRadius: 24,
-        boxShadow: '0 4px 32px 0 #b6d6ff44',
-        padding: 18,
-        marginBottom: 32,
-        width: 320,
-        maxWidth: '96vw',
-        minHeight: 90,
+        borderRadius: 18,
+        boxShadow: 'none',
+        padding: '16px 18px',
+        marginBottom: 48,
+        width: '100%',
+        maxWidth: 340,
+        minHeight: 80,
+        position: 'relative',
         gap: 18
       }}>
-        <img src={require('../assets/welcome/cupcake.png')} alt="cake" style={{ width: 56, height: 56, borderRadius: 18, objectFit: 'cover' }} />
-        <div style={{ fontSize: 15, color: '#222', lineHeight: 1.3, fontWeight: 500 }}>
+        <img src={require('../assets/welcome/cupcake3.png')} alt="cake" style={{ width: 80, height: 80, borderRadius: 16, filter: 'drop-shadow(0 0 0px #a86a3d) drop-shadow(0 0 8px #a86a3d) drop-shadow(0 0 18px #a86a3d) drop-shadow(0 0 32px #ffe0b3) drop-shadow(0 0 56px #fff0e0)', objectFit: 'cover' }} />
+        <div style={{ fontSize: 14, color: '#222', lineHeight: 1.15, fontWeight: 500, marginLeft: 8, marginRight: 0, padding: 0, marginTop: 0, marginBottom: 0 }}>
           Плавное снижение веса — это безопасный путь и лучшая форма: улучшается самочувствие, снижается давление и риск диабета, уходит жир.
         </div>
       </div>
