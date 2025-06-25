@@ -30,13 +30,13 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
         border: '2px solid #222',
         borderRadius: 18,
         boxShadow: 'none',
-        padding: '18px 18px',
+        padding: '16px 18px',
         marginBottom: 48,
         width: '100%',
         maxWidth: 340,
         minHeight: 80,
         position: 'relative',
-        gap: 12,
+        gap: 18,
         overflow: 'visible'
       }}>
         <img src={require('../assets/welcome/cupcake3.png')} alt="cake" style={{ width: 80, height: 80, borderRadius: 16, filter: 'drop-shadow(0 0 0px #a86a3d) drop-shadow(0 0 8px #a86a3d) drop-shadow(0 0 18px #a86a3d) drop-shadow(0 0 32px #ffe0b3) drop-shadow(0 0 56px #fff0e0)', objectFit: 'cover' }} />
