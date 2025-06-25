@@ -399,37 +399,44 @@ export default function StoryQuiz({ onFinish }) {
         }}>
           <div style={{ fontWeight: 700, fontSize: 28, margin: '24px 0 12px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>{slide.title}</div>
           <div style={{
-            border: '2px solid #222',
-            borderRadius: 18,
-            background: '#fff',
-            boxShadow: 'none',
-            padding: '16px 18px',
-            marginBottom: 24,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 8, // уменьшено ещё для сдвига кексика влево
             width: '100%',
-            maxWidth: 340,
             minHeight: 80,
-            position: 'relative',
-            marginTop: 0,
-            overflow: 'visible',
-            zIndex: 2
+            boxSizing: 'border-box',
+            padding: 0,
+            display: 'flex',
+            justifyContent: 'center',
           }}>
-            <img src={require('../assets/welcome/cupcake2.png')} alt="cupcake"
-              className="cupcake-glow cupcake-glow-yellow"
-              style={{
-                width: 80,
-                height: 80,
-                objectFit: 'cover',
-                filter: 'drop-shadow(0 0 0px #ffb86a) drop-shadow(0 0 8px #ffb86a) drop-shadow(0 0 18px #ffb86a) drop-shadow(0 0 32px #ffe0b3) drop-shadow(0 0 56px #fff0e0)',
-                borderRadius: 16,
-                overflow: 'visible',
-                zIndex: 3
-              }}
-            />
-            <div style={{ fontSize: 14, color: '#222', lineHeight: 1.15, fontWeight: 500, marginLeft: 8, marginRight: 0, padding: 0, marginTop: 0, marginBottom: 0 }}>
-              Это поможет мне подготовить тренировку, наиболее соответствующую твоей возрастной группе.
+            <div style={{
+              border: '2px solid #222',
+              borderRadius: 18,
+              background: '#fff',
+              boxShadow: 'none',
+              padding: '16px 18px',
+              margin: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 18,
+              width: '100%',
+              maxWidth: 340,
+              minHeight: 80,
+              position: 'relative',
+              overflow: 'visible',
+              zIndex: 2
+            }}>
+              <img src={require('../assets/welcome/cupcake2.png')} alt="cupcake"
+                style={{
+                  width: 80,
+                  height: 80,
+                  objectFit: 'cover',
+                  filter: 'drop-shadow(0 0 0px #ffb86a) drop-shadow(0 0 8px #ffb86a) drop-shadow(0 0 18px #ffb86a) drop-shadow(0 0 32px #ffe0b3) drop-shadow(0 0 56px #fff0e0)',
+                  borderRadius: 16,
+                  overflow: 'visible',
+                  zIndex: 3
+                }}
+              />
+              <div style={{ fontSize: 14, color: '#222', lineHeight: 1.15, fontWeight: 500, marginLeft: 8, marginRight: 0, padding: 0, marginTop: 0, marginBottom: 0 }}>
+                Это поможет мне подготовить тренировку, наиболее соответствующую твоей возрастной группе.
+              </div>
             </div>
           </div>
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 32, background: 'none', boxShadow: 'none', border: 'none' }}>

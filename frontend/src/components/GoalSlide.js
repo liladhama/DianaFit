@@ -22,7 +22,7 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
       <div style={{ fontWeight: 700, fontSize: 28, margin: '48px 0 16px 0', textAlign: 'left', letterSpacing: 0, color: '#181818', width: 320, maxWidth: '96vw' }}>
         ТВОЯ ЦЕЛЬ
       </div>
-      <div style={{ maxWidth: 420, width: '100%', margin: '0 auto 48px auto', minHeight: 80, padding: '0 12px', boxSizing: 'border-box' }}>
+      <div style={{ maxWidth: 340, width: '100%', margin: '0 auto 48px auto', minHeight: 80, boxSizing: 'border-box' }}>
         <div style={{
           border: '2px solid #222',
           borderRadius: 18,
