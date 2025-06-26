@@ -36,6 +36,15 @@ export default function StoryQuiz({ onFinish }) {
     if (inputRef.current) inputRef.current.focus();
   }, [step]);
 
+  useEffect(() => {
+    if (slide?.type === 'finish') {
+      const timer = setTimeout(() => {
+        handleNext();
+      }, 2500);
+      return () => clearTimeout(timer);
+    }
+  }, [slide]);
+
   function handleNext() {
     if (!quizConfig) return;
     console.log('handleNext', { step, total, nextStep: step + 1 });
