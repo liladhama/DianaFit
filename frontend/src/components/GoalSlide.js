@@ -40,7 +40,6 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
             width: 80,
             height: 80,
             objectFit: 'cover',
-            filter: 'drop-shadow(0 0 0px #a97c50) drop-shadow(0 0 8px #a97c50) drop-shadow(0 0 18px #a97c50) drop-shadow(0 0 32px #e0c3a0) drop-shadow(0 0 56px #f5e6d3)',
             borderRadius: 16,
             overflow: 'visible',
             zIndex: 3,
