@@ -572,7 +572,7 @@ export default function StoryQuiz({ onFinish }) {
             loop
             muted
             playsInline
-            style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', objectFit: 'cover', zIndex: 1 }}
+            style={{ position: 'fixed', top: '-60px', left: 0, width: '100vw', height: 'calc(100vh + 60px)', objectFit: 'cover', zIndex: 1 }}
           />
         </div>
       );
