@@ -397,7 +397,7 @@ export default function StoryQuiz({ onFinish }) {
           padding: '32px 16px 16px 16px',
           position: 'relative'
         }}>
-          <div style={{ fontWeight: 700, fontSize: 28, margin: '24px 0 12px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>{slide.title}</div>
+          <div style={{ fontWeight: 700, fontSize: 28, margin: '8px 0 12px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>{slide.title}</div>
           <div style={{
             width: '100%',
             minHeight: 80,
@@ -405,6 +405,7 @@ export default function StoryQuiz({ onFinish }) {
             padding: 0,
             display: 'flex',
             justifyContent: 'center',
+            marginTop: 0
           }}>
             <div style={{
               border: '2px solid #222',
@@ -420,7 +421,7 @@ export default function StoryQuiz({ onFinish }) {
               maxWidth: 340,
               minHeight: 80,
               position: 'relative',
-              overflow: 'visible', // Исправлено: чтобы свечение не обрезалось
+              overflow: 'visible',
               zIndex: 2
             }}>
               <img src={require('../assets/welcome/cupcake2.png')} alt="cupcake"
@@ -439,10 +440,10 @@ export default function StoryQuiz({ onFinish }) {
               </div>
             </div>
           </div>
-          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 32, background: 'none', boxShadow: 'none', border: 'none' }}>
+          <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 32, background: 'none', boxShadow: 'none', border: 'none', marginTop: 48 }}>
             <WheelPicker value={value} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} min={minYear} max={maxYear} />
           </div>
-          <button className="quiz-btn age-btn" style={{ marginTop: 16, fontSize: 20, padding: '16px 0', borderRadius: 12, width: 320, maxWidth: '90vw', background: '#2196f3', color: '#fff', fontWeight: 700, boxShadow: '0 4px 16px 0 #2196f366', border: 'none' }} onClick={handleNext}>Следующий</button>
+          <button className="quiz-btn age-btn" style={{ marginTop: 48, fontSize: 20, padding: '16px 0', borderRadius: 12, width: 320, maxWidth: '90vw', background: '#2196f3', color: '#fff', fontWeight: 700, boxShadow: '0 4px 16px 0 #2196f366', border: 'none' }} onClick={handleNext}>Следующий</button>
         </div>
       );
     }
@@ -563,8 +564,18 @@ export default function StoryQuiz({ onFinish }) {
       );
     }
     if (slide.type === 'finish') {
-      setTimeout(handleNext, 500); // авто-завершение через 0.5 сек
-      return <div style={{textAlign: 'center', fontSize: 22, margin: 32}}>{slide.title}</div>;
+      return (
+        <div style={{ position: 'relative', width: '100vw', height: '100vh', overflow: 'hidden', background: '#fff' }}>
+          <video
+            src={require('../assets/quiz/diana-calc.webm')}
+            autoPlay
+            loop
+            muted
+            playsInline
+            style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', objectFit: 'cover', zIndex: 1 }}
+          />
+        </div>
+      );
     }
     if (slide.type === 'date-wheel') {
       // Колесо с вариантами: завтра, послезавтра, ближайшие 5 дней
@@ -585,11 +596,10 @@ export default function StoryQuiz({ onFinish }) {
             onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))}
             min={0}
             max={options.length - 1}
-            // Переопределяем years на массив дат
             years={options.map(o => o.value)}
             labels={options.map(o => o.label)}
           />
-          <button className="quiz-btn" style={{ marginTop: 32, fontSize: 20, padding: '14px 32px', borderRadius: 12 }} onClick={handleNext}>Дальше</button>
+          <button className="quiz-btn" style={{ marginTop: 32, fontSize: 20, padding: '14px 32px', borderRadius: 12, background: '#2196f3', color: '#fff', fontWeight: 700, boxShadow: '0 4px 16px 0 #2196f366', border: 'none', width: 320, maxWidth: '90vw' }} onClick={handleNext}>Рассчитать программу</button>
         </div>
       );
     }
@@ -608,6 +618,59 @@ export default function StoryQuiz({ onFinish }) {
           onSelect={v => setAnswers(a => ({ ...a, [slide.key]: v }))}
           onNext={handleNext}
         />
+      );
+    }
+    if (slide.key === 'diet_flags') {
+      // Кастомный слайд выбора типа питания
+      const options = [
+        { label: 'вегетарианство', value: 'vegetarian' },
+        { label: 'мясной', value: 'meat' },
+        { label: 'рыбный', value: 'fish' },
+        { label: 'веганство', value: 'vegan' },
+      ];
+      const value = answers[slide.key] || '';
+      return (
+        <div style={{
+          minHeight: '100vh',
+          width: '100vw',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'flex-start',
+          background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
+          boxSizing: 'border-box',
+          padding: '32px 16px 0 16px',
+        }}>
+          <div style={{ fontWeight: 700, fontSize: 28, margin: '32px 0 32px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>
+            ТВОЙ ТИП ПИТАНИЯ
+          </div>
+          <div style={{ width: '100%', maxWidth: 340, display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center', marginBottom: 24 }}>
+            {options.map(opt => (
+              <button
+                key={opt.value}
+                onClick={() => handleAnswer(slide.key, opt.value)}
+                style={{
+                  width: 210,
+                  height: 70,
+                  borderRadius: 35,
+                  border: 'none',
+                  fontWeight: 700,
+                  fontSize: 22,
+                  color: '#222',
+                  background: value === opt.value ? '#2563eb' : '#f6faff',
+                  boxShadow: '0 0 32px 12px #2196f344, 0 0 32px 24px #90caf944, 0 0 64px 32px #2196f344',
+                  transition: 'all 0.2s',
+                  outline: 'none',
+                  cursor: 'pointer',
+                  textTransform: 'none',
+                  letterSpacing: 0,
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
       );
     }
     return null;
