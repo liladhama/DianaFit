@@ -19,8 +19,8 @@ function App() {
 
   function handleQuizFinish(quizAnswers) {
     setAnswers(quizAnswers);
-    // Здесь можно добавить логику для получения programId
-    // setProgramId(...)
+    // Если в ответах есть programId, используем его, иначе заглушка
+    setProgramId(quizAnswers.programId || quizAnswers.id || 'demo-program');
   }
 
   return (
