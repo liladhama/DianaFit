@@ -420,7 +420,7 @@ export default function StoryQuiz({ onFinish }) {
               maxWidth: 340,
               minHeight: 80,
               position: 'relative',
-              overflow: 'visible',
+              overflow: 'visible', // Исправлено: чтобы свечение не обрезалось
               zIndex: 2
             }}>
               <img src={require('../assets/welcome/cupcake2.png')} alt="cupcake"

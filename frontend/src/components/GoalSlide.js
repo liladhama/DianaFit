@@ -17,12 +17,22 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
       justifyContent: 'flex-start',
       background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
       boxSizing: 'border-box',
-      padding: '0 0 32px 0',
+      padding: '48px 0 32px 0', // Было '0 0 32px 0', теперь сверху 48px
+      overflow: 'visible', // На всякий случай
     }}>
       <div style={{ fontWeight: 700, fontSize: 28, margin: '48px 0 16px 0', textAlign: 'left', letterSpacing: 0, color: '#181818', width: 320, maxWidth: '96vw' }}>
         ТВОЯ ЦЕЛЬ
       </div>
-      <div style={{ maxWidth: 340, width: '100%', margin: '0 auto 48px auto', minHeight: 80, boxSizing: 'border-box', position: 'relative', overflow: 'visible', zIndex: 2 }}>
+      <div style={{
+        maxWidth: 340,
+        width: '100%',
+        margin: '24px auto 48px auto', // Отступ сверху, чтобы не налезало на заголовок
+        minHeight: 100,
+        boxSizing: 'border-box',
+        position: 'relative',
+        overflow: 'visible',
+        zIndex: 2
+      }}>
         <div style={{
           border: '2px solid #222',
           borderRadius: 18,
@@ -31,12 +41,13 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
           padding: '16px 18px',
           marginBottom: 0,
           display: 'flex',
+          flexDirection: 'row', // Кекс слева, текст справа
           alignItems: 'center',
           gap: 18,
           width: '100%',
-          minHeight: 80,
+          minHeight: 100,
           position: 'relative',
-          overflow: 'visible', // Исправлено: чтобы свечение не обрезалось
+          overflow: 'visible',
           zIndex: 2,
           boxSizing: 'border-box',
         }}>
@@ -51,14 +62,11 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
               borderRadius: 16,
               overflow: 'visible',
               zIndex: 3,
-              marginLeft: 0,
-              marginRight: 0,
-              marginTop: 0,
-              marginBottom: 0,
+              margin: 0,
               pointerEvents: 'none',
             }}
           />
-          <div style={{ fontSize: 14, color: '#222', lineHeight: 1.15, fontWeight: 500, marginLeft: 8, marginRight: 0, padding: 0, marginTop: 0, marginBottom: 0 }}>
+          <div style={{ fontSize: 14, color: '#222', lineHeight: 1.15, fontWeight: 500, margin: 0, padding: 0, textAlign: 'left' }}>
             Плавное снижение веса — это безопасный путь и лучшая форма: улучшается самочувствие, снижается давление и риск диабета, уходит жир.
           </div>
         </div>
