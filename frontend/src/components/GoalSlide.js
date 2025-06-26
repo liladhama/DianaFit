@@ -26,46 +26,47 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
       <div style={{
         maxWidth: 340,
         width: '100%',
-        margin: '24px auto 48px auto', // Отступ сверху, чтобы не налезало на заголовок
+        margin: '24px auto 48px auto',
         minHeight: 100,
         boxSizing: 'border-box',
         position: 'relative',
         overflow: 'visible',
         zIndex: 2
       }}>
+        <img
+          src={require('../assets/welcome/cupcake3.png')}
+          alt="cake"
+          style={{
+            width: 80,
+            height: 80,
+            objectFit: 'cover',
+            filter: 'drop-shadow(0 0 0px #a97c50) drop-shadow(0 0 8px #a97c50) drop-shadow(0 0 18px #a97c50) drop-shadow(0 0 32px #e0c3a0) drop-shadow(0 0 56px #f5e6d3)',
+            borderRadius: 16,
+            overflow: 'visible',
+            zIndex: 3,
+            margin: 0,
+            pointerEvents: 'none',
+            position: 'absolute',
+            left: 18,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            background: 'transparent',
+          }}
+        />
         <div style={{
           border: '2px solid #222',
           borderRadius: 18,
           background: '#fff',
           boxShadow: 'none',
-          padding: '16px 18px',
+          padding: '16px 18px 16px 110px', // padding-left для текста справа от кекса
           marginBottom: 0,
-          display: 'flex',
-          flexDirection: 'row', // Кекс слева, текст справа
-          alignItems: 'center',
-          gap: 18,
-          width: '100%',
-          minHeight: 100,
+          display: 'block',
+          minHeight: 80,
           position: 'relative',
           overflow: 'visible',
           zIndex: 2,
           boxSizing: 'border-box',
         }}>
-          <img
-            src={require('../assets/welcome/cupcake3.png')}
-            alt="cake"
-            style={{
-              width: 80,
-              height: 80,
-              objectFit: 'cover',
-              filter: 'drop-shadow(0 0 0px #a97c50) drop-shadow(0 0 8px #a97c50) drop-shadow(0 0 18px #a97c50) drop-shadow(0 0 32px #e0c3a0) drop-shadow(0 0 56px #f5e6d3)',
-              borderRadius: 16,
-              overflow: 'visible',
-              zIndex: 3,
-              margin: 0,
-              pointerEvents: 'none',
-            }}
-          />
           <div style={{ fontSize: 14, color: '#222', lineHeight: 1.15, fontWeight: 500, margin: 0, padding: 0, textAlign: 'left' }}>
             Плавное снижение веса — это безопасный путь и лучшая форма: улучшается самочувствие, снижается давление и риск диабета, уходит жир.
           </div>
