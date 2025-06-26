@@ -47,18 +47,14 @@ function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100vw', background: '#fff' }}>
-      {/* Кнопка "Текущий день" в левом верхнем углу */}
-      <div style={{ position: 'fixed', top: 16, left: 16, zIndex: 100 }}>
-        <button onClick={() => setShowToday(true)} style={{ background: '#e0e7ff', border: 'none', borderRadius: 12, padding: '10px 18px', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 2px 8px #e0e7ff44' }}>
-          Текущий день
-        </button>
-      </div>
-      {/* Аватарка пользователя в правом верхнем углу */}
-      <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 100 }}>
-        <button onClick={() => setShowProfile(true)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
-          <img src={window.Telegram?.WebApp?.initDataUnsafe?.user?.photo_url || 'https://twa.netlify.app/ava.png'} alt="avatar" style={{ width: 44, height: 44, borderRadius: '50%', boxShadow: '0 2px 8px #e0e7ff44', objectFit: 'cover' }} />
-        </button>
-      </div>
+      {((answers && programId) || (showToday && todayDay)) && (
+        // Аватарка пользователя только на странице недели и текущего дня
+        <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 100 }}>
+          <button onClick={() => setShowProfile(true)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+            <img src={window.Telegram?.WebApp?.initDataUnsafe?.user?.photo_url || 'https://twa.netlify.app/ava.png'} alt="avatar" style={{ width: 44, height: 44, borderRadius: '50%', boxShadow: '0 2px 8px #e0e7ff44', objectFit: 'cover' }} />
+          </button>
+        </div>
+      )}
       {showSplash ? (
         <SplashScreen />
       ) : showProfile ? (
@@ -69,7 +65,15 @@ function App() {
           <button onClick={() => setShowToday(false)} style={{ marginTop: 32, padding: '12px 32px', borderRadius: 12, background: '#e0e7ff', border: 'none', fontWeight: 700, fontSize: 20, cursor: 'pointer' }}>Назад</button>
         </div>
       ) : answers && programId ? (
-        <WeekPlan programId={programId} />
+        <>
+          {/* Кнопка "Текущий день" только на странице недели */}
+          <div style={{ position: 'fixed', top: 16, left: 16, zIndex: 100 }}>
+            <button onClick={() => setShowToday(true)} style={{ background: '#e0e7ff', border: 'none', borderRadius: 12, padding: '10px 18px', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 2px 8px #e0e7ff44' }}>
+              Текущий день
+            </button>
+          </div>
+          <WeekPlan programId={programId} />
+        </>
       ) : (
         <StoryQuiz onFinish={handleQuizFinish} />
       )}
