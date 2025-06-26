@@ -22,7 +22,7 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
       <div style={{ fontWeight: 700, fontSize: 28, margin: '48px 0 16px 0', textAlign: 'left', letterSpacing: 0, color: '#181818', width: 320, maxWidth: '96vw' }}>
         ТВОЯ ЦЕЛЬ
       </div>
-      <div style={{ maxWidth: 340, width: '100%', margin: '0 auto 48px auto', minHeight: 80, boxSizing: 'border-box' }}>
+      <div style={{ maxWidth: 340, width: '100%', margin: '0 auto 48px auto', minHeight: 80, boxSizing: 'border-box', position: 'relative', overflow: 'visible', zIndex: 2 }}>
         <div style={{
           border: '2px solid #222',
           borderRadius: 18,
@@ -36,7 +36,7 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
           width: '100%',
           minHeight: 80,
           position: 'relative',
-          overflow: 'visible',
+          overflow: 'visible', // Исправлено: чтобы свечение не обрезалось
           zIndex: 2,
           boxSizing: 'border-box',
         }}>
@@ -51,6 +51,11 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
               borderRadius: 16,
               overflow: 'visible',
               zIndex: 3,
+              marginLeft: 0,
+              marginRight: 0,
+              marginTop: 0,
+              marginBottom: 0,
+              pointerEvents: 'none',
             }}
           />
           <div style={{ fontSize: 14, color: '#222', lineHeight: 1.15, fontWeight: 500, marginLeft: 8, marginRight: 0, padding: 0, marginTop: 0, marginBottom: 0 }}>
