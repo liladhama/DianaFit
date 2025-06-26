@@ -2,11 +2,33 @@ import React, { useEffect, useState } from 'react';
 import SplashScreen from './components/SplashScreen';
 import StoryQuiz from './components/StoryQuiz';
 import WeekPlan from './components/WeekPlan';
+import ProfilePage from './components/ProfilePage';
+import DayBlock from './components/DayBlock';
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [programId, setProgramId] = useState(null);
   const [answers, setAnswers] = useState(null);
+  const [showProfile, setShowProfile] = useState(false);
+  const [showToday, setShowToday] = useState(false);
+
+  // Получаем текущий день из мок-данных (если нет weekData)
+  let todayDay = null;
+  if (answers && programId) {
+    // Если есть реальные данные
+    // todayStr = '2024-06-03' и т.д.
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const days = (window.weekData && window.weekData.days) || [
+      { date: '2024-06-03', title: 'Понедельник', workout: { title: 'Тренировка 1', exercises: [{ name: 'Приседания', reps: 15 }, { name: 'Отжимания', reps: 10 }] }, meals: [{ type: 'Завтрак', menu: 'Овсянка' }, { type: 'Обед', menu: 'Курица с рисом' }], completed: false },
+      { date: '2024-06-04', title: 'Вторник', workout: { title: 'Тренировка 2', exercises: [{ name: 'Планка', reps: 60 }, { name: 'Выпады', reps: 12 }] }, meals: [{ type: 'Завтрак', menu: 'Яичница' }, { type: 'Обед', menu: 'Рыба с овощами' }], completed: false },
+      { date: '2024-06-05', title: 'Среда', workout: { title: 'Тренировка 3', exercises: [{ name: 'Скручивания', reps: 20 }, { name: 'Приседания', reps: 15 }] }, meals: [{ type: 'Завтрак', menu: 'Творог' }, { type: 'Обед', menu: 'Гречка с курицей' }], completed: false },
+      { date: '2024-06-06', title: 'Четверг', workout: { title: 'Тренировка 4', exercises: [{ name: 'Выпады', reps: 12 }, { name: 'Планка', reps: 60 }] }, meals: [{ type: 'Завтрак', menu: 'Омлет' }, { type: 'Обед', menu: 'Говядина с овощами' }], completed: false },
+      { date: '2024-06-07', title: 'Пятница', workout: { title: 'Тренировка 5', exercises: [{ name: 'Отжимания', reps: 10 }, { name: 'Скручивания', reps: 20 }] }, meals: [{ type: 'Завтрак', menu: 'Гречка' }, { type: 'Обед', menu: 'Рыба с картофелем' }], completed: false },
+      { date: '2024-06-08', title: 'Суббота', workout: { title: 'Тренировка 6', exercises: [{ name: 'Приседания', reps: 15 }, { name: 'Планка', reps: 60 }] }, meals: [{ type: 'Завтрак', menu: 'Овсянка' }, { type: 'Обед', menu: 'Курица с овощами' }], completed: false },
+      { date: '2024-06-09', title: 'Воскресенье', workout: { title: 'Отдых', exercises: [] }, meals: [{ type: 'Завтрак', menu: 'Фрукты' }, { type: 'Обед', menu: 'Салат' }], completed: false },
+    ];
+    todayDay = days.find(d => d.date === todayStr) || days[0];
+  }
 
   useEffect(() => {
     // Автоматическое расширение окна Telegram WebApp
@@ -25,12 +47,31 @@ function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100vw', background: '#fff' }}>
+      {/* Кнопка "Текущий день" в левом верхнем углу */}
+      <div style={{ position: 'fixed', top: 16, left: 16, zIndex: 100 }}>
+        <button onClick={() => setShowToday(true)} style={{ background: '#e0e7ff', border: 'none', borderRadius: 12, padding: '10px 18px', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 2px 8px #e0e7ff44' }}>
+          Текущий день
+        </button>
+      </div>
+      {/* Аватарка пользователя в правом верхнем углу */}
+      <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 100 }}>
+        <button onClick={() => setShowProfile(true)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
+          <img src={window.Telegram?.WebApp?.initDataUnsafe?.user?.photo_url || 'https://twa.netlify.app/ava.png'} alt="avatar" style={{ width: 44, height: 44, borderRadius: '50%', boxShadow: '0 2px 8px #e0e7ff44', objectFit: 'cover' }} />
+        </button>
+      </div>
       {showSplash ? (
         <SplashScreen />
-      ) : !programId ? (
-        <StoryQuiz onFinish={handleQuizFinish} />
-      ) : (
+      ) : showProfile ? (
+        <ProfilePage onClose={() => setShowProfile(false)} />
+      ) : showToday && todayDay ? (
+        <div style={{ width: '100vw', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+          <DayBlock day={todayDay} onToggle={() => setShowToday(false)} />
+          <button onClick={() => setShowToday(false)} style={{ marginTop: 32, padding: '12px 32px', borderRadius: 12, background: '#e0e7ff', border: 'none', fontWeight: 700, fontSize: 20, cursor: 'pointer' }}>Назад</button>
+        </div>
+      ) : answers && programId ? (
         <WeekPlan programId={programId} />
+      ) : (
+        <StoryQuiz onFinish={handleQuizFinish} />
       )}
     </div>
   );
