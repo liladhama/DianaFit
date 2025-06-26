@@ -30,7 +30,24 @@ export default function WeekPlan({ programId, week = 1 }) {
     // TODO: отправить на backend отметку о выполнении
   }
 
-  if (!weekData) return <div>Загрузка недели…</div>;
+  if (!weekData || !weekData.days) {
+    // Мок-данные для теста UI
+    const mockDays = [
+      { date: '2024-06-01', title: 'Понедельник', workout: { title: 'Тренировка 1', exercises: [{ name: 'Приседания', reps: 15 }, { name: 'Отжимания', reps: 10 }] }, meals: [{ type: 'Завтрак', menu: 'Овсянка' }, { type: 'Обед', menu: 'Курица с рисом' }], completed: false },
+      { date: '2024-06-02', title: 'Вторник', workout: { title: 'Тренировка 2', exercises: [{ name: 'Планка', reps: 60 }, { name: 'Выпады', reps: 12 }] }, meals: [{ type: 'Завтрак', menu: 'Яичница' }, { type: 'Обед', menu: 'Рыба с овощами' }], completed: false },
+    ];
+    return <div style={{padding: 24}}>
+      <h2>Тестовая неделя</h2>
+      {mockDays.map(day => <div key={day.date} style={{marginBottom: 16}}>
+        <b>{day.title} ({day.date})</b><br/>
+        Тренировка: {day.workout.title}<br/>
+        <ul>{day.workout.exercises.map((ex, i) => <li key={i}>{ex.name} — {ex.reps} раз</li>)}</ul>
+        Меню:<br/>
+        <ul>{day.meals.map((meal, i) => <li key={i}><b>{meal.type}:</b> {meal.menu}</li>)}</ul>
+      </div>)}
+      <div style={{color:'#888',marginTop:24}}>Это заглушка. Для реального ИИ будет подключён backend.</div>
+    </div>;
+  }
 
   // Определяем текущий день (по дате)
   const todayStr = new Date().toISOString().slice(0, 10);
