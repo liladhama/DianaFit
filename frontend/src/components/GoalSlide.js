@@ -17,7 +17,7 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
       justifyContent: 'flex-start',
       background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
       boxSizing: 'border-box',
-      padding: '48px 0 32px 0', // Было '0 0 32px 0', теперь сверху 48px
+      padding: '16px 0 32px 0', // уменьшил верхний паддинг, чтобы элементы были выше
       overflow: 'visible', // На всякий случай
     }}>
       <div style={{ fontWeight: 700, fontSize: 28, margin: '48px 0 16px 0', textAlign: 'left', letterSpacing: 0, color: '#181818', width: 320, maxWidth: '96vw' }}>
