@@ -395,64 +395,46 @@ export default function StoryQuiz({ onFinish }) {
       const maxYear = currentYear - 14;
       const value = answers[slide.key] ?? (currentYear - 25);
       return (
-        <div style={{
-          minHeight: '100vh',
-          width: '100vw',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
-          boxSizing: 'border-box',
-          padding: '32px 16px 16px 16px',
-          position: 'relative'
-        }}>
-          <div style={{ fontWeight: 700, fontSize: 28, margin: '8px 0 12px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>{slide.title}</div>
+        <div style={{ minHeight: '100vh', width: '100vw', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)', boxSizing: 'border-box', padding: '32px 16px 16px 16px', position: 'relative' }}>
+          <div style={{ fontWeight: 700, fontSize: 28, margin: '48px 0 24px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>{slide.title}</div>
           <div style={{
-            width: '100%',
-            minHeight: 80,
-            boxSizing: 'border-box',
-            padding: 0,
+            border: '2px solid #222',
+            borderRadius: 18,
+            background: '#fff',
+            boxShadow: 'none',
+            padding: '16px 18px',
+            margin: 0,
             display: 'flex',
-            justifyContent: 'center',
-            marginTop: 0
+            alignItems: 'center',
+            gap: 18,
+            width: '100%',
+            maxWidth: 340,
+            minHeight: 80,
+            position: 'relative',
+            overflow: 'visible',
+            zIndex: 2
           }}>
-            <div style={{
-              border: '2px solid #222',
-              borderRadius: 18,
-              background: '#fff',
-              boxShadow: 'none',
-              padding: '16px 18px',
-              margin: 0,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 18,
-              width: '100%',
-              maxWidth: 340,
-              minHeight: 80,
-              position: 'relative',
-              overflow: 'visible',
-              zIndex: 2
-            }}>
-              <img src={require('../assets/welcome/cupcake2.png')} alt="cupcake"
-                style={{
-                  width: 80,
-                  height: 80,
-                  objectFit: 'cover',
-                  filter: 'drop-shadow(0 0 0px #ffb86a) drop-shadow(0 0 8px #ffb86a) drop-shadow(0 0 18px #ffb86a) drop-shadow(0 0 32px #ffe0b3) drop-shadow(0 0 56px #fff0e0)',
-                  borderRadius: 16,
-                  overflow: 'visible',
-                  zIndex: 3
-                }}
-              />
-              <div style={{ fontSize: 14, color: '#222', lineHeight: 1.15, fontWeight: 500, marginLeft: 8, marginRight: 0, padding: 0, marginTop: 0, marginBottom: 0 }}>
-                Это поможет мне подготовить тренировку, наиболее соответствующую твоей возрастной группе.
-              </div>
+            <img src={require('../assets/welcome/cupcake2.png')} alt="cupcake"
+              style={{
+                width: 80,
+                height: 80,
+                objectFit: 'cover',
+                filter: 'drop-shadow(0 0 0px #ffb86a) drop-shadow(0 0 8px #ffb86a) drop-shadow(0 0 18px #ffb86a) drop-shadow(0 0 32px #ffe0b3) drop-shadow(0 0 56px #fff0e0)',
+                borderRadius: 16,
+                overflow: 'visible',
+                zIndex: 3,
+                background: 'transparent',
+                flexShrink: 0
+              }}
+            />
+            <div style={{ fontSize: 14, color: '#222', lineHeight: 1.15, fontWeight: 500, marginLeft: 8, marginRight: 0, padding: 0, marginTop: 0, marginBottom: 0 }}>
+              Это поможет мне подготовить тренировку, наиболее соответствующую твоей возрастной группе.
             </div>
           </div>
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 32, background: 'none', boxShadow: 'none', border: 'none', marginTop: 48 }}>
             <WheelPicker value={value} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} min={minYear} max={maxYear} />
           </div>
-          <button className="quiz-btn age-btn" style={{ marginTop: 48, fontSize: 20, padding: '16px 0', borderRadius: 12, width: 320, maxWidth: '90vw', background: '#2196f3', color: '#fff', fontWeight: 700, boxShadow: '0 4px 16px 0 #2196f366', border: 'none' }} onClick={handleNext}>Следующий</button>
+          <button className="quiz-btn age-btn" style={{ marginTop: 0, fontSize: 20, padding: '16px 0', borderRadius: 12, width: 320, maxWidth: '90vw', background: '#2196f3', color: '#fff', fontWeight: 700, boxShadow: '0 4px 16px 0 #2196f366', border: 'none' }} onClick={handleNext}>Следующий</button>
         </div>
       );
     }
