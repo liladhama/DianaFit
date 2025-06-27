@@ -106,19 +106,19 @@ export default function StoryQuiz({ onFinish }) {
               ГДЕ БУДЕШЬ<br />ТРЕНИРОВАТЬСЯ
             </div>
             <div style={{
-              border: '2px solid #b3c6e0',
-              borderRadius: 24,
-              background: '#fff',
-              boxShadow: '0 4px 32px 0 #b6d6ff44',
-              padding: '16px 20px',
-              marginBottom: 48,
+              width: '100%',
               display: 'flex',
               alignItems: 'center',
-              gap: 4,
-              width: '100%',
-              maxWidth: 300,
+              marginBottom: 16,
+              border: '2px solid rgb(34, 34, 34)',
+              borderRadius: 24,
+              background: 'rgb(255, 255, 255)',
+              boxShadow: '0px 4px 32px 0px rgba(182, 214, 255, 0.267)',
+              padding: '12px 15px',
               minHeight: 80,
-              height: 80
+              position: 'relative',
+              gap: 18,
+              maxWidth: 341,
             }}>
               <img src={require('../assets/quiz/dumbbell.png')} alt="dumbbell" style={{ width: 88, height: 88, borderRadius: 16, objectFit: 'cover', marginRight: 4 }} />
               <div style={{ fontSize: 13, color: '#7a7a7a', lineHeight: 1.3, fontWeight: 500 }}>
@@ -244,8 +244,47 @@ export default function StoryQuiz({ onFinish }) {
           background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
         }}>
           <div style={{ marginTop: 48, width: 340, maxWidth: '96vw', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ fontWeight: 700, fontSize: 28, textAlign: 'left', marginBottom: 48, textTransform: 'uppercase', letterSpacing: 0, color: '#181818', alignSelf: 'flex-start', lineHeight: 1.05 }}>
+            <div style={{ fontWeight: 700, fontSize: 28, textAlign: 'left', marginBottom: 24, textTransform: 'uppercase', letterSpacing: 0, color: '#181818', alignSelf: 'flex-start', lineHeight: 1.05 }}>
               ТВОЯ БЫТОВАЯ<br />АКТИВНОСТЬ
+            </div>
+            <div style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              marginBottom: 16,
+              border: '2px solid rgb(34, 34, 34)',
+              borderRadius: 24,
+              background: 'rgb(255, 255, 255)',
+              boxShadow: '0px 4px 32px 0px rgba(182, 214, 255, 0.267)',
+              padding: '12px 15px',
+              minHeight: 80,
+              position: 'relative',
+              gap: 18,
+              maxWidth: 341,
+            }}>
+              <img
+                src={require('../assets/quiz/heart.png')}
+                alt="heart"
+                style={{
+                  width: 78,
+                  height: 61,
+                  borderRadius: 22,
+                  objectFit: 'cover',
+                  background: 'transparent',
+                  marginRight: -11,
+                }}
+              />
+              <div style={{
+                fontSize: 15,
+                color: '#222',
+                fontWeight: 500,
+                flex: 1,
+                wordBreak: 'break-word',
+                whiteSpace: 'normal',
+                lineHeight: 1.2,
+              }}>
+                Уровень твоей бытовой активности важен для понимания, сколько энергии ты тратишь в течение дня. Это поможет мне точнее программу тренировок.
+              </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 28, width: '100%', marginTop: 0 }}>
               {options.map(opt => {
@@ -335,11 +374,29 @@ export default function StoryQuiz({ onFinish }) {
               maxWidth: 340,
               minHeight: 80,
               position: 'relative',
-              overflow: 'visible', // Исправлено: чтобы свечение не обрезалось
-              zIndex: 2 // Исправлено: чтобы свечение было поверх
+              overflow: 'visible', // чтобы свечение не обрезалось
+              zIndex: 2 // чтобы свечение было поверх
             }}>
-              <img src={require('../assets/welcome/cupcake.png')} alt="cupcake" style={{ width: 80, height: 80, objectFit: 'cover', filter: 'drop-shadow(0 0 0px #ff6a6a) drop-shadow(0 0 8px #ff6a6a) drop-shadow(0 0 18px #ff6a6a) drop-shadow(0 0 32px #ffb3b3) drop-shadow(0 0 56px #ffe0e0)', borderRadius: 16, overflow: 'visible', zIndex: 3 }} />
-              <div style={{ fontSize: 14, color: '#222', lineHeight: 1.15, fontWeight: 500, marginLeft: 8, marginRight: 0, padding: 0, marginTop: 0, marginBottom: 0 }}>
+              <img src={require('../assets/welcome/cupcake.png')} alt="cupcake" style={{
+                width: 80,
+                height: 80,
+                objectFit: 'cover',
+                filter: 'drop-shadow(0 0 0px #ff6a6a) drop-shadow(0 0 8px #ff6a6a) drop-shadow(0 0 18px #ff6a6a) drop-shadow(0 0 32px #ffb3b3) drop-shadow(0 0 56px #ffe0e0)',
+                borderRadius: 16,
+                overflow: 'visible',
+                zIndex: 3
+              }} />
+              <div style={{
+                fontSize: 14,
+                color: '#222',
+                lineHeight: 1.15,
+                fontWeight: 500,
+                marginLeft: 8,
+                marginRight: 0,
+                padding: 0,
+                marginTop: 0,
+                marginBottom: 0
+              }}>
                 это поможет мне подобрать нагрузку и упражнения, которые наилучшим образом учитывают физиологические особенности твоего организма.
               </div>
             </div>
@@ -359,7 +416,6 @@ export default function StoryQuiz({ onFinish }) {
                       transition: 'all 0.18s',
                       cursor: 'pointer',
                       outline: 'none',
-                      // Только для НЕвыбранной кнопки задаём цвет, бордер и фон
                       ...(isSelected ? {} : {
                         background: '#fff',
                         border: '2.5px solid #eaf4ff',
@@ -629,19 +685,60 @@ export default function StoryQuiz({ onFinish }) {
       ];
       const value = answers[slide.key] || '';
       return (
-        <div style={{
-          minHeight: '100vh',
-          width: '100vw',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'flex-start',
-          background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
-          boxSizing: 'border-box',
-          padding: '32px 16px 0 16px',
-        }}>
-          <div style={{ fontWeight: 700, fontSize: 28, margin: '32px 0 32px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>
+        <div
+          style={{
+            minHeight: '100vh',
+            width: '100vw',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'flex-start',
+            background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
+            boxSizing: 'border-box',
+            padding: '8px 16px 0 16px',
+          }}
+        >
+          <div style={{ fontWeight: 700, fontSize: 28, margin: '8px 0 16px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>
             ТВОЙ ТИП ПИТАНИЯ
+          </div>
+          <div style={{
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            marginBottom: 16,
+            border: '2px solid rgb(34, 34, 34)',
+            borderRadius: 24,
+            background: 'rgb(255, 255, 255)',
+            boxShadow: '0px 4px 32px 0px rgba(182, 214, 255, 0.267)',
+            padding: '7px 7px',
+            minHeight: 80,
+            position: 'relative',
+            gap: 18,
+            maxWidth: 341,
+          }}>
+            <img
+              src={require('../assets/quiz/cupcake.png')}
+              alt="cupcake"
+              style={{
+                width: 95,
+                height: 78,
+                borderRadius: 23,
+                objectFit: 'cover',
+                background: 'transparent',
+                marginRight: -20,
+              }}
+            />
+            <div style={{
+              fontSize: 15,
+              color: '#222',
+              fontWeight: 500,
+              flex: 1,
+              wordBreak: 'break-word',
+              whiteSpace: 'normal',
+              lineHeight: 1.2,
+            }}>
+              Тип питания помогает понять твои привычки и предпочтения в еде. Зная это, я смогу составить программу, которая будет не только эффективной, но и комфортной для тебя.
+            </div>
           </div>
           <div style={{ width: '100%', maxWidth: 340, display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center', marginBottom: 24 }}>
             {options.map(opt => (
@@ -678,7 +775,7 @@ export default function StoryQuiz({ onFinish }) {
   if (!quizConfig) return <div>Загрузка...</div>;
 
   return (
-    <div style={{ width: '100vw', minWidth: '100vw', maxWidth: '100vw', minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)', boxSizing: 'border-box', padding: '32px 16px 0 16px', margin: 0, overflowX: 'hidden' }}>
+    <div style={{ width: '100vw', minWidth: '100vw', maxWidth: '100vw', minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)', boxSizing: 'border-box', padding: '8px 16px 0 16px', margin: 0, overflowX: 'hidden' }}>
       <ProgressBar current={step + 1} total={total} />
       {renderDots()}
       {renderControl({ inputRef })}
