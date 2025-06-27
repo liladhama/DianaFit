@@ -395,17 +395,25 @@ export default function StoryQuiz({ onFinish }) {
       const maxYear = currentYear - 14;
       const value = answers[slide.key] ?? (currentYear - 25);
       return (
-        <div style={{
-          minHeight: '100vh',
-          width: '100vw',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
-          boxSizing: 'border-box',
-          padding: '32px 16px 16px 16px',
-          position: 'relative'
-        }}>
+        <div style={{ minHeight: '100vh', width: '100vw', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)', boxSizing: 'border-box', padding: '32px 16px 16px 16px', position: 'relative' }}>
+          {/* Дублирующий кексик абсолютно поверх всего приложения */}
+          <img
+            src={require('../assets/welcome/cupcake2.png')}
+            alt="cupcake-duplicate"
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: 102,
+              transform: 'translateX(-157px)',
+              width: 80,
+              height: 80,
+              objectFit: 'cover',
+              filter: 'drop-shadow(0 0 0px #ffb86a) drop-shadow(0 0 8px #ffb86a) drop-shadow(0 0 18px #ffb86a) drop-shadow(0 0 32px #ffe0b3) drop-shadow(0 0 56px #fff0e0)',
+              borderRadius: 16,
+              zIndex: 1000,
+              pointerEvents: 'none',
+            }}
+          />
           <div style={{ fontWeight: 700, fontSize: 28, margin: '8px 0 12px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>{slide.title}</div>
           <div style={{
             width: '100%',
