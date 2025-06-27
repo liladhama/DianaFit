@@ -4,6 +4,7 @@ import StoryQuiz from './components/StoryQuiz';
 import WeekPlan from './components/WeekPlan';
 import ProfilePage from './components/ProfilePage';
 import DayBlock from './components/DayBlock';
+import TodayBlock from './components/TodayBlock';
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -11,14 +12,13 @@ function App() {
   const [answers, setAnswers] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showToday, setShowToday] = useState(false);
+  const [unlocked, setUnlocked] = useState(false);
 
   // Получаем текущий день из мок-данных (если нет weekData)
   let todayDay = null;
   if (answers && programId) {
-    // Если есть реальные данные
-    // todayStr = '2024-06-03' и т.д.
-    const todayStr = new Date().toISOString().slice(0, 10);
-    const days = (window.weekData && window.weekData.days) || [
+    // Мок-данные на неделю
+    const days = [
       { date: '2024-06-03', title: 'Понедельник', workout: { title: 'Тренировка 1', exercises: [{ name: 'Приседания', reps: 15 }, { name: 'Отжимания', reps: 10 }] }, meals: [{ type: 'Завтрак', menu: 'Овсянка' }, { type: 'Обед', menu: 'Курица с рисом' }], completed: false },
       { date: '2024-06-04', title: 'Вторник', workout: { title: 'Тренировка 2', exercises: [{ name: 'Планка', reps: 60 }, { name: 'Выпады', reps: 12 }] }, meals: [{ type: 'Завтрак', menu: 'Яичница' }, { type: 'Обед', menu: 'Рыба с овощами' }], completed: false },
       { date: '2024-06-05', title: 'Среда', workout: { title: 'Тренировка 3', exercises: [{ name: 'Скручивания', reps: 20 }, { name: 'Приседания', reps: 15 }] }, meals: [{ type: 'Завтрак', menu: 'Творог' }, { type: 'Обед', menu: 'Гречка с курицей' }], completed: false },
@@ -27,6 +27,7 @@ function App() {
       { date: '2024-06-08', title: 'Суббота', workout: { title: 'Тренировка 6', exercises: [{ name: 'Приседания', reps: 15 }, { name: 'Планка', reps: 60 }] }, meals: [{ type: 'Завтрак', menu: 'Овсянка' }, { type: 'Обед', menu: 'Курица с овощами' }], completed: false },
       { date: '2024-06-09', title: 'Воскресенье', workout: { title: 'Отдых', exercises: [] }, meals: [{ type: 'Завтрак', menu: 'Фрукты' }, { type: 'Обед', menu: 'Салат' }], completed: false },
     ];
+    const todayStr = new Date().toISOString().slice(0, 10);
     todayDay = days.find(d => d.date === todayStr) || days[0];
   }
 
@@ -58,22 +59,17 @@ function App() {
       {showSplash ? (
         <SplashScreen />
       ) : showProfile ? (
-        <ProfilePage onClose={() => setShowProfile(false)} />
-      ) : showToday && todayDay ? (
-        <div style={{ width: '100vw', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
-          <DayBlock day={todayDay} onToggle={() => setShowToday(false)} />
-          <button onClick={() => setShowToday(false)} style={{ marginTop: 32, padding: '12px 32px', borderRadius: 12, background: '#e0e7ff', border: 'none', fontWeight: 700, fontSize: 20, cursor: 'pointer' }}>Назад</button>
-        </div>
-      ) : answers && programId ? (
-        <>
-          {/* Кнопка "Текущий день" только на странице недели */}
-          <div style={{ position: 'fixed', top: 16, left: 16, zIndex: 100 }}>
-            <button onClick={() => setShowToday(true)} style={{ background: '#e0e7ff', border: 'none', borderRadius: 12, padding: '10px 18px', fontWeight: 700, fontSize: 18, cursor: 'pointer', boxShadow: '0 2px 8px #e0e7ff44' }}>
-              Текущий день
-            </button>
-          </div>
-          <WeekPlan programId={programId} />
-        </>
+        <ProfilePage
+          onClose={() => setShowProfile(false)}
+          unlocked={unlocked}
+          answers={answers}
+          onEditQuiz={() => { setShowProfile(false); setShowToday(false); }}
+          onRestart={() => { setAnswers(null); setProgramId(null); setShowProfile(false); setShowToday(false); setUnlocked(false); }}
+        />
+      ) : (answers && programId && todayDay && !showToday) ? (
+        <TodayBlock day={todayDay} onBackToWeek={() => setShowToday(true)} />
+      ) : showToday && answers && programId ? (
+        <WeekPlan programId={programId} unlocked={unlocked} setUnlocked={setUnlocked} />
       ) : (
         <StoryQuiz onFinish={handleQuizFinish} />
       )}

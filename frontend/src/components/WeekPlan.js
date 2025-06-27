@@ -4,7 +4,7 @@ import TodayBlock from './TodayBlock';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dianafit.onrender.com';
 
-export default function WeekPlan({ programId, week = 1 }) {
+export default function WeekPlan({ programId, week = 1, unlocked = false, setUnlocked }) {
   useEffect(() => {
     console.log('WeekPlan mounted', programId);
   }, []);
@@ -12,6 +12,7 @@ export default function WeekPlan({ programId, week = 1 }) {
   const [weekData, setWeekData] = useState(null);
   const [weekStats, setWeekStats] = useState(null);
   const [mode, setMode] = useState('week'); // 'week' | 'today'
+  const [showPayment, setShowPayment] = useState(false);
 
   useEffect(() => {
     fetch(`${API_URL}/api/program/week?programId=${programId}&week=${week}`)
@@ -41,14 +42,36 @@ export default function WeekPlan({ programId, week = 1 }) {
       { date: '2024-06-08', title: 'Суббота', workout: { title: 'Тренировка 6', exercises: [{ name: 'Приседания', reps: 15 }, { name: 'Планка', reps: 60 }] }, meals: [{ type: 'Завтрак', menu: 'Овсянка' }, { type: 'Обед', menu: 'Курица с овощами' }], completed: false },
       { date: '2024-06-09', title: 'Воскресенье', workout: { title: 'Отдых', exercises: [] }, meals: [{ type: 'Завтрак', menu: 'Фрукты' }, { type: 'Обед', menu: 'Салат' }], completed: false },
     ];
+    const daysToShow = unlocked ? mockDays.map(d => ({ ...d })) : mockDays;
+    if (mode === 'today') {
+      return <TodayBlock day={mockDays[0]} onBackToWeek={() => setMode('week')} />;
+    }
     return <div style={{padding: 24}}>
       <div style={{marginTop: 48}}>
         <h2>Тестовая неделя</h2>
-        {mockDays.map(day => (
-          <DayBlock key={day.date} day={day} onToggle={() => {}} />
+        {daysToShow.map((day, i) => (
+          <DayBlock key={day.date} day={day} openable={unlocked ? true : i < 3} locked={unlocked ? false : i >= 3} />
         ))}
+        {!unlocked && (
+          <button
+            style={{ fontSize: 20, padding: '16px 40px', borderRadius: 12, background: '#2196f3', color: '#fff', border: 'none', fontWeight: 700, marginTop: 32 }}
+            onClick={() => setShowPayment(true)}
+          >Открыть доступ ко всем дням</button>
+        )}
+        <button
+          style={{ position: 'fixed', top: 24, left: 24, zIndex: 100, fontSize: 18, padding: '12px 32px', borderRadius: 12, background: '#e0e7ff', color: '#222', border: 'none', fontWeight: 700 }}
+          onClick={() => setMode('today')}
+        >Текущий день</button>
       </div>
       <div style={{color:'#888',marginTop:24}}>Это заглушка. Для реального ИИ будет подключён backend.</div>
+      {showPayment && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: '#fff', zIndex: 1000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <h2>Открыть доступ ко всем дням</h2>
+          <p>Оформите подписку, чтобы получить доступ к полной программе на месяц.</p>
+          <button style={{ fontSize: 22, padding: '16px 40px', borderRadius: 12, background: '#2196f3', color: '#fff', border: 'none', fontWeight: 700, marginTop: 32 }} onClick={() => { setUnlocked(true); setShowPayment(false); }}>Оплатить 499 ₽</button>
+          <button style={{ marginTop: 24, fontSize: 18, color: '#2196f3', background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer' }} onClick={() => setShowPayment(false)}>Назад</button>
+        </div>
+      )}
     </div>;
   }
 
@@ -61,6 +84,17 @@ export default function WeekPlan({ programId, week = 1 }) {
     return (
       <div style={{ width: '100vw', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#fff' }}>
         <TodayBlock day={todayWithProgramId} onBackToWeek={() => setMode('week')} />
+      </div>
+    );
+  }
+
+  if (showPayment) {
+    return (
+      <div style={{ width: '100vw', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#fff' }}>
+        <h2>Открыть доступ ко всем дням</h2>
+        <p>Оформите подписку, чтобы получить доступ к полной программе на месяц.</p>
+        <button style={{ fontSize: 22, padding: '16px 40px', borderRadius: 12, background: '#2196f3', color: '#fff', border: 'none', fontWeight: 700, marginTop: 32 }} onClick={() => alert('Заглушка оплаты!')}>Оплатить 499 ₽</button>
+        <button style={{ marginTop: 24, fontSize: 18, color: '#2196f3', background: 'none', border: 'none', textDecoration: 'underline', cursor: 'pointer' }} onClick={() => setShowPayment(false)}>Назад</button>
       </div>
     );
   }
@@ -92,9 +126,22 @@ export default function WeekPlan({ programId, week = 1 }) {
         </div>
       )}
       <h2 style={{ textAlign: 'center', marginBottom: 24 }}>Неделя с {weekData.weekStart}</h2>
-      {weekData.days.map(day => (
-        <DayBlock key={day.date} day={day} onToggle={handleToggle} />
+      {weekData.days.map((day, i) => (
+        <DayBlock
+          key={day.date}
+          day={day}
+          openable={i < 3}
+          locked={i >= 3}
+        />
       ))}
+      <button
+        style={{ fontSize: 20, padding: '16px 40px', borderRadius: 12, background: '#2196f3', color: '#fff', border: 'none', fontWeight: 700, marginTop: 32 }}
+        onClick={() => setShowPayment(true)}
+      >Открыть доступ ко всем дням</button>
+      <button
+        style={{ position: 'fixed', top: 24, left: 24, zIndex: 100, fontSize: 18, padding: '12px 32px', borderRadius: 12, background: '#e0e7ff', color: '#222', border: 'none', fontWeight: 700 }}
+        onClick={() => setMode('today')}
+      >Текущий день</button>
     </div>
   );
 }
