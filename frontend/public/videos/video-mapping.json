@@ -1,0 +1,104 @@
+{
+  "gym": {
+    "day1_glutes_hamstrings": {
+      "title": "День 1 | Силовая: ягодицы, бицепс бедра",
+      "exercises": [
+        "glute_bridge_smith_machine",
+        "cable_kickback",
+        "good_morning",
+        "seated_leg_abduction_dropset",
+        "seated_leg_adduction"
+      ]
+    },
+    "day2_shoulders_triceps_abs": {
+      "title": "День 2 | Плечи, трицепс, пресс",
+      "exercises": [
+        "arnold_press_dropset",
+        "cable_upright_row_lateral_raise_superset",
+        "horizontal_cable_chest_pull",
+        "dumbbell_lateral_raises_dropset",
+        "lying_tricep_extension_plate",
+        "prayer_exercise"
+      ]
+    },
+    "day3_back_biceps": {
+      "title": "День 3 | Спина, бицепс",
+      "exercises": [
+        "assisted_pullups_wide_grip",
+        "horizontal_row",
+        "single_arm_dumbbell_row",
+        "vertical_pulldown",
+        "reverse_grip_dumbbell_curls",
+        "hanging_leg_raises"
+      ]
+    },
+    "day4_glutes_quads_calves": {
+      "title": "День 4 | Ягодицы, квадрицепс, икры",
+      "exercises": [
+        "seated_leg_extension_dropset",
+        "smith_machine_lunges",
+        "front_squat",
+        "cable_side_leg_raise",
+        "seated_leg_abduction_glute_hyperextension_superset",
+        "seated_calf_raises"
+      ]
+    }
+  },
+  "home": {
+    "day1_cardio_circuit": {
+      "title": "День 1 | К (вт) — 5 кругов, отдых 1 мин",
+      "exercises": [
+        "squats_with_steps_forward_backward",
+        "reverse_plank_knee_raise",
+        "shoulder_stand",
+        "lazy_burpees_with_squat",
+        "cross_lunges"
+      ]
+    },
+    "day2_functional_circuit": {
+      "title": "День 2 | Ф (нп) — 5 кругов",
+      "exercises": [
+        "squats_with_leg_curl_back",
+        "plank_leg_kickback",
+        "squat_jump_to_plank",
+        "boat_pose_leg_raises",
+        "high_knees_running",
+        "step_ups_with_leg_swing"
+      ]
+    },
+    "day3_tabata": {
+      "title": "День 3 | T — 20 с работа / 10 с отдых, 6 кругов",
+      "exercises": [
+        "jumping_jacks",
+        "squat_reverse_lunge_combo",
+        "seated_book_crunches",
+        "plank_up_down_shoulder_tap",
+        "side_lunge_leg_raise",
+        "diagonal_toe_touch_corner",
+        "knee_to_stand_jump"
+      ]
+    },
+    "day4_hiit": {
+      "title": "День 4 | HIIT (вт) — 40 с работа / 20 с отдых",
+      "exercises": [
+        "stand_to_plank_walkout",
+        "lying_crunches",
+        "squat_good_morning_combo",
+        "plank_jumping_jacks",
+        "pushup_leg_kickback",
+        "sumo_squat_calf_raises"
+      ]
+    },
+    "day5_cardio_advanced": {
+      "title": "День 5 | К (нп) — 5 кругов, отдых — бег на месте",
+      "exercises": [
+        "lunge_knee_raise_combo",
+        "plank_hold",
+        "single_leg_glute_bridge",
+        "half_amplitude_crunches",
+        "boat_pose_shoulder_blade_squeeze",
+        "squat_box_jump"
+      ]
+    }
+  }
+}

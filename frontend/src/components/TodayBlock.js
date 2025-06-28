@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import VideoPlayer from './VideoPlayer';
+import { getWorkoutLocation, getDayId, getExerciseEnglishName } from '../utils/videoUtils';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dianafit.onrender.com';
 
@@ -103,23 +105,33 @@ export default function TodayBlock({ day, onBackToWeek }) {
           <div style={{ marginBottom: 18 }}>
             <b>Тренировка:</b> {day.workout.title || day.workout.name}
             <ul style={{ margin: '8px 0 0 0', padding: 0, listStyle: 'none' }}>
-              {day.workout.exercises.map((ex, i) => (
-                <li key={i} style={{ marginBottom: 16 }}>
-                  <div style={{ fontWeight: 600, marginBottom: 4 }}>{ex.name} — {ex.reps} раз</div>
-                  {(() => {
-                    try {
-                      // eslint-disable-next-line import/no-dynamic-require
-                      return <video src={require(`../assets/quiz/exercise-${i+1}.webm`)} width={120} height={80} controls style={{ borderRadius: 8, margin: '6px 0', background: '#eee' }} />;
-                    } catch {
-                      return <div style={{ width: 120, height: 80, background: '#eee', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: 14 }}>Видео<br />скоро</div>;
-                    }
-                  })()}
-                  <div>
-                    <input type="checkbox" checked={completedExercises[i]} onChange={() => handleExerciseChange(i)} style={{ marginRight: 8 }} />
-                    <span>Выполнено</span>
-                  </div>
-                </li>
-              ))}
+              {day.workout.exercises.map((ex, i) => {
+                const location = getWorkoutLocation(day.workout.title || day.workout.name);
+                const dayId = getDayId(day.workout.title || day.workout.name, location);
+                const exerciseName = getExerciseEnglishName(ex.name);
+                
+                return (
+                  <li key={i} style={{ marginBottom: 16 }}>
+                    <div style={{ fontWeight: 600, marginBottom: 4 }}>{ex.name} — {ex.reps} раз</div>
+                    {location && dayId && exerciseName ? (
+                      <VideoPlayer 
+                        location={location}
+                        dayId={dayId}
+                        exerciseName={exerciseName}
+                        title={ex.name}
+                      />
+                    ) : (
+                      <div style={{ width: 120, height: 80, background: '#eee', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: 14 }}>
+                        Видео<br />скоро
+                      </div>
+                    )}
+                    <div>
+                      <input type="checkbox" checked={completedExercises[i]} onChange={() => handleExerciseChange(i)} style={{ marginRight: 8 }} />
+                      <span>Выполнено</span>
+                    </div>
+                  </li>
+                );
+              })}
             </ul>
           </div>
         ) : <div style={{ marginBottom: 16, color: '#888' }}>Сегодня нет тренировки</div>}
