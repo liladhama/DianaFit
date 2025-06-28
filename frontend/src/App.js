@@ -52,8 +52,8 @@ function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100vw', background: '#fff' }}>
-      {((answers && programId) || (showToday && todayDay) || showTestWeek) && (
-        // Аватарка пользователя только на странице недели, текущего дня и тестовой недели
+      {((answers && programId) || (showToday && todayDay) || showTestWeek) && !showProfile && (
+        // Аватарка пользователя только на странице недели, текущего дня и тестовой недели (но НЕ в профиле)
         <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 100 }}>
           <button onClick={() => setShowProfile(true)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
             <img src={window.Telegram?.WebApp?.initDataUnsafe?.user?.photo_url || 'https://twa.netlify.app/ava.png'} alt="avatar" style={{ width: 44, height: 44, borderRadius: '50%', boxShadow: '0 2px 8px #e0e7ff44', objectFit: 'cover' }} />

@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import PaymentPage from './PaymentPage';
 import "../fonts/fonts.css";
 
 export default function TestWeek({ onStartProgram }) {
   const [selectedDay, setSelectedDay] = useState(null);
+  const [showPayment, setShowPayment] = useState(false);
 
   // Данные тренировочной недели
   const testWeekData = [
@@ -30,8 +32,25 @@ export default function TestWeek({ onStartProgram }) {
   }
 
   function handleUnlock() {
-    // Логика разблокировки/покупки
-    console.log('Unlock/Purchase clicked');
+    // Показываем страницу оплаты
+    setShowPayment(true);
+  }
+
+  function handlePaymentSuccess() {
+    // После успешной оплаты разблокируем все дни
+    setShowPayment(false);
+    // Здесь можно добавить логику разблокировки дней
+    console.log('Payment successful! All days unlocked.');
+  }
+
+  // Если показываем страницу оплаты
+  if (showPayment) {
+    return (
+      <PaymentPage 
+        onClose={() => setShowPayment(false)}
+        onPaymentSuccess={handlePaymentSuccess}
+      />
+    );
   }
 
   return (
@@ -51,10 +70,10 @@ export default function TestWeek({ onStartProgram }) {
         onClick={handleCurrentDay}
         style={{
           background: 'linear-gradient(135deg, #4FC3F7 0%, #29B6F6 100%)',
-          borderRadius: 20,
-          padding: '12px 24px',
-          marginBottom: 32,
-          boxShadow: '0px 4px 12px 0px rgba(79, 195, 247, 0.3)',
+          borderRadius: 25,
+          padding: '14px 28px',
+          marginBottom: 24,
+          boxShadow: '0px 4px 12px 0px rgba(79, 195, 247, 0.4)',
           border: 'none',
           cursor: 'pointer',
           transition: 'all 0.2s',
@@ -62,9 +81,9 @@ export default function TestWeek({ onStartProgram }) {
         }}
       >
         <div style={{
-          fontFamily: 'NeutralFace-Bold',
+          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           fontSize: 14,
-          fontWeight: 700,
+          fontWeight: 800,
           color: '#fff',
           letterSpacing: 0.5,
           textTransform: 'uppercase'
@@ -75,11 +94,11 @@ export default function TestWeek({ onStartProgram }) {
 
       {/* Заголовок "ТРЕНИРОВОЧНАЯ НЕДЕЛЯ" */}
       <div style={{
-        fontFamily: 'NeutralFace-Bold',
-        fontSize: 24,
-        fontWeight: 700,
+        fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+        fontSize: 22,
+        fontWeight: 800,
         color: '#181818',
-        marginBottom: 32,
+        marginBottom: 24,
         textAlign: 'center',
         letterSpacing: 0.5,
         textTransform: 'uppercase'
@@ -93,8 +112,8 @@ export default function TestWeek({ onStartProgram }) {
         maxWidth: 340,
         display: 'flex',
         flexDirection: 'column',
-        gap: 12,
-        marginBottom: 32
+        gap: 10,
+        marginBottom: 24
       }}>
         {testWeekData.map((dayData, index) => (
           <button
@@ -103,38 +122,36 @@ export default function TestWeek({ onStartProgram }) {
             disabled={!dayData.unlocked}
             style={{
               background: dayData.unlocked ? '#fff' : '#f5f5f5',
-              border: dayData.unlocked ? '1px solid #e0e7ff' : '1px solid #d0d0d0',
-              borderRadius: 30,
-              padding: '16px 24px',
+              border: 'none',
+              borderRadius: 25,
+              padding: '18px 24px',
               cursor: dayData.unlocked ? 'pointer' : 'not-allowed',
               transition: 'all 0.2s',
-              boxShadow: dayData.unlocked ? '0px 2px 8px 0px rgba(0, 0, 0, 0.1)' : 'none',
+              boxShadow: dayData.unlocked ? '0px 4px 12px 0px rgba(0, 0, 0, 0.12)' : '0px 2px 6px 0px rgba(0, 0, 0, 0.06)',
               outline: 'none',
               position: 'relative',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              opacity: dayData.unlocked ? 1 : 0.6
+              opacity: dayData.unlocked ? 1 : 0.7
             }}
             onMouseEnter={(e) => {
               if (dayData.unlocked) {
-                e.target.style.borderColor = '#4FC3F7';
-                e.target.style.transform = 'translateY(-1px)';
-                e.target.style.boxShadow = '0px 4px 12px 0px rgba(0, 0, 0, 0.15)';
+                e.target.style.transform = 'translateY(-2px)';
+                e.target.style.boxShadow = '0px 6px 16px 0px rgba(0, 0, 0, 0.15)';
               }
             }}
             onMouseLeave={(e) => {
               if (dayData.unlocked) {
-                e.target.style.borderColor = '#e0e7ff';
                 e.target.style.transform = 'translateY(0px)';
-                e.target.style.boxShadow = '0px 2px 8px 0px rgba(0, 0, 0, 0.1)';
+                e.target.style.boxShadow = '0px 4px 12px 0px rgba(0, 0, 0, 0.12)';
               }
             }}
           >
             <div style={{
-              fontFamily: 'NeutralFace',
+              fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
               fontSize: 16,
-              fontWeight: 500,
+              fontWeight: 700,
               color: dayData.unlocked ? '#181818' : '#999',
               textAlign: 'center',
               lineHeight: 1.2
@@ -163,27 +180,27 @@ export default function TestWeek({ onStartProgram }) {
         style={{
           background: 'linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)',
           borderRadius: 25,
-          padding: '16px 32px',
+          padding: '18px 36px',
           border: 'none',
           cursor: 'pointer',
           transition: 'all 0.2s',
           outline: 'none',
-          boxShadow: '0px 4px 12px 0px rgba(255, 107, 53, 0.3)',
-          marginTop: 16
+          boxShadow: '0px 4px 12px 0px rgba(255, 107, 53, 0.4)',
+          marginTop: 20
         }}
         onMouseEnter={(e) => {
           e.target.style.transform = 'translateY(-2px)';
-          e.target.style.boxShadow = '0px 6px 16px 0px rgba(255, 107, 53, 0.4)';
+          e.target.style.boxShadow = '0px 6px 16px 0px rgba(255, 107, 53, 0.5)';
         }}
         onMouseLeave={(e) => {
           e.target.style.transform = 'translateY(0px)';
-          e.target.style.boxShadow = '0px 4px 12px 0px rgba(255, 107, 53, 0.3)';
+          e.target.style.boxShadow = '0px 4px 12px 0px rgba(255, 107, 53, 0.4)';
         }}
       >
         <div style={{
-          fontFamily: 'NeutralFace-Bold',
+          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           fontSize: 16,
-          fontWeight: 700,
+          fontWeight: 800,
           color: '#fff',
           letterSpacing: 0.3
         }}>
