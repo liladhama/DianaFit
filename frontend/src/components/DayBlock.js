@@ -22,16 +22,21 @@ export default function DayBlock({ day, openable = true, locked = false }) {
       </div>
       {openable && open && (
         <div style={{ padding: 16, borderTop: '1px solid #e0e7ff' }}>
-          {day.workout && (
+          {day.workout ? (
             <div style={{ marginBottom: 12 }}>
               <b>Тренировка:</b> {day.workout.title || day.workout.name}
               <ul>{day.workout.exercises.map((ex, i) => <li key={i}>{ex.name} — {ex.reps} раз</li>)}</ul>
+            </div>
+          ) : (
+            <div style={{ marginBottom: 12, color: '#666' }}>
+              <b>🌿 День отдыха</b>
+              <p style={{ margin: '8px 0', fontSize: 14 }}>Сегодня отдыхаем! Можно прогуляться или сделать лёгкую растяжку.</p>
             </div>
           )}
           <div>
             <b>Меню:</b>
             <ul>
-              {day.meals.map((meal, i) => <li key={i}><b>{meal.type}:</b> {meal.menu}</li>)}
+              {day.meals.map((meal, i) => <li key={i}><b>{meal.name || meal.type}:</b> {meal.menu}</li>)}
             </ul>
           </div>
         </div>

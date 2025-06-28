@@ -113,7 +113,7 @@ export default function StoryQuiz({ onFinish }) {
               border: '2px solid rgb(34, 34, 34)',
               borderRadius: 24,
               background: 'rgb(255, 255, 255)',
-              boxShadow: '0px 4px 32px 0px rgba(182, 214, 255, 0.267)',
+              boxShadow: '0px 4px 12px 0px rgba(0, 0, 0, 0.2)',
               padding: '12px 15px',
               minHeight: 80,
               position: 'relative',
@@ -121,7 +121,7 @@ export default function StoryQuiz({ onFinish }) {
               maxWidth: 341,
             }}>
               <img src={require('../assets/quiz/dumbbell.png')} alt="dumbbell" style={{ width: 88, height: 88, borderRadius: 16, objectFit: 'cover', marginRight: 4 }} />
-              <div style={{ fontSize: 13, color: '#7a7a7a', lineHeight: 1.3, fontWeight: 500 }}>
+              <div style={{ fontSize: 13, color: '#222', lineHeight: 1.3, fontWeight: 500 }}>
                 Я подберу эффективный комплекс под твои условия, чтобы тренировки приносили результат и удовольствие.
               </div>
             </div>
@@ -177,10 +177,10 @@ export default function StoryQuiz({ onFinish }) {
               ТВОЙ ОПЫТ<br />ТРЕНИРОВОК
             </div>
             <div style={{
-              border: '1.5px solid #222',
+              border: '2px solid #222',
               borderRadius: 24,
               background: '#fff',
-              boxShadow: 'none',
+              boxShadow: '0px 4px 12px 0px rgba(0, 0, 0, 0.2)',
               padding: '6px 10px',
               marginBottom: 48,
               display: 'flex',
@@ -255,7 +255,7 @@ export default function StoryQuiz({ onFinish }) {
               border: '2px solid rgb(34, 34, 34)',
               borderRadius: 24,
               background: 'rgb(255, 255, 255)',
-              boxShadow: '0px 4px 32px 0px rgba(182, 214, 255, 0.267)',
+              boxShadow: '0px 4px 12px 0px rgba(0, 0, 0, 0.2)',
               padding: '12px 15px',
               minHeight: 80,
               position: 'relative',
@@ -364,7 +364,7 @@ export default function StoryQuiz({ onFinish }) {
               border: '2px solid #222',
               borderRadius: 18,
               background: '#fff',
-              boxShadow: 'none',
+              boxShadow: '0px 4px 12px 0px rgba(0, 0, 0, 0.2)',
               padding: '16px 18px',
               marginBottom: 48,
               display: 'flex',
@@ -433,6 +433,66 @@ export default function StoryQuiz({ onFinish }) {
         </div>
       );
     }
+    // Специальный слайд для выбора количества тренировок
+    if (slide.key === 'workouts_per_week') {
+      return (
+        <div key={step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', height: '100%', padding: '40px 16px 32px', textAlign: 'center', minHeight: '100vh' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: 360 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 'bold', color: '#222', marginBottom: 24, lineHeight: 1.2 }}>
+              Сколько тренировок в неделю будем выполнять?
+            </h1>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              marginBottom: 32,
+              border: '2px solid rgb(34, 34, 34)',
+              borderRadius: 24,
+              background: 'rgb(255, 255, 255)',
+              boxShadow: '0px 4px 12px 0px rgba(0, 0, 0, 0.2)',
+              padding: '12px 15px',
+              minHeight: 80,
+              position: 'relative',
+              gap: 18,
+              maxWidth: 360,
+            }}>
+              <img src={require('../assets/quiz/dumbbell.png')} alt="dumbbell" style={{ width: 88, height: 88, borderRadius: 16, objectFit: 'cover', marginRight: 4 }} />
+              <div style={{ fontSize: 13, color: '#222', lineHeight: 1.3, fontWeight: 500, textAlign: 'left' }}>
+                Лучше делать меньше, но регулярно. На основе этого мы подберём тебе сбалансированную программу.
+              </div>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 28, width: '100%', marginTop: 0 }}>
+              {slide.options.map(opt => {
+                const isSelected = answers[slide.key] === opt.value;
+                return (
+                  <button
+                    key={opt.value}
+                    className={isSelected ? 'selected-gender' : 'gender-btn'}
+                    style={{
+                      fontSize: 20,
+                      padding: '18px 0',
+                      borderRadius: 32,
+                      width: 200,
+                      fontWeight: 700,
+                      background: 'transparent',
+                      margin: '0 auto',
+                      letterSpacing: 0.2,
+                      textTransform: 'none',
+                      transition: 'all 0.18s',
+                      cursor: 'pointer',
+                      outline: 'none',
+                    }}
+                    onClick={() => handleAnswer(slide.key, opt.value)}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     if (slide.type === 'choice' || slide.type === 'radio' || slide.type === 'toggle') {
       return (
         <>
@@ -466,7 +526,7 @@ export default function StoryQuiz({ onFinish }) {
               border: '2px solid #222',
               borderRadius: 18,
               background: '#fff',
-              boxShadow: 'none',
+              boxShadow: '0px 4px 12px 0px rgba(0, 0, 0, 0.2)',
               padding: '16px 18px',
               margin: 0,
               display: 'flex',
@@ -709,7 +769,7 @@ export default function StoryQuiz({ onFinish }) {
             border: '2px solid rgb(34, 34, 34)',
             borderRadius: 24,
             background: 'rgb(255, 255, 255)',
-            boxShadow: '0px 4px 32px 0px rgba(182, 214, 255, 0.267)',
+            boxShadow: '0px 4px 12px 0px rgba(0, 0, 0, 0.2)',
             padding: '7px 7px',
             minHeight: 80,
             position: 'relative',

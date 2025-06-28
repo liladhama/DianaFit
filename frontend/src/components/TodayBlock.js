@@ -134,7 +134,21 @@ export default function TodayBlock({ day, onBackToWeek }) {
               })}
             </ul>
           </div>
-        ) : <div style={{ marginBottom: 16, color: '#888' }}>Сегодня нет тренировки</div>}
+        ) : (
+          <div style={{ 
+            marginBottom: 16, 
+            padding: '20px', 
+            background: 'linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%)',
+            borderRadius: '12px',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '48px', marginBottom: '12px' }}>🌿</div>
+            <h3 style={{ color: '#2d5a2d', marginBottom: '8px' }}>День отдыха</h3>
+            <p style={{ color: '#666', fontSize: '16px', margin: 0 }}>
+              Сегодня отдыхаем! Можно прогуляться или сделать лёгкую растяжку.
+            </p>
+          </div>
+        )}
         <div style={{ marginBottom: 18 }}>
           <b>Меню на день:</b>
           <ul style={{ margin: '8px 0 0 0', padding: 0, listStyle: 'none' }}>

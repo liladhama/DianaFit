@@ -1,7 +1,7 @@
 .gender-btn {
   background: #fff;
   border: 2.5px solid #eaf4ff;
-  color: #222;
+  color: #666;
   /* Эффект сияния всегда */
   box-shadow: 0 0 32px 12px #2196f344, 0 0 32px 24px #90caf944, 0 0 64px 32px #2196f344;
   transition: box-shadow 0.2s, border 0.2s, background 0.2s, color 0.2s;

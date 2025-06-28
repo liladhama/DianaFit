@@ -56,7 +56,7 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
           border: '2px solid #222',
           borderRadius: 18,
           background: '#fff',
-          boxShadow: 'none',
+          boxShadow: '0px 4px 12px 0px rgba(0, 0, 0, 0.2)',
           padding: '16px 18px 16px 110px', // padding-left для текста справа от кекса
           marginBottom: 0,
           display: 'block',

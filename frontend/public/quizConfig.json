@@ -91,13 +91,25 @@
     ]
   },
   {
+    "id": 11,
+    "type": "choice",
+    "title": "Сколько тренировок в неделю будем выполнять?",
+    "key": "workouts_per_week",
+    "options": [
+      { "label": "2 тренировки", "value": 2 },
+      { "label": "3 тренировки", "value": 3 },
+      { "label": "4 тренировки", "value": 4 },
+      { "label": "5 тренировок", "value": 5 }
+    ]
+  },
+  {
     "id": 11.5,
     "type": "custom",
     "title": "Твой тип питания",
     "key": "diet_flags"
   },
   {
-    "id": 7.1,
+    "id": 12,
     "type": "date-wheel",
     "title": "Когда начнём?",
     "key": "start_date",
