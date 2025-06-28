@@ -1,10 +1,51 @@
 import React from "react";
 
-export default function GoalSlide({ onSelect, selected, options, onNext }) {
+export default function GoalSlide({ onSelect, selected, options, onNext, onBack, showBackButton }) {
   // При выборе варианта сразу вызываем onNext
   function handleSelect(value) {
     onSelect(value);
     setTimeout(onNext, 200);
+  }
+
+  function renderBackButton() {
+    if (!showBackButton || !onBack) return null;
+    
+    return (
+      <button
+        onClick={onBack}
+        style={{
+          position: 'absolute',
+          top: -22,
+          left: 16,
+          zIndex: 20,
+          background: 'rgba(255, 255, 255, 0.9)',
+          border: '1px solid #ddd',
+          borderRadius: 12,
+          padding: '8px 10px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 20,
+          fontWeight: 600,
+          color: '#333',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          transition: 'all 0.2s ease',
+          minWidth: 36,
+          minHeight: 36,
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.background = '#f5f5f5';
+          e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.background = 'rgba(255, 255, 255, 0.9)';
+          e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+        }}
+      >
+        ←
+      </button>
+    );
   }
 
   return (
@@ -19,7 +60,9 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
       boxSizing: 'border-box',
       padding: '16px 0 32px 0', // уменьшил верхний паддинг, чтобы элементы были выше
       overflow: 'visible', // На всякий случай
+      position: 'relative',
     }}>
+      {renderBackButton()}
       <div style={{ fontWeight: 700, fontSize: 28, margin: '48px 0 16px 0', textAlign: 'left', letterSpacing: 0, color: '#181818', width: 320, maxWidth: '96vw' }}>
         ТВОЯ ЦЕЛЬ
       </div>
@@ -37,8 +80,8 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
           src={require('../assets/welcome/cupcake3.png')}
           alt="cake"
           style={{
-            width: 80,
-            height: 80,
+            width: 65,
+            height: 65,
             objectFit: 'cover',
             borderRadius: 16,
             overflow: 'visible',
@@ -57,10 +100,10 @@ export default function GoalSlide({ onSelect, selected, options, onNext }) {
           borderRadius: 18,
           background: '#fff',
           boxShadow: '0px 4px 12px 0px rgba(0, 0, 0, 0.2)',
-          padding: '16px 18px 16px 110px', // padding-left для текста справа от кекса
+          padding: '12px 18px 12px 95px', // padding-left для текста справа от кекса
           marginBottom: 0,
           display: 'block',
-          minHeight: 80,
+          minHeight: 65,
           position: 'relative',
           overflow: 'visible',
           zIndex: 2,

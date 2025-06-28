@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import PaymentPage from './PaymentPage';
 import "../fonts/fonts.css";
 
-export default function TestWeek({ onStartProgram }) {
+export default function TestWeek({ onStartProgram, onShowTodayBlock }) {
   const [selectedDay, setSelectedDay] = useState(null);
   const [showPayment, setShowPayment] = useState(false);
 
@@ -25,9 +25,9 @@ export default function TestWeek({ onStartProgram }) {
   }
 
   function handleCurrentDay() {
-    // Переход к основной программе
-    if (onStartProgram) {
-      onStartProgram();
+    // Переход к TodayBlock
+    if (onShowTodayBlock) {
+      onShowTodayBlock();
     }
   }
 
@@ -81,11 +81,11 @@ export default function TestWeek({ onStartProgram }) {
         }}
       >
         <div style={{
-          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          fontFamily: 'Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
           fontSize: 14,
-          fontWeight: 800,
+          fontWeight: 700,
           color: '#fff',
-          letterSpacing: 0.5,
+          letterSpacing: '0.5px',
           textTransform: 'uppercase'
         }}>
           ТЕКУЩИЙ ДЕНЬ
@@ -149,12 +149,13 @@ export default function TestWeek({ onStartProgram }) {
             }}
           >
             <div style={{
-              fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              fontFamily: 'Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
               fontSize: 16,
               fontWeight: 700,
               color: dayData.unlocked ? '#181818' : '#999',
               textAlign: 'center',
-              lineHeight: 1.2
+              lineHeight: 1.2,
+              letterSpacing: '0.5px'
             }}>
               {dayData.day}, {dayData.date}
             </div>
@@ -198,11 +199,11 @@ export default function TestWeek({ onStartProgram }) {
         }}
       >
         <div style={{
-          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          fontFamily: 'Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
           fontSize: 16,
-          fontWeight: 800,
+          fontWeight: 700,
           color: '#fff',
-          letterSpacing: 0.3
+          letterSpacing: '0.5px'
         }}>
           РАЗБЛОКИРОВАТЬ ПОЛНЫЙ ДОСТУП
         </div>

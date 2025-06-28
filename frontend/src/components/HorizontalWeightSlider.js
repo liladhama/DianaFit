@@ -64,9 +64,21 @@ export default function HorizontalWeightSlider({ value, min, max, step = 1, unit
           alignItems: 'center',
           justifyContent: 'center',
         }}>
+          {/* Синяя палочка вверх */}
           <div style={{
-            width: 36,
-            height: 36,
+            position: 'absolute',
+            bottom: 24,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 3,
+            height: 18,
+            background: '#2196f3',
+            borderRadius: 1.5,
+          }} />
+          {/* Уменьшенный круг */}
+          <div style={{
+            width: 28,
+            height: 28,
             borderRadius: '50%',
             background: 'linear-gradient(135deg, #2196f3 60%, #90caf9 100%)',
             boxShadow: '0 4px 16px #2196f399',

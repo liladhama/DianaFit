@@ -29,7 +29,7 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
         onClick={onClose} 
         style={{ 
           position: 'absolute', 
-          top: 17, 
+          top: 8, 
           left: 16, 
           background: 'transparent', 
           border: 'none', 
@@ -47,7 +47,7 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
       <div style={{
         maxWidth: 340,
         textAlign: 'center',
-        marginTop: 65,
+        marginTop: 40,
         position: 'relative',
         zIndex: 10
       }}>
@@ -169,10 +169,11 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
           }}
         >
           <div style={{
-            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            fontFamily: 'Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
             fontSize: 16,
-            fontWeight: 800,
-            color: '#fff'
+            fontWeight: 700,
+            color: '#fff',
+            letterSpacing: '0.5px'
           }}>
             Оплатить 999 ₽
           </div>
@@ -182,7 +183,7 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
       {/* Изображение Дианы внизу на всю страницу */}
       <div style={{
         position: 'fixed',
-        bottom: -35,
+        bottom: -50,
         left: 0,
         width: '100vw',
         height: '50vh',

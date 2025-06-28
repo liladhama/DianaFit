@@ -15,11 +15,11 @@
   background: url('../assets/welcome/background.png') no-repeat center center/cover;
   overflow: hidden;
   box-sizing: border-box;
-  padding-top: 32px; /* Было 96px, теперь элементы выше */
+  padding-top: 16px; /* Еще выше - было 32px */
 }
 
 .splash-header-block {
-  margin-top: 0; /* Было 72px, теперь элементы выше */
+  margin-top: -16px; /* Еще выше - было 0 */
   margin-left: -30px;
   position: relative;
   z-index: 2;

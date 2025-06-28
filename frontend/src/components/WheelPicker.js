@@ -29,7 +29,7 @@ export default function WheelPicker({ value, onChange, min = 1950, max = 2025, y
   const paddingItems = Array(Math.floor(VISIBLE_ITEMS / 2)).fill(null);
 
   return (
-    <div style={{ height: ITEM_HEIGHT * VISIBLE_ITEMS, overflow: 'hidden', width: 180, margin: '0 auto', position: 'relative', background: '#fff' }}>
+    <div style={{ height: ITEM_HEIGHT * VISIBLE_ITEMS, overflow: 'hidden', width: 180, margin: '0 auto', position: 'relative', background: 'transparent' }}>
       <div
         ref={listRef}
         onScroll={handleScroll}

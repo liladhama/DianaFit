@@ -251,11 +251,12 @@ export default function ProfilePage({ onClose, unlocked, answers, onEditQuiz, on
         }}
       >
         <span style={{
-          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          fontFamily: 'Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
           fontSize: 20,
           color: '#181818',
-          fontWeight: 800,
-          textTransform: 'uppercase'
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          letterSpacing: '0.5px'
         }}>
           МОЯ ЦЕЛЬ -{quizAnswers.goal_weight_loss || 3} кг
         </span>

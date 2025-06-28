@@ -14,6 +14,7 @@ function App() {
   const [showProfile, setShowProfile] = useState(false);
   const [showToday, setShowToday] = useState(false);
   const [showTestWeek, setShowTestWeek] = useState(false);
+  const [showTodayBlock, setShowTodayBlock] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
 
   // Получаем текущий день из мок-данных (если нет weekData)
@@ -46,13 +47,13 @@ function App() {
     setAnswers(quizAnswers);
     // Если в ответах есть programId, используем его, иначе заглушка
     setProgramId(quizAnswers.programId || quizAnswers.id || 'demo-program');
-    // Показываем тестовую неделю сразу после квиза
-    setShowTestWeek(true);
+    // Показываем TodayBlock сразу после квиза
+    setShowTodayBlock(true);
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100vw', background: '#fff' }}>
-      {((answers && programId) || (showToday && todayDay) || showTestWeek) && !showProfile && (
+      {((answers && programId) || (showToday && todayDay) || showTestWeek || showTodayBlock) && !showProfile && (
         // Аватарка пользователя только на странице недели, текущего дня и тестовой недели (но НЕ в профиле)
         <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 100 }}>
           <button onClick={() => setShowProfile(true)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
@@ -67,8 +68,8 @@ function App() {
           onClose={() => setShowProfile(false)}
           unlocked={unlocked}
           answers={answers}
-          onEditQuiz={() => { setShowProfile(false); setShowToday(false); setShowTestWeek(false); }}
-          onRestart={() => { setAnswers(null); setProgramId(null); setShowProfile(false); setShowToday(false); setShowTestWeek(false); setUnlocked(false); }}
+          onEditQuiz={() => { setShowProfile(false); setShowToday(false); setShowTestWeek(false); setShowTodayBlock(false); }}
+          onRestart={() => { setAnswers(null); setProgramId(null); setShowProfile(false); setShowToday(false); setShowTestWeek(false); setShowTodayBlock(false); setUnlocked(false); }}
         />
       ) : showTestWeek ? (
         <TestWeek 
@@ -76,9 +77,22 @@ function App() {
             setShowTestWeek(false);
             setShowToday(true);
           }}
+          onShowTodayBlock={() => {
+            setShowTestWeek(false);
+            setShowTodayBlock(true);
+          }}
+        />
+      ) : showTodayBlock && todayDay ? (
+        <TodayBlock 
+          day={todayDay} 
+          answers={answers}
+          onBackToWeek={() => {
+            setShowTodayBlock(false);
+            setShowTestWeek(true);
+          }} 
         />
       ) : (answers && programId && todayDay && !showToday) ? (
-        <TodayBlock day={todayDay} onBackToWeek={() => setShowToday(true)} />
+        <WeekPlan programId={programId} unlocked={unlocked} setUnlocked={setUnlocked} />
       ) : showToday && answers && programId ? (
         <WeekPlan programId={programId} unlocked={unlocked} setUnlocked={setUnlocked} />
       ) : (

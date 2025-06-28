@@ -16,6 +16,59 @@ function ProgressBar({ current, total }) {
   );
 }
 
+// Единый стиль для кнопок "Следующий" согласно референсу
+const getButtonStyle = (isEnabled = true, customStyles = {}) => ({
+  fontSize: 18,
+  fontWeight: 700,
+  fontFamily: 'Roboto, sans-serif',
+  padding: '16px 32px',
+  borderRadius: 12,
+  background: isEnabled ? '#2196f3' : '#ccc',
+  color: '#fff',
+  border: 'none',
+  boxShadow: isEnabled ? '0 4px 16px 0 #2196f366' : 'none',
+  cursor: isEnabled ? 'pointer' : 'not-allowed',
+  transition: 'all 0.2s ease',
+  textAlign: 'center',
+  letterSpacing: '0.5px',
+  textTransform: 'none',
+  ...customStyles
+});
+
+// Стиль для кнопок выбора
+const getChoiceButtonStyle = (customStyles = {}) => ({
+  fontSize: 18,
+  fontWeight: 700,
+  fontFamily: 'Roboto, sans-serif',
+  padding: '16px 28px',
+  borderRadius: 12,
+  background: '#2196f3',
+  color: '#fff',
+  border: 'none',
+  boxShadow: '0 4px 16px 0 #2196f366',
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+  textAlign: 'center',
+  letterSpacing: '0.5px',
+  textTransform: 'none',
+  ...customStyles
+});
+
+// Униврсальный стиль для кнопок выбора по референсу GoalSlide
+const getChoiceOptionStyle = (isSelected = false, customStyles = {}) => ({
+  background: '#fff',
+  color: isSelected ? '#2196f3' : '#bdbdbd',
+  border: isSelected ? '2.5px solid #2196f3' : '2.5px solid #eaf4ff',
+  boxShadow: '0 0 24px 8px #2196f3cc',
+  borderRadius: 32,
+  fontSize: 22,
+  fontWeight: 700,
+  cursor: 'pointer',
+  outline: 'none',
+  transition: 'all 0.18s',
+  ...customStyles
+});
+
 export default function StoryQuiz({ onFinish }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState({});
@@ -55,6 +108,10 @@ export default function StoryQuiz({ onFinish }) {
     }
   }
 
+  function handleBack() {
+    if (step > 0) setStep(step - 1);
+  }
+
   function handleAnswer(key, value) {
     console.log('handleAnswer', { key, value });
     setAnswers(a => ({ ...a, [key]: value }));
@@ -70,6 +127,51 @@ export default function StoryQuiz({ onFinish }) {
   const questionSlides = quizConfig ? quizConfig.filter(s => !['welcome', 'finish', 'daily_steps'].includes(s.type) && s.key !== 'daily_steps') : [];
   const questionIndex = slide ? questionSlides.findIndex(s => String(s.id) === String(slide.id)) : -1;
   const showDots = questionIndex !== -1;
+
+  // Показываем стрелочку возврата начиная со слайда "Твой возраст" (step > 1, так как 0 - welcome, 1 - пол)
+  // Но не показываем для GoalSlide, так как у него своя стрелочка
+  const showBackButton = step > 1 && slide?.type !== 'welcome' && slide?.type !== 'finish' && slide?.key !== 'goal_weight_loss';
+
+  function renderBackButton() {
+    if (!showBackButton) return null;
+    
+    return (
+      <button
+        onClick={handleBack}
+        style={{
+          position: 'absolute',
+          top: 24,
+          left: 16,
+          zIndex: 20,
+          background: 'rgba(255, 255, 255, 0.9)',
+          border: '1px solid #ddd',
+          borderRadius: 12,
+          padding: '8px 10px',
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: 20,
+          fontWeight: 600,
+          color: '#333',
+          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+          transition: 'all 0.2s ease',
+          minWidth: 36,
+          minHeight: 36,
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.background = '#f5f5f5';
+          e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.background = 'rgba(255, 255, 255, 0.9)';
+          e.target.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
+        }}
+      >
+        ←
+      </button>
+    );
+  }
 
   function renderDots() {
     return (
@@ -100,9 +202,11 @@ export default function StoryQuiz({ onFinish }) {
           alignItems: 'center',
           justifyContent: 'flex-start',
           background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
+          boxSizing: 'border-box',
+          padding: '60px 16px 16px 16px'
         }}>
-          <div style={{ marginTop: 48, width: 340, maxWidth: '96vw', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ fontWeight: 700, fontSize: 28, textAlign: 'left', marginBottom: 24, textTransform: 'uppercase', letterSpacing: 0, color: '#181818', alignSelf: 'flex-start', lineHeight: 1.05 }}>
+          <div style={{ width: '100%', maxWidth: 340, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ fontWeight: 700, fontSize: 26, textAlign: 'center', marginBottom: 24, textTransform: 'uppercase', letterSpacing: 0.2, color: '#181818', alignSelf: 'center', lineHeight: 1.05 }}>
               ГДЕ БУДЕШЬ<br />ТРЕНИРОВАТЬСЯ
             </div>
             <div style={{
@@ -114,14 +218,14 @@ export default function StoryQuiz({ onFinish }) {
               borderRadius: 24,
               background: 'rgb(255, 255, 255)',
               boxShadow: '0px 4px 12px 0px rgba(0, 0, 0, 0.2)',
-              padding: '12px 15px',
+              padding: '8px 15px',
               minHeight: 80,
               position: 'relative',
               gap: 18,
-              maxWidth: 341,
+              maxWidth: 320,
             }}>
               <img src={require('../assets/quiz/dumbbell.png')} alt="dumbbell" style={{ width: 88, height: 88, borderRadius: 16, objectFit: 'cover', marginRight: 4 }} />
-              <div style={{ fontSize: 13, color: '#222', lineHeight: 1.3, fontWeight: 500 }}>
+              <div style={{ fontSize: 14, color: '#222', lineHeight: 1.3, fontWeight: 500, marginLeft: -6 }}>
                 Я подберу эффективный комплекс под твои условия, чтобы тренировки приносили результат и удовольствие.
               </div>
             </div>
@@ -131,19 +235,13 @@ export default function StoryQuiz({ onFinish }) {
                 return (
                   <button
                     key={opt.value}
-                    className={isSelected ? 'selected-gender' : 'gender-btn'}
-                    style={{
-                      fontSize: 20,
+                    style={getChoiceOptionStyle(isSelected, {
                       padding: '18px 32px',
-                      borderRadius: 24,
                       minWidth: 120,
-                      fontWeight: 700,
-                      transition: 'all 0.18s',
-                      cursor: 'pointer',
-                      outline: 'none',
                       margin: '0 8px',
-                      background: 'transparent',
-                    }}
+                      letterSpacing: '0.5px',
+                      display: 'block',
+                    })}
                     onClick={() => handleAnswer(slide.key, opt.value)}
                   >
                     {opt.label}
@@ -171,9 +269,11 @@ export default function StoryQuiz({ onFinish }) {
           alignItems: 'center',
           justifyContent: 'flex-start',
           background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
+          boxSizing: 'border-box',
+          padding: '32px 16px 16px 16px'
         }}>
-          <div style={{ marginTop: 48, width: 340, maxWidth: '96vw', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ fontWeight: 700, fontSize: 28, textAlign: 'left', marginBottom: 24, textTransform: 'uppercase', letterSpacing: 0, color: '#181818', alignSelf: 'flex-start', lineHeight: 1.05 }}>
+          <div style={{ width: '100%', maxWidth: 340, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ fontWeight: 700, fontSize: 26, textAlign: 'center', marginBottom: 24, textTransform: 'uppercase', letterSpacing: 0.2, color: '#181818', alignSelf: 'center', lineHeight: 1.05 }}>
               ТВОЙ ОПЫТ<br />ТРЕНИРОВОК
             </div>
             <div style={{
@@ -202,18 +302,13 @@ export default function StoryQuiz({ onFinish }) {
                 return (
                   <button
                     key={opt.value}
-                    className={isSelected ? 'selected-gender' : 'gender-btn'}
-                    style={{
-                      fontSize: 20,
+                    style={getChoiceOptionStyle(isSelected, {
                       padding: '18px 0',
-                      borderRadius: 32,
                       width: 200,
-                      fontWeight: 700,
-                      background: 'transparent',
                       margin: '0 auto',
-                      letterSpacing: 0.2,
+                      letterSpacing: '0.5px',
                       textTransform: 'none',
-                    }}
+                    })}
                     onClick={() => handleAnswer(slide.key, opt.value)}
                   >
                     {opt.label}
@@ -242,9 +337,11 @@ export default function StoryQuiz({ onFinish }) {
           alignItems: 'center',
           justifyContent: 'flex-start',
           background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
+          boxSizing: 'border-box',
+          padding: '32px 16px 16px 16px'
         }}>
-          <div style={{ marginTop: 48, width: 340, maxWidth: '96vw', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ fontWeight: 700, fontSize: 28, textAlign: 'left', marginBottom: 24, textTransform: 'uppercase', letterSpacing: 0, color: '#181818', alignSelf: 'flex-start', lineHeight: 1.05 }}>
+          <div style={{ width: '100%', maxWidth: 340, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ fontWeight: 700, fontSize: 26, textAlign: 'center', marginBottom: 24, textTransform: 'uppercase', letterSpacing: 0.2, color: '#181818', alignSelf: 'center', lineHeight: 1.05 }}>
               ТВОЯ БЫТОВАЯ<br />АКТИВНОСТЬ
             </div>
             <div style={{
@@ -260,7 +357,7 @@ export default function StoryQuiz({ onFinish }) {
               minHeight: 80,
               position: 'relative',
               gap: 18,
-              maxWidth: 341,
+              maxWidth: 340,
             }}>
               <img
                 src={require('../assets/quiz/heart.png')}
@@ -275,7 +372,7 @@ export default function StoryQuiz({ onFinish }) {
                 }}
               />
               <div style={{
-                fontSize: 15,
+                fontSize: 14,
                 color: '#222',
                 fontWeight: 500,
                 flex: 1,
@@ -292,19 +389,14 @@ export default function StoryQuiz({ onFinish }) {
                 return (
                   <button
                     key={opt.value}
-                    className={isSelected ? 'selected-gender' : 'gender-btn'}
-                    style={{
-                      fontSize: 20,
+                    style={getChoiceOptionStyle(isSelected, {
                       padding: '18px 0',
-                      borderRadius: 32,
                       width: 200,
-                      fontWeight: 700,
-                      background: 'transparent',
                       margin: '0 auto',
-                      letterSpacing: 0.2,
+                      letterSpacing: '0.5px',
                       textTransform: 'none',
                       whiteSpace: 'pre-line',
-                    }}
+                    })}
                     onClick={() => handleAnswer(slide.key, opt.value)}
                   >
                     {opt.label}
@@ -338,9 +430,7 @@ export default function StoryQuiz({ onFinish }) {
             <div style={{ color: '#222', fontSize: 16, textAlign: 'center', marginBottom: 24, maxWidth: 320, minHeight: 44, lineHeight: 1.2, whiteSpace: 'pre-line' }}>
               {`Давай найдём твою стартовую\nточку А и подберём персональную программу!`}
             </div>
-            <button onClick={handleNext} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', width: 320, display: 'flex', justifyContent: 'center' }}>
-              <img src={require('../assets/quiz/next-btn.png')} alt="Следующий" style={{ width: 320, height: 64, display: 'block', objectFit: 'cover', borderRadius: 16 }} />
-            </button>
+            <button className="quiz-btn age-btn" style={getButtonStyle(true, { marginTop: 0, width: 320, maxWidth: '90vw' })} onClick={handleNext}>Следующий</button>
           </div>
         </div>
       );
@@ -348,16 +438,18 @@ export default function StoryQuiz({ onFinish }) {
     if ((slide.type === 'choice' || slide.type === 'radio' || slide.type === 'toggle') && slide.key === 'sex') {
       return (
         <div style={{
-          width: '100%',
+          width: '100vw',
           minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'flex-start',
           background: 'transparent',
+          boxSizing: 'border-box',
+          padding: '32px 16px 16px 16px'
         }}>
-          <div style={{ marginTop: 64, width: 340, maxWidth: '96vw', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-            <div style={{ fontWeight: 700, fontSize: 28, textAlign: 'center', marginBottom: 24, textTransform: 'uppercase', letterSpacing: 0, color: '#181818' }}>
+          <div style={{ width: '100%', maxWidth: 340, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div style={{ fontWeight: 700, fontSize: 26, textAlign: 'center', marginBottom: 24, textTransform: 'uppercase', letterSpacing: 0.2, color: '#181818' }}>
               ТВОЙ ПОЛ
             </div>
             <div style={{
@@ -365,39 +457,41 @@ export default function StoryQuiz({ onFinish }) {
               borderRadius: 18,
               background: '#fff',
               boxShadow: '0px 4px 12px 0px rgba(0, 0, 0, 0.2)',
-              padding: '16px 18px',
+              padding: '16px 8px 16px 18px',
               marginBottom: 48,
               display: 'flex',
               alignItems: 'center',
               gap: 18,
               width: '100%',
-              maxWidth: 340,
+              maxWidth: 318,
               minHeight: 80,
               position: 'relative',
-              overflow: 'visible', // чтобы свечение не обрезалось
-              zIndex: 2 // чтобы свечение было поверх
+              overflow: 'visible',
+              zIndex: 2
             }}>
               <img src={require('../assets/welcome/cupcake.png')} alt="cupcake" style={{
                 width: 80,
                 height: 80,
                 objectFit: 'cover',
-                filter: 'drop-shadow(0 0 0px #ff6a6a) drop-shadow(0 0 8px #ff6a6a) drop-shadow(0 0 18px #ff6a6a) drop-shadow(0 0 32px #ffb3b3) drop-shadow(0 0 56px #ffe0e0)',
                 borderRadius: 16,
                 overflow: 'visible',
-                zIndex: 3
+                zIndex: 3,
+                marginLeft: -10
               }} />
               <div style={{
                 fontSize: 14,
                 color: '#222',
                 lineHeight: 1.15,
                 fontWeight: 500,
-                marginLeft: 8,
-                marginRight: 0,
+                marginLeft: -2,
+                marginRight: -6,
                 padding: 0,
                 marginTop: 0,
-                marginBottom: 0
+                marginBottom: 0,
+                flex: 1,
+                textAlign: 'left'
               }}>
-                это поможет мне подобрать нагрузку и упражнения, которые наилучшим образом учитывают физиологические особенности твоего организма.
+                Это поможет мне подобрать нагрузку и упражнения, которые наилучшим образом учитывают физиологические особенности твоего организма.
               </div>
             </div>
             <div style={{ display: 'flex', gap: 32, justifyContent: 'center', width: '100%', marginTop: 32 }}>
@@ -406,22 +500,10 @@ export default function StoryQuiz({ onFinish }) {
                 return (
                   <button
                     key={opt.value}
-                    className={isSelected ? 'selected-gender' : 'gender-btn'}
-                    style={{
-                      fontSize: 20,
+                    style={getChoiceOptionStyle(isSelected, {
                       padding: '18px 32px',
-                      borderRadius: 24,
                       minWidth: 120,
-                      fontWeight: 700,
-                      transition: 'all 0.18s',
-                      cursor: 'pointer',
-                      outline: 'none',
-                      ...(isSelected ? {} : {
-                        background: '#fff',
-                        border: '2.5px solid #eaf4ff',
-                        color: '#222',
-                      })
-                    }}
+                    })}
                     onClick={() => handleAnswer(slide.key, opt.value)}
                   >
                     {opt.label}
@@ -436,10 +518,10 @@ export default function StoryQuiz({ onFinish }) {
     // Специальный слайд для выбора количества тренировок
     if (slide.key === 'workouts_per_week') {
       return (
-        <div key={step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', height: '100%', padding: '40px 16px 32px', textAlign: 'center', minHeight: '100vh' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: 360 }}>
-            <h1 style={{ fontSize: 24, fontWeight: 'bold', color: '#222', marginBottom: 24, lineHeight: 1.2 }}>
-              Сколько тренировок в неделю будем выполнять?
+        <div key={step} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', height: '100%', padding: '32px 16px 16px 16px', textAlign: 'center', minHeight: '100vh', width: '100vw', boxSizing: 'border-box' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '100%', maxWidth: 340 }}>
+            <h1 style={{ fontSize: 26, fontWeight: 700, color: '#181818', marginBottom: 24, lineHeight: 1.2, textAlign: 'center', textTransform: 'uppercase', letterSpacing: 0.2 }}>
+              СКОЛЬКО ТРЕНИРОВОК В НЕДЕЛЮ БУДЕМ ВЫПОЛНЯТЬ?
             </h1>
             <div style={{
               display: 'flex',
@@ -449,14 +531,14 @@ export default function StoryQuiz({ onFinish }) {
               borderRadius: 24,
               background: 'rgb(255, 255, 255)',
               boxShadow: '0px 4px 12px 0px rgba(0, 0, 0, 0.2)',
-              padding: '12px 15px',
-              minHeight: 80,
+              padding: '8px 15px',
+              minHeight: 65,
               position: 'relative',
               gap: 18,
               maxWidth: 360,
             }}>
-              <img src={require('../assets/quiz/dumbbell.png')} alt="dumbbell" style={{ width: 88, height: 88, borderRadius: 16, objectFit: 'cover', marginRight: 4 }} />
-              <div style={{ fontSize: 13, color: '#222', lineHeight: 1.3, fontWeight: 500, textAlign: 'left' }}>
+              <img src={require('../assets/quiz/dumbbell.png')} alt="dumbbell" style={{ width: 88, height: 88, borderRadius: 16, objectFit: 'cover', marginLeft: -8 }} />
+              <div style={{ fontSize: 13, color: '#222', lineHeight: 1.3, fontWeight: 500, textAlign: 'left', marginLeft: -10 }}>
                 Лучше делать меньше, но регулярно. На основе этого мы подберём тебе сбалансированную программу.
               </div>
             </div>
@@ -466,21 +548,13 @@ export default function StoryQuiz({ onFinish }) {
                 return (
                   <button
                     key={opt.value}
-                    className={isSelected ? 'selected-gender' : 'gender-btn'}
-                    style={{
-                      fontSize: 20,
+                    style={getChoiceOptionStyle(isSelected, {
                       padding: '18px 0',
-                      borderRadius: 32,
                       width: 200,
-                      fontWeight: 700,
-                      background: 'transparent',
                       margin: '0 auto',
-                      letterSpacing: 0.2,
+                      letterSpacing: '0.5px',
                       textTransform: 'none',
-                      transition: 'all 0.18s',
-                      cursor: 'pointer',
-                      outline: 'none',
-                    }}
+                    })}
                     onClick={() => handleAnswer(slide.key, opt.value)}
                   >
                     {opt.label}
@@ -498,7 +572,7 @@ export default function StoryQuiz({ onFinish }) {
         <>
           <div style={{ display: 'flex', gap: 16, justifyContent: 'center', margin: '32px 0' }}>
             {slide.options.map(opt => (
-              <button className="quiz-btn" style={{fontSize: 20, padding: '14px 28px', borderRadius: 12}} key={opt.value} onClick={() => handleAnswer(slide.key, opt.value)}>{opt.label}</button>
+              <button className="quiz-btn age-btn" style={getChoiceButtonStyle()} key={opt.value} onClick={() => handleAnswer(slide.key, opt.value)}>{opt.label}</button>
             ))}
           </div>
         </>
@@ -512,7 +586,7 @@ export default function StoryQuiz({ onFinish }) {
       const value = answers[slide.key] ?? (currentYear - 25);
       return (
         <div style={{ minHeight: '100vh', width: '100vw', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)', boxSizing: 'border-box', padding: '32px 16px 16px 16px', position: 'relative' }}>
-          <div style={{ fontWeight: 700, fontSize: 28, margin: '8px 0 12px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>{slide.title}</div>
+          <div style={{ fontWeight: 700, fontSize: 26, margin: '8px 0 12px 0', textAlign: 'center', letterSpacing: 0.2, color: '#181818', textTransform: 'uppercase' }}>{slide.title}</div>
           <div style={{
             width: '100%',
             minHeight: 80,
@@ -527,7 +601,7 @@ export default function StoryQuiz({ onFinish }) {
               borderRadius: 18,
               background: '#fff',
               boxShadow: '0px 4px 12px 0px rgba(0, 0, 0, 0.2)',
-              padding: '16px 18px',
+              padding: '12px 18px',
               margin: 0,
               display: 'flex',
               alignItems: 'center',
@@ -541,13 +615,13 @@ export default function StoryQuiz({ onFinish }) {
             }}>
               <img src={require('../assets/welcome/cupcake2.png')} alt="cupcake"
                 style={{
-                  width: 80,
-                  height: 80,
+                  width: 70,
+                  height: 70,
                   objectFit: 'cover',
-                  filter: 'drop-shadow(0 0 0px #ffb86a) drop-shadow(0 0 8px #ffb86a) drop-shadow(0 0 18px #ffb86a) drop-shadow(0 0 32px #ffe0b3) drop-shadow(0 0 56px #fff0e0)',
                   borderRadius: 16,
                   overflow: 'visible',
-                  zIndex: 3
+                  zIndex: 3,
+                  marginLeft: 6
                 }}
               />
               <div style={{ fontSize: 14, color: '#222', lineHeight: 1.15, fontWeight: 500, marginLeft: 8, marginRight: 0, padding: 0, marginTop: 0, marginBottom: 0 }}>
@@ -558,7 +632,7 @@ export default function StoryQuiz({ onFinish }) {
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 32, background: 'none', boxShadow: 'none', border: 'none', marginTop: 48 }}>
             <WheelPicker value={value} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} min={minYear} max={maxYear} />
           </div>
-          <button className="quiz-btn age-btn" style={{ marginTop: 48, fontSize: 20, padding: '16px 0', borderRadius: 12, width: 320, maxWidth: '90vw', background: '#2196f3', color: '#fff', fontWeight: 700, boxShadow: '0 4px 16px 0 #2196f366', border: 'none' }} onClick={handleNext}>Следующий</button>
+          <button className="quiz-btn age-btn" style={getButtonStyle(true, { marginTop: 48, width: 320, maxWidth: '90vw' })} onClick={handleNext}>Следующий</button>
         </div>
       );
     }
@@ -576,11 +650,11 @@ export default function StoryQuiz({ onFinish }) {
           boxSizing: 'border-box',
           padding: '32px 16px 16px 16px'
         }}>
-          <div style={{ fontWeight: 700, fontSize: 28, margin: '48px 0 24px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>{slide.title}</div>
+          <div style={{ fontWeight: 700, fontSize: 26, margin: '48px 0 24px 0', textAlign: 'center', letterSpacing: 0.2, color: '#181818', textTransform: 'uppercase' }}>{slide.title}</div>
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 8, minHeight: 120 }}>
             <HorizontalWeightSlider value={value} min={slide.min} max={slide.max} unit={slide.unit} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} />
           </div>
-          <button className="quiz-btn age-btn" style={{ marginTop: 0, fontSize: 20, padding: '16px 0', borderRadius: 12, width: 320, maxWidth: '90vw', background: '#2196f3', color: '#fff', fontWeight: 700, boxShadow: '0 4px 16px 0 #2196f366', border: 'none' }} onClick={handleNext}>Следующий</button>
+          <button className="quiz-btn age-btn" style={getButtonStyle(true, { marginTop: 0, width: 320, maxWidth: '90vw' })} onClick={handleNext}>Следующий</button>
         </div>
       );
     }
@@ -598,11 +672,11 @@ export default function StoryQuiz({ onFinish }) {
           boxSizing: 'border-box',
           padding: '32px 16px 16px 16px'
         }}>
-          <div style={{ fontWeight: 700, fontSize: 28, margin: '48px 0 24px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>{slide.title}</div>
+          <div style={{ fontWeight: 700, fontSize: 26, margin: '32px 0 24px 0', textAlign: 'center', letterSpacing: 0.2, color: '#181818', textTransform: 'uppercase' }}>{slide.title}</div>
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 8, minHeight: 420 }}>
             <CustomSlider value={value} min={slide.min} max={slide.max} unit={slide.unit} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} height={380} />
           </div>
-          <button className="quiz-btn age-btn" style={{ marginTop: 0, fontSize: 20, padding: '16px 0', borderRadius: 12, width: 320, maxWidth: '90vw', background: '#2196f3', color: '#fff', fontWeight: 700, boxShadow: '0 4px 16px 0 #2196f366', border: 'none' }} onClick={handleNext}>Следующий</button>
+          <button className="quiz-btn age-btn" style={getButtonStyle(true, { marginTop: 0, width: 320, maxWidth: '90vw' })} onClick={handleNext}>Следующий</button>
         </div>
       );
     }
@@ -629,7 +703,7 @@ export default function StoryQuiz({ onFinish }) {
                 }} /> {opt.label}
               </label>
             ))}
-            <button className="quiz-btn" style={{ marginTop: 18, fontSize: 20, padding: '14px 32px', borderRadius: 12 }} onClick={handleNext}>Дальше</button>
+            <button className="quiz-btn age-btn" style={getButtonStyle(true, { marginTop: 18 })} onClick={handleNext}>Дальше</button>
           </div>
         </>
       );
@@ -637,15 +711,17 @@ export default function StoryQuiz({ onFinish }) {
     if (slide.type === 'input') {
       return (
         <div style={{
-          width: '100%',
+          width: '100vw',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'flex-start',
           minHeight: '100vh',
           background: 'transparent',
+          boxSizing: 'border-box',
+          padding: '32px 16px 16px 16px'
         }}>
-          <div style={{ marginTop: 120, width: 320, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ width: '100%', maxWidth: 340, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
             <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 26, textAlign: 'center', marginBottom: 24, textTransform: 'uppercase', letterSpacing: 0.2 }}>
               <span>{slide.title}</span>
               <img src={require('../assets/quiz/heart2.png')} alt="heart" style={{ width: 38, height: 38, marginLeft: 12, marginBottom: 0 }} />
@@ -671,9 +747,7 @@ export default function StoryQuiz({ onFinish }) {
                 fontWeight: 600
               }}
             />
-            <button onClick={handleNext} style={{ background: 'none', border: 'none', padding: 0, cursor: answers[slide.key] ? 'pointer' : 'not-allowed', width: 320, display: 'flex', justifyContent: 'center' }} disabled={!answers[slide.key]}>
-              <img src={require('../assets/quiz/next-btn.png')} alt="Следующий" style={{ width: 320, height: 64, display: 'block', objectFit: 'cover', borderRadius: 16 }} />
-            </button>
+            <button className="quiz-btn age-btn" style={getButtonStyle(!!answers[slide.key], { marginTop: 24, width: 320, maxWidth: '90vw' })} onClick={handleNext} disabled={!answers[slide.key]}>Следующий</button>
           </div>
         </div>
       );
@@ -714,7 +788,7 @@ export default function StoryQuiz({ onFinish }) {
             years={options.map(o => o.value)}
             labels={options.map(o => o.label)}
           />
-          <button className="quiz-btn" style={{ marginTop: 32, fontSize: 20, padding: '14px 32px', borderRadius: 12, background: '#2196f3', color: '#fff', fontWeight: 700, boxShadow: '0 4px 16px 0 #2196f366', border: 'none', width: 320, maxWidth: '90vw' }} onClick={handleNext}>Рассчитать программу</button>
+          <button className="quiz-btn" style={getButtonStyle(true, { marginTop: 32, width: 320, maxWidth: '90vw' })} onClick={handleNext}>Рассчитать программу</button>
         </div>
       );
     }
@@ -726,12 +800,16 @@ export default function StoryQuiz({ onFinish }) {
         { label: '-5 кг за месяц', value: 5 },
       ];
       const value = answers[slide.key];
+      // Для GoalSlide показываем стрелочку, если step > 1
+      const goalShowBackButton = step > 1;
       return (
         <GoalSlide
           options={options}
           selected={value}
           onSelect={v => setAnswers(a => ({ ...a, [slide.key]: v }))}
           onNext={handleNext}
+          onBack={handleBack}
+          showBackButton={goalShowBackButton}
         />
       );
     }
@@ -755,14 +833,15 @@ export default function StoryQuiz({ onFinish }) {
             justifyContent: 'flex-start',
             background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
             boxSizing: 'border-box',
-            padding: '8px 16px 0 16px',
+            padding: '32px 16px 16px 16px',
           }}
         >
-          <div style={{ fontWeight: 700, fontSize: 28, margin: '8px 0 16px 0', textAlign: 'center', letterSpacing: 0, color: '#181818' }}>
+          <div style={{ fontWeight: 700, fontSize: 26, margin: '8px 0 16px 0', textAlign: 'center', letterSpacing: 0.2, color: '#181818', textTransform: 'uppercase' }}>
             ТВОЙ ТИП ПИТАНИЯ
           </div>
           <div style={{
             width: '100%',
+            maxWidth: 340,
             display: 'flex',
             alignItems: 'center',
             marginBottom: 16,
@@ -774,22 +853,22 @@ export default function StoryQuiz({ onFinish }) {
             minHeight: 80,
             position: 'relative',
             gap: 18,
-            maxWidth: 341,
           }}>
             <img
               src={require('../assets/quiz/cupcake.png')}
               alt="cupcake"
               style={{
-                width: 95,
-                height: 78,
+                width: 80,
+                height: 66,
                 borderRadius: 23,
                 objectFit: 'cover',
                 background: 'transparent',
                 marginRight: -20,
+                marginLeft: -2,
               }}
             />
             <div style={{
-              fontSize: 15,
+              fontSize: 13,
               color: '#222',
               fontWeight: 500,
               flex: 1,
@@ -801,30 +880,28 @@ export default function StoryQuiz({ onFinish }) {
             </div>
           </div>
           <div style={{ width: '100%', maxWidth: 340, display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center', marginBottom: 24 }}>
-            {options.map(opt => (
-              <button
-                key={opt.value}
-                onClick={() => handleAnswer(slide.key, opt.value)}
-                style={{
-                  width: 210,
-                  height: 70,
-                  borderRadius: 35,
-                  border: 'none',
-                  fontWeight: 700,
-                  fontSize: 22,
-                  color: '#222',
-                  background: value === opt.value ? '#2563eb' : '#f6faff',
-                  boxShadow: '0 0 32px 12px #2196f344, 0 0 32px 24px #90caf944, 0 0 64px 32px #2196f344',
-                  transition: 'all 0.2s',
-                  outline: 'none',
-                  cursor: 'pointer',
-                  textTransform: 'none',
-                  letterSpacing: 0,
-                }}
-              >
-                {opt.label}
-              </button>
-            ))}
+            {options.map(opt => {
+              const isSelected = value === opt.value;
+              return (
+                <button
+                  key={opt.value}
+                  onClick={() => handleAnswer(slide.key, opt.value)}
+                  style={getChoiceOptionStyle(isSelected, {
+                    width: 210,
+                    height: 70,
+                    borderRadius: 35,
+                    fontWeight: 700,
+                    fontSize: 20,
+                    fontFamily: 'Roboto, sans-serif',
+                    textTransform: 'none',
+                    letterSpacing: '0.5px',
+                    padding: '18px 0',
+                  })}
+                >
+                  {opt.label}
+                </button>
+              );
+            })}
           </div>
         </div>
       );
@@ -835,7 +912,8 @@ export default function StoryQuiz({ onFinish }) {
   if (!quizConfig) return <div>Загрузка...</div>;
 
   return (
-    <div style={{ width: '100vw', minWidth: '100vw', maxWidth: '100vw', minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)', boxSizing: 'border-box', padding: '8px 16px 0 16px', margin: 0, overflowX: 'hidden' }}>
+    <div style={{ width: '100vw', minWidth: '100vw', maxWidth: '100vw', minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)', boxSizing: 'border-box', padding: '8px 16px 0 16px', margin: 0, overflowX: 'hidden', position: 'relative' }}>
+      {renderBackButton()}
       <ProgressBar current={step + 1} total={total} />
       {renderDots()}
       {renderControl({ inputRef })}

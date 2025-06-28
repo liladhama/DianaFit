@@ -81,9 +81,9 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
           onTouchStart={startDrag}
         >
           {/* Палочка влево от линейки */}
-          <div style={{ width: stickLength, height: 4, background: '#22c55e', borderRadius: 2, marginRight: 0 }} />
+          <div style={{ width: stickLength, height: 4, background: '#2196f3', borderRadius: 2, marginRight: 0 }} />
           {/* Круг */}
-          <div style={{ width: knobSize, height: knobSize, borderRadius: '50%', background: '#fff', border: '3px solid #22c55e', boxShadow: '0 2px 8px #22c55e33', marginLeft: -knobSize/2, zIndex: 2 }} />
+          <div style={{ width: knobSize, height: knobSize, borderRadius: '50%', background: '#fff', border: '3px solid #2196f3', boxShadow: '0 2px 8px #2196f333', marginLeft: -knobSize/2, zIndex: 2 }} />
           {/* Невидимая область для drag */}
           <div style={{ position: 'absolute', left: stickLength, top: 0, width: grabSize, height: grabSize, borderRadius: '50%', background: 'rgba(0,0,0,0)', zIndex: 1 }} />
         </div>
@@ -100,7 +100,7 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
             WebkitAppearance: 'slider-vertical',
             width: stickLength + grabSize + 30,
             height,
-            accentColor: '#22c55e',
+            accentColor: '#2196f3',
             position: 'absolute',
             left: -15,
             top: 0,

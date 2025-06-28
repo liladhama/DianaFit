@@ -4,7 +4,7 @@ import { getWorkoutLocation, getDayId, getExerciseEnglishName } from '../utils/v
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dianafit.onrender.com';
 
-export default function TodayBlock({ day, onBackToWeek }) {
+export default function TodayBlock({ day, answers, onBackToWeek }) {
   // Если day не передан или невалиден — используем мок-день
   if (!day || !day.date) {
     day = {
@@ -16,6 +16,9 @@ export default function TodayBlock({ day, onBackToWeek }) {
     };
   }
 
+  // Проверяем, начинается ли программа сегодня или позже
+  const programStartsLater = answers && answers.start_date && new Date(answers.start_date) > new Date();
+  
   const [completedExercises, setCompletedExercises] = useState(
     day.workout?.exercises.map((ex, i) => day.completedExercises?.[i] || false) || []
   );
@@ -95,12 +98,37 @@ export default function TodayBlock({ day, onBackToWeek }) {
         }}
       >К расписанию</button>
       <div style={{ flex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingBottom: 40 }}>
-        <div style={{ marginBottom: 18, marginTop: 0 }}>
-          <span style={{ fontSize: 26, fontWeight: 700 }}>
-            День {(day && typeof day.title === 'string' ? day.title.replace(/\D/g, '') : '')}
-          </span>
-          <span style={{ fontSize: 16, color: '#888', marginLeft: 10 }}>({day?.date || ''})</span>
-        </div>
+        {programStartsLater ? (
+          // Показываем сообщение о том, что программа начнется позже
+          <div style={{ textAlign: 'center', padding: '20px', maxWidth: 300 }}>
+            <div style={{ fontSize: 24, fontWeight: 700, marginBottom: 16, color: '#181818' }}>
+              Программа начнется позже
+            </div>
+            <div style={{ fontSize: 16, color: '#666', lineHeight: 1.5, marginBottom: 20 }}>
+              Вы выбрали начать тренировки {answers?.start_date ? new Date(answers.start_date).toLocaleDateString('ru-RU') : 'в выбранную дату'}. 
+              До этого времени можете ознакомиться с недельным расписанием.
+            </div>
+            <div style={{ 
+              background: '#e3f0ff', 
+              borderRadius: 12, 
+              padding: '16px', 
+              border: '1px solid #2196f3',
+              color: '#1976d2',
+              fontSize: 14,
+              fontWeight: 500 
+            }}>
+              💡 Подготовьтесь заранее: посмотрите упражнения и составьте список покупок для правильного питания
+            </div>
+          </div>
+        ) : (
+          // Показываем обычный контент дня
+          <>
+            <div style={{ marginBottom: 18, marginTop: 0 }}>
+              <span style={{ fontSize: 26, fontWeight: 700 }}>
+                День {(day && typeof day.title === 'string' ? day.title.replace(/\D/g, '') : '')}
+              </span>
+              <span style={{ fontSize: 16, color: '#888', marginLeft: 10 }}>({day?.date || ''})</span>
+            </div>
         {day.workout ? (
           <div style={{ marginBottom: 18 }}>
             <b>Тренировка:</b> {day.workout.title || day.workout.name}
@@ -175,6 +203,8 @@ export default function TodayBlock({ day, onBackToWeek }) {
             </div>
           )}
         </div>
+        </>
+        )}
       </div>
     </div>
   );
