@@ -5,8 +5,33 @@ import faiss
 from tqdm import tqdm
 import numpy as np
 
-# Укажите свой OpenAI API ключ
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+# Читаем API ключ из .env файла или переменной окружения
+def load_api_key():
+    # Сначала пробуем переменную окружения
+    api_key = os.getenv("OPENAI_API_KEY")
+    if api_key:
+        return api_key
+    
+    # Если нет, читаем из .env файла
+    try:
+        with open('.env', 'r') as f:
+            for line in f:
+                if line.startswith('OPENAI_API_KEY='):
+                    return line.split('=', 1)[1].strip()
+    except FileNotFoundError:
+        pass
+    
+    # Если ключ не найден, запрашиваем у пользователя
+    print("OpenAI API ключ не найден!")
+    print("1. Установите переменную окружения OPENAI_API_KEY")
+    print("2. Или добавьте ключ в файл .env: OPENAI_API_KEY=your_key_here")
+    return None
+
+OPENAI_API_KEY = load_api_key()
+if not OPENAI_API_KEY:
+    print("Ошибка: OpenAI API ключ не найден")
+    exit(1)
+
 openai.api_key = OPENAI_API_KEY
 
 CHUNKS_PATH = "knowledge_base_chunks.jsonl"
