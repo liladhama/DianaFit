@@ -5,6 +5,7 @@ import WeekPlan from './components/WeekPlan';
 import ProfilePage from './components/ProfilePage';
 import DayBlock from './components/DayBlock';
 import TodayBlock from './components/TodayBlock';
+import TestWeek from './components/TestWeek';
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -12,6 +13,7 @@ function App() {
   const [answers, setAnswers] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showToday, setShowToday] = useState(false);
+  const [showTestWeek, setShowTestWeek] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
 
   // Получаем текущий день из мок-данных (если нет weekData)
@@ -44,12 +46,14 @@ function App() {
     setAnswers(quizAnswers);
     // Если в ответах есть programId, используем его, иначе заглушка
     setProgramId(quizAnswers.programId || quizAnswers.id || 'demo-program');
+    // Показываем тестовую неделю сразу после квиза
+    setShowTestWeek(true);
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100vw', background: '#fff' }}>
-      {((answers && programId) || (showToday && todayDay)) && (
-        // Аватарка пользователя только на странице недели и текущего дня
+      {((answers && programId) || (showToday && todayDay) || showTestWeek) && (
+        // Аватарка пользователя только на странице недели, текущего дня и тестовой недели
         <div style={{ position: 'fixed', top: 16, right: 16, zIndex: 100 }}>
           <button onClick={() => setShowProfile(true)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}>
             <img src={window.Telegram?.WebApp?.initDataUnsafe?.user?.photo_url || 'https://twa.netlify.app/ava.png'} alt="avatar" style={{ width: 44, height: 44, borderRadius: '50%', boxShadow: '0 2px 8px #e0e7ff44', objectFit: 'cover' }} />
@@ -63,8 +67,15 @@ function App() {
           onClose={() => setShowProfile(false)}
           unlocked={unlocked}
           answers={answers}
-          onEditQuiz={() => { setShowProfile(false); setShowToday(false); }}
-          onRestart={() => { setAnswers(null); setProgramId(null); setShowProfile(false); setShowToday(false); setUnlocked(false); }}
+          onEditQuiz={() => { setShowProfile(false); setShowToday(false); setShowTestWeek(false); }}
+          onRestart={() => { setAnswers(null); setProgramId(null); setShowProfile(false); setShowToday(false); setShowTestWeek(false); setUnlocked(false); }}
+        />
+      ) : showTestWeek ? (
+        <TestWeek 
+          onStartProgram={() => {
+            setShowTestWeek(false);
+            setShowToday(true);
+          }}
         />
       ) : (answers && programId && todayDay && !showToday) ? (
         <TodayBlock day={todayDay} onBackToWeek={() => setShowToday(true)} />
