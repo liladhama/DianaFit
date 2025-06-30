@@ -29,7 +29,9 @@ const cardStyle = {
   padding: 20,
   marginBottom: 16,
   boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
-  border: '1px solid #f0f0f0'
+  border: '1px solid #f0f0f0',
+  width: '100%',
+  boxSizing: 'border-box'
 };
 
 const headerStyle = {
@@ -86,6 +88,8 @@ export default function TodayBlock({ day, answers, onBackToWeek }) {
   );
   const [dailySteps] = useState(day.dailySteps || 7500);
   const [stepsGoal] = useState(day.dailyStepsGoal || 10000);
+  const [aiAnalysis, setAiAnalysis] = useState('');
+  const [loadingAI, setLoadingAI] = useState(false);
   
   // Получаем случайную мотивационную цитату
   const todayQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
@@ -158,10 +162,7 @@ export default function TodayBlock({ day, answers, onBackToWeek }) {
       <div style={{ 
         padding: '16px 20px', 
         background: '#fff', 
-        borderBottom: '1px solid #e2e8f0',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
+        borderBottom: '1px solid #e2e8f0'
       }}>
         <button
           onClick={onBackToWeek}
@@ -173,17 +174,31 @@ export default function TodayBlock({ day, answers, onBackToWeek }) {
             border: 'none',
             fontWeight: 600,
             cursor: 'pointer',
-            color: '#2196f3'
+            color: '#2196f3',
+            whiteSpace: 'nowrap'
           }}
         >← К расписанию</button>
         
-        <div style={{ fontSize: 16, fontWeight: 600, color: '#1a1a1a' }}>
+        {/* Заголовок под кнопкой */}
+        <div style={{ 
+          fontSize: 20, 
+          fontWeight: 700, 
+          color: '#1a1a1a', 
+          textAlign: 'center',
+          marginTop: 12
+        }}>
           Текущий день
         </div>
-        <div style={{ width: 85 }} /> {/* Spacer для центрирования */}
       </div>
 
-      <div style={{ flex: 1, padding: '20px', maxWidth: 400, margin: '0 auto', width: '100%' }}>
+      <div style={{ 
+        flex: 1, 
+        padding: '20px', 
+        maxWidth: 480, 
+        margin: '0 auto', 
+        width: '100%',
+        boxSizing: 'border-box'
+      }}>
         
         {programStartsLater ? (
           // Показываем сообщение о том, что программа начнется позже
@@ -312,8 +327,9 @@ export default function TodayBlock({ day, answers, onBackToWeek }) {
               
               {/* БЖУ и Калории */}
               <div style={{ 
-                display: 'flex', 
-                justifyContent: 'space-between', 
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: 8,
                 background: '#f8fafc', 
                 padding: 16, 
                 borderRadius: 12,
