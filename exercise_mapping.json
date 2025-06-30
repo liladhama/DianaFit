@@ -1,0 +1,102 @@
+{
+  "exerciseMapping": {
+    "gym": {
+      "day1_back_shoulders": {
+        "Тяга верхнего блока широким хватом": "lat_pulldown_wide_grip",
+        "Тяга верхнего блока узким хватом": "lat_pulldown_close_grip",
+        "Тяга в тренажере Хаммер двумя руками": "hammer_machine_row_both_hands",
+        "Жим гантелей сидя": "seated_dumbbell_press",
+        "Махи гантелей в стороны": "dumbbell_lateral_raises",
+        "Отведения на заднюю дельту": "rear_delt_flyes"
+      },
+      "day2_glutes": {
+        "Жим платформы лежа": "leg_press_lying",
+        "Румынская тяга в Смите": "romanian_deadlift_smith_machine",
+        "Приседания с узкой постановкой ног": "narrow_stance_squats",
+        "Ягодичный мост в Смите в короткую амплитуду": "smith_machine_glute_bridge_short_range"
+      },
+      "day3_glutes_hamstrings": {
+        "Ягодичный мост со свободным весом": "free_weight_glute_bridge",
+        "Жим платформы одной ногой": "single_leg_press",
+        "Румынская тяга со свободным весом": "free_weight_romanian_deadlift",
+        "Сгибания ног в тренажере на проработку задней поверхности бедра": "lying_leg_curls",
+        "Отведения бедра сидя": "seated_hip_abduction"
+      },
+      "day4_back_shoulders": {
+        "Тяга нижнего блока узким хватом": "cable_row_close_grip",
+        "Тяга одной рукой в тренажере Хаммер": "single_arm_hammer_row",
+        "Тяга верхнего блока широким хватом": "lat_pulldown_wide_grip",
+        "Отведения за заднюю дельту в тренажере бабочка": "rear_delt_machine_flyes",
+        "Махи гантелей стоя": "standing_dumbbell_lateral_raises",
+        "Жим на плечи в Смите": "smith_machine_shoulder_press"
+      },
+      "day5_glutes_focused": {
+        "Отведения бедра в тренажере": "hip_abduction_machine",
+        "Ягодичный мост со свободным весом": "free_weight_glute_bridge",
+        "Приседания с узкой постановкой ног в Смите": "smith_machine_narrow_squats"
+      }
+    },
+    "home": {
+      "day1_cardio_circuit": {
+        "Приседания с шагами вперед-назад": "squats_with_steps_forward_backward",
+        "Обратная планка с подъемом колена": "reverse_plank_knee_raise",
+        "Стойка на плечах": "shoulder_stand",
+        "Ленивые берпи с приседом": "lazy_burpees_with_squat",
+        "Перекрестные выпады": "cross_lunges"
+      },
+      "day2_functional_circuit": {
+        "Приседания с подъемом ноги назад": "squats_with_leg_curl_back",
+        "Планка с отведением ноги": "plank_leg_kickback",
+        "Прыжок из приседа в планку": "squat_jump_to_plank",
+        "Лодочка с подъемами ног": "boat_pose_leg_raises",
+        "Бег с высоким подниманием колен": "high_knees_running",
+        "Зашагивания с махом ноги": "step_ups_with_leg_swing"
+      },
+      "day3_tabata": {
+        "Прыгающий джек": "jumping_jacks",
+        "Присед + выпад назад": "squat_reverse_lunge_combo",
+        "Складка сидя": "seated_book_crunches",
+        "Планка вверх-вниз + касание плеч": "plank_up_down_shoulder_tap",
+        "Боковой выпад + подъем ноги": "side_lunge_leg_raise",
+        "Диагональное касание носка к углу": "diagonal_toe_touch_corner",
+        "Подъем с колена в прыжок": "knee_to_stand_jump"
+      },
+      "day4_hiit": {
+        "Переход из стойки в планку": "stand_to_plank_walkout",
+        "Скручивания лежа": "lying_crunches",
+        "Присед + наклон": "squat_good_morning_combo",
+        "Планка с прыжками": "plank_jumping_jacks",
+        "Отжимания с отведением ноги": "pushup_leg_kickback",
+        "Приседания сумо + подъемы на носки": "sumo_squat_calf_raises"
+      },
+      "day5_cardio_advanced": {
+        "Выпад + подъем колена": "lunge_knee_raise_combo",
+        "Планка статическая": "plank_hold",
+        "Ягодичный мост на одной ноге": "single_leg_glute_bridge",
+        "Скручивания в половину амплитуды": "half_amplitude_crunches",
+        "Лодочка со сведением лопаток": "boat_pose_shoulder_blade_squeeze",
+        "Присед + запрыгивание на коробку": "squat_box_jump"
+      }
+    }
+  },
+  "fileNamingGuide": {
+    "rules": [
+      "Все имена файлов должны быть строчными буквами",
+      "Используйте подчеркивания (_) вместо пробелов",
+      "Формат файла: .mp4",
+      "Имя файла должно точно соответствовать английскому названию из маппинга"
+    ],
+    "examples": {
+      "correct": [
+        "glute_bridge_smith_machine.mp4",
+        "jumping_jacks.mp4",
+        "plank_hold.mp4"
+      ],
+      "incorrect": [
+        "Glute Bridge Smith Machine.mp4",
+        "jumping-jacks.mp4",
+        "plank hold.avi"
+      ]
+    }
+  }
+}

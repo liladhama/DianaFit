@@ -4,15 +4,74 @@ import { getWorkoutLocation, getDayId, getExerciseEnglishName } from '../utils/v
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dianafit.onrender.com';
 
+// Мотивационные цитаты от Дианы
+const motivationalQuotes = [
+  "Не нужно быть идеальной. Нужно быть стабильной. — Диана",
+  "Каждый день — это новая возможность стать лучше. — Диана",
+  "Твое тело может. Твой разум сомневается. Слушай тело. — Диана",
+  "Прогресс важнее совершенства. — Диана",
+  "Твоя цель — не быть как все, а быть лучшей версией себя. — Диана"
+];
+
+// Получаем текущую дату в формате "Вторник, 25 июня"
+const getCurrentDateString = () => {
+  const now = new Date();
+  const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
+  const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
+  
+  return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
+};
+
+// Стили компонентов
+const cardStyle = {
+  background: '#fff',
+  borderRadius: 16,
+  padding: 20,
+  marginBottom: 16,
+  boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
+  border: '1px solid #f0f0f0'
+};
+
+const headerStyle = {
+  fontSize: 20,
+  fontWeight: 700,
+  color: '#1a1a1a',
+  marginBottom: 16,
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8
+};
+
+const checkboxButtonStyle = (completed) => ({
+  padding: '8px 16px',
+  borderRadius: 8,
+  border: '1px solid #e0e7ff',
+  background: completed ? '#e0e7ff' : '#fff',
+  color: completed ? '#2196f3' : '#666',
+  fontSize: 14,
+  fontWeight: 600,
+  cursor: 'pointer',
+  transition: 'all 0.2s ease',
+  marginTop: 8
+});
+
 export default function TodayBlock({ day, answers, onBackToWeek }) {
   // Если day не передан или невалиден — используем мок-день
   if (!day || !day.date) {
     day = {
       date: '2024-06-03',
       title: 'Понедельник',
-      workout: { title: 'Тренировка 1', exercises: [ { name: 'Приседания', reps: 15 }, { name: 'Отжимания', reps: 10 } ] },
-      meals: [ { type: 'Завтрак', menu: 'Овсянка' }, { type: 'Обед', menu: 'Курица с рисом' } ],
-      completed: false
+      workout: { title: 'Домашняя тренировка №2', exercises: [ { name: 'Приседания', reps: 15 }, { name: 'Отжимания', reps: 10 } ] },
+      meals: [ 
+        { type: 'Завтрак', menu: 'Овсянка с ягодами', calories: 320 },
+        { type: 'Перекус', menu: 'Греческий йогурт с орехами', calories: 180 },
+        { type: 'Обед', menu: 'Курица с рисом и овощами', calories: 450 },
+        { type: 'Полдник', menu: 'Яблоко с арахисовой пастой', calories: 200 },
+        { type: 'Ужин', menu: 'Запеченная рыба с салатом', calories: 380 }
+      ],
+      completed: false,
+      dailySteps: 7500,
+      dailyStepsGoal: 10000
     };
   }
 
@@ -25,9 +84,16 @@ export default function TodayBlock({ day, answers, onBackToWeek }) {
   const [completedMeals, setCompletedMeals] = useState(
     day.meals?.map((m, i) => day.completedMealsArr?.[i] || false) || []
   );
-  const [aiAnalysis, setAiAnalysis] = useState('');
-  const [loadingAI, setLoadingAI] = useState(false);
-
+  const [dailySteps] = useState(day.dailySteps || 7500);
+  const [stepsGoal] = useState(day.dailyStepsGoal || 10000);
+  
+  // Получаем случайную мотивационную цитату
+  const todayQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+  
+  // Вычисляем общие калории и БЖУ
+  const totalCalories = day.meals?.reduce((sum, meal) => sum + (meal.calories || 0), 0) || 1530;
+  const targetCalories = answers?.targetCalories || 1800; // Из квиза
+  
   const products = day.meals
     ? Array.from(new Set(day.meals.flatMap(m => m.menu.split(/,| /).map(s => s.trim()).filter(Boolean))))
     : [];
@@ -81,27 +147,48 @@ export default function TodayBlock({ day, answers, onBackToWeek }) {
   }
 
   return (
-    <div style={{ width: '100vw', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: '#fff' }}>
-      <button
-        onClick={onBackToWeek}
-        style={{
-          fontSize: 22,
-          padding: '12px 32px',
-          borderRadius: 12,
-          background: '#e0e7ff',
-          border: 'none',
-          fontWeight: 700,
-          cursor: 'pointer',
-          boxShadow: '0 2px 8px #e0e7ff44',
-          margin: '32px auto 24px auto',
-          display: 'block',
-        }}
-      >К расписанию</button>
-      <div style={{ flex: 1, width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', paddingBottom: 40 }}>
+    <div style={{ 
+      width: '100vw', 
+      minHeight: '100dvh', 
+      display: 'flex', 
+      flexDirection: 'column', 
+      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' 
+    }}>
+      {/* Шапка с кнопкой назад */}
+      <div style={{ 
+        padding: '16px 20px', 
+        background: '#fff', 
+        borderBottom: '1px solid #e2e8f0',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between'
+      }}>
+        <button
+          onClick={onBackToWeek}
+          style={{
+            fontSize: 16,
+            padding: '8px 16px',
+            borderRadius: 8,
+            background: '#e0e7ff',
+            border: 'none',
+            fontWeight: 600,
+            cursor: 'pointer',
+            color: '#2196f3'
+          }}
+        >← К расписанию</button>
+        
+        <div style={{ fontSize: 16, fontWeight: 600, color: '#1a1a1a' }}>
+          Текущий день
+        </div>
+        <div style={{ width: 85 }} /> {/* Spacer для центрирования */}
+      </div>
+
+      <div style={{ flex: 1, padding: '20px', maxWidth: 400, margin: '0 auto', width: '100%' }}>
+        
         {programStartsLater ? (
           // Показываем сообщение о том, что программа начнется позже
-          <div style={{ textAlign: 'center', padding: '20px', maxWidth: 300 }}>
-            <div style={{ fontSize: 24, fontWeight: 700, marginBottom: 16, color: '#181818' }}>
+          <div style={{ ...cardStyle, textAlign: 'center' }}>
+            <div style={{ fontSize: 24, fontWeight: 700, marginBottom: 16, color: '#1a1a1a' }}>
               Программа начнется позже
             </div>
             <div style={{ fontSize: 16, color: '#666', lineHeight: 1.5, marginBottom: 20 }}>
@@ -121,89 +208,228 @@ export default function TodayBlock({ day, answers, onBackToWeek }) {
             </div>
           </div>
         ) : (
-          // Показываем обычный контент дня
           <>
-            <div style={{ marginBottom: 18, marginTop: 0 }}>
-              <span style={{ fontSize: 26, fontWeight: 700 }}>
-                День {(day && typeof day.title === 'string' ? day.title.replace(/\D/g, '') : '')}
-              </span>
-              <span style={{ fontSize: 16, color: '#888', marginLeft: 10 }}>({day?.date || ''})</span>
+            {/* 1. Заголовок с датой */}
+            <div style={{ ...cardStyle, textAlign: 'center', marginBottom: 24 }}>
+              <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>Сегодня</div>
+              <div style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a' }}>
+                {getCurrentDateString()}
+              </div>
             </div>
-        {day.workout ? (
-          <div style={{ marginBottom: 18 }}>
-            <b>Тренировка:</b> {day.workout.title || day.workout.name}
-            <ul style={{ margin: '8px 0 0 0', padding: 0, listStyle: 'none' }}>
-              {day.workout.exercises.map((ex, i) => {
-                const location = getWorkoutLocation(day.workout.title || day.workout.name);
-                const dayId = getDayId(day.workout.title || day.workout.name, location);
-                const exerciseName = getExerciseEnglishName(ex.name);
-                
-                return (
-                  <li key={i} style={{ marginBottom: 16 }}>
-                    <div style={{ fontWeight: 600, marginBottom: 4 }}>{ex.name} — {ex.reps} раз</div>
-                    {location && dayId && exerciseName ? (
-                      <VideoPlayer 
-                        location={location}
-                        dayId={dayId}
-                        exerciseName={exerciseName}
-                        title={ex.name}
-                      />
-                    ) : (
-                      <div style={{ width: 120, height: 80, background: '#eee', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#aaa', fontSize: 14 }}>
-                        Видео<br />скоро
+
+            {/* 2. Блок тренировки */}
+            <div style={cardStyle}>
+              <div style={headerStyle}>
+                🏋️‍♀️ Тренировка
+              </div>
+              
+              {day.workout && day.workout.exercises && day.workout.exercises.length > 0 ? (
+                <>
+                  <div style={{ fontSize: 18, fontWeight: 600, color: '#1a1a1a', marginBottom: 16 }}>
+                    {day.workout.title || 'Тренировка'}
+                  </div>
+                  
+                  {day.workout.exercises.map((ex, i) => {
+                    const location = getWorkoutLocation(day.workout.title || day.workout.name);
+                    const dayId = getDayId(day.workout.title || day.workout.name, location);
+                    const exerciseName = getExerciseEnglishName(ex.name);
+                    
+                    return (
+                      <div key={i} style={{ 
+                        marginBottom: 20, 
+                        padding: 16, 
+                        background: '#f8fafc', 
+                        borderRadius: 12,
+                        border: '1px solid #e2e8f0'
+                      }}>
+                        <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: '#1a1a1a' }}>
+                          {ex.name}
+                        </div>
+                        <div style={{ fontSize: 14, color: '#666', marginBottom: 12 }}>
+                          {ex.reps} повторений
+                        </div>
+                        
+                        {location && dayId && exerciseName ? (
+                          <VideoPlayer 
+                            location={location}
+                            dayId={dayId}
+                            exerciseName={exerciseName}
+                            title={ex.name}
+                          />
+                        ) : (
+                          <div style={{ 
+                            width: '100%', 
+                            height: 120, 
+                            background: '#e2e8f0', 
+                            borderRadius: 8, 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            color: '#94a3b8', 
+                            fontSize: 14,
+                            marginBottom: 12
+                          }}>
+                            🎥 Видео скоро
+                          </div>
+                        )}
+                        
+                        <button
+                          onClick={() => handleExerciseChange(i)}
+                          style={{
+                            ...checkboxButtonStyle(completedExercises[i]),
+                            width: '100%'
+                          }}
+                        >
+                          {completedExercises[i] ? '✅ Выполнено' : '⭕ Выполнить'}
+                        </button>
                       </div>
-                    )}
-                    <div>
-                      <input type="checkbox" checked={completedExercises[i]} onChange={() => handleExerciseChange(i)} style={{ marginRight: 8 }} />
-                      <span>Выполнено</span>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ) : (
-          <div style={{ 
-            marginBottom: 16, 
-            padding: '20px', 
-            background: 'linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%)',
-            borderRadius: '12px',
-            textAlign: 'center'
-          }}>
-            <div style={{ fontSize: '48px', marginBottom: '12px' }}>🌿</div>
-            <h3 style={{ color: '#2d5a2d', marginBottom: '8px' }}>День отдыха</h3>
-            <p style={{ color: '#666', fontSize: '16px', margin: 0 }}>
-              Сегодня отдыхаем! Можно прогуляться или сделать лёгкую растяжку.
-            </p>
-          </div>
-        )}
-        <div style={{ marginBottom: 18 }}>
-          <b>Меню на день:</b>
-          <ul style={{ margin: '8px 0 0 0', padding: 0, listStyle: 'none' }}>
-            {day.meals && day.meals.map((meal, i) => (
-              <li key={i} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
-                <input type="checkbox" checked={completedMeals[i]} onChange={() => handleMealChange(i)} style={{ marginRight: 8 }} />
-                <span><b>{meal.type}:</b> {meal.menu}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div style={{ marginTop: 32 }}>
-          <b>Список продуктов на день:</b>
-          <ul style={{ margin: '8px 0 0 18px' }}>
-            {products.map((p, i) => <li key={i}>{p}</li>)}
-          </ul>
-        </div>
-        <div style={{ marginTop: 32 }}>
-          {/* Кнопка анализа дня от ИИ временно убрана */}
-          {aiAnalysis && (
-            <div style={{ background: '#f1f5f9', borderRadius: 10, padding: 16, marginTop: 8, color: '#222', fontSize: 16 }}>
-              <b>Анализ и совет от ИИ:</b><br />
-              {aiAnalysis}
+                    );
+                  })}
+                </>
+              ) : (
+                <div style={{ 
+                  textAlign: 'center',
+                  padding: 24,
+                  background: 'linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%)',
+                  borderRadius: 12
+                }}>
+                  <div style={{ fontSize: 48, marginBottom: 12 }}>🌿</div>
+                  <div style={{ fontSize: 18, fontWeight: 600, color: '#2d5a2d', marginBottom: 8 }}>
+                    Сегодня день отдыха
+                  </div>
+                  <div style={{ fontSize: 14, color: '#666' }}>
+                    Прогуляйся 10 000 шагов 💪
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-        </>
+
+            {/* 3. Блок питания */}
+            <div style={cardStyle}>
+              <div style={headerStyle}>
+                🥗 Питание на день
+              </div>
+              
+              {/* БЖУ и Калории */}
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                background: '#f8fafc', 
+                padding: 16, 
+                borderRadius: 12,
+                marginBottom: 16,
+                border: '1px solid #e2e8f0'
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#2196f3' }}>{totalCalories}</div>
+                  <div style={{ fontSize: 12, color: '#666' }}>Ккал</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#10b981' }}>120г</div>
+                  <div style={{ fontSize: 12, color: '#666' }}>Белки</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#f59e0b' }}>80г</div>
+                  <div style={{ fontSize: 12, color: '#666' }}>Жиры</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 20, fontWeight: 700, color: '#8b5cf6' }}>180г</div>
+                  <div style={{ fontSize: 12, color: '#666' }}>Углеводы</div>
+                </div>
+              </div>
+
+              {/* Приемы пищи */}
+              {day.meals && day.meals.map((meal, i) => (
+                <div key={i} style={{
+                  marginBottom: 12,
+                  padding: 12,
+                  background: '#f8fafc',
+                  borderRadius: 8,
+                  border: '1px solid #e2e8f0'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <div style={{ fontSize: 16, fontWeight: 600, color: '#1a1a1a' }}>
+                      {meal.type}
+                    </div>
+                    <div style={{ fontSize: 14, color: '#666' }}>
+                      {meal.calories || 0} ккал
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>
+                    {meal.menu}
+                  </div>
+                  <button
+                    onClick={() => handleMealChange(i)}
+                    style={checkboxButtonStyle(completedMeals[i])}
+                  >
+                    {completedMeals[i] ? '✅ Съел' : '🍽️ Съесть'}
+                  </button>
+                </div>
+              ))}
+            </div>
+
+            {/* 4. Блок активности */}
+            <div style={cardStyle}>
+              <div style={headerStyle}>
+                🚶 Активность
+              </div>
+              
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: 12
+              }}>
+                <div style={{ fontSize: 16, color: '#1a1a1a' }}>Шаги сегодня</div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: dailySteps >= stepsGoal ? '#10b981' : '#2196f3' }}>
+                  {dailySteps.toLocaleString()} / {stepsGoal.toLocaleString()}
+                </div>
+              </div>
+              
+              {/* Прогресс-бар шагов */}
+              <div style={{ 
+                height: 8, 
+                background: '#e2e8f0', 
+                borderRadius: 4, 
+                overflow: 'hidden',
+                marginBottom: 12 
+              }}>
+                <div style={{ 
+                  width: `${Math.min((dailySteps / stepsGoal) * 100, 100)}%`, 
+                  height: '100%', 
+                  background: dailySteps >= stepsGoal ? '#10b981' : '#2196f3',
+                  transition: 'width 0.3s ease' 
+                }} />
+              </div>
+              
+              <div style={{ fontSize: 14, color: '#666', textAlign: 'center' }}>
+                {dailySteps >= stepsGoal ? 
+                  '🎉 Цель достигнута! Отлично!' : 
+                  `Осталось ${(stepsGoal - dailySteps).toLocaleString()} шагов до цели`
+                }
+              </div>
+            </div>
+
+            {/* 5. Мотивация дня */}
+            <div style={{
+              ...cardStyle,
+              background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)',
+              border: '1px solid #a5b4fc',
+              textAlign: 'center',
+              marginBottom: 24
+            }}>
+              <div style={{ fontSize: 24, marginBottom: 12 }}>💬</div>
+              <div style={{ 
+                fontSize: 16, 
+                fontStyle: 'italic', 
+                color: '#3730a3', 
+                lineHeight: 1.4,
+                fontWeight: 500
+              }}>
+                {todayQuote}
+              </div>
+            </div>
+          </>
         )}
       </div>
     </div>

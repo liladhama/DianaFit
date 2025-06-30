@@ -1,0 +1,173 @@
+{
+  "gymWorkouts": {
+    "day1": {
+      "title": "Тренировка 1: Спина/Плечи",
+      "exercises": [
+        {
+          "russian": "Тяга верхнего блока широким хватом",
+          "english": "lat_pulldown_wide_grip",
+          "sets": 3,
+          "reps": 8
+        },
+        {
+          "russian": "Тяга верхнего блока узким хватом", 
+          "english": "lat_pulldown_close_grip",
+          "sets": 3,
+          "reps": 8
+        },
+        {
+          "russian": "Тяга в тренажере Хаммер двумя руками",
+          "english": "hammer_machine_row_both_hands", 
+          "sets": 3,
+          "reps": 10
+        },
+        {
+          "russian": "Жим гантелей сидя",
+          "english": "seated_dumbbell_press",
+          "sets": 4,
+          "reps": 12
+        },
+        {
+          "russian": "Махи гантелей в стороны",
+          "english": "dumbbell_lateral_raises",
+          "sets": 4,
+          "reps": 12
+        },
+        {
+          "russian": "Отведения на заднюю дельту",
+          "english": "rear_delt_flyes",
+          "sets": 4,
+          "reps": 12
+        }
+      ]
+    },
+    "day2": {
+      "title": "Тренировка 2: Ягодицы",
+      "exercises": [
+        {
+          "russian": "Жим платформы лежа",
+          "english": "leg_press_lying",
+          "sets": 3,
+          "reps": 8
+        },
+        {
+          "russian": "Румынская тяга в Смите",
+          "english": "romanian_deadlift_smith_machine",
+          "sets": 3,
+          "reps": 10
+        },
+        {
+          "russian": "Приседания с узкой постановкой ног",
+          "english": "narrow_stance_squats",
+          "sets": 2,
+          "reps": 10
+        },
+        {
+          "russian": "Ягодичный мост в Смите в короткую амплитуду",
+          "english": "smith_machine_glute_bridge_short_range",
+          "sets": 2,
+          "reps": 10
+        }
+      ]
+    },
+    "day3": {
+      "title": "Тренировка 3: Ягодицы/Задняя поверхность бедра",
+      "exercises": [
+        {
+          "russian": "Ягодичный мост со свободным весом",
+          "english": "free_weight_glute_bridge",
+          "sets": 3,
+          "reps": 6
+        },
+        {
+          "russian": "Жим платформы одной ногой",
+          "english": "single_leg_press",
+          "sets": 2,
+          "reps": 10
+        },
+        {
+          "russian": "Румынская тяга со свободным весом",
+          "english": "free_weight_romanian_deadlift",
+          "sets": 2,
+          "reps": 10
+        },
+        {
+          "russian": "Сгибания ног в тренажере на проработку задней поверхности бедра",
+          "english": "lying_leg_curls",
+          "sets": 3,
+          "reps": 10
+        },
+        {
+          "russian": "Отведения бедра сидя",
+          "english": "seated_hip_abduction",
+          "sets": 3,
+          "reps": 10
+        }
+      ]
+    },
+    "day4": {
+      "title": "Тренировка 4: Спина/Плечи",
+      "exercises": [
+        {
+          "russian": "Тяга нижнего блока узким хватом",
+          "english": "cable_row_close_grip",
+          "sets": 3,
+          "reps": 12
+        },
+        {
+          "russian": "Тяга одной рукой в тренажере Хаммер",
+          "english": "single_arm_hammer_row",
+          "sets": 3,
+          "reps": 12
+        },
+        {
+          "russian": "Тяга верхнего блока широким хватом",
+          "english": "lat_pulldown_wide_grip",
+          "sets": 3,
+          "reps": 12
+        },
+        {
+          "russian": "Отведения за заднюю дельту в тренажере бабочка",
+          "english": "rear_delt_machine_flyes",
+          "sets": 4,
+          "reps": 10
+        },
+        {
+          "russian": "Махи гантелей стоя",
+          "english": "standing_dumbbell_lateral_raises",
+          "sets": 4,
+          "reps": 10
+        },
+        {
+          "russian": "Жим на плечи в Смите",
+          "english": "smith_machine_shoulder_press",
+          "sets": 4,
+          "reps": 10
+        }
+      ]
+    },
+    "day5": {
+      "title": "Тренировка 5: Ягодицы (фокусированная)",
+      "exercises": [
+        {
+          "russian": "Отведения бедра в тренажере",
+          "english": "hip_abduction_machine",
+          "sets": 4,
+          "reps": 12
+        },
+        {
+          "russian": "Ягодичный мост со свободным весом",
+          "english": "free_weight_glute_bridge",
+          "sets": 4,
+          "reps": 10
+        },
+        {
+          "russian": "Приседания с узкой постановкой ног в Смите",
+          "english": "smith_machine_narrow_squats",
+          "sets": 4,
+          "reps": 12
+        }
+      ]
+    }
+  }
+}
