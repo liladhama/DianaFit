@@ -19,7 +19,12 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
         const program = JSON.parse(localProgram);
         setPersonalProgram(program);
         console.log('📅 TestWeek: Персональная программа загружена:', program);
+        console.log('📅 TestWeek: Данные дней:', program.days.slice(0, 7));
+      } else {
+        console.log('❌ TestWeek: Программа не найдена в localStorage для ID:', programId);
       }
+    } else {
+      console.log('❌ TestWeek: programId не передан');
     }
   }, [programId]);
 
@@ -28,28 +33,24 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
     setIsPremium(propIsPremium || false);
   }, [propIsPremium]);
 
-  // Данные тренировочной недели - берем из персональной программы или используем заглушку
+  // Данные тренировочной недели - только из персональной программы
   const getTestWeekData = () => {
     if (personalProgram && personalProgram.days) {
       // Берем первые 7 дней из программы
-      return personalProgram.days.slice(0, 7).map((day, index) => ({
+      console.log('📅 TestWeek: Используем персональную программу, дней:', personalProgram.days.length);
+      const result = personalProgram.days.slice(0, 7).map((day, index) => ({
         day: day.title,
         date: new Date(day.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
         unlocked: index < 3 || isPremium, // первые 3 дня всегда открыты, остальные - только в премиум
         planData: day // добавляем данные плана
       }));
+      console.log('📅 TestWeek: Результат из персональной программы:', result);
+      return result;
     }
     
-    // Заглушка, если нет персональной программы
-    return [
-      { day: 'понедельник', date: '2 июля', unlocked: true, planData: null },
-      { day: 'вторник', date: '3 июля', unlocked: true, planData: null },  
-      { day: 'среда', date: '4 июля', unlocked: true, planData: null },
-      { day: 'четверг', date: '5 июля', unlocked: isPremium, planData: null },
-      { day: 'пятница', date: '6 июля', unlocked: isPremium, planData: null },
-      { day: 'суббота', date: '7 июля', unlocked: isPremium, planData: null },
-      { day: 'воскресенье', date: '8 июля', unlocked: isPremium, planData: null },
-    ];
+    // Если нет программы - показываем что надо создать программу
+    console.log('❌ TestWeek: Персональная программа не загружена');
+    return [];
   };
 
   const testWeekData = getTestWeekData();
@@ -381,7 +382,7 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
                         ))}
                       </>
                     ) : (
-                      index % 2 === 0 ? 'Домашняя тренировка: Приседания, отжимания, планка' : 'День отдыха: Легкая прогулка 30 мин'
+                      'Нет тренировки'
                     )}
                   </div>
                 </div>

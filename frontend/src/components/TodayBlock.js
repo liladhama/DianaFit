@@ -701,12 +701,12 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId }) {
         )}
       </div>
       
-      {/* Закрепленная кнопка вызова чата с Дианой в правом нижнем углу */}
+      {/* Закрепленная кнопка вызова чата с Дианой в правом верхнем углу */}
       <div
         onClick={() => setShowDianaChat(true)}
         style={{
           position: 'fixed',
-          bottom: 20,
+          top: 20,
           right: 20,
           width: 60,
           height: 60,

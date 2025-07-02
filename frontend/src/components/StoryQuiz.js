@@ -816,12 +816,11 @@ export default function StoryQuiz({ onFinish }) {
     if (slide.key === 'diet_flags') {
       // Кастомный слайд выбора типа питания
       const options = [
-        { label: 'вегетарианство (с яйцами)', value: 'vegetarian_eggs' },
-        { label: 'вегетарианство (без яиц)', value: 'vegetarian_no_eggs' },
+        { label: 'вегетарианство 🥚', value: 'vegetarian_eggs' },
+        { label: 'вегетарианство', value: 'vegetarian_no_eggs' },
         { label: 'мясной', value: 'meat' },
         { label: 'рыбный', value: 'fish' },
-        { label: 'веганство', value: 'vegan' },
-        { label: 'кето диета', value: 'keto' },
+        { label: 'веганство', value: 'vegan' }
       ];
       const value = answers[slide.key] || '';
       return (
