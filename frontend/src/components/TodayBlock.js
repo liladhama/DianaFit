@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import VideoPlayer from './VideoPlayer';
-import { getWorkoutLocation, getDayId, getExerciseEnglishName } from '../utils/videoUtils';
+import { getWorkoutLocation, getDayId, getExerciseEnglishName, getVideoPathForExercise } from '../utils/videoUtils';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dianafit.onrender.com';
+// Определяем URL backend в зависимости от окружения
+const API_URL = process.env.NODE_ENV === 'production' 
+  ? 'https://dianafit.onrender.com' 
+  : 'http://localhost:3001';
 
 // Мотивационные цитаты от Дианы
 const motivationalQuotes = [
@@ -57,37 +60,215 @@ const checkboxButtonStyle = (completed) => ({
   marginTop: 8
 });
 
-export default function TodayBlock({ day, answers, onBackToWeek }) {
-  // Если day не передан или невалиден — используем мок-день
-  if (!day || !day.date) {
-    day = {
-      date: '2024-06-03',
-      title: 'Понедельник',
-      workout: { title: 'Домашняя тренировка №2', exercises: [ { name: 'Приседания', reps: 15 }, { name: 'Отжимания', reps: 10 } ] },
-      meals: [ 
-        { type: 'Завтрак', menu: 'Овсянка с ягодами', calories: 320 },
-        { type: 'Перекус', menu: 'Греческий йогурт с орехами', calories: 180 },
-        { type: 'Обед', menu: 'Курица с рисом и овощами', calories: 450 },
-        { type: 'Полдник', menu: 'Яблоко с арахисовой пастой', calories: 200 },
-        { type: 'Ужин', menu: 'Запеченная рыба с салатом', calories: 380 }
-      ],
-      completed: false,
-      dailySteps: 7500,
-      dailyStepsGoal: 10000
-    };
-  }
+// Компонент для отображения приема пищи с граммовками
+const MealCard = ({ meal, index, isCompleted, onToggleComplete }) => {
+  const [showIngredients, setShowIngredients] = useState(false);
+
+  // Получаем информацию о блюде (название + граммовки) 
+  const mealInfo = meal.meal || { name: meal.menu || 'Не указано', ingredients: [] };
+  const mealName = typeof mealInfo === 'string' ? mealInfo : mealInfo.name;
+  const ingredients = typeof mealInfo === 'object' && mealInfo.ingredients ? mealInfo.ingredients : [];
+
+  const checkboxButtonStyle = (completed) => ({
+    padding: '8px 16px',
+    backgroundColor: completed ? '#22c55e' : '#f1f5f9',
+    color: completed ? 'white' : '#64748b',
+    border: 'none',
+    borderRadius: 6,
+    fontSize: 14,
+    fontWeight: 500,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    width: '100%'
+  });
+
+  return (
+    <div style={{
+      marginBottom: 12,
+      padding: 12,
+      background: '#f8fafc',
+      borderRadius: 8,
+      border: '1px solid #e2e8f0'
+    }}>
+      {/* Заголовок приема пищи */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+        <div style={{ fontSize: 16, fontWeight: 600, color: '#1a1a1a' }}>
+          {meal.type}
+        </div>
+        <div style={{ fontSize: 14, color: '#666' }}>
+          {meal.calories || 0} ккал
+        </div>
+      </div>
+
+      {/* Название блюда */}
+      <div style={{ fontSize: 14, color: '#666', marginBottom: 8, fontWeight: 500 }}>
+        {mealName}
+      </div>
+
+      {/* Кнопка для разворачивания ингредиентов */}
+      {ingredients.length > 0 && (
+        <button
+          onClick={() => setShowIngredients(!showIngredients)}
+          style={{
+            padding: '6px 12px',
+            backgroundColor: '#e2e8f0',
+            color: '#64748b',
+            border: 'none',
+            borderRadius: 4,
+            fontSize: 12,
+            cursor: 'pointer',
+            marginBottom: 8,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4
+          }}
+        >
+          📊 {showIngredients ? 'Скрыть граммовки' : 'Показать граммовки'}
+          <span style={{ transform: showIngredients ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
+            ▼
+          </span>
+        </button>
+      )}
+
+      {/* Список ингредиентов с граммовками */}
+      {showIngredients && ingredients.length > 0 && (
+        <div style={{
+          backgroundColor: '#fff',
+          border: '1px solid #d1d5db',
+          borderRadius: 6,
+          padding: 8,
+          marginBottom: 8
+        }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
+            Состав:
+          </div>
+          {ingredients.map((ingredient, idx) => (
+            <div key={idx} style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: '4px 0',
+              borderBottom: idx < ingredients.length - 1 ? '1px solid #f3f4f6' : 'none',
+              fontSize: 11,
+              color: '#6b7280'
+            }}>
+              <span>{ingredient.name}</span>
+              <span style={{ fontWeight: 500, color: '#374151' }}>
+                {ingredient.amount} {ingredient.unit}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Кнопка завершения */}
+      <button
+        onClick={onToggleComplete}
+        style={checkboxButtonStyle(isCompleted)}
+      >
+        {isCompleted ? '✅ Съел' : '🍽️ Съесть'}
+      </button>
+    </div>
+  );
+};
+
+export default function TodayBlock({ day, answers, onBackToWeek, programId }) {
+  // Состояние для персонального плана
+  const [personalPlan, setPersonalPlan] = useState(null);
+  const [loadingPlan, setLoadingPlan] = useState(false);
+  const [planError, setPlanError] = useState(null);
+
+  // Загружаем персональный план при монтировании компонента
+  useEffect(() => {
+    if (programId) {
+      loadTodayPlan();
+    }
+  }, [programId]);
+
+  // Функция загрузки плана на сегодня
+  const loadTodayPlan = async () => {
+    if (!programId) return;
+    
+    setLoadingPlan(true);
+    setPlanError(null);
+    
+    try {
+      console.log('📅 Загружаем план на сегодня для программы:', programId);
+      
+      // Сначала пробуем загрузить из localStorage (демо версия)
+      const localProgram = localStorage.getItem(`program_${programId}`);
+      if (localProgram) {
+        const program = JSON.parse(localProgram);
+        const today = new Date().toISOString().slice(0, 10);
+        const todayPlan = program.days.find(d => d.date === today);
+        
+        if (todayPlan) {
+          console.log('✅ План на сегодня загружен из localStorage:', todayPlan);
+          console.log('🎥 Проверка упражнений в плане:', todayPlan.workout?.exercises);
+          setPersonalPlan(todayPlan);
+          setLoadingPlan(false);
+          return;
+        } else {
+          // Если сегодняшний день не найден, берем первый день программы
+          const firstDay = program.days[0];
+          if (firstDay) {
+            console.log('📅 Сегодняшний день не найден, используем первый день программы:', firstDay);
+            console.log('🎥 Проверка упражнений в первом дне:', firstDay.workout?.exercises);
+            setPersonalPlan(firstDay);
+            setLoadingPlan(false);
+            return;
+          }
+        }
+      }
+      
+      // Если не нашли в localStorage, пробуем обратиться к серверу
+      const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dianafit.onrender.com';
+      const response = await fetch(`${API_URL}/api/program/today?programId=${programId}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('✅ План на сегодня загружен с сервера:', data.plan);
+        setPersonalPlan(data.plan);
+      } else {
+        console.error('❌ Ошибка загрузки плана:', data.error);
+        setPlanError(data.error);
+      }
+    } catch (error) {
+      console.error('❌ Ошибка сети при загрузке плана:', error);
+      setPlanError('Ошибка подключения к серверу');
+    } finally {
+      setLoadingPlan(false);
+    }
+  };
+
+  // Используем персональный план если он есть, иначе переданный день или мок
+  const currentDay = personalPlan || day || {
+    date: '2024-06-03',
+    title: 'Понедельник',
+    workout: { title: 'Домашняя тренировка №2', exercises: [ { name: 'Приседания', reps: 15 }, { name: 'Отжимания', reps: 10 } ] },
+    meals: [ 
+      { type: 'Завтрак', menu: 'Овсянка с ягодами', calories: 320 },
+      { type: 'Перекус', menu: 'Греческий йогурт с орехами', calories: 180 },
+      { type: 'Обед', menu: 'Курица с рисом и овощами', calories: 450 },
+      { type: 'Полдник', menu: 'Яблоко с арахисовой пастой', calories: 200 },
+      { type: 'Ужин', menu: 'Запеченная рыба с салатом', calories: 380 }
+    ],
+    completed: false,
+    dailySteps: 7500,
+    dailyStepsGoal: 10000
+  };
 
   // Проверяем, начинается ли программа сегодня или позже
   const programStartsLater = answers && answers.start_date && new Date(answers.start_date) > new Date();
   
   const [completedExercises, setCompletedExercises] = useState(
-    day.workout?.exercises.map((ex, i) => day.completedExercises?.[i] || false) || []
+    currentDay.workout?.exercises.map((ex, i) => currentDay.completedExercises?.[i] || false) || []
   );
   const [completedMeals, setCompletedMeals] = useState(
-    day.meals?.map((m, i) => day.completedMealsArr?.[i] || false) || []
+    currentDay.meals?.map((m, i) => currentDay.completedMealsArr?.[i] || false) || []
   );
-  const [dailySteps] = useState(day.dailySteps || 7500);
-  const [stepsGoal] = useState(day.dailyStepsGoal || 10000);
+  const [dailySteps] = useState(currentDay.dailySteps || 7500);
+  const [stepsGoal] = useState(currentDay.dailyStepsGoal || 10000);
   const [aiAnalysis, setAiAnalysis] = useState('');
   const [loadingAI, setLoadingAI] = useState(false);
   
@@ -95,23 +276,32 @@ export default function TodayBlock({ day, answers, onBackToWeek }) {
   const todayQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
   
   // Вычисляем общие калории и БЖУ
-  const totalCalories = day.meals?.reduce((sum, meal) => sum + (meal.calories || 0), 0) || 1530;
+  const totalCalories = currentDay.meals?.reduce((sum, meal) => sum + (meal.calories || 0), 0) || 1530;
   const targetCalories = answers?.targetCalories || 1800; // Из квиза
   
-  const products = day.meals
-    ? Array.from(new Set(day.meals.flatMap(m => m.menu.split(/,| /).map(s => s.trim()).filter(Boolean))))
+  const products = currentDay.meals
+    ? Array.from(new Set(currentDay.meals.flatMap(m => {
+        const mealInfo = m.meal || { name: m.menu || '', ingredients: [] };
+        if (typeof mealInfo === 'string') {
+          return mealInfo.split(/,| /).map(s => s.trim()).filter(Boolean);
+        } else if (mealInfo.ingredients) {
+          return mealInfo.ingredients.map(ing => ing.name);
+        } else {
+          return [mealInfo.name || ''];
+        }
+      })))
     : [];
 
-  const programId = day.programId;
+  const localProgramId = programId || currentDay.programId;
 
   async function handleExerciseChange(idx) {
     const updated = completedExercises.map((v, i) => i === idx ? !v : v);
     setCompletedExercises(updated);
-    if (programId) {
+    if (localProgramId) {
       await fetch(`${API_URL}/api/program/day-complete`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ programId, date: day.date, completedExercises: updated })
+        body: JSON.stringify({ programId: localProgramId, date: currentDay.date, completedExercises: updated })
       });
     }
   }
@@ -119,11 +309,11 @@ export default function TodayBlock({ day, answers, onBackToWeek }) {
   async function handleMealChange(idx) {
     const updated = completedMeals.map((v, i) => i === idx ? !v : v);
     setCompletedMeals(updated);
-    if (programId) {
+    if (localProgramId) {
       await fetch(`${API_URL}/api/program/day-complete`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ programId, date: day.date, completedMealsArr: updated })
+        body: JSON.stringify({ programId: localProgramId, date: currentDay.date, completedMealsArr: updated })
       });
     }
   }
@@ -200,7 +390,41 @@ export default function TodayBlock({ day, answers, onBackToWeek }) {
         boxSizing: 'border-box'
       }}>
         
-        {programStartsLater ? (
+        {loadingPlan ? (
+          // Показываем загрузку персонального плана
+          <div style={{ ...cardStyle, textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, color: '#1a1a1a' }}>
+              📅 Загружаем ваш персональный план...
+            </div>
+            <div style={{ fontSize: 14, color: '#666' }}>
+              Подбираем тренировки и питание специально для вас
+            </div>
+          </div>
+        ) : planError ? (
+          // Показываем ошибку загрузки
+          <div style={{ ...cardStyle, textAlign: 'center' }}>
+            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, color: '#e74c3c' }}>
+              ❌ Ошибка загрузки плана
+            </div>
+            <div style={{ fontSize: 14, color: '#666', marginBottom: 16 }}>
+              {planError}
+            </div>
+            <button
+              onClick={loadTodayPlan}
+              style={{
+                padding: '10px 20px',
+                borderRadius: 8,
+                background: '#3498db',
+                border: 'none',
+                color: '#fff',
+                fontWeight: 600,
+                cursor: 'pointer'
+              }}
+            >
+              Попробовать снова
+            </button>
+          </div>
+        ) : programStartsLater ? (
           // Показываем сообщение о том, что программа начнется позже
           <div style={{ ...cardStyle, textAlign: 'center' }}>
             <div style={{ fontSize: 24, fontWeight: 700, marginBottom: 16, color: '#1a1a1a' }}>
@@ -238,16 +462,27 @@ export default function TodayBlock({ day, answers, onBackToWeek }) {
                 🏋️‍♀️ Тренировка
               </div>
               
-              {day.workout && day.workout.exercises && day.workout.exercises.length > 0 ? (
+              {currentDay.workout && currentDay.workout.exercises && currentDay.workout.exercises.length > 0 ? (
                 <>
                   <div style={{ fontSize: 18, fontWeight: 600, color: '#1a1a1a', marginBottom: 16 }}>
-                    {day.workout.title || 'Тренировка'}
+                    {currentDay.workout.title || 'Тренировка'}
                   </div>
                   
-                  {day.workout.exercises.map((ex, i) => {
-                    const location = getWorkoutLocation(day.workout.title || day.workout.name);
-                    const dayId = getDayId(day.workout.title || day.workout.name, location);
+                  {currentDay.workout.exercises.map((ex, i) => {
+                    // Используем данные из упражнения, если они есть, иначе анализируем название тренировки
+                    const location = ex.location || currentDay.workout.location || getWorkoutLocation(currentDay.workout.title || currentDay.workout.name);
+                    const dayId = ex.dayId || getDayId(currentDay.workout.title || currentDay.workout.name, location);
                     const exerciseName = getExerciseEnglishName(ex.name);
+                    
+                    console.log('🎥 TodayBlock видео данные для упражнения:', {
+                      exerciseName: ex.name,
+                      location,
+                      dayId,
+                      exerciseEnglishName: exerciseName,
+                      exerciseObject: ex,
+                      workoutObject: currentDay.workout,
+                      fullVideoPath: location && dayId && exerciseName ? `/videos/${location}/${dayId}/${exerciseName}.mp4` : null
+                    });
                     
                     return (
                       <div key={i} style={{ 
@@ -264,27 +499,40 @@ export default function TodayBlock({ day, answers, onBackToWeek }) {
                           {ex.reps} повторений
                         </div>
                         
-                        {location && dayId && exerciseName ? (
+                        {(location && dayId && (ex.videoName || exerciseName)) ? (
                           <VideoPlayer 
                             location={location}
                             dayId={dayId}
-                            exerciseName={exerciseName}
+                            exerciseName={ex.videoName || exerciseName}
                             title={ex.name}
                           />
                         ) : (
                           <div style={{ 
-                            width: '100%', 
-                            height: 120, 
-                            background: '#e2e8f0', 
-                            borderRadius: 8, 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'center', 
-                            color: '#94a3b8', 
-                            fontSize: 14,
+                            display: 'flex',
+                            justifyContent: 'center',
                             marginBottom: 12
                           }}>
-                            🎥 Видео скоро
+                            <div style={{
+                              width: '200px',
+                              height: '300px',
+                              background: '#e2e8f0', 
+                              borderRadius: 12, 
+                              display: 'flex', 
+                              flexDirection: 'column',
+                              alignItems: 'center', 
+                              justifyContent: 'center', 
+                              color: '#94a3b8', 
+                              fontSize: 14
+                            }}>
+                              <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎥</div>
+                              <div>Видео скоро</div>
+                              <div style={{ fontSize: '10px', marginTop: '8px', textAlign: 'center' }}>
+                                Отсутствуют данные:<br/>
+                                location: {location || 'нет'}<br/>
+                                dayId: {dayId || 'нет'}<br/>
+                                exerciseName: {exerciseName || 'нет'}
+                              </div>
+                            </div>
                           </div>
                         )}
                         
@@ -355,32 +603,14 @@ export default function TodayBlock({ day, answers, onBackToWeek }) {
               </div>
 
               {/* Приемы пищи */}
-              {day.meals && day.meals.map((meal, i) => (
-                <div key={i} style={{
-                  marginBottom: 12,
-                  padding: 12,
-                  background: '#f8fafc',
-                  borderRadius: 8,
-                  border: '1px solid #e2e8f0'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                    <div style={{ fontSize: 16, fontWeight: 600, color: '#1a1a1a' }}>
-                      {meal.type}
-                    </div>
-                    <div style={{ fontSize: 14, color: '#666' }}>
-                      {meal.calories || 0} ккал
-                    </div>
-                  </div>
-                  <div style={{ fontSize: 14, color: '#666', marginBottom: 8 }}>
-                    {meal.menu}
-                  </div>
-                  <button
-                    onClick={() => handleMealChange(i)}
-                    style={checkboxButtonStyle(completedMeals[i])}
-                  >
-                    {completedMeals[i] ? '✅ Съел' : '🍽️ Съесть'}
-                  </button>
-                </div>
+              {currentDay.meals && currentDay.meals.map((meal, i) => (
+                <MealCard 
+                  key={i} 
+                  meal={meal} 
+                  index={i} 
+                  isCompleted={completedMeals[i]} 
+                  onToggleComplete={() => handleMealChange(i)} 
+                />
               ))}
             </div>
 

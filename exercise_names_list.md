@@ -78,6 +78,27 @@ half_amplitude_crunches.mp4
 boat_pose_shoulder_blade_squeeze.mp4
 squat_box_jump.mp4
 
+## 🆕 НОВЫЕ ТРЕНИРОВКИ (Домашние программы DianaFit)
+
+### Тренировка 1 - Кардио + Пресс (new_workout_1)
+dynamic_plank.mp4
+lying_crunches.mp4
+jumping_jacks.mp4
+wide_stance_squats.mp4
+butt_kicks_jumps.mp4
+
+### Тренировка 2 - Силовая с резинкой (new_workout_2)  
+curtsy_lunges.mp4
+romanian_deadlift_resistance_band.mp4
+resistance_band_row_both_hands.mp4
+single_arm_resistance_band_row.mp4
+
+### Тренировка 3 - Ноги + Пресс (new_workout_3)
+squat_with_side_leg_raise.mp4
+stationary_lunges.mp4
+dynamic_plank_push_up.mp4
+single_arm_resistance_band_row.mp4
+
 ---
 
 ## 📋 Быстрые команды для переименования (Windows)

@@ -1,7 +1,7 @@
 import React from 'react';
 import { getDietIcon, getDietName } from '../utils/dietUtils';
 
-export default function ProfilePage({ onClose, unlocked, answers, onEditQuiz, onRestart }) {
+export default function ProfilePage({ onClose, unlocked, isPremium, activatePremium, answers, onEditQuiz, onRestart }) {
   // Получаем данные пользователя
   const user = window.Telegram?.WebApp?.initDataUnsafe?.user || { first_name: 'Диана', last_name: '', photo_url: 'https://twa.netlify.app/ava.png' };
   

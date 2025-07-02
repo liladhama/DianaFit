@@ -36,10 +36,24 @@ export const getEnglishExerciseName = (russianName, videoMapping) => {
 };
 
 /**
- * Генерирует путь к видео для упражнения
+ * Генерирует путь к видео для упражнения с полными данными
+ */
+export const getVideoPathForExercise = (exercise) => {
+  if (!exercise || !exercise.name || !exercise.location || !exercise.dayId) {
+    console.warn('getVideoPathForExercise: Недостаточно данных для упражнения', exercise);
+    return null;
+  }
+  
+  const englishName = getExerciseEnglishName(exercise.name);
+  return `/videos/${exercise.location}/${exercise.dayId}/${englishName}.mp4`;
+};
+
+/**
+ * Генерирует путь к видео для упражнения (устаревшая версия)
  */
 export const getVideoPath = (location, dayId, exerciseName) => {
-  return `/videos/${location}/${dayId}/${exerciseName}.mp4`;
+  const englishName = getExerciseEnglishName(exerciseName);
+  return `/videos/${location}/${dayId}/${englishName}.mp4`;
 };
 
 /**

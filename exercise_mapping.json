@@ -76,6 +76,25 @@
         "Скручивания в половину амплитуды": "half_amplitude_crunches",
         "Лодочка со сведением лопаток": "boat_pose_shoulder_blade_squeeze",
         "Присед + запрыгивание на коробку": "squat_box_jump"
+      },
+      "new_workout_1": {
+        "Динамическая планка": "dynamic_plank",
+        "Скручивания лежа": "lying_crunches",
+        "Прыжки Джек": "jumping_jacks",
+        "Классические приседания с широкой постановкой ног": "wide_stance_squats",
+        "Прыжки с захлестом ног": "butt_kicks_jumps"
+      },
+      "new_workout_2": {
+        "Крестовые выпады": "curtsy_lunges",
+        "Румынская тяга с резинкой": "romanian_deadlift_resistance_band",
+        "Тяга резинки двумя руками на спину": "resistance_band_row_both_hands",
+        "Тяга резинки по одной руке": "single_arm_resistance_band_row"
+      },
+      "new_workout_3": {
+        "Приседания с махом ноги в сторону": "squat_with_side_leg_raise",
+        "Выпады на месте": "stationary_lunges",
+        "Динамичная планка с подъемом на руки": "dynamic_plank_push_up",
+        "Тяга резинки по одной руке": "single_arm_resistance_band_row"
       }
     }
   },

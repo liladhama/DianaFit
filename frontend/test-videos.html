@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест видео для домашних тренировок DianaFit</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .workout {
+            background: white;
+            border-radius: 10px;
+            margin: 20px 0;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .workout h2 {
+            color: #333;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .exercise {
+            margin: 15px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .exercise h3 {
+            margin: 0 0 10px 0;
+            color: #495057;
+        }
+        video {
+            width: 100%;
+            max-width: 400px;
+            height: 300px;
+            border-radius: 8px;
+            border: 2px solid #dee2e6;
+        }
+        .video-info {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+        .status {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏠 Тест видео для домашних тренировок DianaFit</h1>
+        
+        <div class="workout">
+            <h2>Тренировка 1: Кардио + Пресс</h2>
+            <div class="exercise">
+                <h3>Динамическая планка <span class="status" id="status-1-1">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-1-1', true)" onerror="setStatus('status-1-1', false)">
+                    <source src="videos/home/day1_cardio_circuit/dynamic_plank.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: videos/home/day1_cardio_circuit/dynamic_plank.mp4</div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Скручивания лежа <span class="status" id="status-1-2">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-1-2', true)" onerror="setStatus('status-1-2', false)">
+                    <source src="public/videos/home/day1_cardio_circuit/lying_crunches.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day1_cardio_circuit/lying_crunches.mp4</div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Прыжки Джек <span class="status" id="status-1-3">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-1-3', true)" onerror="setStatus('status-1-3', false)">
+                    <source src="public/videos/home/day1_cardio_circuit/jumping_jacks.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day1_cardio_circuit/jumping_jacks.mp4</div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Классические приседания с широкой постановкой ног <span class="status" id="status-1-4">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-1-4', true)" onerror="setStatus('status-1-4', false)">
+                    <source src="public/videos/home/day1_cardio_circuit/wide_stance_squats.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day1_cardio_circuit/wide_stance_squats.mp4</div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Прыжки с захлестом ног <span class="status" id="status-1-5">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-1-5', true)" onerror="setStatus('status-1-5', false)">
+                    <source src="public/videos/home/day1_cardio_circuit/butt_kicks_jumps.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day1_cardio_circuit/butt_kicks_jumps.mp4</div>
+            </div>
+        </div>
+
+        <div class="workout">
+            <h2>Тренировка 2: Силовая с резинкой</h2>
+            <div class="exercise">
+                <h3>Крестовые выпады <span class="status" id="status-2-1">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-2-1', true)" onerror="setStatus('status-2-1', false)">
+                    <source src="public/videos/home/day2_functional_circuit/curtsy_lunges.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day2_functional_circuit/curtsy_lunges.mp4</div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Румынская тяга с резинкой <span class="status" id="status-2-2">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-2-2', true)" onerror="setStatus('status-2-2', false)">
+                    <source src="public/videos/home/day2_functional_circuit/romanian_deadlift_resistance_band.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day2_functional_circuit/romanian_deadlift_resistance_band.mp4</div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Тяга резинки двумя руками на спину <span class="status" id="status-2-3">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-2-3', true)" onerror="setStatus('status-2-3', false)">
+                    <source src="public/videos/home/day2_functional_circuit/resistance_band_row_both_hands.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day2_functional_circuit/resistance_band_row_both_hands.mp4</div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Тяга резинки по одной руке <span class="status" id="status-2-4">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-2-4', true)" onerror="setStatus('status-2-4', false)">
+                    <source src="public/videos/home/day2_functional_circuit/single_arm_resistance_band_row.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day2_functional_circuit/single_arm_resistance_band_row.mp4</div>
+            </div>
+        </div>
+
+        <div class="workout">
+            <h2>Тренировка 3: Ноги + Пресс</h2>
+            <div class="exercise">
+                <h3>Приседания с махом ноги в сторону <span class="status" id="status-3-1">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-3-1', true)" onerror="setStatus('status-3-1', false)">
+                    <source src="public/videos/home/day3_tabata/squat_with_side_leg_raise.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day3_tabata/squat_with_side_leg_raise.mp4</div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Выпады на месте <span class="status" id="status-3-2">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-3-2', true)" onerror="setStatus('status-3-2', false)">
+                    <source src="public/videos/home/day3_tabata/stationary_lunges.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day3_tabata/stationary_lunges.mp4</div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Динамичная планка с подъемом на руки <span class="status" id="status-3-3">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-3-3', true)" onerror="setStatus('status-3-3', false)">
+                    <source src="public/videos/home/day3_tabata/dynamic_plank_push_up.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day3_tabata/dynamic_plank_push_up.mp4</div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Тяга резинки по одной руке <span class="status" id="status-3-4">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-3-4', true)" onerror="setStatus('status-3-4', false)">
+                    <source src="public/videos/home/day3_tabata/single_arm_resistance_band_row.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day3_tabata/single_arm_resistance_band_row.mp4</div>
+            </div>
+        </div>
+
+        <div class="workout">
+            <h2>Тренировка 4: Силовая + Пресс</h2>
+            <div class="exercise">
+                <h3>Сведения лопаток за спину <span class="status" id="status-4-1">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-4-1', true)" onerror="setStatus('status-4-1', false)">
+                    <source src="public/videos/home/day4_hiit/shoulder_blade_squeezes.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day4_hiit/shoulder_blade_squeezes.mp4</div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Приседания с подъемом на стопу <span class="status" id="status-4-2">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-4-2', true)" onerror="setStatus('status-4-2', false)">
+                    <source src="public/videos/home/day4_hiit/squats_with_calf_raise.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day4_hiit/squats_with_calf_raise.mp4</div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Скручивания <span class="status" id="status-4-3">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-4-3', true)" onerror="setStatus('status-4-3', false)">
+                    <source src="public/videos/home/day4_hiit/crunches.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day4_hiit/crunches.mp4</div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Динамичная планка <span class="status" id="status-4-4">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-4-4', true)" onerror="setStatus('status-4-4', false)">
+                    <source src="public/videos/home/day4_hiit/dynamic_plank.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day4_hiit/dynamic_plank.mp4</div>
+            </div>
+        </div>
+
+        <div class="workout">
+            <h2>Тренировка 5: Кардио + Ноги</h2>
+            <div class="exercise">
+                <h3>Прыжки на месте с захлестом <span class="status" id="status-5-1">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-5-1', true)" onerror="setStatus('status-5-1', false)">
+                    <source src="public/videos/home/day5_cardio_advanced/butt_kicks.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day5_cardio_advanced/butt_kicks.mp4</div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Классические приседания <span class="status" id="status-5-2">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-5-2', true)" onerror="setStatus('status-5-2', false)">
+                    <source src="public/videos/home/day5_cardio_advanced/classic_squats.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day5_cardio_advanced/classic_squats.mp4</div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Ягодичный мост <span class="status" id="status-5-3">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-5-3', true)" onerror="setStatus('status-5-3', false)">
+                    <source src="public/videos/home/day5_cardio_advanced/glute_bridge.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day5_cardio_advanced/glute_bridge.mp4</div>
+            </div>
+            
+            <div class="exercise">
+                <h3>Приседания плие <span class="status" id="status-5-4">Загрузка...</span></h3>
+                <video controls preload="metadata" onloadeddata="setStatus('status-5-4', true)" onerror="setStatus('status-5-4', false)">
+                    <source src="public/videos/home/day5_cardio_advanced/plie_squats.mp4" type="video/mp4">
+                </video>
+                <div class="video-info">Путь: public/videos/home/day5_cardio_advanced/plie_squats.mp4</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setStatus(statusId, success) {
+            const statusEl = document.getElementById(statusId);
+            if (success) {
+                statusEl.textContent = '✅ OK';
+                statusEl.className = 'status success';
+            } else {
+                statusEl.textContent = '❌ Ошибка';
+                statusEl.className = 'status error';
+            }
+        }
+
+        // Подсчет статистики после загрузки страницы
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                const allStatuses = document.querySelectorAll('.status');
+                const successCount = document.querySelectorAll('.status.success').length;
+                const errorCount = document.querySelectorAll('.status.error').length;
+                const totalCount = allStatuses.length;
+                
+                console.log(`Статистика загрузки видео:`);
+                console.log(`✅ Успешно загружено: ${successCount}/${totalCount}`);
+                console.log(`❌ Ошибки загрузки: ${errorCount}/${totalCount}`);
+                
+                // Добавляем статистику на страницу
+                const container = document.querySelector('.container');
+                const statsDiv = document.createElement('div');
+                statsDiv.style.cssText = 'background: #007bff; color: white; padding: 15px; border-radius: 10px; margin: 20px 0; text-align: center; font-weight: bold;';
+                statsDiv.innerHTML = `
+                    <h3 style="margin: 0 0 10px 0;">📊 Статистика загрузки видео</h3>
+                    <p style="margin: 5px 0;">✅ Успешно загружено: ${successCount}/${totalCount}</p>
+                    <p style="margin: 5px 0;">❌ Ошибки загрузки: ${errorCount}/${totalCount}</p>
+                    <p style="margin: 5px 0;">📈 Процент успеха: ${Math.round((successCount/totalCount)*100)}%</p>
+                `;
+                container.insertBefore(statsDiv, container.firstChild.nextSibling);
+            }, 3000); // Ждем 3 секунды для загрузки всех видео
+        });
+    </script>
+</body>
+</html>

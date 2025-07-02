@@ -1,0 +1,196 @@
+{
+  "homeWorkouts": {
+    "day1": {
+      "title": "Тренировка 1: Кардио + Пресс",
+      "description": "4 круга подходов по 12 повторений каждое упражнение. Отдых между подходами 1 минута",
+      "rounds": 4,
+      "repsPerExercise": 12,
+      "restBetweenSets": 60,
+      "exercises": [
+        {
+          "russian": "Динамическая планка",
+          "english": "dynamic_plank",
+          "sets": 4,
+          "reps": 12,
+          "description": "Переход из планки на предплечьях в планку на прямых руках"
+        },
+        {
+          "russian": "Скручивания лежа",
+          "english": "lying_crunches",
+          "sets": 4,
+          "reps": 12,
+          "description": "Классические скручивания на пресс лежа на спине"
+        },
+        {
+          "russian": "Прыжки Джек",
+          "english": "jumping_jacks",
+          "sets": 4,
+          "reps": 12,
+          "description": "Прыжки с разведением рук и ног в стороны"
+        },
+        {
+          "russian": "Классические приседания с широкой постановкой ног",
+          "english": "wide_stance_squats",
+          "sets": 4,
+          "reps": 12,
+          "description": "Приседания с ногами шире плеч"
+        },
+        {
+          "russian": "Прыжки с захлестом ног",
+          "english": "butt_kicks_jumps",
+          "sets": 4,
+          "reps": 12,
+          "description": "Прыжки на месте с захлестыванием ног назад к ягодицам"
+        }
+      ]
+    },
+    "day2": {
+      "title": "Тренировка 2: Силовая с резинкой",
+      "description": "4 круга подходов по 12 повторений каждое упражнение. Отдых между подходами 1 минута",
+      "rounds": 4,
+      "repsPerExercise": 12,
+      "restBetweenSets": 60,
+      "exercises": [
+        {
+          "russian": "Крестовые выпады",
+          "english": "curtsy_lunges",
+          "sets": 4,
+          "reps": 12,
+          "description": "Выпады с заведением ноги назад и в сторону (крестообразно)"
+        },
+        {
+          "russian": "Румынская тяга с резинкой",
+          "english": "romanian_deadlift_resistance_band",
+          "sets": 4,
+          "reps": 12,
+          "description": "Наклоны вперед с прямыми ногами, держа резинку"
+        },
+        {
+          "russian": "Тяга резинки двумя руками на спину",
+          "english": "resistance_band_row_both_hands",
+          "sets": 4,
+          "reps": 12,
+          "description": "Тяга резинки к груди двумя руками для проработки спины"
+        },
+        {
+          "russian": "Тяга резинки по одной руке",
+          "english": "single_arm_resistance_band_row",
+          "sets": 4,
+          "reps": 12,
+          "description": "Тяга резинки одной рукой, чередуя руки"
+        }
+      ]
+    },
+    "day3": {
+      "title": "Тренировка 3: Ноги + Пресс",
+      "description": "4 круга подходов по 12 повторений каждое упражнение. Отдых между подходами 1 минута",
+      "rounds": 4,
+      "repsPerExercise": 12,
+      "restBetweenSets": 60,
+      "exercises": [
+        {
+          "russian": "Приседания с махом ноги в сторону",
+          "english": "squat_with_side_leg_raise",
+          "sets": 4,
+          "reps": 12,
+          "description": "Приседание с последующим подъемом одной ноги в сторону"
+        },
+        {
+          "russian": "Выпады на месте",
+          "english": "stationary_lunges",
+          "sets": 4,
+          "reps": 12,
+          "description": "Выпады вперед без смены позиции ног"
+        },
+        {
+          "russian": "Динамичная планка с подъемом на руки",
+          "english": "dynamic_plank_push_up",
+          "sets": 4,
+          "reps": 12,
+          "description": "Переход из планки на предплечьях в планку на прямых руках"
+        },
+        {
+          "russian": "Тяга резинки по одной руке",
+          "english": "single_arm_resistance_band_row",
+          "sets": 4,
+          "reps": 12,
+          "description": "Тяга резинки одной рукой, чередуя руки"
+        }
+      ]
+    },
+    "day4": {
+      "title": "Тренировка 4: Силовая + Пресс",
+      "description": "4 круга подходов по 12 повторений каждое упражнение. Отдых между подходами 1 минута",
+      "rounds": 4,
+      "repsPerExercise": 12,
+      "restBetweenSets": 60,
+      "exercises": [
+        {
+          "russian": "Сведения лопаток за спину",
+          "english": "shoulder_blade_squeezes",
+          "sets": 4,
+          "reps": 12,
+          "description": "Сведение лопаток назад для укрепления мышц спины"
+        },
+        {
+          "russian": "Приседания с подъемом на стопу",
+          "english": "squats_with_calf_raise",
+          "sets": 4,
+          "reps": 12,
+          "description": "Приседания с подъемом на носки в верхней точке"
+        },
+        {
+          "russian": "Скручивания",
+          "english": "crunches",
+          "sets": 4,
+          "reps": 12,
+          "description": "Классические скручивания на пресс"
+        },
+        {
+          "russian": "Динамичная планка",
+          "english": "dynamic_plank",
+          "sets": 4,
+          "reps": 12,
+          "description": "Переход из планки на предплечьях в планку на прямых руках"
+        }
+      ]
+    },
+    "day5": {
+      "title": "Тренировка 5: Кардио + Ноги",
+      "description": "4 круга подходов по 12 повторений каждое упражнение. Отдых между подходами 1 минута",
+      "rounds": 4,
+      "repsPerExercise": 12,
+      "restBetweenSets": 60,
+      "exercises": [
+        {
+          "russian": "Прыжки на месте с захлестом",
+          "english": "butt_kicks",
+          "sets": 4,
+          "reps": 12,
+          "description": "Прыжки на месте с захлестыванием ног назад к ягодицам"
+        },
+        {
+          "russian": "Классические приседания",
+          "english": "classic_squats",
+          "sets": 4,
+          "reps": 12,
+          "description": "Обычные приседания с ногами на ширине плеч"
+        },
+        {
+          "russian": "Ягодичный мост",
+          "english": "glute_bridge",
+          "sets": 4,
+          "reps": 12,
+          "description": "Подъем таза лежа на спине для проработки ягодиц"
+        },
+        {
+          "russian": "Приседания плие",
+          "english": "plie_squats",
+          "sets": 4,
+          "reps": 12,
+          "description": "Приседания с широкой постановкой ног и развернутыми носками"
+        }
+      ]
+    }
+  }
+}

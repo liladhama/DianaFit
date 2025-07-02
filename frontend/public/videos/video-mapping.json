@@ -46,58 +46,49 @@
   },
   "home": {
     "day1_cardio_circuit": {
-      "title": "День 1 | К (вт) — 5 кругов, отдых 1 мин",
+      "title": "Тренировка 1: Кардио + Пресс",
       "exercises": [
-        "squats_with_steps_forward_backward",
-        "reverse_plank_knee_raise",
-        "shoulder_stand",
-        "lazy_burpees_with_squat",
-        "cross_lunges"
+        "dynamic_plank",
+        "lying_crunches",
+        "jumping_jacks",
+        "wide_stance_squats",
+        "butt_kicks_jumps"
       ]
     },
     "day2_functional_circuit": {
-      "title": "День 2 | Ф (нп) — 5 кругов",
+      "title": "Тренировка 2: Силовая с резинкой",
       "exercises": [
-        "squats_with_leg_curl_back",
-        "plank_leg_kickback",
-        "squat_jump_to_plank",
-        "boat_pose_leg_raises",
-        "high_knees_running",
-        "step_ups_with_leg_swing"
+        "curtsy_lunges",
+        "romanian_deadlift_resistance_band",
+        "resistance_band_row_both_hands",
+        "single_arm_resistance_band_row"
       ]
     },
     "day3_tabata": {
-      "title": "День 3 | T — 20 с работа / 10 с отдых, 6 кругов",
+      "title": "Тренировка 3: Ноги + Пресс",
       "exercises": [
-        "jumping_jacks",
-        "squat_reverse_lunge_combo",
-        "seated_book_crunches",
-        "plank_up_down_shoulder_tap",
-        "side_lunge_leg_raise",
-        "diagonal_toe_touch_corner",
-        "knee_to_stand_jump"
+        "squat_with_side_leg_raise",
+        "stationary_lunges",
+        "dynamic_plank_push_up",
+        "single_arm_resistance_band_row"
       ]
     },
     "day4_hiit": {
-      "title": "День 4 | HIIT (вт) — 40 с работа / 20 с отдых",
+      "title": "Тренировка 4: Силовая + Пресс",
       "exercises": [
-        "stand_to_plank_walkout",
-        "lying_crunches",
-        "squat_good_morning_combo",
-        "plank_jumping_jacks",
-        "pushup_leg_kickback",
-        "sumo_squat_calf_raises"
+        "shoulder_blade_squeezes",
+        "squats_with_calf_raise",
+        "crunches",
+        "dynamic_plank"
       ]
     },
     "day5_cardio_advanced": {
-      "title": "День 5 | К (нп) — 5 кругов, отдых — бег на месте",
+      "title": "Тренировка 5: Кардио + Ноги",
       "exercises": [
-        "lunge_knee_raise_combo",
-        "plank_hold",
-        "single_leg_glute_bridge",
-        "half_amplitude_crunches",
-        "boat_pose_shoulder_blade_squeeze",
-        "squat_box_jump"
+        "butt_kicks",
+        "classic_squats",
+        "glute_bridge",
+        "plie_squats"
       ]
     }
   }
