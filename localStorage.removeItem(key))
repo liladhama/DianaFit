@@ -1,0 +1,1 @@
+window.clearPrograms = function() { Object.keys(localStorage).filter(key =; console.log('Программы очищены'); }

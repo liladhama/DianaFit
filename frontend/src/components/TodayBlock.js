@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import VideoPlayer from './VideoPlayer';
 import DianaChat from './DianaChat';
 import StepsPermissionModal from './StepsPermissionModal';
+import ReasonModal from './ReasonModal';
+import ExerciseCard from './ExerciseCard';
+import MealCard from './MealCardNew';
 import { getWorkoutLocation, getDayId, getExerciseEnglishName, getVideoPathForExercise } from '../utils/videoUtils';
 import chatDianaIcon from '../assets/icons/chat-diana-icon.png';
 
@@ -77,118 +80,6 @@ const checkboxButtonStyle = (completed) => ({
   marginTop: 8
 });
 
-// Компонент для отображения приема пищи с граммовками
-const MealCard = ({ meal, index, isCompleted, onToggleComplete }) => {
-  const [showIngredients, setShowIngredients] = useState(false);
-
-  // Получаем информацию о блюде (название + граммовки) 
-  const mealInfo = meal.meal || { name: meal.menu || 'Не указано', ingredients: [] };
-  const mealName = typeof mealInfo === 'string' ? mealInfo : mealInfo.name;
-  const ingredients = typeof mealInfo === 'object' && mealInfo.ingredients ? mealInfo.ingredients : [];
-
-  const checkboxButtonStyle = (completed) => ({
-    padding: '8px 16px',
-    backgroundColor: completed ? '#22c55e' : '#f1f5f9',
-    color: completed ? 'white' : '#64748b',
-    border: 'none',
-    borderRadius: 6,
-    fontSize: 14,
-    fontWeight: 500,
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    width: '100%'
-  });
-
-  return (
-    <div style={{
-      marginBottom: 12,
-      padding: 12,
-      background: '#f8fafc',
-      borderRadius: 8,
-      border: '1px solid #e2e8f0'
-    }}>
-      {/* Заголовок приема пищи */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-        <div style={{ fontSize: 16, fontWeight: 600, color: '#1a1a1a' }}>
-          {meal.type}
-        </div>
-        <div style={{ fontSize: 14, color: '#666' }}>
-          {meal.calories || 0} ккал
-        </div>
-      </div>
-
-      {/* Название блюда */}
-      <div style={{ fontSize: 14, color: '#666', marginBottom: 8, fontWeight: 500 }}>
-        {mealName}
-      </div>
-
-      {/* Кнопка для разворачивания ингредиентов */}
-      {ingredients.length > 0 && (
-        <button
-          onClick={() => setShowIngredients(!showIngredients)}
-          style={{
-            padding: '6px 12px',
-            backgroundColor: '#e2e8f0',
-            color: '#64748b',
-            border: 'none',
-            borderRadius: 4,
-            fontSize: 12,
-            cursor: 'pointer',
-            marginBottom: 8,
-            display: 'flex',
-            alignItems: 'center',
-            gap: 4
-          }}
-        >
-          📊 {showIngredients ? 'Скрыть граммовки' : 'Показать граммовки'}
-          <span style={{ transform: showIngredients ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.2s' }}>
-            ▼
-          </span>
-        </button>
-      )}
-
-      {/* Список ингредиентов с граммовками */}
-      {showIngredients && ingredients.length > 0 && (
-        <div style={{
-          backgroundColor: '#fff',
-          border: '1px solid #d1d5db',
-          borderRadius: 6,
-          padding: 8,
-          marginBottom: 8
-        }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#374151', marginBottom: 6 }}>
-            Состав:
-          </div>
-          {ingredients.map((ingredient, idx) => (
-            <div key={idx} style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              padding: '4px 0',
-              borderBottom: idx < ingredients.length - 1 ? '1px solid #f3f4f6' : 'none',
-              fontSize: 11,
-              color: '#6b7280'
-            }}>
-              <span>{ingredient.name}</span>
-              <span style={{ fontWeight: 500, color: '#374151' }}>
-                {ingredient.amount} {ingredient.unit}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Кнопка завершения */}
-      <button
-        onClick={onToggleComplete}
-        style={checkboxButtonStyle(isCompleted)}
-      >
-        {isCompleted ? '✅ Съел' : '🍽️ Съесть'}
-      </button>
-    </div>
-  );
-};
-
 export default function TodayBlock({ day, answers, onBackToWeek, programId, isPremium, activatePremium, setIsPaymentShown }) {
   // Состояние для персонального плана
   const [personalPlan, setPersonalPlan] = useState(null);
@@ -201,6 +92,14 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   // Состояние для модала разрешений на шаги
   const [showStepsPermission, setShowStepsPermission] = useState(false);
   const [hasStepsPermission, setHasStepsPermission] = useState(false);
+
+  // Состояние для модала причин невыполнения
+  const [showReasonModal, setShowReasonModal] = useState(false);
+  const [reasonModalData, setReasonModalData] = useState({ type: '', index: -1, itemName: '' });
+
+  // Состояние для хранения причин невыполнения
+  const [exerciseReasons, setExerciseReasons] = useState({});
+  const [mealReasons, setMealReasons] = useState({});
 
   // Загружаем персональный план при монтировании компонента
   useEffect(() => {
@@ -298,12 +197,51 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   // Проверяем, начинается ли программа сегодня или позже
   const programStartsLater = answers && answers.start_date && new Date(answers.start_date) > new Date();
   
-  const [completedExercises, setCompletedExercises] = useState(
-    currentDay.workout?.exercises.map((ex, i) => currentDay.completedExercises?.[i] || false) || []
-  );
-  const [completedMeals, setCompletedMeals] = useState(
-    currentDay.meals?.map((m, i) => currentDay.completedMealsArr?.[i] || false) || []
-  );
+  // Инициализируем массивы статусов как пустые, заполнение происходит в useEffect
+  const [completedExercises, setCompletedExercises] = useState([]);
+  const [completedMeals, setCompletedMeals] = useState([]);
+
+  // Обновляем состояние при изменении currentDay
+  useEffect(() => {
+    console.log('🔄 useEffect [currentDay] вызван:', {
+      exercisesCount: currentDay.workout?.exercises?.length || 0,
+      mealsCount: currentDay.meals?.length || 0,
+      savedExercises: currentDay.completedExercises,
+      savedMeals: currentDay.completedMealsArr,
+      currentCompletedExercises: completedExercises,
+      currentCompletedMeals: completedMeals
+    });
+
+    if (currentDay.workout?.exercises) {
+      const newExerciseStates = currentDay.workout.exercises.map((ex, i) => {
+        const saved = currentDay.completedExercises?.[i];
+        const result = saved ?? null; // null = не выбрано, true = выполнено, false = не выполнено
+        console.log(`🏋️ Упражнение ${i} (${ex.name}): сохранено=${saved}, результат=${result}, typeof=${typeof result}`);
+        return result;
+      });
+      console.log('🏋️ Итоговый массив completedExercises ДО setCompletedExercises:', newExerciseStates);
+      setCompletedExercises(newExerciseStates);
+      console.log('🏋️ setCompletedExercises вызван с:', newExerciseStates);
+    } else {
+      console.log('🏋️ Нет упражнений, устанавливаем пустой массив');
+      setCompletedExercises([]);
+    }
+
+    if (currentDay.meals) {
+      const newMealStates = currentDay.meals.map((m, i) => {
+        const saved = currentDay.completedMealsArr?.[i];
+        const result = saved ?? null; // null = не выбрано, true = съедено, false = не съедено
+        console.log(`🍽️ Прием пищи ${i} (${m.type}): сохранено=${saved}, результат=${result}, typeof=${typeof result}`);
+        return result;
+      });
+      console.log('🍽️ Итоговый массив completedMeals ДО setCompletedMeals:', newMealStates);
+      setCompletedMeals(newMealStates);
+      console.log('🍽️ setCompletedMeals вызван с:', newMealStates);
+    } else {
+      console.log('🍽️ Нет приемов пищи, устанавливаем пустой массив');
+      setCompletedMeals([]);
+    }
+  }, [currentDay]);
   // Определяем, запущено ли на мобильном устройстве
   const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   const hasTelegramWebApp = window.Telegram?.WebApp;
@@ -747,13 +685,114 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       localStorage.removeItem('dianafit_steps_permission_asked');
       console.log('✅ Флаг сброшен. При следующем заходе модал покажется автоматически');
     };
+
+    // Функция для еженедельной аналитики
+    window.runWeeklyAnalytics = async () => {
+      console.log('📊 Запускаем еженедельную аналитику...');
+      
+      // Собираем статистику за последние 7 дней
+      const weekStats = [];
+      const today = new Date();
+      
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().slice(0, 10);
+        
+        const statsKey = `completion_stats_${dateStr}`;
+        const dayStats = localStorage.getItem(statsKey);
+        
+        if (dayStats) {
+          weekStats.push(JSON.parse(dayStats));
+        } else {
+          // Добавляем пустой день если нет данных
+          weekStats.push({
+            date: dateStr,
+            completionPercentage: 0,
+            totalExercises: 0,
+            completedExercises: 0,
+            totalMeals: 0,
+            completedMeals: 0,
+            stepsCompleted: false,
+            exerciseReasons: {},
+            mealReasons: {}
+          });
+        }
+      }
+      
+      console.log('📈 Статистика недели:', weekStats);
+      
+      try {
+        const response = await fetch(`${API_URL}/api/weekly-analytics`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            weekStats,
+            userId: 'demo_user',
+            programId: programId || 'demo_program'
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          console.log('🎯 Анализ недели получен:', result.analysis);
+          
+          // Показываем краткий отчет в консоли
+          console.log(`📊 Средний процент выполнения: ${result.analysis.weekSummary.avgCompletion}%`);
+          console.log(`✅ Успешных дней: ${result.analysis.weekSummary.completedDays}`);
+          console.log(`⚠️ Сложных дней: ${result.analysis.weekSummary.strugglingDays}`);
+          console.log(`💬 Сообщение: ${result.analysis.motivationalMessage}`);
+          
+          if (result.analysis.recommendations.length > 0) {
+            console.log('🎯 Рекомендации:');
+            result.analysis.recommendations.forEach((rec, i) => {
+              console.log(`  ${i + 1}. ${rec.title}: ${rec.text}`);
+            });
+          }
+          
+          return result.analysis;
+        } else {
+          console.error('❌ Ошибка анализа:', result.error);
+        }
+      } catch (error) {
+        console.error('❌ Ошибка сети при анализе:', error);
+      }
+    };
     
+    // Функция для очистки всех программ
+    window.clearPrograms = () => {
+      console.log('🧹 Очищаем все программы в localStorage');
+      Object.keys(localStorage).filter(key => key.startsWith('program_')).forEach(key => {
+        console.log('🗑️ Удаляем:', key);
+        localStorage.removeItem(key);
+      });
+      console.log('✅ Все программы очищены. Обновите страницу для создания новой программы.');
+    };
+
+    // Функция для пересоздания программы с корректными начальными значениями
+    window.recreateProgram = () => {
+      console.log('🔄 Пересоздаем программу с правильными начальными значениями...');
+      
+      // Очищаем старые программы
+      Object.keys(localStorage).filter(key => key.startsWith('program_')).forEach(key => {
+        localStorage.removeItem(key);
+      });
+      
+      console.log('✅ Старые программы удалены. Перезагрузите страницу для создания новой программы.');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    };
+
     console.log('🛠️ Отладочные функции добавлены в window:');
     console.log('   clearStepsData() - очистить данные о шагах');
     console.log('   checkPrograms() - проверить программы в localStorage');
     console.log('   diagnoseStepCounter() - диагностика шагомера');
     console.log('   requestStepsPermission() - открыть модал разрешений');
     console.log('   resetPermissionAsked() - сбросить флаг "уже спрашивали"');
+    console.log('   runWeeklyAnalytics() - запустить анализ недели');
+    console.log('   recreateProgram() - пересоздать программу с начальными значениями');
     
     return () => {
       delete window.clearStepsData;
@@ -761,6 +800,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       delete window.diagnoseStepCounter;
       delete window.requestStepsPermission;
       delete window.resetPermissionAsked;
+      delete window.runWeeklyAnalytics;
+      delete window.recreateProgram;
     };
   }, [dailySteps, stepsGoal, stepsError, hasStepsPermission]);
 
@@ -829,13 +870,92 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   const localProgramId = programId || currentDay.programId;
 
-  async function handleExerciseChange(idx) {
-    const updated = completedExercises.map((v, i) => i === idx ? !v : v);
+  // Обработчик выбора причины невыполнения
+  const handleReasonSelected = async (reasonData) => {
+    const { type, index } = reasonModalData;
+    
+    if (type === 'workout') {
+      // Сохраняем причину невыполнения упражнения
+      const newReasons = { ...exerciseReasons, [index]: reasonData };
+      setExerciseReasons(newReasons);
+      
+      // Отмечаем упражнение как НЕ выполнено
+      const updated = completedExercises.map((v, i) => i === index ? false : v);
+      setCompletedExercises(updated);
+      
+      if (localProgramId) {
+        try {
+          await fetch(`${API_URL}/api/program/day-complete`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              programId: localProgramId,
+              date: currentDay.date,
+              completedExercises: updated,
+              exerciseReasons: newReasons
+            })
+          });
+        } catch (error) {
+          console.error('❌ Ошибка сохранения причины невыполнения упражнения:', error);
+        }
+      }
+    } else if (type === 'meal') {
+      // Сохраняем причину невыполнения приема пищи
+      const newReasons = { ...mealReasons, [index]: reasonData };
+      setMealReasons(newReasons);
+      
+      // Отмечаем прием пищи как НЕ выполнен
+      const updated = completedMeals.map((v, i) => i === index ? false : v);
+      setCompletedMeals(updated);
+      
+      if (localProgramId) {
+        try {
+          await fetch(`${API_URL}/api/program/day-complete`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              programId: localProgramId,
+              date: currentDay.date,
+              completedMealsArr: updated,
+              mealReasons: newReasons
+            })
+          });
+        } catch (error) {
+          console.error('❌ Ошибка сохранения причины невыполнения приема пищи:', error);
+        }
+      }
+    }
+
+    console.log('📊 Причина сохранена:', { type, index, reason: reasonData });
+  };
+
+  // Обработчик выбора состояния упражнения (выполнил/не выполнил)
+  const handleExerciseComplete = async (idx, completed) => {
+    // Если отмечаем как НЕ выполнено - показываем модал с причинами
+    if (!completed) {
+      setReasonModalData({
+        type: 'workout',
+        index: idx,
+        itemName: currentDay.workout?.exercises[idx]?.name || `Упражнение ${idx + 1}`
+      });
+      setShowReasonModal(true);
+      return;
+    }
+
+    // Если отмечаем как выполнено - сразу обновляем
+    if (completed) {
+      // Убираем причину, если была
+      const newReasons = { ...exerciseReasons };
+      delete newReasons[idx];
+      setExerciseReasons(newReasons);
+    }
+
+    const updated = completedExercises.map((v, i) => i === idx ? completed : v);
     setCompletedExercises(updated);
     
     // Добавляем тактильную обратную связь (вибрацию) при успешном выполнении
-    if (updated[idx] && navigator.vibrate) {
-      navigator.vibrate(100); // 100ms вибрация при отметке как выполнено
+    if (completed && navigator.vibrate) {
+      navigator.vibrate(100);
     }
     
     if (localProgramId) {
@@ -845,22 +965,151 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ programId: localProgramId, date: currentDay.date, completedExercises: updated })
         });
-        console.log('✅ Статус упражнения обновлен:', { idx, completed: updated[idx] });
+        console.log('✅ Статус упражнения обновлен:', { idx, completed });
+      } catch (error) {
+        console.error('❌ Ошибка обновления статуса упражнения:', error);
+      }
+    }
+  };
+
+  async function handleExerciseChange(idx) {
+    const wasCompleted = completedExercises[idx];
+    const willBeCompleted = !wasCompleted;
+
+    // Если отмечаем как НЕ выполнено (было выполнено, становится не выполнено)
+    if (wasCompleted && !willBeCompleted) {
+      // Показываем модал с причинами
+      setReasonModalData({
+        type: 'workout',
+        index: idx,
+        itemName: currentDay.workout?.exercises[idx]?.name || `Упражнение ${idx + 1}`
+      });
+      setShowReasonModal(true);
+      return; // Не обновляем состояние сразу, ждем выбор причины
+    }
+
+    // Если отмечаем как выполнено - сразу обновляем
+    if (!wasCompleted && willBeCompleted) {
+      // Убираем причину, если была
+      const newReasons = { ...exerciseReasons };
+      delete newReasons[idx];
+      setExerciseReasons(newReasons);
+    }
+
+    const updated = completedExercises.map((v, i) => i === idx ? willBeCompleted : v);
+    setCompletedExercises(updated);
+    
+    // Добавляем тактильную обратную связь (вибрацию) при успешном выполнении
+    if (willBeCompleted && navigator.vibrate) {
+      navigator.vibrate(100); // 100ms вибрация при отметке как выполнено
+    }
+    
+    if (localProgramId) {
+      try {
+        const payload = {
+          programId: localProgramId,
+          date: currentDay.date,
+          completedExercises: updated
+        };
+
+        // Добавляем причины невыполнения если есть
+        if (Object.keys(exerciseReasons).length > 0) {
+          payload.exerciseReasons = exerciseReasons;
+        }
+
+        await fetch(`${API_URL}/api/program/day-complete`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        console.log('✅ Статус упражнения обновлен:', { idx, completed: willBeCompleted });
       } catch (error) {
         console.error('❌ Ошибка обновления статуса упражнения:', error);
       }
     }
   }
 
-  async function handleMealChange(idx) {
-    const updated = completedMeals.map((v, i) => i === idx ? !v : v);
+  // Обработчик выбора состояния приема пищи (съел/не съел)
+  const handleMealComplete = async (idx, completed) => {
+    // Если отмечаем как НЕ съедено - показываем модал с причинами
+    if (!completed) {
+      setReasonModalData({
+        type: 'meal',
+        index: idx,
+        itemName: currentDay.meals[idx]?.type || `Прием пищи ${idx + 1}`
+      });
+      setShowReasonModal(true);
+      return;
+    }
+
+    // Если отмечаем как съедено - сразу обновляем
+    if (completed) {
+      // Убираем причину, если была
+      const newReasons = { ...mealReasons };
+      delete newReasons[idx];
+      setMealReasons(newReasons);
+    }
+
+    const updated = completedMeals.map((v, i) => i === idx ? completed : v);
     setCompletedMeals(updated);
+    
     if (localProgramId) {
       await fetch(`${API_URL}/api/program/day-complete`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ programId: localProgramId, date: currentDay.date, completedMealsArr: updated })
       });
+    }
+  };
+
+  async function handleMealChange(idx) {
+    const wasCompleted = completedMeals[idx];
+    const willBeCompleted = !wasCompleted;
+
+    // Если отмечаем как НЕ съедено (было съедено, становится не съедено)
+    if (wasCompleted && !willBeCompleted) {
+      // Показываем модал с причинами
+      setReasonModalData({
+        type: 'meal',
+        index: idx,
+        itemName: currentDay.meals[idx]?.type || `Прием пищи ${idx + 1}`
+      });
+      setShowReasonModal(true);
+      return; // Не обновляем состояние сразу, ждем выбор причины
+    }
+
+    // Если отмечаем как съедено - сразу обновляем
+    if (!wasCompleted && willBeCompleted) {
+      // Убираем причину, если была
+      const newReasons = { ...mealReasons };
+      delete newReasons[idx];
+      setMealReasons(newReasons);
+    }
+
+    const updated = completedMeals.map((v, i) => i === idx ? willBeCompleted : v);
+    setCompletedMeals(updated);
+    
+    if (localProgramId) {
+      try {
+        const payload = {
+          programId: localProgramId,
+          date: currentDay.date,
+          completedMealsArr: updated
+        };
+
+        // Добавляем причины невыполнения если есть
+        if (Object.keys(mealReasons).length > 0) {
+          payload.mealReasons = mealReasons;
+        }
+
+        await fetch(`${API_URL}/api/program/day-complete`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+      } catch (error) {
+        console.error('❌ Ошибка обновления статуса приема пищи:', error);
+      }
     }
   }
 
@@ -885,6 +1134,80 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     }
     setLoadingAI(false);
   }
+
+  // Функция для расчета общего процента выполнения дня
+  const calculateDayCompletionPercentage = () => {
+    let totalTasks = 0;
+    let completedTasks = 0;
+
+    // Считаем упражнения
+    if (currentDay.workout?.exercises && currentDay.workout.exercises.length > 0) {
+      totalTasks += currentDay.workout.exercises.length;
+      completedTasks += completedExercises.filter(Boolean).length;
+    }
+
+    // Считаем приемы пищи
+    if (currentDay.meals && currentDay.meals.length > 0) {
+      totalTasks += currentDay.meals.length;
+      completedTasks += completedMeals.filter(Boolean).length;
+    }
+
+    // Считаем шаги (если достигнута цель - засчитываем как выполненное)
+    totalTasks += 1; // Цель по шагам
+    if (dailySteps >= stepsGoal) {
+      completedTasks += 1;
+    }
+
+    return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+  };
+
+  const completionPercentage = calculateDayCompletionPercentage();
+
+  // Сохраняем статистику выполнения для аналитики
+  useEffect(() => {
+    const saveCompletionStats = () => {
+      const statsKey = `completion_stats_${currentDay.date}`;
+      const stats = {
+        date: currentDay.date,
+        completionPercentage,
+        totalExercises: currentDay.workout?.exercises?.length || 0,
+        completedExercises: completedExercises.filter(Boolean).length,
+        totalMeals: currentDay.meals?.length || 0,
+        completedMeals: completedMeals.filter(Boolean).length,
+        stepsGoal,
+        actualSteps: dailySteps,
+        stepsCompleted: dailySteps >= stepsGoal,
+        exerciseReasons,
+        mealReasons,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      localStorage.setItem(statsKey, JSON.stringify(stats));
+      console.log('📊 Статистика дня сохранена:', stats);
+    };
+
+    // Сохраняем статистику при изменении данных
+    if (currentDay.date) {
+      saveCompletionStats();
+    }
+  }, [completedExercises, completedMeals, dailySteps, exerciseReasons, mealReasons, completionPercentage]);
+
+  // Отладочный useEffect для мониторинга изменений в массивах статусов
+  useEffect(() => {
+    console.log('🔍 СОСТОЯНИЕ completedExercises изменилось:', {
+      length: completedExercises.length,
+      values: completedExercises,
+      types: completedExercises.map((val, i) => `[${i}]: ${val} (${typeof val})`)
+    });
+  }, [completedExercises]);
+
+  useEffect(() => {
+    console.log('🔍 СОСТОЯНИЕ completedMeals изменилось:', {
+      length: completedMeals.length,
+      values: completedMeals,
+      types: completedMeals.map((val, i) => `[${i}]: ${val} (${typeof val})`)
+    });
+  }, [completedMeals]);
 
   return (
     <div style={{ 
@@ -919,8 +1242,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         <div style={{ 
           fontSize: 20, 
           fontWeight: 700, 
-          color: '#1a1a1a', 
-          textAlign: 'center',
+          color: '#1a1a1a',
           marginTop: 12
         }}>
           Текущий день
@@ -1030,68 +1352,56 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                       fullVideoPath: location && dayId && exerciseName ? `/videos/${location}/${dayId}/${exerciseName}.mp4` : null
                     });
                     
-                    return (
-                      <div key={i} style={{ 
-                        marginBottom: 20, 
-                        padding: 16, 
-                        background: '#f8fafc', 
-                        borderRadius: 12,
-                        border: '1px solid #e2e8f0'
+                    // Создаем видео компонент
+                    const videoComponent = (location && dayId && (ex.videoName || exerciseName)) ? (
+                      <VideoPlayer 
+                        location={location}
+                        dayId={dayId}
+                        exerciseName={ex.videoName || exerciseName}
+                        title={ex.name}
+                      />
+                    ) : (
+                      <div style={{ 
+                        display: 'flex',
+                        justifyContent: 'center'
                       }}>
-                        <div style={{ fontSize: 16, fontWeight: 600, marginBottom: 8, color: '#1a1a1a' }}>
-                          {ex.name}
-                        </div>
-                        <div style={{ fontSize: 14, color: '#666', marginBottom: 12 }}>
-                          {ex.reps} повторений
-                        </div>
-                        
-                        {(location && dayId && (ex.videoName || exerciseName)) ? (
-                          <VideoPlayer 
-                            location={location}
-                            dayId={dayId}
-                            exerciseName={ex.videoName || exerciseName}
-                            title={ex.name}
-                          />
-                        ) : (
-                          <div style={{ 
-                            display: 'flex',
-                            justifyContent: 'center',
-                            marginBottom: 12
-                          }}>
-                            <div style={{
-                              width: '200px',
-                              height: '300px',
-                              background: '#e2e8f0', 
-                              borderRadius: 12, 
-                              display: 'flex', 
-                              flexDirection: 'column',
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              color: '#94a3b8', 
-                              fontSize: 14
-                            }}>
-                              <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎥</div>
-                              <div>Видео скоро</div>
-                              <div style={{ fontSize: '10px', marginTop: '8px', textAlign: 'center' }}>
-                                Отсутствуют данные:<br/>
-                                location: {location || 'нет'}<br/>
-                                dayId: {dayId || 'нет'}<br/>
-                                exerciseName: {exerciseName || 'нет'}
-                              </div>
-                            </div>
+                        <div style={{
+                          width: '200px',
+                          height: '300px',
+                          background: '#e2e8f0', 
+                          borderRadius: 12, 
+                          display: 'flex', 
+                          flexDirection: 'column',
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          color: '#94a3b8', 
+                          fontSize: 14
+                        }}>
+                          <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎥</div>
+                          <div>Видео скоро</div>
+                          <div style={{ fontSize: '10px', marginTop: '8px', textAlign: 'center' }}>
+                            Отсутствуют данные:<br/>
+                            location: {location || 'нет'}<br/>
+                            dayId: {dayId || 'нет'}<br/>
+                            exerciseName: {exerciseName || 'нет'}
                           </div>
-                        )}
-                        
-                        <button
-                          onClick={() => handleExerciseChange(i)}
-                          style={{
-                            ...checkboxButtonStyle(completedExercises[i]),
-                            width: '100%'
-                          }}
-                        >
-                          {completedExercises[i] ? '✅ Выполнено' : '⭕ Выполнить'}
-                        </button>
+                        </div>
                       </div>
+                    );
+                    
+                    return (
+                      <ExerciseCard
+                        key={i}
+                        exercise={ex}
+                        index={i}
+                        isCompleted={(() => {
+                          const value = completedExercises[i] ?? null; // Защита от undefined
+                          console.log(`🏋️ Передаем в ExerciseCard[${i}]: исходное=${completedExercises[i]}, обработанное=${value}, typeof=${typeof value}, completedExercises.length=${completedExercises.length}`);
+                          return value;
+                        })()}
+                        onStatusChange={handleExerciseComplete}
+                        videoComponent={videoComponent}
+                      />
                     );
                   })}
                 </>
@@ -1153,9 +1463,12 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                 <MealCard 
                   key={i} 
                   meal={meal} 
-                  index={i} 
-                  isCompleted={completedMeals[i]} 
-                  onToggleComplete={() => handleMealChange(i)} 
+                  isCompleted={(() => {
+                    const value = completedMeals[i] ?? null; // Защита от undefined
+                    console.log(`🍽️ Передаем в MealCard[${i}]: исходное=${completedMeals[i]}, обработанное=${value}, typeof=${typeof value}, completedMeals.length=${completedMeals.length}`);
+                    return value;
+                  })()} 
+                  onStatusChange={(mealId, completed, type) => handleMealComplete(i, completed)}
                 />
               ))}
             </div>
@@ -1471,6 +1784,15 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         isVisible={showStepsPermission}
         onClose={() => setShowStepsPermission(false)}
         onPermissionGranted={handlePermissionGranted}
+      />
+      
+      {/* Модал для выбора причины невыполнения */}
+      <ReasonModal
+        isVisible={showReasonModal}
+        onClose={() => setShowReasonModal(false)}
+        onReasonSelected={handleReasonSelected}
+        type={reasonModalData.type}
+        itemName={reasonModalData.itemName}
       />
     </div>
   );

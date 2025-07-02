@@ -353,8 +353,8 @@ function App() {
         ],
         dailySteps: 0,
         dailyStepsGoal: level === 'beginner' ? 8000 : 10000,
-        completedExercises: isWorkoutDay ? new Array(3).fill(false) : [],
-        completedMealsArr: new Array(5).fill(false),
+        completedExercises: isWorkoutDay ? new Array(3).fill(null) : [],
+        completedMealsArr: new Array(5).fill(null),
         completedWorkout: false,
         completedMeals: false
       };
@@ -538,8 +538,8 @@ function App() {
         ],
         dailySteps: 0,
         dailyStepsGoal: level === 'beginner' ? 8000 : 10000,
-        completedExercises: isWorkoutDay ? new Array(3).fill(false) : [],
-        completedMealsArr: new Array(5).fill(false),
+        completedExercises: isWorkoutDay ? new Array(3).fill(null) : [],
+        completedMealsArr: new Array(5).fill(null),
         completedWorkout: false,
         completedMeals: false
       };
@@ -646,8 +646,8 @@ function App() {
                 meals: day.meals || [],
                 dailySteps: 0,
                 dailyStepsGoal: 10000,
-                completedExercises: day.workout ? new Array(day.workout.exercises?.length || 3).fill(false) : [],
-                completedMealsArr: new Array(5).fill(false),
+                completedExercises: day.workout ? new Array(day.workout.exercises?.length || 3).fill(null) : [],
+                completedMealsArr: new Array(5).fill(null),
                 completedWorkout: false,
                 completedMeals: false
               };
