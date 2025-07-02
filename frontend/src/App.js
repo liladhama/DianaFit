@@ -8,10 +8,8 @@ import TestWeek from './components/TestWeek';
 import VideoTest from './components/VideoTest';
 import AITestPage from './components/AITestPage';
 
-// Определяем URL backend в зависимости от окружения
-const API_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://dianafit.onrender.com' 
-  : 'http://localhost:3001';
+// Временно используем только production URL для тестирования ИИ
+const API_URL = 'https://dianafit.onrender.com';
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -117,21 +115,62 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, []);
 
-  // Получаем текущий день из мок-данных (если нет weekData)
+  // Получаем текущий день из созданной программы
   let todayDay = null;
   if (answers && programId) {
-    // Мок-данные на неделю
-    const days = [
-      { date: '2024-06-03', title: 'Понедельник', workout: { title: 'Тренировка 1', exercises: [{ name: 'Приседания', reps: 15 }, { name: 'Отжимания', reps: 10 }] }, meals: [{ type: 'Завтрак', menu: 'Овсянка' }, { type: 'Обед', menu: 'Курица с рисом' }], completed: false },
-      { date: '2024-06-04', title: 'Вторник', workout: { title: 'Тренировка 2', exercises: [{ name: 'Планка', reps: 60 }, { name: 'Выпады', reps: 12 }] }, meals: [{ type: 'Завтрак', menu: 'Яичница' }, { type: 'Обед', menu: 'Рыба с овощами' }], completed: false },
-      { date: '2024-06-05', title: 'Среда', workout: { title: 'Тренировка 3', exercises: [{ name: 'Скручивания', reps: 20 }, { name: 'Приседания', reps: 15 }] }, meals: [{ type: 'Завтрак', menu: 'Творог' }, { type: 'Обед', menu: 'Гречка с курицей' }], completed: false },
-      { date: '2024-06-06', title: 'Четверг', workout: { title: 'Тренировка 4', exercises: [{ name: 'Выпады', reps: 12 }, { name: 'Планка', reps: 60 }] }, meals: [{ type: 'Завтрак', menu: 'Омлет' }, { type: 'Обед', menu: 'Говядина с овощами' }], completed: false },
-      { date: '2024-06-07', title: 'Пятница', workout: { title: 'Тренировка 5', exercises: [{ name: 'Отжимания', reps: 10 }, { name: 'Скручивания', reps: 20 }] }, meals: [{ type: 'Завтрак', menu: 'Гречка' }, { type: 'Обед', menu: 'Рыба с картофелем' }], completed: false },
-      { date: '2024-06-08', title: 'Суббота', workout: { title: 'Тренировка 6', exercises: [{ name: 'Приседания', reps: 15 }, { name: 'Планка', reps: 60 }] }, meals: [{ type: 'Завтрак', menu: 'Овсянка' }, { type: 'Обед', menu: 'Курица с овощами' }], completed: false },
-      { date: '2024-06-09', title: 'Воскресенье', workout: { title: 'Отдых', exercises: [] }, meals: [{ type: 'Завтрак', menu: 'Фрукты' }, { type: 'Обед', menu: 'Салат' }], completed: false },
-    ];
-    const todayStr = new Date().toISOString().slice(0, 10);
-    todayDay = days.find(d => d.date === todayStr) || days[0];
+    // Сначала пробуем загрузить из созданной программы
+    const localProgram = localStorage.getItem(`program_${programId}`);
+    if (localProgram) {
+      const program = JSON.parse(localProgram);
+      console.log('🔍 App.js: Загруженная программа:', { 
+        programType: typeof program, 
+        isArray: Array.isArray(program),
+        hasData: !!program,
+        keys: Object.keys(program || {}),
+        program 
+      });
+      
+      const todayStr = new Date().toISOString().slice(0, 10);
+      
+      // Проверяем структуру программы и получаем массив дней
+      let days = null;
+      if (Array.isArray(program)) {
+        days = program;
+      } else if (program && program.days && Array.isArray(program.days)) {
+        days = program.days;
+      } else if (program && Array.isArray(program.data)) {
+        days = program.data;
+      }
+      
+      if (days && Array.isArray(days)) {
+        todayDay = days.find(d => d.date === todayStr);
+        console.log('📅 App.js: Поиск сегодняшнего дня:', {
+          todayStr,
+          foundDay: !!todayDay,
+          totalDays: days.length,
+          dayWorkout: todayDay?.workout?.title,
+          dayLocation: todayDay?.workout?.location
+        });
+      } else {
+        console.error('❌ App.js: Программа не содержит массив дней:', program);
+      }
+    }
+    
+    // Если не найден, используем мок-данные как fallback
+    if (!todayDay) {
+      const days = [
+        { date: '2024-06-03', title: 'Понедельник', workout: { title: 'Тренировка 1', exercises: [{ name: 'Приседания', reps: 15 }, { name: 'Отжимания', reps: 10 }] }, meals: [{ type: 'Завтрак', menu: 'Овсянка' }, { type: 'Обед', menu: 'Курица с рисом' }], completed: false },
+        { date: '2024-06-04', title: 'Вторник', workout: { title: 'Тренировка 2', exercises: [{ name: 'Планка', reps: 60 }, { name: 'Выпады', reps: 12 }] }, meals: [{ type: 'Завтрак', menu: 'Яичница' }, { type: 'Обед', menu: 'Рыба с овощами' }], completed: false },
+        { date: '2024-06-05', title: 'Среда', workout: { title: 'Тренировка 3', exercises: [{ name: 'Скручивания', reps: 20 }, { name: 'Приседания', reps: 15 }] }, meals: [{ type: 'Завтрак', menu: 'Творог' }, { type: 'Обед', menu: 'Гречка с курицей' }], completed: false },
+        { date: '2024-06-06', title: 'Четверг', workout: { title: 'Тренировка 4', exercises: [{ name: 'Выпады', reps: 12 }, { name: 'Планка', reps: 60 }] }, meals: [{ type: 'Завтрак', menu: 'Омлет' }, { type: 'Обед', menu: 'Говядина с овощами' }], completed: false },
+        { date: '2024-06-07', title: 'Пятница', workout: { title: 'Тренировка 5', exercises: [{ name: 'Отжимания', reps: 10 }, { name: 'Скручивания', reps: 20 }] }, meals: [{ type: 'Завтрак', menu: 'Гречка' }, { type: 'Обед', menu: 'Рыба с картофелем' }], completed: false },
+        { date: '2024-06-08', title: 'Суббота', workout: { title: 'Тренировка 6', exercises: [{ name: 'Приседания', reps: 15 }, { name: 'Планка', reps: 60 }] }, meals: [{ type: 'Завтрак', menu: 'Овсянка' }, { type: 'Обед', menu: 'Курица с овощами' }], completed: false },
+        { date: '2024-06-09', title: 'Воскресенье', workout: { title: 'Отдых', exercises: [] }, meals: [{ type: 'Завтрак', menu: 'Фрукты' }, { type: 'Обед', menu: 'Салат' }], completed: false },
+      ];
+      const todayStr = new Date().toISOString().slice(0, 10);
+      todayDay = days.find(d => d.date === todayStr) || days[0];
+      console.log('⚠️ App.js: Используем мок-данные как fallback для сегодняшнего дня');
+    }
   }
 
   useEffect(() => {
@@ -243,13 +282,16 @@ function App() {
   // Создание месячной программы на основе ответов квиза (демо версия)
   function createMonthlyProgramDemo(quizAnswers) {
     const workoutsPerWeek = parseInt(quizAnswers.workouts_per_week) || 3;
-    const location = quizAnswers.gym_or_home === 'В зале' ? 'gym' : 'home';
+    const location = quizAnswers.gym_or_home === 'gym' ? 'gym' : 'home'; // Исправлено: сравниваем с 'gym'
     const startDate = new Date(quizAnswers.start_date || new Date());
     const goal = quizAnswers.goal_weight_loss || 'weight_loss';
     const level = quizAnswers.training_level || 'beginner';
     
     console.log('🎯 Создаем демо программу локально');
     console.log('📋 Параметры:', { workoutsPerWeek, location, goal, level });
+    console.log('🔍 Debug quizAnswers.gym_or_home:', quizAnswers.gym_or_home);
+    console.log('🔍 Debug location result:', location);
+    console.log('🔍 Debug ВЕСЬ объект quizAnswers:', quizAnswers);
     
     // Определяем паттерн тренировочных дней для недели
     const getWorkoutPattern = (workoutsCount) => {
@@ -303,11 +345,11 @@ function App() {
           location: location
         } : null,
         meals: [
-          { type: 'Завтрак', meal: getBreakfastByDiet(quizAnswers.diet_flags), calories: 320, time: '08:00' },
-          { type: 'Перекус', meal: getSnackByDiet(quizAnswers.diet_flags), calories: 80, time: '11:00' },
-          { type: 'Обед', meal: getLunchByDiet(quizAnswers.diet_flags), calories: 450, time: '14:00' },
-          { type: 'Полдник', meal: getSnackByDiet(quizAnswers.diet_flags), calories: 120, time: '17:00' },
-          { type: 'Ужин', meal: getDinnerByDiet(quizAnswers.diet_flags), calories: 350, time: '19:00' }
+          { type: 'Завтрак', meal: getBreakfastByDiet(quizAnswers.diet_flags, i + 1), calories: 320, time: '08:00' },
+          { type: 'Перекус', meal: getSnackByDiet(quizAnswers.diet_flags, i + 1), calories: 80, time: '11:00' },
+          { type: 'Обед', meal: getLunchByDiet(quizAnswers.diet_flags, i + 1), calories: 450, time: '14:00' },
+          { type: 'Полдник', meal: getSnackByDiet(quizAnswers.diet_flags, i + 1, true), calories: 120, time: '17:00' },
+          { type: 'Ужин', meal: getDinnerByDiet(quizAnswers.diet_flags, i + 1), calories: 350, time: '19:00' }
         ],
         dailySteps: 0,
         dailyStepsGoal: level === 'beginner' ? 8000 : 10000,
@@ -443,11 +485,14 @@ function App() {
   // Функция для создания программы из текстового ответа ИИ
   function createProgramFromText(textResponse, quizAnswers) {
     console.log('📝 Создаем программу из текстового ответа ИИ');
+    console.log('🔍 Quiz answers:', quizAnswers);
     
     // Извлекаем ключевые параметры из квиза
-    const workoutsPerWeek = parseInt(quizAnswers.workout_count) || 3;
-    const location = quizAnswers.workout_place === 'Дома' ? 'home' : 'gym';
-    const level = quizAnswers.fitness_level === 'Новичок' ? 'beginner' : 'intermediate';
+    const workoutsPerWeek = parseInt(quizAnswers.workouts_per_week) || 3;
+    const location = quizAnswers.gym_or_home || 'home'; // Используем правильный ключ из квиза
+    const level = quizAnswers.training_level === 'beginner' ? 'beginner' : 'intermediate';
+    
+    console.log('🏋️‍♀️ Параметры программы:', { workoutsPerWeek, location, level });
     
     // Создаем базовую структуру программы с ИИ-упражнениями
     const startDate = new Date();
@@ -645,7 +690,7 @@ function App() {
   }
 
   // Функции для генерации питания по типу диеты с граммовками
-  function getBreakfastByDiet(dietType) {
+  function getBreakfastByDiet(dietType, dayNumber = 1) {
     const breakfasts = {
       vegetarian_eggs: [
         { 
@@ -666,6 +711,36 @@ function App() {
             { name: 'Ягоды свежие', amount: 80, unit: 'г' },
             { name: 'Мед', amount: 15, unit: 'г (1 ст.л.)' },
             { name: 'Овсяные хлопья', amount: 20, unit: 'г' }
+          ]
+        },
+        { 
+          name: 'Сырники с черникой', 
+          ingredients: [
+            { name: 'Творог 9%', amount: 120, unit: 'г' },
+            { name: 'Яйцо куриное', amount: 50, unit: 'г (1 шт)' },
+            { name: 'Мука цельнозерновая', amount: 30, unit: 'г' },
+            { name: 'Черника', amount: 60, unit: 'г' },
+            { name: 'Кокосовое масло', amount: 10, unit: 'г' }
+          ]
+        },
+        { 
+          name: 'Омлет с сыром и зеленью', 
+          ingredients: [
+            { name: 'Яйца куриные', amount: 150, unit: 'г (3 шт)' },
+            { name: 'Сыр твердый', amount: 40, unit: 'г' },
+            { name: 'Укроп', amount: 15, unit: 'г' },
+            { name: 'Зеленый лук', amount: 20, unit: 'г' },
+            { name: 'Сливочное масло', amount: 10, unit: 'г' }
+          ]
+        },
+        { 
+          name: 'Творог с бананом и орехами', 
+          ingredients: [
+            { name: 'Творог 5%', amount: 150, unit: 'г' },
+            { name: 'Банан', amount: 100, unit: 'г (1 шт)' },
+            { name: 'Миндаль', amount: 20, unit: 'г' },
+            { name: 'Мед', amount: 10, unit: 'г' },
+            { name: 'Корица', amount: 2, unit: 'г' }
           ]
         }
       ],
@@ -783,10 +858,12 @@ function App() {
     };
     
     const options = breakfasts[dietType] || breakfasts.default;
-    return options[Math.floor(Math.random() * options.length)];
+    // Используем номер дня для детерминированного выбора блюда
+    const index = (dayNumber - 1) % options.length;
+    return options[index];
   }
 
-  function getSnackByDiet(dietType) {
+  function getSnackByDiet(dietType, dayNumber = 1, isEvening = false) {
     const snacks = {
       vegetarian_eggs: [
         { 
@@ -795,6 +872,21 @@ function App() {
             { name: 'Творог 5%', amount: 100, unit: 'г' },
             { name: 'Грецкие орехи', amount: 20, unit: 'г' },
             { name: 'Мед', amount: 10, unit: 'г' }
+          ]
+        },
+        { 
+          name: 'Банан с йогуртом', 
+          ingredients: [
+            { name: 'Банан', amount: 100, unit: 'г (1 шт)' },
+            { name: 'Йогурт греческий', amount: 80, unit: 'г' },
+            { name: 'Корица', amount: 2, unit: 'г' }
+          ]
+        },
+        { 
+          name: 'Сыр с яблоком', 
+          ingredients: [
+            { name: 'Сыр моцарелла', amount: 50, unit: 'г' },
+            { name: 'Яблоко', amount: 100, unit: 'г (1 шт)' }
           ]
         }
       ],
@@ -855,10 +947,13 @@ function App() {
     };
     
     const options = snacks[dietType] || snacks.default;
-    return options[Math.floor(Math.random() * options.length)];
+    // Используем номер дня и тип перекуса для детерминированного выбора
+    const seed = isEvening ? dayNumber + 100 : dayNumber;
+    const index = (seed - 1) % options.length;
+    return options[index];
   }
 
-  function getLunchByDiet(dietType) {
+  function getLunchByDiet(dietType, dayNumber = 1) {
     const lunches = {
       vegetarian_eggs: [
         { 
@@ -869,6 +964,46 @@ function App() {
             { name: 'Сыр фета', amount: 50, unit: 'г' },
             { name: 'Помидоры', amount: 80, unit: 'г' },
             { name: 'Оливковое масло', amount: 10, unit: 'мл' }
+          ]
+        },
+        { 
+          name: 'Омлет с сыром и овощами', 
+          ingredients: [
+            { name: 'Яйца куриные', amount: 150, unit: 'г (3 шт)' },
+            { name: 'Сыр твердый', amount: 40, unit: 'г' },
+            { name: 'Кабачок', amount: 100, unit: 'г' },
+            { name: 'Помидоры', amount: 80, unit: 'г' },
+            { name: 'Оливковое масло', amount: 10, unit: 'мл' }
+          ]
+        },
+        { 
+          name: 'Творожная запеканка с овощами', 
+          ingredients: [
+            { name: 'Творог 5%', amount: 150, unit: 'г' },
+            { name: 'Яйца куриные', amount: 100, unit: 'г (2 шт)' },
+            { name: 'Морковь', amount: 80, unit: 'г' },
+            { name: 'Цукини', amount: 100, unit: 'г' },
+            { name: 'Сыр твердый', amount: 30, unit: 'г' }
+          ]
+        },
+        { 
+          name: 'Фриттата с шпинатом', 
+          ingredients: [
+            { name: 'Яйца куриные', amount: 150, unit: 'г (3 шт)' },
+            { name: 'Шпинат', amount: 120, unit: 'г' },
+            { name: 'Сыр моцарелла', amount: 50, unit: 'г' },
+            { name: 'Лук репчатый', amount: 40, unit: 'г' },
+            { name: 'Оливковое масло', amount: 10, unit: 'мл' }
+          ]
+        },
+        { 
+          name: 'Ризотто с овощами', 
+          ingredients: [
+            { name: 'Рис арборио', amount: 60, unit: 'г (сухой)' },
+            { name: 'Спаржа', amount: 100, unit: 'г' },
+            { name: 'Сыр пармезан', amount: 40, unit: 'г' },
+            { name: 'Грибы шампиньоны', amount: 80, unit: 'г' },
+            { name: 'Овощной бульон', amount: 200, unit: 'мл' }
           ]
         }
       ],
@@ -965,10 +1100,12 @@ function App() {
     };
     
     const options = lunches[dietType] || lunches.default;
-    return options[Math.floor(Math.random() * options.length)];
+    // Используем номер дня для детерминированного выбора обеда
+    const index = (dayNumber - 1) % options.length;
+    return options[index];
   }
 
-  function getDinnerByDiet(dietType) {
+  function getDinnerByDiet(dietType, dayNumber = 1) {
     const dinners = {
       vegetarian_eggs: [
         { 
@@ -978,6 +1115,45 @@ function App() {
             { name: 'Шпинат', amount: 60, unit: 'г' },
             { name: 'Укроп', amount: 10, unit: 'г' },
             { name: 'Сыр творожный', amount: 30, unit: 'г' }
+          ]
+        },
+        { 
+          name: 'Творог с яйцом и огурцом', 
+          ingredients: [
+            { name: 'Творог 5%', amount: 120, unit: 'г' },
+            { name: 'Яйцо куриное вареное', amount: 50, unit: 'г (1 шт)' },
+            { name: 'Огурец', amount: 100, unit: 'г' },
+            { name: 'Зелень', amount: 15, unit: 'г' },
+            { name: 'Оливковое масло', amount: 5, unit: 'мл' }
+          ]
+        },
+        { 
+          name: 'Яичница с овощами', 
+          ingredients: [
+            { name: 'Яйца куриные', amount: 100, unit: 'г (2 шт)' },
+            { name: 'Помидоры', amount: 80, unit: 'г' },
+            { name: 'Перец болгарский', amount: 60, unit: 'г' },
+            { name: 'Лук зеленый', amount: 20, unit: 'г' },
+            { name: 'Оливковое масло', amount: 8, unit: 'мл' }
+          ]
+        },
+        { 
+          name: 'Сырники запеченные', 
+          ingredients: [
+            { name: 'Творог 9%', amount: 150, unit: 'г' },
+            { name: 'Яйцо куриное', amount: 50, unit: 'г (1 шт)' },
+            { name: 'Мука рисовая', amount: 20, unit: 'г' },
+            { name: 'Ягоды', amount: 50, unit: 'г' }
+          ]
+        },
+        { 
+          name: 'Салат с моцареллой и помидорами', 
+          ingredients: [
+            { name: 'Моцарелла', amount: 80, unit: 'г' },
+            { name: 'Помидоры', amount: 120, unit: 'г' },
+            { name: 'Листья салата', amount: 60, unit: 'г' },
+            { name: 'Базилик', amount: 10, unit: 'г' },
+            { name: 'Оливковое масло', amount: 10, unit: 'мл' }
           ]
         }
       ],
@@ -1050,7 +1226,9 @@ function App() {
     };
     
     const options = dinners[dietType] || dinners.default;
-    return options[Math.floor(Math.random() * options.length)];
+    // Используем номер дня для детерминированного выбора ужина
+    const index = (dayNumber - 1) % options.length;
+    return options[index];
   }
 
   return (
@@ -1066,8 +1244,8 @@ function App() {
       ) : null}
       
       {/* Аватарка пользователя из Telegram в правом верхнем углу */}
-      {/* Показываем только на страницах: TestWeek и TodayBlock, но НЕ на странице оплаты */}
-      {!showSplash && (showTestWeek || showTodayBlock) && !isPaymentShown && (
+      {/* Показываем только на странице TestWeek, но НЕ на TodayBlock и НЕ на странице оплаты */}
+      {!showSplash && showTestWeek && !isPaymentShown && (
         <div
           onClick={() => setShowProfile(true)}
           style={{
@@ -1077,15 +1255,15 @@ function App() {
             width: 60,
             height: 60,
             borderRadius: '50%',
-            background: '#0088cc',
+            background: 'linear-gradient(135deg, #0088cc 0%, #005699 100%)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            zIndex: 1000,
-            boxShadow: '0 4px 12px rgba(0, 136, 204, 0.3)',
+            zIndex: 1001, // Выше чем у кнопки чата
+            boxShadow: '0 4px 20px rgba(0, 136, 204, 0.4)',
             transition: 'all 0.3s ease',
-            border: '3px solid white',
+            border: '2px solid rgba(255, 255, 255, 0.2)',
             overflow: 'hidden'
           }}
           onMouseEnter={(e) => {
@@ -1094,7 +1272,7 @@ function App() {
           }}
           onMouseLeave={(e) => {
             e.target.style.transform = 'scale(1)';
-            e.target.style.boxShadow = '0 4px 12px rgba(0, 136, 204, 0.3)';
+            e.target.style.boxShadow = '0 4px 20px rgba(0, 136, 204, 0.4)';
           }}
         >
           {/* Аватарка пользователя из Telegram или иконка по умолчанию */}

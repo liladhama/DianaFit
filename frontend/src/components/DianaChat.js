@@ -1,10 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import dianaIcon from '../assets/icons/diana.png';
 
-// Определяем URL backend в зависимости от окружения
-const API_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://dianafit.onrender.com' 
-  : 'http://localhost:3001';
+// Временно используем только production URL для тестирования ИИ
+const API_URL = 'https://dianafit.onrender.com';
 
 const DianaChat = ({ onClose, isPremium = false }) => {
   const [messages, setMessages] = useState([

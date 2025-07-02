@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import VideoPlayer from './VideoPlayer';
+import DianaChat from './DianaChat';
 import { getWorkoutLocation, getDayId, getExerciseEnglishName, getVideoPathForExercise } from '../utils/videoUtils';
 
-// Определяем URL backend в зависимости от окружения
-const API_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://dianafit.onrender.com' 
-  : 'http://localhost:3001';
+// Временно используем только production URL для тестирования ИИ
+const API_URL = 'https://dianafit.onrender.com';
 
 // Мотивационные цитаты от Дианы
 const motivationalQuotes = [
@@ -177,6 +176,9 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId }) {
   const [personalPlan, setPersonalPlan] = useState(null);
   const [loadingPlan, setLoadingPlan] = useState(false);
   const [planError, setPlanError] = useState(null);
+  
+  // Состояние для чата с Дианой
+  const [showDianaChat, setShowDianaChat] = useState(false);
 
   // Загружаем персональный план при монтировании компонента
   useEffect(() => {
@@ -257,6 +259,15 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId }) {
     dailySteps: 7500,
     dailyStepsGoal: 10000
   };
+  
+  // Логируем данные для отладки
+  console.log('🏋️‍♀️ TodayBlock Debug:', {
+    personalPlan: !!personalPlan,
+    dayProp: !!day,
+    currentDayWorkout: currentDay.workout,
+    currentDayLocation: currentDay.workout?.location,
+    currentDayExercises: currentDay.workout?.exercises?.map(ex => ex.name)
+  });
 
   // Проверяем, начинается ли программа сегодня или позже
   const programStartsLater = answers && answers.start_date && new Date(answers.start_date) > new Date();
@@ -297,12 +308,23 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId }) {
   async function handleExerciseChange(idx) {
     const updated = completedExercises.map((v, i) => i === idx ? !v : v);
     setCompletedExercises(updated);
+    
+    // Добавляем тактильную обратную связь (вибрацию) при успешном выполнении
+    if (updated[idx] && navigator.vibrate) {
+      navigator.vibrate(100); // 100ms вибрация при отметке как выполнено
+    }
+    
     if (localProgramId) {
-      await fetch(`${API_URL}/api/program/day-complete`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ programId: localProgramId, date: currentDay.date, completedExercises: updated })
-      });
+      try {
+        await fetch(`${API_URL}/api/program/day-complete`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ programId: localProgramId, date: currentDay.date, completedExercises: updated })
+        });
+        console.log('✅ Статус упражнения обновлен:', { idx, completed: updated[idx] });
+      } catch (error) {
+        console.error('❌ Ошибка обновления статуса упражнения:', error);
+      }
     }
   }
 
@@ -678,6 +700,37 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId }) {
           </>
         )}
       </div>
+      
+      {/* Закрепленная кнопка вызова чата с Дианой в правом нижнем углу */}
+      <div
+        onClick={() => setShowDianaChat(true)}
+        style={{
+          position: 'fixed',
+          bottom: 20,
+          right: 20,
+          width: 60,
+          height: 60,
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 1000,
+          boxShadow: '0 4px 20px rgba(102, 126, 234, 0.4)',
+          transition: 'all 0.3s ease',
+        }}
+      >
+        <span style={{ fontSize: 24, color: 'white' }}>💬</span>
+      </div>
+      
+      {/* Диалог чата с Дианой */}
+      {showDianaChat && (
+        <DianaChat
+          onClose={() => setShowDianaChat(false)}
+          isPremium={true} // Временно делаем доступным для всех
+        />
+      )}
     </div>
   );
 }
