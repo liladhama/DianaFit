@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 
 const VideoPlayer = ({ location, dayId, exerciseName, title }) => {
   const [videoExists, setVideoExists] = useState(false);
   const [videoLoading, setVideoLoading] = useState(true);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const videoRef = useRef(null);
 
   const videoPath = `/videos/${location}/${dayId}/${exerciseName}.mp4`;
 
@@ -27,6 +29,52 @@ const VideoPlayer = ({ location, dayId, exerciseName, title }) => {
     
     checkVideo();
   }, [videoPath]);
+
+  // Функции для работы с полноэкранным режимом
+  const toggleFullscreen = () => {
+    if (!isFullscreen) {
+      // Вход в полноэкранный режим
+      if (videoRef.current.requestFullscreen) {
+        videoRef.current.requestFullscreen();
+      } else if (videoRef.current.webkitRequestFullscreen) {
+        videoRef.current.webkitRequestFullscreen();
+      } else if (videoRef.current.mozRequestFullScreen) {
+        videoRef.current.mozRequestFullScreen();
+      } else if (videoRef.current.msRequestFullscreen) {
+        videoRef.current.msRequestFullscreen();
+      }
+    } else {
+      // Выход из полноэкранного режима
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if (document.webkitExitFullscreen) {
+        document.webkitExitFullscreen();
+      } else if (document.mozCancelFullScreen) {
+        document.mozCancelFullScreen();
+      } else if (document.msExitFullscreen) {
+        document.msExitFullscreen();
+      }
+    }
+  };
+
+  // Отслеживание изменений полноэкранного режима
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
 
   if (videoLoading) {
     return (
@@ -99,23 +147,55 @@ const VideoPlayer = ({ location, dayId, exerciseName, title }) => {
       marginBottom: '12px',
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'center'
+      alignItems: 'center',
+      position: 'relative'
     }}>
-      <video 
-        controls 
-        style={{ 
-          maxWidth: '100%',
-          maxHeight: '400px',
-          height: 'auto',
-          width: 'auto',
-          borderRadius: '12px',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
-        }}
-        poster={`/videos/${location}/${dayId}/${exerciseName}_poster.jpg`} // опциональный постер
-      >
-        <source src={videoPath} type="video/mp4" />
-        Ваш браузер не поддерживает видео.
-      </video>
+      <div style={{ position: 'relative', display: 'inline-block' }}>
+        <video 
+          ref={videoRef}
+          controls 
+          style={{ 
+            maxWidth: '100%',
+            maxHeight: '400px',
+            height: 'auto',
+            width: 'auto',
+            borderRadius: '12px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+          }}
+          poster={`/videos/${location}/${dayId}/${exerciseName}_poster.jpg`} // опциональный постер
+        >
+          <source src={videoPath} type="video/mp4" />
+          Ваш браузер не поддерживает видео.
+        </video>
+        
+        {/* Кнопка полноэкранного режима */}
+        <button
+          onClick={toggleFullscreen}
+          style={{
+            position: 'absolute',
+            top: '8px',
+            right: '8px',
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            padding: '8px 12px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: '500',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            transition: 'background-color 0.2s ease',
+            zIndex: 10
+          }}
+          onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.9)'}
+          onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.7)'}
+        >
+          {isFullscreen ? '⤵' : '⤢'} {isFullscreen ? 'Свернуть' : 'На весь экран'}
+        </button>
+      </div>
+      
       <p style={{ 
         fontSize: '14px', 
         color: '#666', 
