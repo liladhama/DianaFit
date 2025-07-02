@@ -1448,6 +1448,9 @@ function App() {
           day={todayDay} 
           answers={answers}
           programId={programId}
+          isPremium={isPremium}
+          activatePremium={activatePremium}
+          setIsPaymentShown={setIsPaymentShown}
           onBackToWeek={() => {
             setShowTodayBlock(false);
             setShowTestWeek(true);

@@ -6,9 +6,9 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
   const marksArr = Array.from({ length: marks }, (_, i) => min + i * markStep);
 
   // Размеры для бегунка и палочки
-  const knobSize = 28; // чуть больше для удобства
-  const stickLength = 48;
-  const grabSize = 56; // невидимая область для drag
+  const knobSize = 32; // увеличиваем для лучшего захвата
+  const stickLength = 52;
+  const grabSize = 64; // увеличиваем область захвата
 
   // Позиция бегунка (от 0 до height)
   const percent = ((value - min) / (max - min));
@@ -16,30 +16,55 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
 
   const sliderRef = useRef();
 
-  // Drag/touch обработчики для кастомного бегунка
+  // Улучшенные drag/touch обработчики для более плавного движения
   function handleDrag(e) {
+    e.preventDefault(); // предотвращаем скролл на мобильных
     let clientY;
-    if (e.touches) {
+    if (e.touches && e.touches.length > 0) {
       clientY = e.touches[0].clientY;
     } else {
       clientY = e.clientY;
     }
+    
+    if (!sliderRef.current) return;
+    
     const rect = sliderRef.current.getBoundingClientRect();
     let pos = clientY - rect.top;
+    
+    // Ограничиваем позицию в пределах слайдера
     pos = Math.max(0, Math.min(height, pos));
-    const newValue = Math.round((max - min) * (1 - pos / height) + min);
+    
+    // Более точное вычисление значения с учетом step
+    const rawValue = (max - min) * (1 - pos / height) + min;
+    const steppedValue = Math.round(rawValue / step) * step;
+    const newValue = Math.max(min, Math.min(max, steppedValue));
+    
     onChange(newValue);
   }
 
   function startDrag(e) {
     e.preventDefault();
+    e.stopPropagation();
+    
+    // Устанавливаем курсор захвата
+    document.body.style.cursor = 'grabbing';
+    document.body.style.userSelect = 'none';
+    
     handleDrag(e);
-    window.addEventListener('mousemove', handleDrag);
-    window.addEventListener('touchmove', handleDrag);
+    
+    // Используем passive: false для предотвращения скролла
+    const options = { passive: false };
+    window.addEventListener('mousemove', handleDrag, options);
+    window.addEventListener('touchmove', handleDrag, options);
     window.addEventListener('mouseup', stopDrag);
     window.addEventListener('touchend', stopDrag);
   }
+  
   function stopDrag() {
+    // Восстанавливаем курсор
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+    
     window.removeEventListener('mousemove', handleDrag);
     window.removeEventListener('touchmove', handleDrag);
     window.removeEventListener('mouseup', stopDrag);
@@ -73,21 +98,53 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
             display: 'flex',
             alignItems: 'center',
             zIndex: 3,
-            transition: 'top 0.2s',
             cursor: 'grab',
             pointerEvents: 'auto',
+            transition: 'none', // убираем transition для более отзывчивого движения
           }}
           onMouseDown={startDrag}
           onTouchStart={startDrag}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'scale(1.05)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'scale(1)';
+          }}
         >
           {/* Палочка влево от линейки */}
-          <div style={{ width: stickLength, height: 4, background: '#2196f3', borderRadius: 2, marginRight: 0 }} />
+          <div style={{ 
+            width: stickLength, 
+            height: 5, // увеличиваем высоту для лучшей видимости
+            background: '#2196f3', 
+            borderRadius: 3, 
+            marginRight: 0,
+            boxShadow: '0 1px 3px rgba(33, 150, 243, 0.3)'
+          }} />
           {/* Круг */}
-          <div style={{ width: knobSize, height: knobSize, borderRadius: '50%', background: '#fff', border: '3px solid #2196f3', boxShadow: '0 2px 8px #2196f333', marginLeft: -knobSize/2, zIndex: 2 }} />
-          {/* Невидимая область для drag */}
-          <div style={{ position: 'absolute', left: stickLength, top: 0, width: grabSize, height: grabSize, borderRadius: '50%', background: 'rgba(0,0,0,0)', zIndex: 1 }} />
+          <div style={{ 
+            width: knobSize, 
+            height: knobSize, 
+            borderRadius: '50%', 
+            background: '#fff', 
+            border: '4px solid #2196f3', 
+            boxShadow: '0 3px 12px rgba(33, 150, 243, 0.4)', 
+            marginLeft: -knobSize/2, 
+            zIndex: 2,
+            transition: 'box-shadow 0.2s ease'
+          }} />
+          {/* Увеличенная невидимая область для drag */}
+          <div style={{ 
+            position: 'absolute', 
+            left: stickLength - grabSize/2, 
+            top: 0, 
+            width: grabSize, 
+            height: grabSize, 
+            borderRadius: '50%', 
+            background: 'rgba(0,0,0,0)', 
+            zIndex: 1 
+          }} />
         </div>
-        {/* Скрытый input для совместимости с клавиатурой и accessibility */}
+        {/* Улучшенный скрытый input для клавиатуры и accessibility */}
         <input
           type="range"
           min={min}
@@ -107,8 +164,9 @@ export default function CustomSlider({ value, min, max, step = 1, unit = '', onC
             opacity: 0,
             zIndex: 4,
             cursor: 'pointer',
-            touchAction: 'none',
+            touchAction: 'manipulation', // улучшаем touch поведение
           }}
+          aria-label={`Выберите значение от ${min} до ${max} ${unit}`}
         />
       </div>
       {/* Подписи min/max */}

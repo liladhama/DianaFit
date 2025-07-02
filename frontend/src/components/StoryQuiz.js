@@ -293,7 +293,7 @@ export default function StoryQuiz({ onFinish }) {
             }}>
               <img src={require('../assets/welcome/yoga-mat.png')} alt="yoga-mat" style={{ width: 90, height: 90, objectFit: 'contain', borderRadius: 16, marginRight: 2, marginLeft: -8 }} />
               <div style={{ fontSize: 14, color: '#222', lineHeight: 1.18, fontWeight: 500, marginLeft: 0, marginRight: 0, padding: '4px 0', marginTop: 0, marginBottom: 0 }}>
-                Опыт в тренировках помогает избегать перегрузок и травм. Постепенное увеличение нагрузки делает занятия безопасными и приятными, а тело быстрее привыкает к новому ритму.
+                Опыт в тренировках помогает избежать травм и упростить адаптацию к нагрузкам.
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 24, width: '100%', marginTop: 0 }}>
@@ -539,7 +539,7 @@ export default function StoryQuiz({ onFinish }) {
             }}>
               <img src={require('../assets/quiz/dumbbell.png')} alt="dumbbell" style={{ width: 88, height: 88, borderRadius: 16, objectFit: 'cover', marginLeft: -8 }} />
               <div style={{ fontSize: 13, color: '#222', lineHeight: 1.3, fontWeight: 500, textAlign: 'left', marginLeft: -10 }}>
-                Лучше делать меньше, но регулярно. На основе этого мы подберём тебе сбалансированную программу.
+                Лучше делать меньше, но регулярно. На основе этого мы подберём сбалансированную программу. тренировок
               </div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 28, width: '100%', marginTop: 0 }}>
@@ -877,7 +877,7 @@ export default function StoryQuiz({ onFinish }) {
               whiteSpace: 'normal',
               lineHeight: 1.2,
             }}>
-              Тип питания помогает понять твои привычки и предпочтения в еде. Зная это, я смогу составить программу, которая будет не только эффективной, но и комфортной для тебя.
+              Тип питания показывает твои привычки и поможет создать удобную и эффективную программу.
             </div>
           </div>
           <div style={{ width: '100%', maxWidth: 340, display: 'flex', flexDirection: 'column', gap: 20, alignItems: 'center', marginBottom: 24 }}>
