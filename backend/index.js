@@ -266,15 +266,26 @@ async function getFallbackResponse(message) {
 async function callMistralAI(messages) {
   const apiKey = process.env.MISTRAL_API_KEY;
   if (!apiKey) {
-    throw new Error('MISTRAL_API_KEY не установлен в переменных окружения');
+    console.error('MISTRAL_API_KEY не установлен в переменных окружения');
+    return await getFallbackResponse();
   }
   
   try {
     console.log('Вызов Mistral API...');
     
-    // Используем ключ как есть, без префиксов - мы уже проверили, что он работает
+    // Логируем информацию о запросе для отладки
     console.log(`Используемый API ключ: ${apiKey.substring(0, 5)}...${apiKey.substring(apiKey.length - 4)}`);
     console.log('Длина ключа:', apiKey.length, 'символов');
+    console.log('Количество сообщений в запросе:', messages.length);
+    console.log('Размер первого сообщения (bytes):', Buffer.from(messages[0].content).length);
+    
+    // Проверяем, не слишком ли большой размер запроса
+    const totalMessageSize = messages.reduce((acc, msg) => acc + Buffer.from(msg.content).length, 0);
+    console.log('Общий размер сообщений (bytes):', totalMessageSize);
+    
+    if (totalMessageSize > 100000) {
+      console.warn('Предупреждение: размер запроса превышает 100KB, это может вызвать проблемы с API');
+    }
     
     // Сначала пробуем использовать модель mistral-medium
     console.log('Используем модель mistral-medium...');
@@ -292,8 +303,12 @@ async function callMistralAI(messages) {
     });
     
     // Если первая попытка не удалась, пробуем с моделью mistral-tiny
-    if (!response.ok && (response.status === 401 || response.status === 403)) {
-      console.log('Первая попытка не удалась, пробуем модель mistral-tiny...');
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Ошибка с mistral-medium: ${response.status} ${response.statusText}`);
+      console.error(`Детали ошибки: ${errorText}`);
+      
+      console.log('Пробуем модель mistral-tiny...');
       response = await fetch('https://api.mistral.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -363,16 +378,32 @@ app.post('/api/chat-diana', async (req, res) => {
   if (!message) return res.status(400).json({ error: 'No message provided' });
 
   try {
-    console.log(`Получен запрос на чат с Дианой: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`);
+    console.log(`\n===== ЗАПРОС ЧАТА С ДИАНОЙ =====`);
+    console.log(`Сообщение: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`);
+    console.log(`Контекст: ${chatContext.substring(0, 50)}${chatContext.length > 50 ? '...' : ''}`);
+    console.log(`Время запроса: ${new Date().toISOString()}`);
     
     // Находим релевантные знания из векторной базы
     const userEmbedding = Array(1536).fill(0); // TODO: получить реальный embedding от сообщения
-    const relevantChunks = findRelevantChunks(userEmbedding, 3);
-    console.log(`Найдено ${relevantChunks.length} релевантных фрагментов знаний`);
+    let relevantChunks = [];
+    
+    try {
+      relevantChunks = findRelevantChunks(userEmbedding, 3);
+      console.log(`Найдено ${relevantChunks.length} релевантных фрагментов знаний`);
+    } catch (error) {
+      console.error('❌ Ошибка при поиске релевантных знаний:', error);
+      console.log('⚠️ Продолжаем без релевантных знаний');
+    }
     
     // Загружаем базу знаний для чата
-    const dianaKnowledge = loadDianaKnowledge();
-    console.log(`Загружена база знаний Дианы: ${dianaKnowledge.length} символов`);
+    let dianaKnowledge = '';
+    try {
+      dianaKnowledge = loadDianaKnowledge();
+      console.log(`Загружена база знаний Дианы: ${dianaKnowledge.length} символов`);
+    } catch (error) {
+      console.error('❌ Ошибка при загрузке базы знаний Дианы:', error);
+      console.log('⚠️ Продолжаем без базы знаний');
+    }
     
     const systemPrompt = `Ты — персональный ИИ-тренер Диана, эксперт по похудению и здоровому образу жизни.
 
@@ -458,39 +489,66 @@ function loadDianaKnowledge() {
     
     let knowledgeText = '';
     
+    console.log('Загрузка базы знаний Дианы...');
+    console.log(`Проверка существования файла: ${knowledgeBasePath}`);
+    
     // Загружаем основную базу знаний (разговоры, лекции)
     if (fs.existsSync(knowledgeBasePath)) {
-      const knowledgeLines = fs.readFileSync(knowledgeBasePath, 'utf8').split('\n').filter(line => line.trim());
+      console.log(`✅ Файл найден: ${knowledgeBasePath}`);
+      const knowledgeContent = fs.readFileSync(knowledgeBasePath, 'utf8');
+      const knowledgeLines = knowledgeContent.split('\n').filter(line => line.trim());
+      console.log(`📚 Найдено ${knowledgeLines.length} строк в файле базы знаний`);
+      
+      let validChunks = 0;
       knowledgeLines.forEach(line => {
         try {
           const chunk = JSON.parse(line);
           if (chunk.text && chunk.text.trim()) {
             knowledgeText += chunk.text + '\n\n';
+            validChunks++;
           }
         } catch (e) {
-          // Игнорируем строки с ошибками парсинга
+          console.error(`❌ Ошибка парсинга строки в базе знаний: ${e.message}`);
         }
       });
+      console.log(`✅ Успешно загружено ${validChunks} фрагментов знаний из ${knowledgeLines.length}`);
+    } else {
+      console.error(`❌ Файл базы знаний не найден: ${knowledgeBasePath}`);
     }
     
+    console.log(`Проверка существования файла тренировок: ${trainingDataPath}`);
     // Загружаем данные о тренировках
     if (fs.existsSync(trainingDataPath)) {
-      const trainingLines = fs.readFileSync(trainingDataPath, 'utf8').split('\n').filter(line => line.trim());
+      console.log(`✅ Файл найден: ${trainingDataPath}`);
+      const trainingContent = fs.readFileSync(trainingDataPath, 'utf8');
+      const trainingLines = trainingContent.split('\n').filter(line => line.trim());
+      console.log(`📚 Найдено ${trainingLines.length} строк в файле тренировок`);
+      
+      let validTrainings = 0;
       trainingLines.forEach(line => {
         try {
           const chunk = JSON.parse(line);
           if (chunk.text && chunk.text.trim()) {
             knowledgeText += chunk.text + '\n\n';
+            validTrainings++;
           }
         } catch (e) {
-          // Игнорируем строки с ошибками парсинга
+          console.error(`❌ Ошибка парсинга строки в файле тренировок: ${e.message}`);
         }
       });
+      console.log(`✅ Успешно загружено ${validTrainings} фрагментов тренировок из ${trainingLines.length}`);
+    } else {
+      console.error(`❌ Файл тренировок не найден: ${trainingDataPath}`);
+    }
+    
+    console.log(`📊 Общий размер базы знаний: ${knowledgeText.length} символов`);
+    if (knowledgeText.length === 0) {
+      console.error('⚠️ ВНИМАНИЕ: База знаний пуста! Это приведет к некачественным ответам');
     }
     
     return knowledgeText;
   } catch (error) {
-    console.error('Ошибка загрузки базы знаний Дианы:', error);
+    console.error('❌ Ошибка загрузки базы знаний Дианы:', error);
     return '';
   }
 }
