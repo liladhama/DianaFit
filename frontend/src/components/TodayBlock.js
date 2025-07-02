@@ -350,6 +350,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   const checkStepsPermission = () => {
     try {
       const savedAuth = localStorage.getItem('dianafit_health_auth');
+      const hasAskedBefore = localStorage.getItem('dianafit_steps_permission_asked');
+      
       if (savedAuth) {
         const authData = JSON.parse(savedAuth);
         
@@ -357,6 +359,10 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         if (authData.expires && authData.expires < Date.now()) {
           localStorage.removeItem('dianafit_health_auth');
           setHasStepsPermission(false);
+          // Если токен истек, показываем модал для повторной авторизации
+          setTimeout(() => {
+            setShowStepsPermission(true);
+          }, 2000);
           return;
         }
         
@@ -364,10 +370,24 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         console.log('✅ Найдены сохраненные разрешения:', authData.type);
       } else {
         setHasStepsPermission(false);
+        
+        // Если пользователь еще не видел запрос разрешения - показываем модал
+        if (!hasAskedBefore) {
+          console.log('🔐 Первый визит - показываем модал разрешений через 3 секунды');
+          setTimeout(() => {
+            setShowStepsPermission(true);
+            // Отмечаем, что уже показывали запрос
+            localStorage.setItem('dianafit_steps_permission_asked', 'true');
+          }, 3000); // 3 секунды задержки для лучшего UX
+        }
       }
     } catch (error) {
       console.error('Ошибка проверки разрешений:', error);
       setHasStepsPermission(false);
+      // При ошибке тоже показываем модал
+      setTimeout(() => {
+        setShowStepsPermission(true);
+      }, 2000);
     }
   };
 
@@ -665,8 +685,11 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       console.log('🧹 Принудительная очистка всех данных о шагах');
       localStorage.removeItem('dianafit_daily_steps');
       localStorage.removeItem('dianafit_steps_date');
+      localStorage.removeItem('dianafit_health_auth');
+      localStorage.removeItem('dianafit_steps_permission_asked');
       setDailySteps(0);
       setStepsError(null);
+      setHasStepsPermission(false);
       console.log('✅ Все данные о шагах очищены');
     };
     
@@ -718,17 +741,26 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       setShowStepsPermission(true);
     };
     
+    // Функция для сброса флага "уже спрашивали разрешение"
+    window.resetPermissionAsked = () => {
+      console.log('🔄 Сбрасываем флаг "уже спрашивали разрешение"');
+      localStorage.removeItem('dianafit_steps_permission_asked');
+      console.log('✅ Флаг сброшен. При следующем заходе модал покажется автоматически');
+    };
+    
     console.log('🛠️ Отладочные функции добавлены в window:');
     console.log('   clearStepsData() - очистить данные о шагах');
     console.log('   checkPrograms() - проверить программы в localStorage');
     console.log('   diagnoseStepCounter() - диагностика шагомера');
     console.log('   requestStepsPermission() - открыть модал разрешений');
+    console.log('   resetPermissionAsked() - сбросить флаг "уже спрашивали"');
     
     return () => {
       delete window.clearStepsData;
       delete window.checkPrograms;
       delete window.diagnoseStepCounter;
       delete window.requestStepsPermission;
+      delete window.resetPermissionAsked;
     };
   }, [dailySteps, stepsGoal, stepsError, hasStepsPermission]);
 
