@@ -1228,3 +1228,8 @@ app.post('/api/generate-weekly-plan', async (req, res) => {
 });
 
 export default app;
+
+// Запускаем сервер
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
