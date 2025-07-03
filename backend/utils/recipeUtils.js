@@ -153,7 +153,7 @@ class RecipeUtils {
           // Добавляем название блюда в множество (в нижнем регистре для сравнения)
           mealNames.add(mealNameLower);
           usedRecipes.push(mealNameLower);
-        });
+        }
         
         // Особая проверка для перекусов и полдников
         if (mealTypes['Перекус'] && mealTypes['Полдник'] && 
