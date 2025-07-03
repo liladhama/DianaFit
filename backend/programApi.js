@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
+import recipeUtils from './utils/recipeUtils.js';
 
 // В памяти (для примера)
 const programs = {};
@@ -940,6 +941,61 @@ router.get('/program/calendar', (req, res) => {
     stats,
     profile: program.profile
   });
+});
+
+// POST /api/generate-meal-plan — генерация рациона на день с учетом иерархии dietType
+const dietTypeHierarchy = {
+  vegan: ['vegan'],
+  vegetarian: ['vegan', 'vegetarian'],
+  vegetarian_egg: ['vegan', 'vegetarian', 'vegetarian_egg'],
+  fish: ['vegan', 'vegetarian', 'vegetarian_egg', 'fish'],
+  meat: ['vegan', 'vegetarian', 'vegetarian_egg', 'fish', 'meat'],
+};
+
+router.post('/generate-meal-plan', async (req, res) => {
+  try {
+    const { dietType = 'vegetarian_egg', calories = 1800 } = req.body;
+    const allowedTypes = dietTypeHierarchy[dietType] || ['vegan'];
+    const mealTypes = ['Завтрак', 'Обед', 'Ужин', 'Перекус', 'Полдник'];
+    const caloriesPerMeal = Math.floor(calories / mealTypes.length);
+    const usedRecipes = [];
+    const plan = [];
+    for (const mealType of mealTypes) {
+      // Получаем только рецепты из разрешённых dietType
+      const recipes = recipeUtils.getRecipesByType(mealType).filter(r => allowedTypes.includes(r.dietType));
+      const unused = recipes.filter(r => !usedRecipes.some(u => u.name === r.name));
+      const recipe = unused.length > 0
+        ? unused[Math.floor(Math.random() * unused.length)]
+        : recipes[Math.floor(Math.random() * recipes.length)];
+      if (recipe) usedRecipes.push(recipe);
+      plan.push({ type: mealType, meal: recipe });
+    }
+    res.json({ success: true, plan });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Проксирующий роут для /api/generate-recipe (перенаправляет на /api/recipes/generate-recipe)
+import fetch from 'node-fetch';
+router.post('/generate-recipe', async (req, res) => {
+  try {
+    const response = await fetch('http://localhost:3001/api/recipes/generate-recipe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body)
+    });
+    const data = await response.text();
+    res.status(response.status).send(data);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Заглушка для /api/get-today-plan (примерная структура)
+router.post('/get-today-plan', async (req, res) => {
+  // Здесь можно реализовать реальную логику, если потребуется
+  res.status(501).json({ success: false, error: 'Эндпоинт не реализован' });
 });
 
 export default router;
