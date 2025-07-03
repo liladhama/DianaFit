@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "dianafit"
+version = "0.1.0"
+description = "DianaFit Backend Services"
+authors = ["Your Name <you@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+openai = "^1.0.0"
+faiss-cpu = "^1.7.4"
+numpy = "^1.24.0"
+tqdm = "^4.65.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
