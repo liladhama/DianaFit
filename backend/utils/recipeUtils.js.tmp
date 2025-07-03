@@ -1,0 +1,184 @@
+/**
+ * Утилиты для работы с рецептами и планом питания
+ */
+
+import recipesDB from './recipesDB.js';
+import { callMistralAI } from './aiUtils.js';
+
+export class RecipeUtils {
+    constructor() {
+        this.recipes = recipesDB;
+    }
+
+    /**
+     * Возвращает рецепты по типу приема пищи
+     * @param {string} mealType - Тип приема пищи
+     * @returns {Array} - Массив рецептов
+     */
+    getRecipesByType(mealType) {
+        return this.recipes[mealType.toLowerCase()] || [];
+    }
+
+    /**
+     * Находит альтернативный рецепт с похожей калорийностью
+     * @param {string} mealType - Тип приема пищи
+     * @param {number} targetCalories - Целевая калорийность
+     * @param {Array} excludeMeals - Исключаемые блюда
+     * @returns {Object} - Альтернативный рецепт
+     */
+    findAlternativeRecipe(mealType, targetCalories, excludeMeals = []) {
+        const recipes = this.getRecipesByType(mealType);
+        const tolerance = targetCalories * 0.1; // 10% погрешность
+
+        const suitableRecipes = recipes.filter(recipe => {
+            if (excludeMeals.includes(recipe.name.toLowerCase())) {
+                return false;
+            }
+            return Math.abs(recipe.calories - targetCalories) <= tolerance;
+        });
+
+        if (suitableRecipes.length === 0) {
+            return null;
+        }
+
+        // Возвращаем случайный рецепт из подходящих
+        return suitableRecipes[Math.floor(Math.random() * suitableRecipes.length)];
+    }
+
+    /**
+     * Проверяет и исправляет дубликаты в плане питания
+     * @param {Array} meals - Список приемов пищи
+     * @param {string} mealType - Тип приема пищи
+     * @returns {Array} - Исправленный список приемов пищи
+     */
+    async checkAndFixMealDuplicatesWithAlternatives(meals, mealType) {
+        const seenMeals = new Set();
+        const result = [];
+
+        for (const meal of meals) {
+            const mealName = meal.name.toLowerCase();
+
+            if (seenMeals.has(mealName)) {
+                // Ищем альтернативу
+                const alternative = this.findAlternativeRecipe(
+                    mealType,
+                    meal.calories,
+                    Array.from(seenMeals)
+                );
+
+                if (alternative) {
+                    result.push(alternative);
+                } else {
+                    // Если не нашли в базе, генерируем новый
+                    const generated = await this.generateRecipe(
+                        mealType,
+                        meal.calories
+                    );
+                    if (generated) {
+                        result.push(generated);
+                    }
+                }
+            } else {
+                seenMeals.add(mealName);
+                result.push(meal);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * Генерирует новый рецепт через AI
+     * @param {string} mealType - Тип приема пищи
+     * @param {number} targetCalories - Желаемая калорийность
+     * @param {Object} preferences - Предпочтения
+     * @returns {Object} - Сгенерированный рецепт
+     */
+    async generateRecipe(mealType, targetCalories, preferences = {}) {
+        const prompt = `Создай рецепт для приема пищи "${mealType}" на ${targetCalories} ккал.
+        ${preferences.diet ? `Учти диету: ${preferences.diet}.` : ''}
+        ${preferences.exclude ? `Исключи: ${preferences.exclude.join(', ')}.` : ''}
+        
+        Формат ответа:
+        Название:
+        Ингредиенты: (с граммовкой)
+        КБЖУ:
+        Способ приготовления:
+        Теги:`;
+
+        const messages = [
+            { role: "system", content: "Ты опытный диетолог и шеф-повар. Создавай только реалистичные и полезные рецепты." },
+            { role: "user", content: prompt }
+        ];
+
+        const response = await callMistralAI(messages);
+        return this.parseAIResponse(response, mealType, targetCalories);
+    }
+
+    /**
+     * Парсит ответ AI в структуру рецепта
+     * @private
+     */
+    parseAIResponse(text, type, targetCalories) {
+        const lines = text.split('\n');
+        const recipe = {
+            name: '',
+            type: type,
+            calories: targetCalories,
+            protein: 0,
+            fat: 0,
+            carbs: 0,
+            ingredients: [],
+            instructions: '',
+            tags: []
+        };
+
+        let currentSection = '';
+        for (const line of lines) {
+            const trimmed = line.trim();
+            if (!trimmed) continue;
+
+            if (trimmed.toLowerCase().startsWith('название:')) {
+                currentSection = 'name';
+                continue;
+            } else if (trimmed.toLowerCase().startsWith('ингредиенты:')) {
+                currentSection = 'ingredients';
+                continue;
+            } else if (trimmed.toLowerCase().startsWith('кбжу:')) {
+                currentSection = 'macros';
+                continue;
+            } else if (trimmed.toLowerCase().startsWith('способ приготовления:')) {
+                currentSection = 'instructions';
+                continue;
+            } else if (trimmed.toLowerCase().startsWith('теги:')) {
+                currentSection = 'tags';
+                continue;
+            }
+
+            switch (currentSection) {
+                case 'name':
+                    recipe.name = trimmed;
+                    break;
+                case 'ingredients':
+                    recipe.ingredients.push(trimmed);
+                    break;
+                case 'macros':
+                    const macros = trimmed.match(/\d+/g);
+                    if (macros && macros.length >= 3) {
+                        recipe.protein = parseInt(macros[0]);
+                        recipe.fat = parseInt(macros[1]);
+                        recipe.carbs = parseInt(macros[2]);
+                    }
+                    break;
+                case 'instructions':
+                    recipe.instructions += trimmed + '\n';
+                    break;
+                case 'tags':
+                    recipe.tags = trimmed.split(',').map(t => t.trim());
+                    break;
+            }
+        }
+
+        return recipe;
+    }
+}

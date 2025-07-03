@@ -1201,8 +1201,8 @@ function App() {
       ) : null}
       
       {/* Аватарка пользователя из Telegram в правом верхнем углу */}
-      {/* Показываем только на странице TestWeek, но НЕ на TodayBlock и НЕ на странице оплаты */}
-      {!showSplash && showTestWeek && !isPaymentShown && (
+      {/* Показываем только на странице TestWeek (тренировочная неделя), но НЕ в профиле и НЕ на странице оплаты */}
+      {!showSplash && showTestWeek && !showProfile && !isPaymentShown && (
         <div
           onClick={() => setShowProfile(true)}
           style={{

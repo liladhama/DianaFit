@@ -1,6 +1,8 @@
 // Утилита для получения иконки диеты
-export function getDietIcon(dietType) {
+function getDietIcon(dietType) {
+  // Используем реальные пути к иконкам в assets/profile
   const dietIcons = {
+    'vegetarian_egg': require('../assets/profile/diet-vegetarian.png'), // Используем существующую иконку, можно создать специальную для vegetarian_egg
     'vegetarian': require('../assets/profile/diet-vegetarian.png'),
     'meat': require('../assets/profile/diet-meat.png'),
     'fish': require('../assets/profile/diet-fish.png'),
@@ -25,8 +27,9 @@ export function getDietIcon(dietType) {
 */
 
 // Названия диет на русском (как они отображаются в профиле)
-export function getDietName(dietType) {
+function getDietName(dietType) {
   const dietNames = {
+    'vegetarian_egg': 'вегетарианскую с яйцом',
     'vegetarian': 'вегетарианскую',
     'meat': 'мясную',
     'fish': 'рыбную', 
@@ -35,3 +38,8 @@ export function getDietName(dietType) {
   
   return dietNames[dietType] || 'мясную';
 }
+
+export default {
+  getDietIcon,
+  getDietName
+};

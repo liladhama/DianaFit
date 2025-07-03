@@ -1,3 +1,14 @@
 {
-  "type": "module"
+  "type": "module",
+  "scripts": {
+    "test-diversity": "node test-meal-diversity.js",
+    "check-backend-status": "node -e \"fetch('http://localhost:3001/health').then(() => process.exit(0)).catch(() => process.exit(1))\"",
+    "test-all": "npm run test-diana-chat && npm run test-diversity",
+    "start-backend": "cd backend && npm start",
+    "postinstall": "cd backend && npm install"
+  },
+  "dependencies": {
+    "node-fetch": "^3.3.0",
+    "cross-env": "^7.0.3"
+  }
 }
