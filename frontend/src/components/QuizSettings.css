@@ -1,0 +1,64 @@
+.answer-wheel-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.answer-wheel-container {
+    background: white;
+    padding: 20px;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 320px;
+    position: relative;
+}
+
+.close-wheel {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    background: none;
+    border: none;
+    color: white;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 8px;
+}
+
+/* Стили для колеса выбора */
+.w-wheel {
+    height: 300px !important;
+}
+
+.w-wheel-item {
+    font-size: 16px;
+    padding: 12px;
+    text-align: center;
+    color: #333;
+}
+
+.w-wheel-item-selected {
+    color: #007AFF;
+    font-weight: bold;
+}
+
+/* Анимации для колеса */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+.answer-wheel-overlay {
+    animation: fadeIn 0.3s ease-out;
+}

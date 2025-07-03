@@ -1,0 +1,66 @@
+.diana-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #ffffff;
+    border-radius: 15px;
+    padding: 20px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: flex-start;
+    max-width: 400px;
+    z-index: 1000;
+}
+
+.diana-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.diana-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.notification-content {
+    flex: 1;
+}
+
+.notification-message {
+    margin-bottom: 10px;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.notification-message:last-child {
+    margin-bottom: 0;
+}
+
+.notification-message.warning {
+    color: #e74c3c;
+}
+
+.notification-message.suggestion {
+    color: #3498db;
+}
+
+.close-notification {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #95a5a6;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.close-notification:hover {
+    color: #7f8c8d;
+}
