@@ -1,9 +1,8 @@
 import express from 'express';
-import { RecipeUtils } from '../utils/recipeUtils.js';
+import recipeUtils from '../utils/recipeUtils.js';
 import { callMistralAI } from '../utils/aiUtils.js';
 
 const router = express.Router();
-const recipeUtils = new RecipeUtils();
 
 // Эндпоинт для генерации рецепта по запросу
 router.post('/generate-recipe', async (req, res) => {

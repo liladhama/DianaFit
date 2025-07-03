@@ -185,7 +185,7 @@ ${dianaKnowledge.substring(0, 1500)}...
 });
 
 // Импортируем утилиты для работы с рецептами
-const recipeUtils = require('./utils/recipeUtils');
+import recipeUtils from './utils/recipeUtils.js';
 
 // Функция для проверки и исправления повторяющихся блюд в дне
 // Использует старую версию, которая просто переименовывает дубликаты
