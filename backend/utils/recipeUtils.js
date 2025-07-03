@@ -15,7 +15,10 @@ const recipeUtils = {
     findDiverseRecipe(mealType, targetCalories, usedRecipes = [], tolerance = 100) {
         const recipes = this.getRecipesByType(mealType);
         const unusedRecipes = recipes.filter(recipe => 
-            !usedRecipes.some(used => used.name.toLowerCase() === recipe.name.toLowerCase())
+            !usedRecipes.some(used => 
+                used.name.toLowerCase() === recipe.name.toLowerCase() &&
+                used.type.toLowerCase() === recipe.type.toLowerCase()
+            )
         );
         const suitableRecipes = unusedRecipes.filter(recipe => 
             Math.abs(recipe.calories - targetCalories) <= tolerance
@@ -58,18 +61,19 @@ const recipeUtils = {
         const planObj = typeof plan === 'string' ? JSON.parse(plan) : plan;
         if (!planObj.weeks || !Array.isArray(planObj.weeks)) return plan;
 
-        const usedRecipesByType = {
-            breakfast: [],
-            lunch: [],
-            dinner: [],
-            snack: []
-        };
-
         for (const week of planObj.weeks) {
             if (!week.days || !Array.isArray(week.days)) continue;
 
             for (const day of week.days) {
                 if (!day.meals || !Array.isArray(day.meals)) continue;
+
+                // Очищаем список использованных рецептов для каждого нового дня
+                const usedRecipesByType = {
+                    breakfast: [],
+                    lunch: [],
+                    dinner: [],
+                    snack: []
+                };
 
                 for (const meal of day.meals) {
                     if (!meal.meal || !meal.type) continue;
@@ -123,59 +127,78 @@ const recipeUtils = {
 
     async checkAndFixMealDuplicatesWithAlternatives(plan) {
         try {
-            const planObj = typeof plan === 'string' ? JSON.parse(plan) : plan;
-            
-            if (!planObj.weeks || !Array.isArray(planObj.weeks)) {
-                console.log('❌ Неверный формат плана, не удалось найти недели');
-                return plan;
+            // Если plan - это строка, очищаем её от markdown и парсим
+            let cleanPlan = plan;
+            if (typeof plan === 'string') {
+                // Удаляем markdown code block markers и лишние пробелы/переносы строк
+                cleanPlan = plan
+                    .replace(/```json\n?/g, '')
+                    .replace(/```\n?/g, '')
+                    .replace(/^\s+|\s+$/g, '');
+                
+                // Проверяем, начинается ли строка с {
+                if (!cleanPlan.startsWith('{')) {
+                    const jsonStart = cleanPlan.indexOf('{');
+                    if (jsonStart !== -1) {
+                        cleanPlan = cleanPlan.substring(jsonStart);
+                    }
+                }
             }
             
-            for (const week of planObj.weeks) {
-                if (!week.days || !Array.isArray(week.days)) continue;
+            try {
+                const planObj = typeof cleanPlan === 'string' ? JSON.parse(cleanPlan) : cleanPlan;
                 
-                for (const day of week.days) {
-                    if (!day.meals || !Array.isArray(day.meals)) continue;
+                if (!planObj.weeks || !Array.isArray(planObj.weeks)) {
+                    console.log('❌ Неверный формат плана, не удалось найти недели');
+                    return plan;
+                }
+                
+                for (const week of planObj.weeks) {
+                    if (!week.days || !Array.isArray(week.days)) continue;
                     
-                    const mealNames = new Set();
-                    const mealTypes = {};
-                    const usedRecipes = [];
-                    
-                    for (const meal of day.meals) {
-                        if (!meal.meal) continue;
+                    for (const day of week.days) {
+                        if (!day.meals || !Array.isArray(day.meals)) continue;
                         
-                        const mealName = typeof meal.meal === 'string' 
-                            ? meal.meal 
-                            : (meal.meal.name || 'Без названия');
-                            
-                        const mealNameLower = mealName.toLowerCase();
+                        const mealNames = new Set();
+                        const mealTypes = {};
+                        const usedRecipes = [];
                         
-                        if (mealNames.has(mealNameLower)) {
-                            console.log(`⚠️ Обнаружен дубликат блюда в дне ${day.day}: "${mealName}"`);
+                        for (const meal of day.meals) {
+                            if (!meal.meal) continue;
                             
-                            const targetCalories = meal.calories || 0;
-                            const alternativeRecipe = this.findAlternativeRecipe(
-                                meal.type, 
-                                targetCalories, 
-                                usedRecipes
-                            );
-        
-                            if (alternativeRecipe) {
-                                console.log(`✅ Заменяем дубликат "${mealName}" на "${alternativeRecipe.name}"`);
+                            const mealName = typeof meal.meal === 'string' 
+                                ? meal.meal 
+                                : (meal.meal.name || 'Без названия');
                                 
-                                if (typeof meal.meal === 'string') {
-                                    meal.meal = alternativeRecipe.name;
-                                } else if (meal.meal && typeof meal.meal === 'object') {
-                                    meal.meal = alternativeRecipe;
+                            const mealNameLower = mealName.toLowerCase();
+                            
+                            if (mealNames.has(mealNameLower)) {
+                                console.log(`⚠️ Обнаружен дубликат блюда в дне ${day.day}: "${mealName}"`);
+                                
+                                const targetCalories = meal.calories || 0;
+                                const alternativeRecipe = this.findAlternativeRecipe(
+                                    meal.type, 
+                                    targetCalories, 
+                                    usedRecipes
+                                );
+            
+                                if (alternativeRecipe) {
+                                    console.log(`✅ Заменяем дубликат "${mealName}" на "${alternativeRecipe.name}"`);
+                                    
+                                    if (typeof meal.meal === 'string') {
+                                        meal.meal = alternativeRecipe.name;
+                                    } else if (meal.meal && typeof meal.meal === 'object') {
+                                        meal.meal = alternativeRecipe;
+                                    }
+                                    
+                                    meal.calories = alternativeRecipe.calories;
+                                    usedRecipes.push(alternativeRecipe.name);
                                 }
-                                
-                                meal.calories = alternativeRecipe.calories;
-                                usedRecipes.push(alternativeRecipe.name);
                             }
-                        }
-                        
-                        if (meal.type) {
-                            if (!mealTypes[meal.type]) {
-                                mealTypes[meal.type] = [];
+                            
+                            if (meal.type) {
+                                if (!mealTypes[meal.type]) {
+                                    mealTypes[meal.type] = [];
                             }
                             mealTypes[meal.type].push({ name: mealName, calories: meal.calories });
                         }
@@ -223,6 +246,10 @@ const recipeUtils = {
                         }
                     }
                 }
+            } catch (parseError) {
+                console.error('Ошибка парсинга JSON:', parseError);
+                console.error('Содержимое после очистки:', cleanPlan);
+                throw new Error('Невалидный JSON после очистки от markdown');
             }
             
             return planObj;
