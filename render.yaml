@@ -1,11 +1,12 @@
 services:
   - type: web
     name: dianafit
-    env: node
-    buildCommand: npm install && cd backend && npm install
+    runtime: node
+    plan: free
+    buildCommand: cd backend && npm install
     startCommand: cd backend && npm start
     envVars:
       - key: NODE_VERSION
         value: 18.2.0
-      - key: NPM_CONFIG_PRODUCTION
-        value: false
+      - key: NODE_ENV
+        value: production
