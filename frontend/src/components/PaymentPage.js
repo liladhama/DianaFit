@@ -26,7 +26,7 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
+      background: 'linear-gradient(180deg, rgba(120,180,255,0.98) 0%, rgba(150,200,255,0.97) 100%)', // чуть более яркий голубой
       padding: '16px 16px 32px 16px',
       boxSizing: 'border-box',
       position: 'relative'

@@ -6,6 +6,7 @@ import DianaNotification from './DianaNotification.js';
 // Используем функции из default export
 const getDietIcon = dietUtils.getDietIcon;
 const getDietName = dietUtils.getDietName;
+const getDietDisplayName = dietUtils.getDietDisplayName;
 
 export default function ProfilePage({ onClose, unlocked, isPremium, activatePremium, answers, onEditQuiz, onRestart }) {
   // Получаем данные пользователя
@@ -24,45 +25,81 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
     weeklyResults: []
   });
 
-  // Загрузка ответов квиза и настроек
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'default';
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user/quiz-answers/${userId}`);
-        if (!response.ok) throw new Error('Failed to fetch user data');
-        const data = await response.json();
-        console.log('Полученные данные пользователя:', data); // Отладочный вывод
-        setQuizAnswers(data);
-        
-        // Рассчитываем БЖУ (временная заглушка)
-        // const bmr = calculateBMR(data);
-        // const macros = calculateMacros(bmr, data.diet_type);
-        const macros = {
-          protein: 120,
-          fats: 60,
-          carbs: 200,
-          calories: 1800
-        };
-        setNutritionInfo(macros);
-      } catch (error) {
-        console.error('Error fetching user data:', error);
+  // --- Корректная формула BMR (Миффлин или Харрис) ---
+  function calculateBMR(weight, height, age, sex = 'female', method = 'mifflin') {
+    if (method === 'mifflin') {
+      if (sex === 'male') {
+        return 66.5 + 13.75 * weight + 5.003 * height - 6.755 * age;
+      } else {
+        return 655 + 9.563 * weight + 1.850 * height - 4.676 * age;
       }
-    };
+    } else if (method === 'harris') {
+      if (sex === 'male') {
+        return 88.36 + 13.4 * weight + 4.8 * height - 5.7 * age;
+      } else {
+        return 10 * weight + 6.25 * height - 5 * age - 161;
+      }
+    }
+    return 1200; // fallback
+  }
 
-    fetchUserData();
-    
-    // Проверяем, нужно ли показать уведомление от Дианы
-    const checkDianaNotification = () => {
-      const today = new Date();
-      const isEndOfWeek = today.getDay() === 0; // Воскресенье
-      if (isEndOfWeek) {
-        setShowDianaNotification(true);
-      }
+  // --- Функция расчёта КБЖУ на основе данных пользователя ---
+  function calculateMacrosFromQuiz(quiz) {
+    // Поддержка weight и weight_kg
+    const weight = Number(quiz.weight) || Number(quiz.weight_kg) || 60;
+    const height = Number(quiz.height) || Number(quiz.height_cm) || 165;
+    const age = Number(quiz.age) || 30;
+    const sex = (quiz.gender || quiz.sex || 'female').toLowerCase();
+    const method = 'mifflin';
+    let bmr = calculateBMR(weight, height, age, sex, method);
+    // Коэффициент активности
+    const activityMap = {
+      'low': 1.2,
+      'medium': 1.375,
+      'high': 1.55,
+      'very_high': 1.725
     };
-    
-    checkDianaNotification();
-  }, []);
+    const activity = quiz.activity_level || quiz.activity_coef || 'medium';
+    const activityCoef = activityMap[activity] || 1.375;
+    let calories_before_goal = Math.round(bmr * activityCoef);
+    let calories = calories_before_goal;
+    // --- Новый расчёт дефицита по goal (3/4/5 кг в месяц) ---
+    const goal = Number(quiz.goal);
+    let deficit = 0;
+    if ([3,4,5].includes(goal)) {
+      deficit = goal * 7700 / 30;
+      calories = Math.round(calories_before_goal - deficit);
+    }
+    // Лог для отладки
+    console.log('[DEBUG КБЖУ]', {
+      weight, height, age, sex, bmr, activityCoef, calories_before_goal, calories, goal, deficit
+    });
+    // Минимум 1000 ккал
+    calories = Math.max(1000, calories);
+    const protein = Math.max(0, Math.round(weight * 1.7));
+    const fats = Math.max(0, Math.round(weight * 0.9));
+    const carbs = Math.max(0, Math.round((calories - (protein*4 + fats*9)) / 4));
+    console.log('[DEBUG КБЖУ итог]', {calories, protein, fats, carbs});
+    return { calories, protein, fats, carbs };
+  }
+
+  // --- Функция округления КБЖУ ---
+  function roundMacros(macros) {
+    return {
+      calories: Math.round(macros.calories / 10) * 10,
+      protein: Math.round(macros.protein / 5) * 5,
+      fats: Math.round(macros.fats / 5) * 5,
+      carbs: Math.round(macros.carbs / 5) * 5,
+    };
+  }
+
+  // --- КБЖУ рассчитываем только на фронте ---
+  useEffect(() => {
+    if (answers && Object.keys(answers).length > 0) {
+      const macros = calculateMacrosFromQuiz(answers);
+      setNutritionInfo(roundMacros(macros));
+    }
+  }, [answers]);
 
   // Получаем реальные данные о прогрессе
   const [progressData, setProgressData] = React.useState({
@@ -107,6 +144,39 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
     return () => clearInterval(interval);
   }, []);
 
+  // Загружаем quizAnswers напрямую из API при монтировании
+  useEffect(() => {
+    const fetchQuizAnswers = async () => {
+      try {
+        const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'testuser1';
+        const response = await fetch(`http://localhost:3001/api/user/quiz-answers/${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          // Приводим возраст к строке для корректного отображения
+          if (typeof data.age !== 'undefined') data.age = String(data.age);
+          setQuizAnswers(data);
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки quizAnswers:', error);
+      }
+    };
+    fetchQuizAnswers();
+  }, []);
+
+  // Функция для обновления quizAnswers после изменений в QuizSettings
+  const handleQuizSettingsChange = async () => {
+    try {
+      const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'testuser1';
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user/quiz-answers/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setQuizAnswers(data);
+      }
+    } catch (error) {
+      console.error('Ошибка обновления quizAnswers:', error);
+    }
+  };
+
   return (
     <div style={{
       width: '100%',
@@ -114,7 +184,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #667eea 100%)',
+      background: 'linear-gradient(180deg, rgba(150,200,255,0.97) 0%, rgba(120,180,255,0.98) 100%)', // более яркий голубой
       backgroundSize: '400% 400%',
       animation: 'gradientShift 8s ease infinite',
       position: 'relative',
@@ -158,7 +228,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
         ))}
       </div>
 
-      <style jsx>{`
+      <style>{`
         @keyframes gradientShift {
           0% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
@@ -291,47 +361,28 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
         {/* Имя */}
         <h1 style={{
           fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-          fontSize: 24,
-          fontWeight: 700,
-          background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-          backgroundClip: 'text',
-          margin: '0 0 6px 0',
-          textShadow: '0 2px 10px rgba(0,0,0,0.1)',
-          letterSpacing: '-0.02em'
+          fontSize: 28,
+          fontWeight: 800,
+          margin: '0 0 8px 0',
+          color: '#222',
+          letterSpacing: '0.5px',
+          textShadow: 'none',
         }}>
           {quizAnswers.name || user.first_name}
         </h1>
-
         {/* Возраст */}
         <p style={{
           fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
           fontSize: 16,
-          color: 'rgba(255, 255, 255, 0.9)',
+          color: '#222',
           margin: '0 0 14px 0',
           fontWeight: 500,
-          letterSpacing: '0.3px'
+          letterSpacing: '0.3px',
+          textShadow: 'none',
         }}>
-          {(() => {
-            // Проверяем, похоже ли значение на год рождения
-            if (quizAnswers.age && quizAnswers.age > 1900) {
-              const currentYear = new Date().getFullYear();
-              const calculatedAge = currentYear - quizAnswers.age;
-              return `${calculatedAge} лет (${quizAnswers.age} г.р.)`;
-            } 
-            // Если это обычный возраст
-            else if (quizAnswers.age) {
-              return `${quizAnswers.age} лет`;
-            }
-            // Если возраст не указан
-            else {
-              return 'Возраст не указан';
-            }
-          })()}
+          {quizAnswers.age ? `${quizAnswers.age} лет` : 'Возраст не указан'}
         </p>
-
-        {/* Тип диеты с улучшенным дизайном */}
+        {/* Тип диеты */}
         <div style={{
           display: 'inline-flex',
           alignItems: 'center',
@@ -342,10 +393,11 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
           borderRadius: 30,
           border: '1px solid rgba(255, 255, 255, 0.3)',
           fontSize: 14,
-          color: '#fff',
+          color: '#222',
           fontWeight: 600,
           fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-          letterSpacing: '0.3px'
+          letterSpacing: '0.3px',
+          textShadow: 'none',
         }}>
           <img 
             src={getDietIcon(quizAnswers.diet_flags)} 
@@ -357,7 +409,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
               filter: 'brightness(1.2) contrast(1.1)'
             }}
           />
-          <span>ем {getDietName(quizAnswers.diet_flags)} пищу</span>
+          <span>{getDietDisplayName(quizAnswers.diet_flags)}</span>
         </div>
       </div>
 
@@ -402,7 +454,8 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               boxShadow: !showSettings ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
               flex: 1,
-              letterSpacing: '0.3px'
+              letterSpacing: '0.3px',
+              color: '#222'
             }}
             onMouseEnter={(e) => {
               if (!showSettings) return;
@@ -430,7 +483,8 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
               transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
               boxShadow: showSettings ? '0 4px 12px rgba(0,0,0,0.15)' : 'none',
               flex: 1,
-              letterSpacing: '0.3px'
+              letterSpacing: '0.3px',
+              color: '#222'
             }}
             onMouseEnter={(e) => {
               if (showSettings) return;
@@ -458,9 +512,9 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                   
                   // Пересчитываем БЖУ при изменении настроек
                   if (changes.weight || changes.height || changes.age || changes.activity_level || changes.goal) {
-                    // const bmr = calculateBMR({ ...quizAnswers, ...changes });
-                    // const macros = calculateMacros(bmr, changes.goal || quizAnswers.goal, changes.activity_level || quizAnswers.activity_level);
-                    // setNutritionInfo(macros);
+                    // Пересчитываем БЖУ при изменении настроек
+                    const macros = calculateMacrosFromQuiz({ ...quizAnswers, ...changes });
+                    setNutritionInfo(roundMacros(macros));
                   }
                 } catch (error) {
                   console.error('Error updating settings:', error);
@@ -477,7 +531,8 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
               color: '#fff',
               textAlign: 'center',
               marginBottom: 32,
-              letterSpacing: '-0.02em'
+              letterSpacing: '-0.02em',
+              color: '#222'
             }}>
               Прогресс за неделю
             </h2>
@@ -509,10 +564,11 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                       <h3 style={{ 
                         fontSize: 16, 
                         fontWeight: 700, 
-                        color: '#fff',
+                        color: '#222',
                         margin: 0,
                         fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-                        letterSpacing: '0.3px'
+                        letterSpacing: '0.3px',
+                        textShadow: 'none'
                       }}>
                         Питание
                       </h3>
@@ -603,10 +659,11 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                       <h3 style={{ 
                         fontSize: 16, 
                         fontWeight: 700, 
-                        color: '#fff',
+                        color: '#222',
                         margin: 0,
                         fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-                        letterSpacing: '0.3px'
+                        letterSpacing: '0.3px',
+                        textShadow: 'none'
                       }}>
                         Тренировки
                       </h3>
@@ -672,218 +729,78 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                 </div>
               </div>
 
-              <style jsx>{`
-                @keyframes shimmer {
-                  0% { transform: translateX(-100%); }
-                  100% { transform: translateX(100%); }
-                }
-              `}</style>
-            </div>
-
-            {/* Улучшенная статистика питания */}
-            <div style={{ marginBottom: 24 }}>
-              <h3 style={{ 
-                fontSize: 18, 
-                fontWeight: 700, 
-                color: '#fff',
-                marginBottom: 16,
-                textAlign: 'center',
-                fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-                letterSpacing: '0.3px'
-              }}>
-                Статистика питания
-              </h3>
-              
-              {nutritionInfo && (
-                <div style={{ 
-                  display: 'grid', 
-                  gridTemplateColumns: 'repeat(2, 1fr)', 
-                  gap: 12,
-                  marginBottom: 20
+              {/* Улучшенная статистика питания */}
+              <div style={{ marginBottom: 24 }}>
+                <h3 style={{ 
+                  fontSize: 18, 
+                  fontWeight: 700, 
+                  color: '#222',
+                  marginBottom: 16,
+                  textAlign: 'center',
+                  fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
+                  letterSpacing: '0.3px'
                 }}>
-                  {[
+                  Мои показатели БЖУ
+                </h3>
+                {nutritionInfo && (() => {
+                  const items = [
                     { label: 'Белки', value: `${nutritionInfo.protein}г`, color: '#48bb78', icon: '🥩' },
                     { label: 'Жиры', value: `${nutritionInfo.fats}г`, color: '#ed8936', icon: '🥑' },
                     { label: 'Углеводы', value: `${nutritionInfo.carbs}г`, color: '#667eea', icon: '🍞' },
                     { label: 'Калории', value: nutritionInfo.calories, color: '#f093fb', icon: '🔥' }
-                  ].map((item, index) => (
-                    <div key={index} style={{ 
-                      background: 'rgba(255, 255, 255, 0.15)',
-                      backdropFilter: 'blur(10px)',
-                      borderRadius: 12,
-                      padding: 16,
-                      textAlign: 'center',
-                      border: '1px solid rgba(255, 255, 255, 0.2)',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                      transition: 'all 0.3s ease',
-                      cursor: 'pointer'
-                    }}
-                    onMouseEnter={(e) => {
-                      e.target.style.transform = 'translateY(-2px)';
-                      e.target.style.boxShadow = '0 6px 18px rgba(0, 0, 0, 0.2)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.transform = 'translateY(0)';
-                      e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
-                    }}
-                    >
-                      <div style={{ fontSize: 20, marginBottom: 6 }}>{item.icon}</div>
-                      <div style={{ 
-                        fontSize: 18, 
-                        fontWeight: 700, 
-                        color: '#fff',
-                        fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-                        marginBottom: 2
-                      }}>
-                        {item.value}
-                      </div>
-                      <div style={{ 
-                        fontSize: 12, 
-                        color: 'rgba(255, 255, 255, 0.8)',
-                        fontWeight: 500,
-                        fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-                        letterSpacing: '0.3px'
-                      }}>
-                        {item.label}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Улучшенный график прогресса */}
-              {progressData.details.weeklyProgress.length > 0 && (
-                <div style={{ marginBottom: 20 }}>
-                  <h4 style={{ 
-                    fontSize: 16, 
-                    fontWeight: 700, 
-                    color: '#fff',
-                    marginBottom: 16,
-                    textAlign: 'center',
-                    fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-                    letterSpacing: '0.3px'
-                  }}>
-                    Динамика за неделю
-                  </h4>
-                  <div style={{ 
-                    background: 'rgba(255, 255, 255, 0.1)',
-                    backdropFilter: 'blur(10px)',
-                    borderRadius: 12,
-                    padding: 16,
-                    border: '1px solid rgba(255, 255, 255, 0.2)'
-                  }}>
+                  ];
+                  return (
                     <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between',
-                      alignItems: 'flex-end',
-                      height: 80,
-                      padding: '8px 0'
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(2, 1fr)', 
+                      gap: 12,
+                      marginBottom: 20
                     }}>
-                      {progressData.details.weeklyProgress.map((value, index) => (
+                      {items.map((item, index) => (
                         <div key={index} style={{ 
-                          display: 'flex', 
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          flex: 1,
-                          gap: 12
-                        }}>
+                          background: 'rgba(255, 255, 255, 0.1)',
+                          borderRadius: 12,
+                          padding: 16,
+                          textAlign: 'center',
+                          border: '1px solid rgba(255, 255, 255, 0.2)',
+                          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                          transition: 'all 0.3s ease',
+                          cursor: 'pointer'
+                        }}
+                        onMouseEnter={e => {
+                          e.target.style.transform = 'translateY(-2px)';
+                          e.target.style.boxShadow = '0 6px 18px rgba(0, 0, 0, 0.2)';
+                        }}
+                        onMouseLeave={e => {
+                          e.target.style.transform = 'translateY(0)';
+                          e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+                        }}
+                        >
+                          <div style={{ fontSize: 20, marginBottom: 6 }}>{item.icon}</div>
                           <div style={{ 
-                            height: `${Math.max(value, 10)}%`,
-                            width: 20,
-                            background: value >= 70 ? 
-                              'linear-gradient(180deg, #48bb78 0%, #38a169 100%)' : 
-                              value >= 40 ? 
-                              'linear-gradient(180deg, #ed8936 0%, #dd6b20 100%)' :
-                              'linear-gradient(180deg, #f56565 0%, #e53e3e 100%)',
-                            borderRadius: 10,
-                            transition: 'all 0.8s ease',
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.2)',
-                            position: 'relative',
-                            overflow: 'hidden'
+                            fontSize: 18, 
+                            fontWeight: 700, 
+                            color: '#222',
+                            fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
+                            marginBottom: 2
                           }}>
-                            <div style={{
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                              right: 0,
-                              height: '30%',
-                              background: 'linear-gradient(180deg, rgba(255,255,255,0.4) 0%, transparent 100%)',
-                              borderRadius: '10px 10px 0 0'
-                            }} />
+                            {item.value}
                           </div>
-                          <span style={{ 
-                            fontSize: 14, 
-                            color: 'rgba(255, 255, 255, 0.9)',
-                            fontWeight: 600,
-                            letterSpacing: '0.5px'
+                          <div style={{ 
+                            fontSize: 12, 
+                            color: '#222',
+                            fontWeight: 500,
+                            fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
+                            letterSpacing: '0.3px'
                           }}>
-                            {['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'][index]}
-                          </span>
+                            {item.label}
+                          </div>
                         </div>
                       ))}
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Улучшенные рекомендации */}
-              {progressData.details.commonIssues.length > 0 && (
-                <div>
-                  <h4 style={{ 
-                    fontSize: 16, 
-                    fontWeight: 700, 
-                    color: '#fff',
-                    marginBottom: 16,
-                    textAlign: 'center',
-                    fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-                    letterSpacing: '0.3px'
-                  }}>
-                    💡 Рекомендации
-                  </h4>
-                  <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 8
-                  }}>
-                    {progressData.details.commonIssues.map((issue, index) => (
-                      <div key={index} style={{
-                        background: 'rgba(255, 255, 255, 0.15)',
-                        backdropFilter: 'blur(10px)',
-                        borderRadius: 16,
-                        padding: '20px 24px',
-                        border: '1px solid rgba(255, 255, 255, 0.2)',
-                        fontSize: 16,
-                        color: '#fff',
-                        fontWeight: 500,
-                        lineHeight: '1.5',
-                        boxShadow: '0 8px 25px rgba(0, 0, 0, 0.1)',
-                        transition: 'all 0.3s ease',
-                        cursor: 'pointer'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.transform = 'translateX(8px)';
-                        e.target.style.background = 'rgba(255, 255, 255, 0.25)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.transform = 'translateX(0)';
-                        e.target.style.background = 'rgba(255, 255, 255, 0.15)';
-                      }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          <div style={{
-                            width: 8,
-                            height: 8,
-                            background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
-                            borderRadius: '50%',
-                            flexShrink: 0
-                          }} />
-                          {issue}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
+                  );
+                })()}
+              </div>
             </div>
           </>
         )}
@@ -979,9 +896,10 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
                 fontWeight: 800,
-                letterSpacing: '-0.02em'
+                letterSpacing: '-0.02em',
+                color: '#222'
               }}>
-                -{quizAnswers.goal_weight_loss || 3} кг
+                -{quizAnswers.goal || 3} кг
               </div>
             </div>
           </div>

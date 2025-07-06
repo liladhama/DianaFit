@@ -9,7 +9,8 @@ import VideoTest from './components/VideoTest';
 import AITestPage from './components/AITestPage';
 
 // Временно используем только production URL для тестирования ИИ
-const API_URL = 'https://dianafit.onrender.com';
+// const API_URL = 'https://dianafit.onrender.com';
+const API_URL = 'http://localhost:3001';
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -383,6 +384,9 @@ function App() {
   }
 
   async function handleQuizFinish(quizAnswers) {
+    // ВРЕМЕННО для локального теста:
+    quizAnswers.userId = 'testuser1';
+    
     console.log('🎯 Квиз завершен, создаем персональную программу через ИИ...');
     
     setAnswers(quizAnswers);
@@ -1367,6 +1371,7 @@ function App() {
             🖼️ Тест аватарки
           </button>
           
+                   
           {/* Тестовые кнопки скрыты в продакшене */}
           {process.env.NODE_ENV === 'development' && (
             <>
@@ -1451,6 +1456,8 @@ function App() {
           isPremium={isPremium}
           activatePremium={activatePremium}
           setIsPaymentShown={setIsPaymentShown}
+          userAvatar={userAvatar}
+          onProfileClick={() => setShowProfile(true)}
           onBackToWeek={() => {
             setShowTodayBlock(false);
             setShowTestWeek(true);

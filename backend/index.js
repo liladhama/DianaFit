@@ -10,6 +10,8 @@ import { fileURLToPath } from 'url';
 import UserProgressLogger from './userProgressLogger.js';
 // Импортируем роутер рецептов
 import recipeRouter from './routes/recipeRoutes.js';
+import { saveQuizToFile } from './programApi.js';
+import progressRouter from './routes/progressRoutes.js';
 
 dotenv.config();
 
@@ -17,12 +19,16 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Разрешить CORS для всех источников (для локальной отладки и Telegram)
 app.use(cors({
   origin: [
     'https://diana-fit.vercel.app',
     'https://dianafit.onrender.com',
     'http://localhost:3000',
-    'http://127.0.0.1:3000'
+    'http://127.0.0.1:3000',
+    'http://localhost:3001',
+    'http://127.0.0.1:3001',
+    '*'
   ],
   credentials: true
 }));
@@ -30,6 +36,7 @@ app.use(cors({
 app.use(express.json());
 app.use('/api', programApi);
 app.use('/api/recipes', recipeRouter);
+app.use('/api/progress', progressRouter);
 
 app.get('/', (req, res) => {
   res.send('Backend работает!');
@@ -47,6 +54,16 @@ app.get('/api/quiz-config', (req, res) => {
 // Принять ответы теста и вернуть план (заглушка)
 app.post('/api/calculate-plan', async (req, res) => {
   const answers = req.body;
+  console.log('[DEBUG calculate-plan] answers:', answers);
+  const userId = answers.userId || answers.id || answers.telegram_id || 'default';
+  console.log('[DEBUG calculate-plan] userId:', userId);
+  if (userId) {
+    try {
+      saveQuizToFile(userId, answers);
+    } catch (e) {
+      console.error('Ошибка сохранения квиза:', e);
+    }
+  }
   const userEmbedding = answers.embedding || Array(1536).fill(0); // TODO: заменить на реальный embedding
   const relevantChunks = findRelevantChunks(userEmbedding, 5);
 
@@ -241,8 +258,6 @@ async function callMistralAI(messages) {
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        model: 'mistral-medium',
-        messages,
         temperature: 0.6,  // Увеличиваем температуру для большего разнообразия
         max_tokens: 2048   // Увеличиваем максимальное количество токенов для более подробных ответов
       })
@@ -1070,16 +1085,13 @@ app.post('/api/regenerate-plan', async (req, res) => {
 app.get('/api/user-progress/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        
-        // Получаем историю пользователя из базы данных
-        const userHistory = await getUserHistory(userId);
-        
+        // Используем UserProgressLogger для чтения истории
+        const logger = new UserProgressLogger(userId);
+        const userHistory = logger.loadLog();
         // Расчет процента выполнения тренировок
         const workoutProgress = calculateWorkoutProgress(userHistory);
-        
         // Расчет процента успехов в питании
         const nutritionProgress = calculateNutritionProgress(userHistory);
-        
         // Детальная статистика по категориям
         const detailedStats = {
             meals: {
@@ -1092,17 +1104,15 @@ app.get('/api/user-progress/:userId', async (req, res) => {
             commonIssues: analyzeCommonIssues(userHistory),
             improvements: calculateImprovements(userHistory)
         };
-
         res.json({
             workouts: workoutProgress,
             nutrition: nutritionProgress,
             details: detailedStats,
             lastUpdate: new Date().toISOString()
         });
-
     } catch (error) {
-        console.error('Error getting user progress:', error);
-        res.status(500).json({ error: 'Internal server error' });
+        console.error('Error getting user progress:', error, userHistory);
+        res.status(500).json({ error: 'Internal server error', details: error.message, userHistory });
     }
 });
 
@@ -1145,12 +1155,13 @@ app.post('/api/user/update-quiz-answers', async (req, res) => {
 // Эндпоинт для логирования выполнения плана
 app.post('/api/user/log-execution', async (req, res) => {
     try {
-        const userId = req.user.id;
-        const { mealType, executed, reason } = req.body;
-        
+        // Исправлено: userId теперь берём из body, а не из req.user
+        const { userId, mealType, executed, reason } = req.body;
+        if (!userId) {
+            return res.status(400).json({ error: 'userId is required' });
+        }
         const logger = new UserProgressLogger(userId);
         await logger.logPlanExecution(mealType, executed, reason);
-        
         res.json({ success: true });
     } catch (error) {
         console.error('Error logging meal execution:', error);
@@ -1231,4 +1242,95 @@ app.listen(PORT, () => {
   console.log(`✅ Сервер запущен на порту ${PORT}`);
 });
 
+console.log('=== BACKEND INDEX.JS ЗАПУЩЕН ===');
+
 export default app;
+
+// --- Реальные функции расчёта прогресса на основе planExecution ---
+function calculateWorkoutProgress(userHistory) {
+  // Считаем процент выполненных тренировок за последние 7 дней
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const planExecution = userHistory.planExecution || [];
+  const workouts = planExecution.filter(e => e.mealType === 'workout' && new Date(e.timestamp) > weekAgo);
+  const total = workouts.length;
+  const done = workouts.filter(e => e.executed).length;
+  return total > 0 ? Math.round((done / total) * 100) : 0;
+}
+
+function calculateNutritionProgress(userHistory) {
+  // Считаем процент выполненных приёмов пищи за последние 7 дней
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const planExecution = userHistory.planExecution || [];
+  const meals = planExecution.filter(e => e.mealType !== 'workout' && new Date(e.timestamp) > weekAgo);
+  const total = meals.length;
+  const done = meals.filter(e => e.executed).length;
+  return total > 0 ? Math.round((done / total) * 100) : 0;
+}
+
+function calculateMealAdherence(userHistory, mealType) {
+  // Процент выполнения по каждому приёму пищи за неделю
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const planExecution = userHistory.planExecution || [];
+  const meals = planExecution.filter(e => e.mealType === mealType && new Date(e.timestamp) > weekAgo);
+  const total = meals.length;
+  const done = meals.filter(e => e.executed).length;
+  return total > 0 ? Math.round((done / total) * 100) : 0;
+}
+
+function calculateWeeklyProgress(userHistory) {
+  // Можно реализовать детальный недельный прогресс, если потребуется
+  return [];
+}
+
+function analyzeCommonIssues(userHistory) {
+  // Анализируем причины невыполнения за неделю
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const planExecution = userHistory.planExecution || [];
+  const failures = planExecution.filter(e => !e.executed && e.reason && new Date(e.timestamp) > weekAgo);
+  const reasons = failures.map(e => e.reason);
+  const reasonCounts = reasons.reduce((acc, reason) => {
+    acc[reason] = (acc[reason] || 0) + 1;
+    return acc;
+  }, {});
+  return Object.entries(reasonCounts)
+    .sort(([,a], [,b]) => b - a)
+    .map(([reason]) => reason);
+}
+
+function calculateImprovements(userHistory) {
+  // Можно реализовать тренды по неделям, если потребуется
+  return { weekOverWeek: 0, trend: 'up' };
+}
+
+// Получить статусы выполнения приёмов пищи и тренировок за день
+app.get('/api/user/day-status/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { date } = req.query;
+        const logger = new UserProgressLogger(userId);
+        const userHistory = logger.loadLog();
+        const planExecution = userHistory.planExecution || [];
+        // Фильтруем по дате (только YYYY-MM-DD)
+        const dayEntries = planExecution.filter(e => e.timestamp && e.timestamp.startsWith(date));
+        // Собираем статусы по типу приёма пищи
+        const mealStatus = {};
+        const completedMealsArr = [];
+        const completedExercises = [];
+        dayEntries.forEach(e => {
+            if (e.mealType === 'workout') {
+                completedExercises.push(e.executed);
+            } else {
+                mealStatus[e.mealType] = e.executed;
+                completedMealsArr.push(e.executed);
+            }
+        });
+        res.json({ mealStatus, completedMealsArr, completedExercises });
+    } catch (error) {
+        console.error('Error getting day status:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});

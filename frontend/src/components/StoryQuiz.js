@@ -98,13 +98,34 @@ export default function StoryQuiz({ onFinish }) {
     }
   }, [slide]);
 
+  // --- Автоматическое заполнение значений по умолчанию для слайдеров (возраст, рост, вес и др.) ---
+  useEffect(() => {
+    if (!slide) return;
+    // Для возраста по умолчанию 25
+    if (slide.type === 'slider' && slide.key === 'age' && typeof answers.age === 'undefined') {
+      setAnswers(a => ({ ...a, age: 25 }));
+    }
+    // Для веса и роста — минимальное значение слайда
+    if (slide.type === 'slider' && typeof answers[slide.key] === 'undefined') {
+      setAnswers(a => ({ ...a, [slide.key]: slide.min }));
+    }
+  }, [slide]);
+
   function handleNext() {
     if (!quizConfig) return;
-    console.log('handleNext', { step, total, nextStep: step + 1 });
+    // Логируем наличие возраста
+    console.log('handleNext', { step, total, nextStep: step + 1, age: answers.age });
     if (step < total - 1) setStep(step + 1);
     else if (onFinish) {
-      console.log('StoryQuiz onFinish', answers);
-      onFinish(answers);
+      // Явно логируем финальные ответы, включая age
+      let finalAnswers = { ...answers };
+      // Если age не попал в answers, ищем его в последнем слайде
+      if (!finalAnswers.age) {
+        const ageSlide = quizConfig.find(q => q.key === 'age');
+        if (ageSlide && answers[ageSlide.key]) finalAnswers.age = answers[ageSlide.key];
+      }
+      console.log('StoryQuiz onFinish', finalAnswers, 'AGE:', finalAnswers.age);
+      onFinish(finalAnswers);
     }
   }
 
@@ -579,11 +600,12 @@ export default function StoryQuiz({ onFinish }) {
       );
     }
     if (slide.type === 'slider' && slide.key === 'age') {
-      // wheel-picker для возраста (год рождения)
-      const currentYear = new Date().getFullYear();
-      const minYear = currentYear - 65;
-      const maxYear = currentYear - 14;
-      const value = answers[slide.key] ?? (currentYear - 25);
+      // Колесо выбора возраста (14–80 лет)
+      const minAge = 14;
+      const maxAge = 80;
+      // Если возраст не выбран, по умолчанию 25 и сразу записываем в answers
+      const value = answers[slide.key] ?? 25;
+      const ageOptions = Array.from({ length: maxAge - minAge + 1 }, (_, i) => minAge + i);
       return (
         <div style={{ minHeight: '100vh', width: '100vw', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)', boxSizing: 'border-box', padding: '32px 16px 16px 16px', position: 'relative' }}>
           <div style={{ fontWeight: 700, fontSize: 26, margin: '8px 0 12px 0', textAlign: 'center', letterSpacing: 0.2, color: '#181818', textTransform: 'uppercase' }}>{slide.title}</div>
@@ -630,7 +652,7 @@ export default function StoryQuiz({ onFinish }) {
             </div>
           </div>
           <div style={{ width: '100%', display: 'flex', justifyContent: 'center', marginBottom: 32, background: 'none', boxShadow: 'none', border: 'none', marginTop: 48 }}>
-            <WheelPicker value={value} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} min={minYear} max={maxYear} />
+            <WheelPicker value={value} onChange={v => setAnswers(a => ({ ...a, [slide.key]: v }))} min={minAge} max={maxAge} years={ageOptions} labels={ageOptions.map(a => a + ' лет')} />
           </div>
           <button className="quiz-btn age-btn" style={getButtonStyle(true, { marginTop: 48, width: 320, maxWidth: '90vw' })} onClick={handleNext}>Следующий</button>
         </div>
@@ -639,6 +661,7 @@ export default function StoryQuiz({ onFinish }) {
     // Горизонтальный слайдер для веса
     if (slide.type === 'slider' && slide.key === 'weight_kg') {
       const value = answers[slide.key] ?? slide.min;
+      // useEffect удалён, автозаполнение теперь на верхнем уровне
       return (
         <div style={{
           minHeight: '100vh',
@@ -767,15 +790,21 @@ export default function StoryQuiz({ onFinish }) {
       );
     }
     if (slide.type === 'date-wheel') {
-      // Колесо с вариантами: завтра, послезавтра, ближайшие 5 дней
+      // Колесо с вариантами: сегодня, завтра, послезавтра, ближайшие 5 дней
       const today = new Date();
-      const options = Array.from({ length: 5 }, (_, i) => {
-        const d = new Date(today.getTime() + (i + 1) * 24 * 60 * 60 * 1000);
-        return {
-          label: i === 0 ? 'Завтра' : i === 1 ? 'Послезавтра' : d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
-          value: d.toISOString().slice(0, 10)
-        };
-      });
+      const options = [
+        {
+          label: 'Сегодня',
+          value: today.toISOString().slice(0, 10)
+        },
+        ...Array.from({ length: 5 }, (_, i) => {
+          const d = new Date(today.getTime() + (i + 1) * 24 * 60 * 60 * 1000);
+          return {
+            label: i === 0 ? 'Завтра' : i === 1 ? 'Послезавтра' : d.toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
+            value: d.toISOString().slice(0, 10)
+          };
+        })
+      ];
       const value = answers[slide.key] ?? options[0].value;
       return (
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', minHeight: '60vh', justifyContent: 'center' }}>
@@ -793,20 +822,20 @@ export default function StoryQuiz({ onFinish }) {
       );
     }
     // Слайд "Твоя цель" (пример с кастомным оформлением)
-    if (slide.key === 'goal_weight_loss') {
+    if (slide.key === 'goal_weight_loss' || slide.key === 'goal') {
       const options = [
         { label: '-3 кг за месяц', value: 3 },
         { label: '-4 кг за месяц', value: 4 },
         { label: '-5 кг за месяц', value: 5 },
       ];
-      const value = answers[slide.key];
+      const value = answers['goal'];
       // Для GoalSlide показываем стрелочку, если step > 1
       const goalShowBackButton = step > 1;
       return (
         <GoalSlide
           options={options}
           selected={value}
-          onSelect={v => setAnswers(a => ({ ...a, [slide.key]: v }))}
+          onSelect={v => setAnswers(a => ({ ...a, goal: v }))}
           onNext={handleNext}
           onBack={handleBack}
           showBackButton={goalShowBackButton}

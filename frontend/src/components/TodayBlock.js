@@ -5,6 +5,7 @@ import StepsPermissionModal from './StepsPermissionModal';
 import ReasonModal from './ReasonModal';
 import ExerciseCard from './ExerciseCard';
 import MealCard from './MealCardNew';
+import MealBlock from './MealBlock';
 import { getWorkoutLocation, getDayId, getExerciseEnglishName, getVideoPathForExercise } from '../utils/videoUtils';
 import chatDianaIcon from '../assets/icons/chat-diana-icon.png';
 
@@ -24,8 +25,10 @@ if (!document.querySelector('#spinner-styles')) {
   document.head.appendChild(style);
 }
 
-// Временно используем только production URL для тестирования ИИ
-const API_URL = 'https://dianafit.onrender.com';
+// --- Переключатель между локальным и продакшн сервером ---
+const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:3001'
+  : 'https://dianafit.onrender.com';
 
 // Мотивационные цитаты от Дианы
 const motivationalQuotes = [
@@ -80,7 +83,7 @@ const checkboxButtonStyle = (completed) => ({
   marginTop: 8
 });
 
-export default function TodayBlock({ day, answers, onBackToWeek, programId, isPremium, activatePremium, setIsPaymentShown }) {
+export default function TodayBlock({ day, answers, onBackToWeek, programId, isPremium, activatePremium, setIsPaymentShown, userAvatar, onProfileClick }) {
   // Состояние для персонального плана
   const [personalPlan, setPersonalPlan] = useState(null);
   const [loadingPlan, setLoadingPlan] = useState(false);
@@ -101,72 +104,18 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   const [exerciseReasons, setExerciseReasons] = useState({});
   const [mealReasons, setMealReasons] = useState({});
 
-  // Загружаем персональный план при монтировании компонента
-  useEffect(() => {
-    if (programId) {
-      loadTodayPlan();
-    }
-  }, [programId]);
+  // Состояние для AI-плана питания
+  const [aiMeals, setAiMeals] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
 
-  // Функция загрузки плана на сегодня
-  const loadTodayPlan = async () => {
-    if (!programId) return;
-    
-    setLoadingPlan(true);
-    setPlanError(null);
-    
-    try {
-      console.log('📅 Загружаем план на сегодня для программы:', programId);
-      
-      // Сначала пробуем загрузить из localStorage (демо версия)
-      const localProgram = localStorage.getItem(`program_${programId}`);
-      if (localProgram) {
-        const program = JSON.parse(localProgram);
-        console.log('💾 Найдена программа в localStorage:', program);
-        
-        const today = new Date().toISOString().slice(0, 10);
-        const todayPlan = program.days.find(d => d.date === today);
-        
-        if (todayPlan) {
-          console.log('✅ План на сегодня загружен из localStorage:', todayPlan);
-          console.log('🎯 Цель по шагам из плана:', todayPlan.dailyStepsGoal);
-          console.log('🎥 Проверка упражнений в плане:', todayPlan.workout?.exercises);
-          setPersonalPlan(todayPlan);
-          setLoadingPlan(false);
-          return;
-        } else {
-          // Если сегодняшний день не найден, берем первый день программы
-          const firstDay = program.days[0];
-          if (firstDay) {
-            console.log('📅 Сегодняшний день не найден, используем первый день программы:', firstDay);
-            console.log('🎯 Цель по шагам из первого дня:', firstDay.dailyStepsGoal);
-            console.log('🎥 Проверка упражнений в первом дне:', firstDay.workout?.exercises);
-            setPersonalPlan(firstDay);
-            setLoadingPlan(false);
-            return;
-          }
-        }
-      }
-      
-      // Если не нашли в localStorage, пробуем обратиться к серверу
-      const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dianafit.onrender.com';
-      const response = await fetch(`${API_URL}/api/program/today?programId=${programId}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        console.log('✅ План на сегодня загружен с сервера:', data.plan);
-        setPersonalPlan(data.plan);
-      } else {
-        console.error('❌ Ошибка загрузки плана:', data.error);
-        setPlanError(data.error);
-      }
-    } catch (error) {
-      console.error('❌ Ошибка сети при загрузке плана:', error);
-      setPlanError('Ошибка подключения к серверу');
-    } finally {
-      setLoadingPlan(false);
-    }
-  };
+  // Индексы выбранных вариантов для каждого AI-приема пищи
+  const [selectedMealOptionIdx, setSelectedMealOptionIdx] = useState(() => Array.isArray(aiMeals) ? aiMeals.map(() => 0) : []);
+
+  // Флаг загрузки статусов с backend
+  const [isLoaded, setIsLoaded] = useState(false);
+  // Массив задач (только реальные статусы)
+  const [tasks, setTasks] = useState([]);
 
   // Используем персональный план если он есть, иначе переданный день или мок
   const currentDay = personalPlan || day || {
@@ -219,12 +168,22 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         console.log(`🏋️ Упражнение ${i} (${ex.name}): сохранено=${saved}, результат=${result}, typeof=${typeof result}`);
         return result;
       });
-      console.log('🏋️ Итоговый массив completedExercises ДО setCompletedExercises:', newExerciseStates);
-      setCompletedExercises(newExerciseStates);
-      console.log('🏋️ setCompletedExercises вызван с:', newExerciseStates);
+      // Сравниваем массивы перед обновлением
+      const isSame =
+        completedExercises.length === newExerciseStates.length &&
+        completedExercises.every((v, i) => v === newExerciseStates[i]);
+      if (!isSame) {
+        console.log('🏋️ Итоговый массив completedExercises ДО setCompletedExercises:', newExerciseStates);
+        setCompletedExercises(newExerciseStates);
+        console.log('🏋️ setCompletedExercises вызван с:', newExerciseStates);
+      } else {
+        console.log('🏋️ Массив completedExercises не изменился, setState не вызывается');
+      }
     } else {
-      console.log('🏋️ Нет упражнений, устанавливаем пустой массив');
-      setCompletedExercises([]);
+      if (completedExercises.length !== 0) {
+        console.log('🏋️ Нет упражнений, устанавливаем пустой массив');
+        setCompletedExercises([]);
+      }
     }
 
     if (currentDay.meals) {
@@ -234,12 +193,22 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         console.log(`🍽️ Прием пищи ${i} (${m.type}): сохранено=${saved}, результат=${result}, typeof=${typeof result}`);
         return result;
       });
-      console.log('🍽️ Итоговый массив completedMeals ДО setCompletedMeals:', newMealStates);
-      setCompletedMeals(newMealStates);
-      console.log('🍽️ setCompletedMeals вызван с:', newMealStates);
+      // Сравниваем массивы перед обновлением
+      const isSame =
+        completedMeals.length === newMealStates.length &&
+        completedMeals.every((v, i) => v === newMealStates[i]);
+      if (!isSame) {
+        console.log('🍽️ Итоговый массив completedMeals ДО setCompletedMeals:', newMealStates);
+        setCompletedMeals(newMealStates);
+        console.log('🍽️ setCompletedMeals вызван с:', newMealStates);
+      } else {
+        console.log('🍽️ Массив completedMeals не изменился, setState не вызывается');
+      }
     } else {
-      console.log('🍽️ Нет приемов пищи, устанавливаем пустой массив');
-      setCompletedMeals([]);
+      if (completedMeals.length !== 0) {
+        console.log('🍽️ Нет приемов пищи, устанавливаем пустой массив');
+        setCompletedMeals([]);
+      }
     }
   }, [currentDay]);
   // Определяем, запущено ли на мобильном устройстве
@@ -421,14 +390,12 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       }
 
       // Базовая симуляция на основе времени (для демонстрации)
-      const hoursToday = new Date().getHours();
-      const approximateSteps = Math.floor(hoursToday * 400 + Math.random() * 1000);
-      
-      localStorage.setItem('dianafit_ios_steps_cache', approximateSteps.toString());
-      localStorage.setItem('dianafit_ios_steps_date', today);
-      
-      console.log('📊 iOS Motion шаги (приблизительно):', approximateSteps);
-      return approximateSteps;
+      // const hoursToday = new Date().getHours();
+      // const approximateSteps = Math.floor(hoursToday * 400 + Math.random() * 1000);
+      // localStorage.setItem('dianafit_ios_steps_cache', approximateSteps.toString());
+      // localStorage.setItem('dianafit_ios_steps_date', today);
+      // console.log('📊 iOS Motion шаги (приблизительно):', approximateSteps);
+      // return approximateSteps;
     } catch (error) {
       console.error('Ошибка получения данных iOS Motion:', error);
       return null;
@@ -446,16 +413,11 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       if (savedSteps && savedDate === today) {
         return parseInt(savedSteps);
       }
-
-      // Базовая оценка для демонстрации
-      const hoursToday = new Date().getHours();
-      const estimatedSteps = Math.floor(hoursToday * 300 + Math.random() * 800);
-      
-      localStorage.setItem('dianafit_web_steps_cache', estimatedSteps.toString());
-      localStorage.setItem('dianafit_web_steps_date', today);
-      
-      console.log('📊 Web Sensors шаги (оценка):', estimatedSteps);
-      return estimatedSteps;
+      // const estimatedSteps = Math.floor(hoursToday * 300 + Math.random() * 800);
+      // localStorage.setItem('dianafit_web_steps_cache', estimatedSteps.toString());
+      // localStorage.setItem('dianafit_web_steps_date', today);
+      // console.log('📊 Web Sensors шаги (оценка):', estimatedSteps);
+      // return estimatedSteps;
     } catch (error) {
       console.error('Ошибка получения данных Web Sensors:', error);
       return null;
@@ -772,7 +734,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
     // Функция для пересоздания программы с корректными начальными значениями
     window.recreateProgram = () => {
-      console.log('🔄 Пересоздаем программу с правильными начальными значениями...');
+      console.log('🔄 Пересоздаем программу с правильными начальними значениями...');
       
       // Очищаем старые программы
       Object.keys(localStorage).filter(key => key.startsWith('program_')).forEach(key => {
@@ -850,6 +812,40 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       saveStepsToStorage(dailySteps);
     }
   }, [dailySteps]);
+
+  // Загружаем AI-план питания при монтировании
+  useEffect(() => {
+    async function fetchAIMealPlan() {
+      if (!answers) {
+        console.warn('AI meal plan: нет answers, запрос не отправляется');
+        return;
+      }
+      setAiLoading(true);
+      setAiError(null);
+      try {
+        console.log('AI meal plan: отправляем профиль:', answers);
+        const res = await fetch(`${API_URL}/api/ai-meal-plan`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ profile: answers })
+        });
+        console.log('AI meal plan: статус ответа:', res.status);
+        const data = await res.json();
+        console.log('AI meal plan: ответ сервера:', data);
+        if (data.success && data.meals) {
+          setAiMeals(data.meals);
+        } else {
+          setAiError(data.error || 'Ошибка генерации плана питания');
+        }
+      } catch (e) {
+        setAiError('Ошибка подключения к AI');
+        console.error('AI meal plan: ошибка запроса:', e);
+      } finally {
+        setAiLoading(false);
+      }
+    }
+    fetchAIMealPlan();
+  }, [answers]);
 
   // Вычисляем общие калории и БЖУ
   const totalCalories = currentDay.meals?.reduce((sum, meal) => sum + (meal.calories || 0), 0) || 1530;
@@ -1209,44 +1205,351 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     });
   }, [completedMeals]);
 
+  // Функция для загрузки статусов выполнения дня с backend
+  const fetchDayStatus = async () => {
+    if (!answers?.userId || !currentDay?.date) return;
+    try {
+      const res = await fetch(`${API_URL}/api/progress?userId=${answers.userId}&date=${currentDay.date}`);
+      const data = await res.json();
+      if (data && (Array.isArray(data.tasks) || data.completedMealsArr || data.completedExercises)) {
+        // Если tasks есть — используем их для tasks-based UI
+        if (Array.isArray(data.tasks)) setTasks(data.tasks);
+        // Для обратной совместимости:
+        if (data.completedMealsArr) setCompletedMeals(data.completedMealsArr);
+        if (data.completedExercises) setCompletedExercises(data.completedExercises);
+      }
+    } catch (e) {
+      console.error('Ошибка загрузки статусов дня:', e);
+    }
+  };
+
+  // Загружаем статусы при смене дня
+  useEffect(() => {
+    fetchDayStatus();
+    // eslint-disable-next-line
+  }, [currentDay?.date, answers?.userId]);
+
+  // --- Новая функция для отправки статуса приема пищи на backend ---
+  const handleMealStatusChange = async (mealId, completed) => {
+    try {
+      // Вместо отдельного запроса — обновляем tasks и отправляем их через основной useEffect
+      setTasks(prev => {
+        const mealTasks = prev.filter(t => t.type === 'meal');
+        const idx = prev.findIndex((t, i) => t.type === 'meal' && mealTasks.indexOf(t) === mealId);
+        if (idx === -1) return prev;
+        const updated = prev.map((t, i) => i === idx ? { ...t, done: completed } : t);
+        console.log('[DEBUG] handleMealStatusChange', mealId, completed, updated);
+        return updated;
+      });
+    } catch (e) {
+      console.error('Ошибка сохранения статуса приема пищи:', e);
+    }
+  };
+
+  // --- СИНХРОНИЗАЦИЯ ПРОГРЕССА СТАРЫМ СПОСОБОМ (PATCH /api/user-progress) ---
+  useEffect(() => {
+    if (!answers?.userId || !currentDay?.date) return;
+    const payload = {
+      userId: answers.userId,
+      date: currentDay.date,
+      completedExercises,
+      completedMeals,
+      stepsCompleted: dailySteps >= stepsGoal
+    };
+    fetch(`${API_URL}/api/user-progress`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(res => res.json())
+      .then(data => {
+        // Можно добавить debug-лог
+        // console.log('[PATCH /api/user-progress] Ответ:', data);
+      })
+      .catch(e => {
+        console.error('[PATCH /api/user-progress] Ошибка:', e);
+      });
+  }, [completedExercises, completedMeals, dailySteps, stepsGoal, answers?.userId, currentDay?.date]);
+
+  // --- UI: Верхняя панель ---
+  // Кнопка Диана АИ (слева)
+  const dianaButton = (
+    <button
+      onClick={() => setShowDianaChat(true)}
+      style={{
+        position: 'fixed',
+        top: 20,
+        left: 20,
+        width: 60,
+        height: 60,
+        borderRadius: '50%',
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        boxShadow: isPremium
+          ? '0 4px 12px rgba(0, 0, 0, 0.15)'
+          : '0 4px 12px rgba(0, 0, 0, 0.1)',
+          zIndex: 1000,
+          transition: 'all 0.3s ease',
+          padding: 0,
+          margin: 0,
+          outline: 'none',
+          position: 'fixed',
+      }}
+      onMouseEnter={e => {
+        e.target.style.transform = 'scale(1.05)';
+        e.target.style.boxShadow = '0 6px 16px rgba(0, 0, 0, 0.2)';
+      }}
+      onMouseLeave={e => {
+        e.target.style.transform = 'scale(1)';
+        e.target.style.boxShadow = isPremium
+          ? '0 4px 12px rgba(0, 0, 0, 0.15)'
+          : '0 4px 12px rgba(0, 0, 0, 0.1)';
+      }}
+    >
+      <img
+        src={chatDianaIcon}
+        alt="Чат с Дианой"
+        style={{
+          width: '100%',
+          height: '100%',
+          borderRadius: '50%',
+          objectFit: 'cover',
+          display: 'block',
+          filter: isPremium ? 'none' : 'grayscale(100%) brightness(0.7)',
+          transition: 'filter 0.3s ease'
+        }}
+      />
+      {!isPremium && (
+        <div style={{
+          position: 'absolute',
+          bottom: '-2px',
+          right: '-2px',
+          width: '18px',
+          height: '18px',
+          borderRadius: '50%',
+          background: '#ff6b35',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '10px',
+          border: '2px solid white',
+          zIndex: 1001
+        }}>
+          🔒
+        </div>
+      )}
+    </button>
+  );
+
+  // Кнопка профиля пользователя (справа сверху)
+  const profileButton = (
+    <button
+      onClick={() => {
+        if (typeof onProfileClick === 'function') {
+          onProfileClick();
+        }
+      }}
+      style={{
+        position: 'fixed',
+        top: 20,
+        right: 20,
+        width: 60,
+        height: 60,
+        borderRadius: '50%',
+        background: 'linear-gradient(135deg, #0088cc 0%, #005699 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        cursor: 'pointer',
+        zIndex: 1001,
+        boxShadow: '0 4px 20px rgba(0, 136, 204, 0.4)',
+        transition: 'all 0.3s ease',
+        border: '2px solid rgba(255, 255, 255, 0.2)',
+        overflow: 'hidden',
+        padding: 0,
+        outline: 'none',
+      }}
+      onMouseEnter={e => {
+        e.currentTarget.style.transform = 'scale(1.07)';
+        e.currentTarget.style.boxShadow = '0 6px 24px rgba(0, 136, 204, 0.5)';
+      }}
+      onMouseLeave={e => {
+        e.currentTarget.style.transform = 'scale(1)';
+        e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 136, 204, 0.4)';
+      }}
+    >
+      {userAvatar ? (
+        <img
+          src={userAvatar}
+          alt="User Avatar"
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            borderRadius: '50%'
+          }}
+        />
+      ) : (
+        <span style={{ fontSize: 28, color: 'white', fontWeight: 'bold' }}>👤</span>
+      )}
+    </button>
+  );
+
+  // Функция загрузки плана на сегодня
+  const loadTodayPlan = async () => {
+    if (!programId) return;
+    setLoadingPlan(true);
+    setPlanError(null);
+    try {
+      console.log('📅 Загружаем план на сегодня для программы:', programId);
+      // Сначала пробуем загрузить из localStorage (демо версия)
+      const localProgram = localStorage.getItem(`program_${programId}`);
+      if (localProgram) {
+        const program = JSON.parse(localProgram);
+        console.log('💾 Найдена программа в localStorage:', program);
+        const today = new Date().toISOString().slice(0, 10);
+        const todayPlan = program.days.find(d => d.date === today);
+        if (todayPlan) {
+          console.log('✅ План на сегодня загружен из localStorage:', todayPlan);
+          console.log('🎯 Цель по шагам из плана:', todayPlan.dailyStepsGoal);
+          console.log('🎥 Проверка упражнений в плане:', todayPlan.workout?.exercises);
+          setPersonalPlan(todayPlan);
+          setLoadingPlan(false);
+          return;
+        } else {
+          // Если сегодняшний день не найден, берем первый день программы
+          const firstDay = program.days[0];
+          if (firstDay) {
+            console.log('📅 Сегодняшний день не найден, используем первый день программы:', firstDay);
+            console.log('🎯 Цель по шагам из первого дня:', firstDay.dailyStepsGoal);
+            console.log('🎥 Проверка упражнений в первом дне:', firstDay.workout?.exercises);
+            setPersonalPlan(firstDay);
+            setLoadingPlan(false);
+            return;
+          }
+        }
+      }
+      // Если не нашли в localStorage, пробуем обратиться к серверу
+      const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dianafit.onrender.com';
+      const response = await fetch(`${API_URL}/api/program/today?programId=${programId}`);
+      const data = await response.json();
+      if (data.success) {
+        console.log('✅ План на сегодня загружен с сервера:', data.plan);
+        setPersonalPlan(data.plan);
+      } else {
+        console.error('❌ Ошибка загрузки плана:', data.error);
+        setPlanError(data.error);
+      }
+    } catch (error) {
+      console.error('❌ Ошибка сети при загрузке плана:', error);
+      setPlanError('Ошибка подключения к серверу');
+    } finally {
+      setLoadingPlan(false);
+    }
+  };
+
+  // Формируем массив задач для отправки
+  function buildTasks() {
+    const tasks = [];
+    // Упражнения
+    if (currentDay.workout?.exercises) {
+      currentDay.workout.exercises.forEach((ex, i) => {
+        tasks.push({
+          name: ex.name,
+          type: 'workout',
+          done: completedExercises[i] === true, // строго true/false
+          reason: completedExercises[i] === false && exerciseReasons[i] ? exerciseReasons[i] : undefined
+        });
+      });
+    }
+    // Приёмы пищи
+    if (currentDay.meals) {
+      currentDay.meals.forEach((m, i) => {
+        tasks.push({
+          name: m.type || m.name,
+          type: 'meal',
+          done: completedMeals[i] === true, // строго true/false
+          reason: completedMeals[i] === false && mealReasons[i] ? mealReasons[i] : undefined
+        });
+      });
+    }
+    // Шаги
+    tasks.push({
+      name: 'steps',
+      type: 'steps',
+      done: dailySteps >= stepsGoal,
+      reason: dailySteps < stepsGoal ? 'Не достигнута цель по шагам' : undefined
+    });
+    return tasks;
+  }
+
+  // Сохраняем задачи на backend при каждом изменении (только после загрузки)
+  useEffect(() => {
+    if (!isLoaded || !answers?.userId || !currentDay?.date) return;
+    const actualTasks = buildTasks();
+    console.log('[DEBUG] Отправка tasks на backend:', actualTasks);
+    fetch(`${API_URL}/api/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: answers.userId,
+        date: currentDay.date,
+        tasks: actualTasks
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log('[DEBUG] Ответ от backend на POST /api/progress:', data);
+      })
+      .catch(e => {
+        console.error('[DEBUG] Ошибка отправки tasks на backend:', e);
+      });
+  }, [isLoaded, completedExercises, completedMeals, dailySteps, exerciseReasons, mealReasons, currentDay?.date, answers?.userId]);
+
   return (
-    <div style={{ 
-      width: '100vw', 
-      minHeight: '100dvh', 
-      display: 'flex', 
-      flexDirection: 'column', 
-      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)' 
-    }}>
-      {/* Шапка с кнопкой назад */}
-      <div style={{ 
-        padding: '16px 20px', 
-        background: '#fff', 
-        borderBottom: '1px solid #e2e8f0'
-      }}>
+    <div
+      style={{
+        minHeight: '100vh',
+        width: '100vw',
+        background: 'linear-gradient(180deg, #E3F3FF 0%, #E6F2FF 100%)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '0',
+        boxSizing: 'border-box',
+        position: 'relative',
+        overflowX: 'hidden',
+      }}
+    >
+      {profileButton}
+      {dianaButton}
+      {/* Кнопка К неделе по центру */}
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '32px 0 16px 0' }}>
         <button
           onClick={onBackToWeek}
           style={{
+            background: 'linear-gradient(135deg, #4FC3F7 0%, #29B6F6 100%)',
+            borderRadius: 25,
+            padding: '14px 32px',
             fontSize: 16,
-            padding: '8px 16px',
-            borderRadius: 8,
-            background: '#e0e7ff',
+            fontWeight: 700,
+            color: '#fff',
             border: 'none',
-            fontWeight: 600,
+            boxShadow: '0px 4px 12px 0px rgba(79, 195, 247, 0.4)',
             cursor: 'pointer',
-            color: '#2196f3',
-            whiteSpace: 'nowrap'
+            outline: 'none',
+            letterSpacing: '0.5px',
+            textTransform: 'uppercase',
+            transition: 'all 0.2s',
+            zIndex: 10
           }}
-        >← К расписанию</button>
-        
-        {/* Заголовок под кнопкой */}
-        <div style={{ 
-          fontSize: 20, 
-          fontWeight: 700, 
-          color: '#1a1a1a',
-          marginTop: 12
-        }}>
-          Текущий день
-        </div>
+        >
+          К НЕДЕЛЕ
+        </button>
       </div>
 
       <div style={{ 
@@ -1324,156 +1627,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
               </div>
             </div>
 
-            {/* 2. Блок тренировки */}
-            <div style={cardStyle}>
-              <div style={headerStyle}>
-                🏋️‍♀️ Тренировка
-              </div>
-              
-              {currentDay.workout && currentDay.workout.exercises && currentDay.workout.exercises.length > 0 ? (
-                <>
-                  <div style={{ fontSize: 18, fontWeight: 600, color: '#1a1a1a', marginBottom: 16 }}>
-                    {currentDay.workout.title || 'Тренировка'}
-                  </div>
-                  
-                  {currentDay.workout.exercises.map((ex, i) => {
-                    // Используем данные из упражнения, если они есть, иначе анализируем название тренировки
-                    const location = ex.location || currentDay.workout.location || getWorkoutLocation(currentDay.workout.title || currentDay.workout.name);
-                    const dayId = ex.dayId || getDayId(currentDay.workout.title || currentDay.workout.name, location);
-                    const exerciseName = getExerciseEnglishName(ex.name);
-                    
-                    console.log('🎥 TodayBlock видео данные для упражнения:', {
-                      exerciseName: ex.name,
-                      location,
-                      dayId,
-                      exerciseEnglishName: exerciseName,
-                      exerciseObject: ex,
-                      workoutObject: currentDay.workout,
-                      fullVideoPath: location && dayId && exerciseName ? `/videos/${location}/${dayId}/${exerciseName}.mp4` : null
-                    });
-                    
-                    // Создаем видео компонент
-                    const videoComponent = (location && dayId && (ex.videoName || exerciseName)) ? (
-                      <VideoPlayer 
-                        location={location}
-                        dayId={dayId}
-                        exerciseName={ex.videoName || exerciseName}
-                        title={ex.name}
-                      />
-                    ) : (
-                      <div style={{ 
-                        display: 'flex',
-                        justifyContent: 'center'
-                      }}>
-                        <div style={{
-                          width: '200px',
-                          height: '300px',
-                          background: '#e2e8f0', 
-                          borderRadius: 12, 
-                          display: 'flex', 
-                          flexDirection: 'column',
-                          alignItems: 'center', 
-                          justifyContent: 'center', 
-                          color: '#94a3b8', 
-                          fontSize: 14
-                        }}>
-                          <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎥</div>
-                          <div>Видео скоро</div>
-                          <div style={{ fontSize: '10px', marginTop: '8px', textAlign: 'center' }}>
-                            Отсутствуют данные:<br/>
-                            location: {location || 'нет'}<br/>
-                            dayId: {dayId || 'нет'}<br/>
-                            exerciseName: {exerciseName || 'нет'}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                    
-                    return (
-                      <ExerciseCard
-                        key={i}
-                        exercise={ex}
-                        index={i}
-                        isCompleted={(() => {
-                          const value = completedExercises[i] ?? null; // Защита от undefined
-                          console.log(`🏋️ Передаем в ExerciseCard[${i}]: исходное=${completedExercises[i]}, обработанное=${value}, typeof=${typeof value}, completedExercises.length=${completedExercises.length}`);
-                          return value;
-                        })()}
-                        onStatusChange={handleExerciseComplete}
-                        videoComponent={videoComponent}
-                      />
-                    );
-                  })}
-                </>
-              ) : (
-                <div style={{ 
-                  textAlign: 'center',
-                  padding: 24,
-                  background: 'linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%)',
-                  borderRadius: 12
-                }}>
-                  <div style={{ fontSize: 48, marginBottom: 12 }}>🌿</div>
-                  <div style={{ fontSize: 18, fontWeight: 600, color: '#2d5a2d', marginBottom: 8 }}>
-                    Сегодня день отдыха
-                  </div>
-                  <div style={{ fontSize: 14, color: '#666' }}>
-                    Прогуляйся 10 000 шагов 💪
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* 3. Блок питания */}
-            <div style={cardStyle}>
-              <div style={headerStyle}>
-                🥗 Питание на день
-              </div>
-              
-              {/* БЖУ и Калории */}
-              <div style={{ 
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: 8,
-                background: '#f8fafc', 
-                padding: 16, 
-                borderRadius: 12,
-                marginBottom: 16,
-                border: '1px solid #e2e8f0'
-              }}>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: '#2196f3' }}>{totalCalories}</div>
-                  <div style={{ fontSize: 12, color: '#666' }}>Ккал</div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: '#10b981' }}>120г</div>
-                  <div style={{ fontSize: 12, color: '#666' }}>Белки</div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: '#f59e0b' }}>80г</div>
-                  <div style={{ fontSize: 12, color: '#666' }}>Жиры</div>
-                </div>
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 20, fontWeight: 700, color: '#8b5cf6' }}>180г</div>
-                  <div style={{ fontSize: 12, color: '#666' }}>Углеводы</div>
-                </div>
-              </div>
-
-              {/* Приемы пищи */}
-              {currentDay.meals && currentDay.meals.map((meal, i) => (
-                <MealCard 
-                  key={i} 
-                  meal={meal} 
-                  isCompleted={(() => {
-                    const value = completedMeals[i] ?? null; // Защита от undefined
-                    console.log(`🍽️ Передаем в MealCard[${i}]: исходное=${completedMeals[i]}, обработанное=${value}, typeof=${typeof value}, completedMeals.length=${completedMeals.length}`);
-                    return value;
-                  })()} 
-                  onStatusChange={(mealId, completed, type) => handleMealComplete(i, completed)}
-                />
-              ))}
-            </div>
-
-            {/* 4. Блок активности */}
+            {/* 2. Блок активности (шаги) — перемещён вверх */}
             <div style={cardStyle}>
               <div style={{
                 ...headerStyle,
@@ -1611,30 +1765,6 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                     }} />
                   )}
                 </div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: dailySteps >= stepsGoal ? '#10b981' : '#2196f3' }}>
-                  {dailySteps.toLocaleString()} / {stepsGoal.toLocaleString()}
-                </div>
-              </div>
-              
-              {/* Прогресс-бар шагов */}
-              <div style={{ 
-                height: 8, 
-                background: '#e2e8f0', 
-                borderRadius: 4, 
-                overflow: 'hidden',
-                marginBottom: 12 
-              }}>
-                <div style={{ 
-                  width: `${Math.min((dailySteps / stepsGoal) * 100, 100)}%`, 
-                  height: '100%', 
-                  background: dailySteps >= stepsGoal ? '#10b981' : '#2196f3',
-                  transition: 'width 0.3s ease' 
-                }} />
-              </div>
-              
-              <div style={{ fontSize: 14, color: '#666', textAlign: 'center' }}>
-                {dailySteps >= stepsGoal ? 
-                  '🎉 Цель достигнута! Отлично!' : 
                   `Осталось ${(stepsGoal - dailySteps).toLocaleString()} шагов до цели`
                 }
               </div>
@@ -1664,6 +1794,150 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                 )}
               </div>
             </div>
+
+            {/* 3. Блок тренировки */}
+            <div style={cardStyle}>
+              <div style={headerStyle}>
+                🏋️‍♀️ Тренировка
+              </div>
+              
+              {currentDay.workout && currentDay.workout.exercises && currentDay.workout.exercises.length > 0 ? (
+                <>
+                  <div style={{ fontSize: 18, fontWeight: 600, color: '#1a1a1a', marginBottom: 16 }}>
+                    {currentDay.workout.title || 'Тренировка'}
+                  </div>
+                  
+                  {currentDay.workout.exercises.map((ex, i) => {
+                    // Используем данные из упражнения, если они есть, иначе анализируем название тренировки
+                    const location = ex.location || currentDay.workout.location || getWorkoutLocation(currentDay.workout.title || currentDay.workout.name);
+                    const dayId = ex.dayId || getDayId(currentDay.workout.title || currentDay.workout.name, location);
+                    const exerciseName = getExerciseEnglishName(ex.name);
+                    
+                    console.log('🎥 TodayBlock видео данные для упражнения:', {
+                      exerciseName: ex.name,
+                      location,
+                      dayId,
+                      exerciseEnglishName: exerciseName,
+                      exerciseObject: ex,
+                      workoutObject: currentDay.workout,
+                      fullVideoPath: location && dayId && exerciseName ? `/videos/${location}/${dayId}/${exerciseName}.mp4` : null
+                    });
+                    
+                    // Создаем видео компонент
+                    const videoComponent = (location && dayId && (ex.videoName || exerciseName)) ? (
+                      <VideoPlayer 
+                        location={location}
+                        dayId={dayId}
+                        exerciseName={ex.videoName || exerciseName}
+                        title={ex.name}
+                      />
+                    ) : (
+                      <div style={{ 
+                        display: 'flex',
+                        justifyContent: 'center'
+                      }}>
+                        <div style={{
+
+                          width: '200px',
+                          height: '300px',
+                          background: '#e2e8f0',
+                          borderRadius: 12,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#94a3b8',
+                          fontSize: 14
+                        }}>
+                          <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎥</div>
+                          <div>Видео скоро</div>
+                          <div style={{ fontSize: '10px', marginTop: '8px', textAlign: 'center' }}>
+                            Отсутствуют данные:<br/>
+                            location: {location || 'нет'}<br/>
+                            dayId: {dayId || 'нет'}<br/>
+                            exerciseName: {exerciseName || 'нет'}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                    
+                    return (
+                      <ExerciseCard
+                        key={i}
+                        exercise={ex}
+                        index={i}
+                        isCompleted={(() => {
+                          const value = completedExercises[i] ?? null; // Защита от undefined
+                          console.log(`🏋️ Передаем в ExerciseCard[${i}]: исходное=${completedExercises[i]}, обработанное=${value}, typeof=${typeof value}, completedExercises.length=${completedExercises.length}`);
+                                                                                                     return value;
+                        })()}
+                        onStatusChange={handleExerciseComplete}
+                        videoComponent={videoComponent}
+                      />
+                    );
+                  })}
+                </>
+              ) : (
+                <div style={{ 
+                  textAlign: 'center',
+                  padding: 24,
+                  background: 'linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%)',
+                  borderRadius: 12
+                }}>
+                  <div style={{ fontSize: 48, marginBottom: 12 }}>🌿</div>
+                  <div style={{ fontSize: 18, fontWeight: 600, color: '#2d5a2d', marginBottom: 8 }}>
+                    Сегодня день отдыха
+                  </div>
+                  <div style={{ fontSize: 14, color: '#666' }}>
+                    Прогуляйся 10 000 шагов 💪
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* 4. Блок питания — только AI-данные */}
+            {aiLoading ? (
+              <div style={{ ...cardStyle, textAlign: 'center' }}>
+                <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, color: '#1a1a1a' }}>
+                  🍽️ Генерируем меню дня...
+                </div>
+                <div style={{ fontSize: 14, color: '#666' }}>
+                  AI подбирает блюда по вашему профилю
+                </div>
+              </div>
+            ) : aiError ? (
+              <div style={{ ...cardStyle, textAlign: 'center', color: '#e74c3c' }}>
+                ❌ {aiError}
+              </div>
+            ) : Array.isArray(aiMeals) && aiMeals.length > 0 && (
+              <div style={{ marginBottom: 24 }}>
+                <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 12, color: '#3b82f6', letterSpacing: '-0.01em', textAlign: 'center' }}>🍽️ Питание на день</div>
+                {aiMeals.map((meal, idx) => {
+                  const isAI = Array.isArray(meal.options) && meal.options.length > 0;
+                  // Индекс выбранного варианта для этого приема пищи
+                  const selectedIdx = selectedMealOptionIdx[idx] || 0;
+                  // Функция для смены варианта
+                  const setIdx = (fn) => {
+                    setSelectedMealOptionIdx(prev => {
+                      const arr = [...prev];
+                      arr[idx] = typeof fn === 'function' ? fn(arr[idx] || 0) : fn;
+                      return arr;
+                    });
+                  };
+                  return (
+                    <MealCard
+                      key={meal.type + idx}
+                      meal={meal}
+                      isCompleted={completedMeals[idx] ?? null}
+                      onStatusChange={handleMealStatusChange}
+                      style={{ marginBottom: 18 }}
+                      selectedIdx={selectedIdx}
+                      setSelectedIdx={setIdx}
+                    />
+                  );
+                })}
+              </div>
+            )}
 
             {/* 5. Мотивация дня */}
             <div style={{
@@ -1737,8 +2011,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       >
         {/* Дизайнерская иконка чата с Дианой */}
         <img 
-          src={chatDianaIcon} 
-          alt={isPremium ? "Чат с Дианой" : "Чат с Дианой (Premium)"}
+          src={chatDianaIcon}          alt={isPremium ? "Чат с Дианой" : "Чат с Дианой (Premium)"}
           style={{
             width: '100%',
             height: '100%',
@@ -1749,26 +2022,6 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
             transition: 'filter 0.3s ease'
           }}
         />
-        
-        {/* Замочек для заблокированного состояния */}
-        {!isPremium && (
-          <div style={{
-            position: 'absolute',
-            bottom: '-2px',
-            right: '-2px',
-            width: '18px',
-            height: '18px',
-            borderRadius: '50%',
-            background: '#ff6b35',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            fontSize: '10px',
-            border: '2px solid white'
-          }}>
-            🔒
-          </div>
-        )}
       </button>
       
       {/* Диалог чата с Дианой */}

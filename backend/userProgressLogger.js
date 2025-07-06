@@ -1,10 +1,15 @@
 import fs from 'fs';
 import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 class UserProgressLogger {
     constructor(userId) {
         this.userId = userId;
-        this.logPath = path.join(process.cwd(), 'data', 'user_logs');
+        this.logPath = path.join(process.cwd(), 'backup_files', 'users');
+        console.log('[DIAGNOSTIC] process.cwd():', process.cwd());
+        console.log('[DIAGNOSTIC] logPath:', this.logPath);
         this.ensureLogDirectory();
     }
 
@@ -70,6 +75,55 @@ class UserProgressLogger {
         await this.saveLog(log);
     }
 
+    // Сохранить прогресс (еда/тренировка/задачи) за конкретную дату
+    async saveDayProgress({ date, ate, workout, tasks }) {
+        const log = this.loadLog();
+        if (!log.dailyProgress) {
+            log.dailyProgress = {};
+        }
+        log.dailyProgress[date] = {
+            ate: !!ate,
+            workout: !!workout,
+            tasks: Array.isArray(tasks) ? tasks : [],
+            updatedAt: new Date().toISOString()
+        };
+        await this.saveLog(log);
+    }
+
+    // Получить прогресс за конкретную дату
+    getDayProgress(date) {
+        const log = this.loadLog();
+        if (log.dailyProgress && log.dailyProgress[date]) {
+            return log.dailyProgress[date];
+        }
+        return { ate: false, workout: false };
+    }
+
+    // Получить сводку прогресса за период (и анализ причин)
+    getProgressSummary({ from, to }) {
+        const log = this.loadLog();
+        if (!log.dailyProgress) return { total: 0, done: 0, failed: 0, reasons: {} };
+        const fromDate = new Date(from);
+        const toDate = new Date(to);
+        let total = 0, done = 0, failed = 0;
+        const reasons = {};
+        for (const [date, day] of Object.entries(log.dailyProgress)) {
+            const d = new Date(date);
+            if (d < fromDate || d > toDate) continue;
+            if (Array.isArray(day.tasks)) {
+                for (const task of day.tasks) {
+                    total++;
+                    if (task.done) done++;
+                    else {
+                        failed++;
+                        if (task.reason) reasons[task.reason] = (reasons[task.reason] || 0) + 1;
+                    }
+                }
+            }
+        }
+        return { total, done, failed, reasons };
+    }
+
     // Анализ прогресса за неделю
     analyzeWeeklyProgress() {
         const log = this.loadLog();
@@ -133,9 +187,40 @@ class UserProgressLogger {
     loadLog() {
         const logPath = this.getUserLogPath();
         if (fs.existsSync(logPath)) {
-            return JSON.parse(fs.readFileSync(logPath, 'utf-8'));
+            try {
+                const content = fs.readFileSync(logPath, 'utf-8');
+                if (!content.trim()) throw new Error('Empty file');
+                return JSON.parse(content);
+            } catch (e) {
+                console.error('[UserProgressLogger] Ошибка чтения файла прогресса:', logPath, e);
+                // Автоматически сбрасываем файл в дефолтное состояние
+                const def = {
+                    workouts: 0,
+                    nutrition: 0,
+                    details: {
+                        meals: { breakfast: 0, lunch: 0, dinner: 0, snacks: 0 },
+                        weeklyProgress: [],
+                        commonIssues: [],
+                        improvements: { weekOverWeek: 0, trend: 'up' }
+                    },
+                    lastUpdate: new Date().toISOString()
+                };
+                fs.writeFileSync(logPath, JSON.stringify(def, null, 2));
+                return def;
+            }
         }
-        return {};
+        // Если файла нет — возвращаем дефолтную структуру прогресса
+        return {
+            workouts: 0,
+            nutrition: 0,
+            details: {
+                meals: { breakfast: 0, lunch: 0, dinner: 0, snacks: 0 },
+                weeklyProgress: [],
+                commonIssues: [],
+                improvements: { weekOverWeek: 0, trend: 'up' }
+            },
+            lastUpdate: new Date().toISOString()
+        };
     }
 
     // Сохранение лога

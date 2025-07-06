@@ -6,12 +6,24 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
 import recipeUtils from './utils/recipeUtils.js';
+import { callMistralAI } from './utils/aiUtils.js';
 
 // В памяти (для примера)
 const programs = {};
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Удалена загрузка knowledge_base_full.jsonl, так как она не используется
+
+// --- Глобальные константы для распределения КБЖУ и типов диет ---
+const mealTypes = ['Завтрак', 'Перекус', 'Обед', 'Полдник', 'Ужин'];
+const mealPercents = [0.25, 0.10, 0.35, 0.10, 0.20];
+const dietTypeHierarchy = {
+  vegan: ['vegan'],
+  vegetarian: ['vegan', 'vegetarian'],
+  vegetarian_egg: ['vegan', 'vegetarian', 'vegetarian_egg'],
+  fish: ['vegan', 'vegetarian', 'vegetarian_egg', 'fish'],
+  meat: ['vegan', 'vegetarian', 'vegetarian_egg', 'fish', 'meat'],
+};
 
 // Функции для получения тренировок
 function getGymWorkoutTitle(dayNumber) {
@@ -177,7 +189,7 @@ function generateMonthlySchedule(profile) {
   const workoutsPerWeek = profile.workouts_per_week || 3;
   const location = profile.gym_or_home || 'home';
   const startDate = new Date(profile.start_date || new Date());
-  const goal = profile.goal_weight_loss || 'weight_loss';
+  const goal = profile.weight_loss || 'weight_loss';
   const level = profile.training_level || 'beginner';
   
   // Создаем расписание на 30 дней
@@ -262,28 +274,43 @@ function getWorkoutFocus(workoutNumber, goal) {
 
 // Генерация плана питания с учетом типа диеты и предотвращением дублирования
 function generateMeals(goal, profile) {
+  // --- Всегда используем итоговую цель пользователя (goal: 3, 4, 5) ---
+  let numericGoal = Number(profile.goal);
+  if (![3, 4, 5].includes(numericGoal)) {
+    numericGoal = Number(profile.goal_weight_loss);
+  }
+  if (![3, 4, 5].includes(numericGoal)) {
+    numericGoal = 4; // дефолт
+  }
+  goal = numericGoal;
+
+  // Базовый метаболизм
+  let bmr;
   const sex = profile.sex || 'female';
   const age = profile.age || 25;
   const weight = profile.weight_kg || 65;
   const height = profile.height_cm || 165;
   const activity = profile.activity_coef || 1.4;
   const dietType = profile.diet_flags || 'meat';
-  
-  // Базовый метаболизм
-  let bmr;
   if (sex === 'male') {
     bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
   } else {
     bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
   }
-  
-  let dailyCalories = bmr * activity;
-  
-  // Корректировка по цели
-  if (goal === 'weight_loss') {
-    dailyCalories *= 0.85; // дефицит 15%
-  } else if (goal === 'muscle_gain') {
-    dailyCalories *= 1.15; // профицит 15%
+
+  // Итоговые калории с учётом цели (goal)
+  let dailyCalories;
+  let deficit = 0;
+  if ([3,4,5].includes(goal)) {
+    deficit = goal * 7700 / 30;
+    dailyCalories = Math.round(bmr * activity - deficit);
+  } else {
+    dailyCalories = Math.round(bmr * activity);
+  }
+
+  // Корректировка по цели (оставить только для muscle_gain, для weight_loss не трогать)
+  if (goal === 'muscle_gain') {
+    dailyCalories = Math.round(dailyCalories * 1.15); // профицит 15%
   }
   
   // Массив для отслеживания использованных перекусов
@@ -296,6 +323,7 @@ function generateMeals(goal, profile) {
   // Генерируем перекус для 17:00 (не должен повторяться)
   const snack2 = getSnackOption(goal, 2, dietType, usedSnacks);
   
+  // Генерируем блюда с итоговыми калориями
   return [
     { 
       type: 'Завтрак', 
@@ -328,6 +356,19 @@ function generateMeals(goal, profile) {
       time: '19:00'
     }
   ];
+}
+
+// --- ДОБАВЛЕНО: функция для распределения dietType по приёмам пищи ---
+function getMealDietTypes(mainDietType) {
+  // Можно скорректировать распределение по желанию
+  const distribution = {
+    meat:      ['meat', 'meat', 'fish', 'vegetarian', 'vegan'],
+    fish:      ['fish', 'fish', 'vegetarian', 'vegetarian', 'vegan'],
+    vegetarian_egg: ['vegetarian_egg', 'vegetarian_egg', 'vegetarian', 'vegan', 'vegan'],
+    vegetarian: ['vegetarian', 'vegetarian', 'vegan', 'vegan', 'vegan'],
+    vegan:     ['vegan', 'vegan', 'vegan', 'vegan', 'vegan'],
+  };
+  return distribution[mainDietType] || Array(5).fill('vegan');
 }
 
 // Опции завтраков с учетом типа диеты
@@ -481,7 +522,7 @@ function getSnackOption(goal, snackNumber, dietType = 'meat', usedSnacks = []) {
         'Яблоко с корицей',
         'Растительное молоко с орехами',
         'Горсть кешью',
-        'Салат из овощей с семечками',
+        'Салат из овощей с семенами',
         'Хумус с морковью',
         'Банан с миндальной пастой',
         'Смузи из фруктов',
@@ -812,16 +853,19 @@ function getDinnerOption(goal, dietType = 'meat') {
   return dietDinners[Math.floor(Math.random() * dietDinners.length)];
 }
 
-// Цель по шагам
-function getDailyStepsGoal(profile) {
-  const level = profile.training_level || 'beginner';
-  const activity = profile.activity_coef || 1.4;
-  
-  if (level === 'beginner') return 8000;
-  if (level === 'intermediate') return 10000;
-  if (level === 'advanced') return 12000;
-  
-  return activity < 1.4 ? 10000 : 8000;
+// Универсальная функция для определения овощей/фруктов/зелени (всегда граммы)
+function isGramOnlyIngredient(name) {
+  const n = name.trim().toLowerCase();
+  const keywords = [
+    'помидор', 'томат', 'перец', 'морковь', 'лук', 'баклажан', 'кабачок', 'цуккини', 'огурец', 'картофель',
+    'брокколи', 'сельдерей', 'шпинат', 'тыква', 'фасоль', 'горошек', 'кукуруза', 'редис', 'свекла', 'капуста',
+    'цветная капуста', 'брюссельская капуста', 'спаржа', 'яблоко', 'груша', 'апельсин', 'мандари', 'банан',
+    'киви', 'персик', 'слива', 'абрикос', 'виноград', 'черешня', 'вишня', 'клубника', 'малина', 'ежевика',
+    'голубика', 'смородина', 'арбуз', 'дыня', 'ананас', 'манго', 'гранат', 'авокадо', 'лимон', 'лайм',
+    'грейпфрут', 'черника', 'клюква', 'облепиха', 'инжир', 'финик', 'курага', 'изюм', 'чернослив', 'ягод',
+    'зелень', 'укроп', 'петрушка', 'базилик', 'кинза', 'лук зеленый', 'салат', 'сельдерей', 'щавель', 'руккола'
+  ];
+  return keywords.some(k => n.includes(k));
 }
 
 // GET /api/program/month?programId=...&month=1
@@ -944,33 +988,94 @@ router.get('/program/calendar', (req, res) => {
 });
 
 // POST /api/generate-meal-plan — генерация рациона на день с учетом иерархии dietType
-const dietTypeHierarchy = {
-  vegan: ['vegan'],
-  vegetarian: ['vegan', 'vegetarian'],
-  vegetarian_egg: ['vegan', 'vegetarian', 'vegetarian_egg'],
-  fish: ['vegan', 'vegetarian', 'vegetarian_egg', 'fish'],
-  meat: ['vegan', 'vegetarian', 'vegetarian_egg', 'fish', 'meat'],
-};
-
 router.post('/generate-meal-plan', async (req, res) => {
   try {
     const { dietType = 'vegetarian_egg', calories = 1800 } = req.body;
-    const allowedTypes = dietTypeHierarchy[dietType] || ['vegan'];
-    const mealTypes = ['Завтрак', 'Обед', 'Ужин', 'Перекус', 'Полдник'];
-    const caloriesPerMeal = Math.floor(calories / mealTypes.length);
-    const usedRecipes = [];
-    const plan = [];
-    for (const mealType of mealTypes) {
-      // Получаем только рецепты из разрешённых dietType
-      const recipes = recipeUtils.getRecipesByType(mealType).filter(r => allowedTypes.includes(r.dietType));
-      const unused = recipes.filter(r => !usedRecipes.some(u => u.name === r.name));
-      const recipe = unused.length > 0
-        ? unused[Math.floor(Math.random() * unused.length)]
-        : recipes[Math.floor(Math.random() * recipes.length)];
-      if (recipe) usedRecipes.push(recipe);
-      plan.push({ type: mealType, meal: recipe });
+    const profile = req.body.profile || req.body;
+    // --- Итоговая цель ---
+    let numericGoal = Number(profile.goal);
+    if (![3, 4, 5].includes(numericGoal)) {
+      numericGoal = Number(profile.goal_weight_loss);
     }
-    res.json({ success: true, plan });
+    if (![3, 4, 5].includes(numericGoal)) {
+      numericGoal = 4;
+    }
+    profile.goal = numericGoal;
+
+    let bmr;
+    if (profile.sex === 'male') {
+      bmr = 88.362 + (13.397 * profile.weight_kg) + (4.799 * profile.height_cm) - (5.677 * profile.age);
+    } else {
+      bmr = 447.593 + (9.247 * profile.weight_kg) + (3.098 * profile.height_cm) - (4.330 * profile.age);
+    }
+    let dailyCalories = bmr * profile.activity_coef;
+    // --- Новый расчёт дефицита по goal (3/4/5 кг в месяц) ---
+    let deficit = 0;
+    if ([3,4,5].includes(profile.goal)) {
+      deficit = profile.goal * 7700 / 30;
+      dailyCalories = Math.round(calories_before_goal - deficit);
+    }
+    // Формула Дианы: белки 1.5 г/кг, жиры 0.9 г/кг, углеводы - остаток
+    const protein = Math.round(profile.weight_kg * 1.5);
+    const fat = Math.round(profile.weight_kg * 0.9);
+    const proteinCals = protein * 4;
+    const fatCals = fat * 9;
+    const carbs = Math.round((dailyCalories - (proteinCals + fatCals)) / 4);
+
+    // Индивидуальные цели для каждого приёма пищи
+    const mealTypes = ['Завтрак', 'Перекус', 'Обед', 'Полдник', 'Ужин'];
+    const mealPercents = [0.25, 0.10, 0.35, 0.10, 0.20];
+    const mealTargets = mealPercents.map(p => ({
+      calories: Math.round(dailyCalories * p),
+      protein: Math.round(protein * p),
+      fat: Math.round(fat * p),
+      carbs: Math.round(carbs * p)
+    }));
+    // --- Новый режим: фильтрация по типу диеты ---
+    const dietTypeHierarchy = {
+      vegan: ['vegan'],
+      vegetarian: ['vegan', 'vegetarian'],
+      vegetarian_egg: ['vegan', 'vegetarian', 'vegetarian_egg'],
+      fish: ['vegan', 'vegetarian', 'vegetarian_egg', 'fish'],
+      meat: ['vegan', 'vegetarian', 'vegetarian_egg', 'fish', 'meat'],
+    };
+    const allowedDietTypes = dietTypeHierarchy[dietType] || ['vegan'];
+    // 2. Список всех рецептов из базы (с БЖУ, калориями, ингредиентами)
+    const allRecipes = [];
+    for (const [type, arr] of Object.entries(recipeUtils.recipes)) {
+      for (const r of arr) {
+        allRecipes.push({
+          name: r.name,
+          type: r.type,
+          dietType: r.dietType,
+          calories: r.calories,
+          protein: r.protein,
+          fat: r.fat,
+          carbs: r.carbs,
+          ingredients: r.ingredients,
+          instructions: r.instructions
+        });
+      }
+    }
+    // Для каждого приема пищи подбираем 5 блюд с максимально близкой калорийностью и подходящим dietType
+    const detailedMeals = mealTypes.map((type, idx) => {
+      const recipes = allRecipes.filter(r => r.type === type && allowedDietTypes.includes(r.dietType));
+      const sorted = [...recipes].sort((a, b) => Math.abs(a.calories - mealTargets[idx].calories) - Math.abs(b.calories - mealTargets[idx].calories));
+      const target = mealTargets[idx];
+      const options = sorted.slice(0, 5).map(r => scaleRecipeToTargets(r, target));
+      return { type, options };
+    });
+    console.log('=== BEFORE DEBUG MEAL TARGETS ===');
+    console.log('[DEBUG MEAL TARGETS]', mealTypes.map((type, idx) => ({ type, target: mealTargets[idx] })));
+    console.log('=== AFTER DEBUG MEAL TARGETS ===');
+
+    res.json({
+      success: true,
+      profile,
+      dailyCalories: Math.round(dailyCalories),
+      protein, fat, carbs,
+      meals: detailedMeals
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -997,5 +1102,359 @@ router.post('/get-today-plan', async (req, res) => {
   // Здесь можно реализовать реальную логику, если потребуется
   res.status(501).json({ success: false, error: 'Эндпоинт не реализован' });
 });
+
+// --- AI-подбор меню по КБЖУ и базе рецептов с несколькими вариантами для каждого приёма пищи ---
+router.post('/ai-meal-plan', async (req, res) => {
+  console.log('=== AI MEAL PLAN ENDPOINT CALLED ===');
+  try {
+    const profile = req.body.profile || req.body;
+    // --- Итоговая цель ---
+    let numericGoal = Number(profile.goal);
+    if (![3, 4, 5].includes(numericGoal)) {
+      numericGoal = Number(profile.goal_weight_loss);
+    }
+    if (![3, 4, 5].includes(numericGoal)) {
+      numericGoal = 4;
+    }
+    profile.goal = numericGoal;
+
+    // 1. Расчёт суточной нормы КБЖУ
+    const sex = profile.sex || 'female';
+    const age = profile.age || 25;
+    const weight = profile.weight_kg || 65;
+    const height = profile.height_cm || 165;
+    const activity = profile.activity_coef || 1.4;
+    const goal = profile.goal_weight_loss || 'weight_loss';
+    const dietType = profile.diet_flags || 'meat';
+
+    let bmr;
+    if (sex === 'male') {
+      bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+    } else {
+      bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+    }
+    let calories_before_goal = bmr * activity;
+    let dailyCalories = calories_before_goal;
+    // --- Новый расчёт дефицита по goal (3/4/5 кг в месяц) ---
+    let deficit = 0;
+    if ([3,4,5].includes(profile.goal)) {
+      deficit = profile.goal * 7700 / 30;
+      dailyCalories = Math.round(calories_before_goal - deficit);
+    }
+    // Формула Дианы: белки 1.5 г/кг, жиры 0.9 г/кг, углеводы - остаток
+    const protein = Math.round(weight * 1.5);
+    const fat = Math.round(weight * 0.9);
+    const proteinCals = protein * 4;
+    const fatCals = fat * 9;
+    const carbs = Math.round((dailyCalories - (proteinCals + fatCals)) / 4);
+
+    // Индивидуальные цели для каждого приёма пищи
+    const mealTypes = ['Завтрак', 'Перекус', 'Обед', 'Полдник', 'Ужин'];
+    const mealPercents = [0.25, 0.10, 0.35, 0.10, 0.20];
+    const mealTargets = mealPercents.map(p => ({
+      calories: Math.round(dailyCalories * p),
+      protein: Math.round(protein * p),
+      fat: Math.round(fat * p),
+      carbs: Math.round(carbs * p)
+    }));
+    // --- Новый режим: фильтрация по типу диеты ---
+    const dietTypeHierarchy = {
+      vegan: ['vegan'],
+      vegetarian: ['vegan', 'vegetarian'],
+      vegetarian_egg: ['vegan', 'vegetarian', 'vegetarian_egg'],
+      fish: ['vegan', 'vegetarian', 'vegetarian_egg', 'fish'],
+      meat: ['vegan', 'vegetarian', 'vegetarian_egg', 'fish', 'meat'],
+    };
+    const allowedDietTypes = dietTypeHierarchy[dietType] || ['vegan'];
+    // 2. Список всех рецептов из базы (с БЖУ, калориями, ингредиентами)
+    const allRecipes = [];
+    for (const [type, arr] of Object.entries(recipeUtils.recipes)) {
+      for (const r of arr) {
+        allRecipes.push({
+          name: r.name,
+          type: r.type,
+          dietType: r.dietType,
+          calories: r.calories,
+          protein: r.protein,
+          fat: r.fat,
+          carbs: r.carbs,
+          ingredients: r.ingredients,
+          instructions: r.instructions
+        });
+      }
+    }
+    // Для каждого приема пищи подбираем 5 блюд с максимально близкой калорийностью и подходящим dietType
+    const detailedMeals = mealTypes.map((type, idx) => {
+      const recipes = allRecipes.filter(r => r.type === type && allowedDietTypes.includes(r.dietType));
+      const sorted = [...recipes].sort((a, b) => Math.abs(a.calories - mealTargets[idx].calories) - Math.abs(b.calories - mealTargets[idx].calories));
+      const target = mealTargets[idx];
+      const options = sorted.slice(0, 5).map(r => scaleRecipeToTargets(r, target));
+      return { type, options };
+    });
+
+    res.json({
+      success: true,
+      profile,
+      dailyCalories: Math.round(dailyCalories),
+      protein, fat, carbs,
+      meals: detailedMeals
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// --- Маппинг типовых весов для овощей/фруктов/зелени ---
+const defaultGramWeights = {
+  'банан': 120,
+  'яблоко': 150,
+  'груша': 140,
+  'апельсин': 160,
+  'киви': 75,
+  'огурец': 100,
+  'помидор': 100,
+  'томат': 100,
+  'морковь': 80,
+  'перец': 120,
+  'картофель': 130,
+  'лук': 80,
+  'кабачок': 200,
+  'баклажан': 200,
+  'грейпфрут': 200,
+  'мандари': 80,
+  'слива': 40,
+  'абрикос': 35,
+  'виноград': 5,
+  'черешня': 8,
+  'вишня': 8,
+  'клубника': 15,
+  'малина': 4,
+  'ежевика': 4,
+  'голубика': 2,
+  'смородина': 1,
+  'арбуз': 2000,
+  'дыня': 2000,
+  'ананас': 900,
+  'манго': 200,
+  'гранат': 200,
+  'авокадо': 140,
+  'лимон': 80,
+  'лайм': 60,
+  'брокколи': 100,
+  'шпинат': 30,
+  'сельдерей': 40,
+  'тыква': 200,
+  'фасоль': 20,
+  'горошек': 5,
+  'кукуруза': 100,
+  'редис': 15,
+  'свекла': 120,
+  'капуста': 100,
+  'цветная капуста': 100,
+  'брюссельская капуста': 20,
+  'спаржа': 20,
+  'зелень': 10,
+  'укроп': 10,
+  'петрушка': 10,
+  'базилик': 10,
+  'кинза': 10,
+  'лук зеленый': 10,
+  'салат': 20,
+  'щавель': 10,
+  'руккола': 10
+};
+
+function getDefaultGramWeight(name) {
+  if (!name) return 100;
+  const n = name.trim().toLowerCase();
+  for (const key in defaultGramWeights) {
+    if (n.includes(key)) return defaultGramWeights[key];
+  }
+  return 100; // fallback
+}
+
+function scaleRecipeToTargets(recipe, target) {
+  if (!recipe || !target) return recipe;
+  // Если у рецепта нет информации о БЖУ, возвращаем как есть
+  if (
+    typeof recipe.calories !== 'number' ||
+    typeof recipe.protein !== 'number' ||
+    typeof recipe.fat !== 'number' ||
+    typeof recipe.carbs !== 'number'
+  ) {
+    return recipe;
+  }
+  // Определяем коэффициент масштабирования по калориям
+  const scale = target.calories / recipe.calories;
+  // --- Маппинг типовых весов для хлеба и подобных продуктов ---
+  const breadKeywords = ['хлеб', 'батон', 'булка', 'багет', 'тост'];
+  const breadTypicalWeight = 35; // 1 кусочек хлеба = 35 г
+  // Масштабируем БЖУ и ингредиенты
+  return {
+    ...recipe,
+    calories: Math.round(recipe.calories * scale),
+    protein: Math.round(recipe.protein * scale),
+    fat: Math.round(recipe.fat * scale),
+    carbs: Math.round(recipe.carbs * scale),
+    // Если есть ингредиенты с количеством, масштабируем их
+    ingredients: Array.isArray(recipe.ingredients)
+      ? recipe.ingredients.map(ing => {
+          // Всегда в граммах для овощей/фруктов/зелени
+          if (typeof ing.name === 'string' && isGramOnlyIngredient(ing.name)) {
+            let baseAmount = ing.amount;
+            if ((baseAmount === 1 || !baseAmount) && (!ing.unit || ing.unit === 'шт')) {
+              baseAmount = getDefaultGramWeight(ing.name);
+            }
+            let grams = Math.round((baseAmount || 100) * scale);
+            if (grams <= 0) grams = getDefaultGramWeight(ing.name);
+            // Исправляем подозрительно маленькие значения
+            if (grams < 10) grams = getDefaultGramWeight(ing.name);
+            return {
+              ...ing,
+              amount: grams,
+              unit: 'г'
+            };
+          }
+          // Для хлеба и подобных продуктов всегда граммы
+          if (typeof ing.name === 'string' && breadKeywords.some(k => ing.name.toLowerCase().includes(k))) {
+            let grams = 0;
+            if (ing.unit && ['кусочек', 'ломтик', 'шт', 'piece', 'slice'].includes(ing.unit)) {
+              grams = Math.round((ing.amount || 1) * breadTypicalWeight * scale);
+            } else if (ing.unit === 'г' || !ing.unit) {
+              grams = Math.round((ing.amount || breadTypicalWeight) * scale);
+            }
+            if (grams < 10) grams = breadTypicalWeight;
+            return {
+              ...ing,
+              amount: grams,
+              unit: 'г'
+            };
+          }
+          // Для других ингредиентов с числовым amount
+          if (typeof ing.amount === 'number') {
+            let amt = Math.round(ing.amount * scale);
+            if (amt < 0) amt = 0;
+            return { ...ing, amount: amt };
+          }
+          return ing;
+        })
+      : recipe.ingredients
+  };
+}
+
+// --- Утилита: оставить только поле goal с числовым значением 3, 4 или 5 ---
+function cleanQuizGoalFields(quiz) {
+  if (!quiz || typeof quiz !== 'object') return { goal: 4 };
+  // Если есть goal_weight_loss (3/4/5), то используем его как goal
+  let parsedGoal = Number(quiz.goal);
+  if (typeof quiz.goal_weight_loss !== 'undefined') {
+    const gwl = Number(quiz.goal_weight_loss);
+    if ([3, 4, 5].includes(gwl)) parsedGoal = gwl;
+  }
+  if (![3, 4, 5].includes(parsedGoal)) parsedGoal = 4;
+  // Удаляем все варианты цели, кроме goal, но явно сохраняем age
+  const { goal, goal_weight_loss, user_goal, target, age, ...rest } = quiz;
+  return { ...rest, age, goal: parsedGoal };
+}
+
+// --- API: Получить ответы квиза и индивидуальные КБЖУ ---
+router.get('/user/quiz-answers/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    let quiz = null;
+    const userFile = path.join(__dirname, 'backup_files', 'users', `quiz_${userId}.json`);
+    if (fs.existsSync(userFile)) {
+      quiz = JSON.parse(fs.readFileSync(userFile, 'utf-8'));
+      console.log('[QUIZ OBJECT до cleanQuizGoalFields]', quiz);
+    } else {
+      quiz = {
+        weight: 60,
+        height: 165,
+        age: 30,
+        gender: 'female',
+        activity_level: 'medium',
+        goal: 4 // по умолчанию 4 кг
+      };
+    }
+    // --- Оставляем только поле goal с числовым значением ---
+    quiz = cleanQuizGoalFields(quiz);
+    console.log('[QUIZ OBJECT после cleanQuizGoalFields]', quiz);
+    // --- Расчёт КБЖУ с учётом цели похудения ---
+    const weight = Number(quiz.weight) || Number(quiz.weight_kg) || 60;
+    const height = Number(quiz.height) || Number(quiz.height_cm) || 165;
+    const age = Number(quiz.age) || 30;
+    const sex = (quiz.gender || quiz.sex || 'female').toLowerCase();
+    let bmr = 10 * weight + 6.25 * height - 5 * age;
+    bmr += sex === 'male' || sex === 'муж' ? 5 : -161;
+    const activityMap = {
+      'low': 1.2,
+      'medium': 1.375,
+      'high': 1.55,
+      'very_high': 1.725
+    };
+    const activity = quiz.activity_level || quiz.activity_coef || 'medium';
+    const activityCoef = activityMap[activity] || Number(quiz.activity_coef) || 1.375;
+    let calories_before_goal = Math.round(bmr * activityCoef);
+    let calories = calories_before_goal;
+    // --- Дефицит калорий по цели похудения (goal: 3, 4, 5) ---
+    const goal = quiz.goal; // уже гарантировано 3, 4, 5
+    const deficit = goal * 7700 / 30;
+    calories = Math.round(calories_before_goal - deficit);
+    const protein = Math.round(weight * 1.7);
+    const fats = Math.round(weight * 0.9);
+    const carbs = Math.round((calories - (protein*4 + fats*9)) / 4);
+    // Возвращаем все исходные поля из файла + расчётные значения
+    res.json({
+      ...quiz,
+      activityCoef,
+      bmr,
+      calories,
+      calories_before_goal,
+      protein,
+      fats,
+      carbs
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// --- API: Сохранение и обновление квиза пользователя ---
+import bodyParser from 'body-parser';
+router.use(bodyParser.json());
+
+// PUT /api/user/quiz-answers/:userId — обновить ответы квиза
+router.put('/user/quiz-answers/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const userFile = path.join(__dirname, 'backup_files', 'users', `quiz_${userId}.json`);
+    let quiz = {};
+    if (fs.existsSync(userFile)) {
+      quiz = JSON.parse(fs.readFileSync(userFile, 'utf-8'));
+    }
+    // Логируем, что реально приходит с фронта
+    console.log('[QUIZ PUT BODY]', req.body);
+    // Обновляем только переданные поля
+    quiz = { ...quiz, ...req.body };
+    quiz = cleanQuizGoalFields(quiz);
+    fs.writeFileSync(userFile, JSON.stringify(quiz, null, 2), 'utf-8');
+    console.log('[QUIZ UPDATED]', quiz);
+    res.json({ success: true, quiz });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// --- Патч: сохранять квиз при генерации плана (StoryQuiz) ---
+// Для этого экспортируем функцию сохранения
+export function saveQuizToFile(userId, quiz) {
+  if (!userId) return;
+  const userFile = path.join(__dirname, 'backup_files', 'users', `quiz_${userId}.json`);
+  console.log('[QUIZ SAVE PATH]', userFile);
+  fs.mkdirSync(path.dirname(userFile), { recursive: true });
+  const cleanedQuiz = cleanQuizGoalFields(quiz);
+  fs.writeFileSync(userFile, JSON.stringify(cleanedQuiz, null, 2), 'utf-8');
+  console.log('[QUIZ SAVED]', userId, cleanedQuiz);
+}
 
 export default router;

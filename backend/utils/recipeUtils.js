@@ -4,9 +4,144 @@
 
 import { recipesDB } from './recipesDB.js';
 import { callMistralAI } from './aiUtils.js';
+import { ingredientCalories } from './ingredientCalories.js';
+
+// Маппинг типовых весов (граммы) для овощей, фруктов, зелени
+const TYPICAL_WEIGHTS = {
+    'помидор': 100,
+    'помидоры': 100,
+    'помидоры черри': 15,
+    'огурец': 120,
+    'морковь': 80,
+    'болгарский перец': 120,
+    'перец': 120,
+    'яблоко': 150,
+    'банан': 120,
+    'лимон': 100,
+    'лук репчатый': 80,
+    'лук': 80,
+    'лук зеленый': 10,
+    'чеснок': 5,
+    'зубчик чеснока': 5,
+    'стебель сельдерея': 40,
+    'сельдерей': 40,
+    'шпинат': 30,
+    'шпинат свежий': 30,
+    'укроп': 5,
+    'петрушка': 5,
+    'руккола': 5,
+    'зелень': 5,
+    'базилик свежий': 5,
+    'микрозелень': 5,
+    'баклажан': 120,
+    'цукини': 120,
+    'тыква': 200,
+    'грибы': 70,
+    'шампиньоны': 70,
+    'лист салата': 10,
+    'листья салата': 10
+};
+
+// Список ключевых слов для овощей/фруктов/зелени
+const GRAM_INGREDIENTS = [
+    'помидор', 'помидоры', 'помидоры черри', 'огурец', 'морковь', 'болгарский перец', 'перец', 'яблоко', 'банан', 'лимон',
+    'лук', 'лук репчатый', 'лук зеленый', 'чеснок', 'зубчик чеснока', 'сельдерей', 'стебель сельдерея', 'шпинат', 'шпинат свежий',
+    'укроп', 'петрушка', 'руккола', 'зелень', 'базилик свежий', 'микрозелень', 'баклажан', 'цукини', 'тыква', 'грибы', 'шампиньоны',
+    'лист салата', 'листья салата'
+];
+
+// Дополнительные типовые веса для нестандартных unit
+const EXTRA_UNIT_WEIGHTS = {
+    'кусочек': 35, // хлеб
+    'ломтик': 20,
+    'стебель': 40,
+    'зубчик': 5,
+    'щепотка': 1,
+    'ч.л.': 5,
+    'ст.л.': 15
+};
+
+// Список специй и приправ для автоматической нормализации
+const SPICES = [
+  'соль', 'соль, перец', 'черный перец', 'паприка', 'корица', 'зира', 'тимьян', 'мускатный орех', 'перец чили', 'розмарин', 'базилик', 'укроп', 'петрушка', 'горчица', 'карри', 'куркума', 'приправа', 'специи'
+];
+
+function normalizeIngredientUnits(ingredient) {
+    const name = ingredient.name.toLowerCase();
+    const isGramType = GRAM_INGREDIENTS.some(key => name.includes(key));
+    let unit = ingredient.unit;
+    let amount = Number(ingredient.amount);
+    // 0. Автоматическая нормализация специй и приправ
+    if (SPICES.some(spice => name.includes(spice))) {
+        // Если количество больше 10 г или не указано, ограничиваем до 1-5 г
+        if (!unit || unit === 'г' || unit === 'гр' || unit === 'грамм' || unit === 'grams') {
+            if (isNaN(amount) || amount > 10 || amount <= 0) amount = 3;
+            return { ...ingredient, amount, unit: 'г' };
+        }
+        // Если указана ложка/щепотка — оставляем, но не больше 5 г
+        if (unit === 'ч.л.' || unit === 'ст.л.' || unit === 'щепотка') {
+            if (isNaN(amount) || amount > 5 || amount <= 0) amount = 1;
+            return { ...ingredient, amount, unit };
+        }
+    }
+    // 1. Конвертация "шт", "кусочек", "ломтик", "стебель", "зубчик" и т.п. в граммы
+    if (isGramType && unit && unit !== 'г') {
+        // Определяем типовой вес
+        let typicalWeight = 0;
+        for (const key in TYPICAL_WEIGHTS) {
+            if (name.includes(key)) {
+                typicalWeight = TYPICAL_WEIGHTS[key];
+                break;
+            }
+        }
+        // Если не найдено — ищем по unit
+        if (!typicalWeight && EXTRA_UNIT_WEIGHTS[unit]) {
+            typicalWeight = EXTRA_UNIT_WEIGHTS[unit];
+        }
+        if (!typicalWeight) typicalWeight = 50; // fallback
+        if (isNaN(amount) || amount === 0) amount = 1;
+        const grams = Math.round(amount * typicalWeight);
+        return { ...ingredient, amount: grams < 5 ? 5 : grams, unit: 'г' };
+    }
+    // 2. Если unit уже 'г', но amount подозрительно мал (<10 г для овощей/фруктов/зелени), исправляем на типовой вес
+    if (isGramType && unit === 'г' && amount > 0 && amount < 10) {
+        let typicalWeight = 0;
+        for (const key in TYPICAL_WEIGHTS) {
+            if (name.includes(key)) {
+                typicalWeight = TYPICAL_WEIGHTS[key];
+                break;
+            }
+        }
+        if (!typicalWeight) typicalWeight = 50;
+        return { ...ingredient, amount: typicalWeight, unit: 'г' };
+    }
+    // 3. Для хлеба и других продуктов с unit: 'кусочек', 'ломтик' и т.п.
+    if ((unit === 'кусочек' || unit === 'ломтик') && (name.includes('хлеб') || name.includes('батон'))) {
+        let typicalWeight = EXTRA_UNIT_WEIGHTS[unit] || 30;
+        if (isNaN(amount) || amount === 0) amount = 1;
+        const grams = Math.round(amount * typicalWeight);
+        return { ...ingredient, amount: grams, unit: 'г' };
+    }
+    return ingredient;
+}
+
+function normalizeRecipeIngredients(recipe) {
+    if (!recipe.ingredients) return recipe;
+    return {
+        ...recipe,
+        ingredients: recipe.ingredients.map(normalizeIngredientUnits)
+    };
+}
+
+// Применяем нормализацию к базе рецептов при инициализации
+const normalizedRecipesDB = {};
+for (const type in recipesDB) {
+    normalizedRecipesDB[type] = recipesDB[type].map(normalizeRecipeIngredients);
+}
 
 const recipeUtils = {
-    recipes: recipesDB,
+    recipes: normalizedRecipesDB,
+    ingredientCalories,
     
     getRecipesByType(mealType) {
         const type = mealType.toLowerCase();

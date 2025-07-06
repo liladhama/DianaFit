@@ -135,7 +135,7 @@ const MealCard = ({
             fontWeight: 600,
             marginBottom: 8
           }}>
-            {meal.calories && (
+            {typeof meal.calories === 'number' && (
               <span style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -147,7 +147,7 @@ const MealCard = ({
                 border: '1px solid #fed7aa'
               }}>
                 <span>🔥</span>
-                {meal.calories} ккал
+                {Math.round(meal.calories / 5) * 5} ккал
               </span>
             )}
             
@@ -253,7 +253,7 @@ const MealCard = ({
                     border: '1px solid #d8b4fe',
                     whiteSpace: 'nowrap'
                   }}>
-                    {typeof ingredient === 'string' ? ingredient : `${ingredient.name}: ${ingredient.amount}${ingredient.unit || ''}`}
+                    {typeof ingredient === 'string' ? ingredient : `${ingredient.name}: ${Math.round(ingredient.amount / 5) * 5}${ingredient.unit || ''}`}
                   </span>
                 ))}
               </div>

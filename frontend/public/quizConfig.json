@@ -113,7 +113,9 @@
     "type": "date-wheel",
     "title": "Когда начнём?",
     "key": "start_date",
-    "options": []
+    "options": [
+      { "label": "Сегодня", "value": "today" }
+    ]
   },
   {
     "id": 13,
