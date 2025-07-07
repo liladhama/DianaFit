@@ -1,0 +1,49 @@
+{
+  "workouts": 0,
+  "nutrition": 0,
+  "details": {
+    "meals": {
+      "breakfast": 0,
+      "lunch": 0,
+      "dinner": 0,
+      "snacks": 0
+    },
+    "weeklyProgress": [],
+    "commonIssues": [],
+    "improvements": {
+      "weekOverWeek": 0,
+      "trend": "up"
+    }
+  },
+  "lastUpdate": "2025-07-07T03:17:39.610Z",
+  "dailyProgress": {
+    "2025-01-20": {
+      "ate": false,
+      "workout": false,
+      "tasks": [
+        {
+          "name": "Завтрак",
+          "type": "meal",
+          "done": true
+        },
+        {
+          "name": "Обед",
+          "type": "meal",
+          "done": true
+        },
+        {
+          "name": "Упражнение 1",
+          "type": "workout",
+          "done": true
+        },
+        {
+          "name": "steps",
+          "type": "steps",
+          "done": false,
+          "value": 8000
+        }
+      ],
+      "updatedAt": "2025-07-07T03:17:39.625Z"
+    }
+  }
+}

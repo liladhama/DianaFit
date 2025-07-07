@@ -3,6 +3,7 @@ import SwipeSlider from './SwipeSlider';
 
 const MealCard = ({ 
   meal, 
+  index,
   isCompleted, 
   onStatusChange,
   style = {},
@@ -43,7 +44,7 @@ const MealCard = ({
 
   // Обработка смены статуса
   const handleStatusChange = (completedVal) => {
-    onStatusChange(meal.id, completedVal, 'meal');
+    onStatusChange(index, completedVal);
   };
 
   // Обработка открытия секций

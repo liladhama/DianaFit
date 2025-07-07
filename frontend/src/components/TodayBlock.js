@@ -117,6 +117,9 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   // Массив задач (только реальные статусы)
   const [tasks, setTasks] = useState([]);
 
+  // --- СТАТУСЫ ПРИЕМОВ ПИЩИ ---
+  const [completedMeals, setCompletedMeals] = useState([]);
+
   // Используем персональный план если он есть, иначе переданный день или мок
   const currentDay = personalPlan || day || {
     date: '2024-06-03',
@@ -148,7 +151,20 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   
   // Инициализируем массивы статусов как пустые, заполнение происходит в useEffect
   const [completedExercises, setCompletedExercises] = useState([]);
-  const [completedMeals, setCompletedMeals] = useState([]);
+  // Синхронизация длины completedMeals с aiMeals (без сброса отмеченных значений)
+  useEffect(() => {
+    if (Array.isArray(aiMeals)) {
+      setCompletedMeals(prev => {
+        if (prev.length !== aiMeals.length) {
+          // Сохраняем отмеченные значения, новые элементы = null
+          return aiMeals.map((_, i) => prev[i] ?? null);
+        }
+        return prev;
+      });
+    } else if (completedMeals.length !== 0) {
+      setCompletedMeals([]);
+    }
+  }, [aiMeals]);
 
   // Обновляем состояние при изменении currentDay
   useEffect(() => {
@@ -868,9 +884,11 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   // Обработчик выбора причины невыполнения
   const handleReasonSelected = async (reasonData) => {
+    console.log('📝 handleReasonSelected вызван:', { reasonData, reasonModalData });
     const { type, index } = reasonModalData;
     
     if (type === 'workout') {
+      console.log('🏋️ Обрабатываем причину для упражнения:', { index, reasonData });
       // Сохраняем причину невыполнения упражнения
       const newReasons = { ...exerciseReasons, [index]: reasonData };
       setExerciseReasons(newReasons);
@@ -879,16 +897,15 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       const updated = completedExercises.map((v, i) => i === index ? false : v);
       setCompletedExercises(updated);
       
-      if (localProgramId) {
+      if (answers?.userId) {
         try {
-          await fetch(`${API_URL}/api/program/day-complete`, {
-            method: 'PATCH',
+          await fetch(`${API_URL}/api/progress`, {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              programId: localProgramId,
+              userId: answers.userId,
               date: currentDay.date,
-              completedExercises: updated,
-              exerciseReasons: newReasons
+              tasks: buildTasks()
             })
           });
         } catch (error) {
@@ -896,6 +913,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         }
       }
     } else if (type === 'meal') {
+      console.log('🍽️ Обрабатываем причину для приема пищи:', { index, reasonData });
       // Сохраняем причину невыполнения приема пищи
       const newReasons = { ...mealReasons, [index]: reasonData };
       setMealReasons(newReasons);
@@ -904,16 +922,15 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       const updated = completedMeals.map((v, i) => i === index ? false : v);
       setCompletedMeals(updated);
       
-      if (localProgramId) {
+      if (answers?.userId) {
         try {
-          await fetch(`${API_URL}/api/program/day-complete`, {
-            method: 'PATCH',
+          await fetch(`${API_URL}/api/progress`, {
+            method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              programId: localProgramId,
+              userId: answers.userId,
               date: currentDay.date,
-              completedMealsArr: updated,
-              mealReasons: newReasons
+              tasks: buildTasks()
             })
           });
         } catch (error) {
@@ -923,6 +940,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     }
 
     console.log('📊 Причина сохранена:', { type, index, reason: reasonData });
+    // Закрываем модал
+    setShowReasonModal(false);
   };
 
   // Обработчик выбора состояния упражнения (выполнил/не выполнил)
@@ -956,10 +975,14 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     
     if (localProgramId) {
       try {
-        await fetch(`${API_URL}/api/program/day-complete`, {
-          method: 'PATCH',
+        await fetch(`${API_URL}/api/progress`, {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ programId: localProgramId, date: currentDay.date, completedExercises: updated })
+          body: JSON.stringify({
+            userId: localProgramId,
+            date: currentDay.date,
+            tasks: buildTasks()
+          })
         });
         console.log('✅ Статус упражнения обновлен:', { idx, completed });
       } catch (error) {
@@ -1013,8 +1036,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           payload.exerciseReasons = exerciseReasons;
         }
 
-        await fetch(`${API_URL}/api/program/day-complete`, {
-          method: 'PATCH',
+        await fetch(`${API_URL}/api/progress`, {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
@@ -1048,14 +1071,16 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
     const updated = completedMeals.map((v, i) => i === idx ? completed : v);
     setCompletedMeals(updated);
-    
-    if (localProgramId) {
-      await fetch(`${API_URL}/api/program/day-complete`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ programId: localProgramId, date: currentDay.date, completedMealsArr: updated })
-      });
-    }
+    // Явная отправка на backend с актуальным массивом
+    fetch(`${API_URL}/api/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId: localProgramId,
+        date: currentDay.date,
+        tasks: buildTasksWithMeals(updated)
+      })
+    });
   };
 
   async function handleMealChange(idx) {
@@ -1087,21 +1112,14 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     
     if (localProgramId) {
       try {
-        const payload = {
-          programId: localProgramId,
-          date: currentDay.date,
-          completedMealsArr: updated
-        };
-
-        // Добавляем причины невыполнения если есть
-        if (Object.keys(mealReasons).length > 0) {
-          payload.mealReasons = mealReasons;
-        }
-
-        await fetch(`${API_URL}/api/program/day-complete`, {
-          method: 'PATCH',
+        await fetch(`${API_URL}/api/progress`, {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
+          body: JSON.stringify({
+            userId: localProgramId,
+            date: currentDay.date,
+            tasks: buildTasks()
+          })
         });
       } catch (error) {
         console.error('❌ Ошибка обновления статуса приема пищи:', error);
@@ -1230,44 +1248,83 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   }, [currentDay?.date, answers?.userId]);
 
   // --- Новая функция для отправки статуса приема пищи на backend ---
-  const handleMealStatusChange = async (mealId, completed) => {
-    try {
-      // Вместо отдельного запроса — обновляем tasks и отправляем их через основной useEffect
-      setTasks(prev => {
-        const mealTasks = prev.filter(t => t.type === 'meal');
-        const idx = prev.findIndex((t, i) => t.type === 'meal' && mealTasks.indexOf(t) === mealId);
-        if (idx === -1) return prev;
-        const updated = prev.map((t, i) => i === idx ? { ...t, done: completed } : t);
-        console.log('[DEBUG] handleMealStatusChange', mealId, completed, updated);
-        return updated;
+  // Обработчик выбора состояния приема пищи (съел/не съел)
+  const handleMealStatusChange = async (idx, completed) => {
+    console.log('🍽️ handleMealStatusChange вызван:', { idx, completed, type: typeof completed });
+    
+    // Если отмечаем как НЕ съедено - показываем модал с причинами
+    if (!completed) {
+      console.log('❌ Показываем модал причины, так как completed =', completed);
+      const mealName = Array.isArray(aiMeals) && aiMeals[idx] 
+        ? aiMeals[idx].type || aiMeals[idx].name 
+        : `Прием пищи ${idx + 1}`;
+      setReasonModalData({
+        type: 'meal',
+        index: idx,
+        itemName: mealName
       });
-    } catch (e) {
-      console.error('Ошибка сохранения статуса приема пищи:', e);
+      setShowReasonModal(true);
+      return;
     }
+
+    // Если отмечаем как съедено - сразу обновляем
+    if (completed) {
+      console.log('✅ Обновляем статус как съедено, так как completed =', completed);
+      // Убираем причину, если была
+      const newReasons = { ...mealReasons };
+      delete newReasons[idx];
+      setMealReasons(newReasons);
+    }
+
+    const updated = completedMeals.map((v, i) => i === idx ? completed : v);
+    setCompletedMeals(updated);
+    
+    // Добавляем тактильную обратную связь (вибрацию) при успешном выполнении
+    if (completed && navigator.vibrate) {
+      navigator.vibrate(100);
+    }
+    
+    // Отправляем на бэкенд (как в handleExerciseComplete)
+    if (answers?.userId) {
+      try {
+        await fetch(`${API_URL}/api/progress`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: answers.userId,
+            date: currentDay.date,
+            tasks: buildTasks()
+          })
+        });
+        console.log('✅ Статус приема пищи отправлен на бэкенд:', { idx, completed });
+      } catch (error) {
+        console.error('❌ Ошибка отправки статуса приема пищи на бэкенд:', error);
+      }
+    }
+    
+    console.log('✅ Статус приема пищи обновлен:', { idx, completed, updatedArray: updated });
   };
 
-  // --- СИНХРОНИЗАЦИЯ ПРОГРЕССА СТАРЫМ СПОСОБОМ (PATCH /api/user-progress) ---
+  // --- СИНХРОНИЗАЦИЯ ПРОГРЕССА (POST /api/progress) ---
   useEffect(() => {
     if (!answers?.userId || !currentDay?.date) return;
     const payload = {
       userId: answers.userId,
       date: currentDay.date,
-      completedExercises,
-      completedMeals,
-      stepsCompleted: dailySteps >= stepsGoal
+      tasks: buildTasks()
     };
-    fetch(`${API_URL}/api/user-progress`, {
-      method: 'PATCH',
+    fetch(`${API_URL}/api/progress`, {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     })
       .then(res => res.json())
       .then(data => {
         // Можно добавить debug-лог
-        // console.log('[PATCH /api/user-progress] Ответ:', data);
+        // console.log('[POST /api/progress] Ответ:', data);
       })
       .catch(e => {
-        console.error('[PATCH /api/user-progress] Ошибка:', e);
+        console.error('[POST /api/progress] Ошибка:', e);
       });
   }, [completedExercises, completedMeals, dailySteps, stepsGoal, answers?.userId, currentDay?.date]);
 
@@ -1466,9 +1523,9 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         });
       });
     }
-    // Приёмы пищи
-    if (currentDay.meals) {
-      currentDay.meals.forEach((m, i) => {
+    // Приёмы пищи (используем aiMeals вместо currentDay.meals)
+    if (Array.isArray(aiMeals) && aiMeals.length > 0) {
+      aiMeals.forEach((m, i) => {
         tasks.push({
           name: m.type || m.name,
           type: 'meal',
@@ -1482,6 +1539,40 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       name: 'steps',
       type: 'steps',
       done: dailySteps >= stepsGoal,
+      value: dailySteps, // <--- добавлено число шагов
+      reason: dailySteps < stepsGoal ? 'Не достигнута цель по шагам' : undefined
+    });
+    return tasks;
+  }
+
+  // Вспомогательная функция для сборки задач с актуальным completedMeals
+  function buildTasksWithMeals(mealsArr) {
+    const tasks = [];
+    if (currentDay.workout?.exercises) {
+      currentDay.workout.exercises.forEach((ex, i) => {
+        tasks.push({
+          name: ex.name,
+          type: 'workout',
+          done: completedExercises[i] === true,
+          reason: completedExercises[i] === false && exerciseReasons[i] ? exerciseReasons[i] : undefined
+        });
+      });
+    }
+    if (currentDay.meals) {
+      currentDay.meals.forEach((m, i) => {
+        tasks.push({
+          name: m.type || m.name,
+          type: 'meal',
+          done: mealsArr[i] === true,
+          reason: mealsArr[i] === false && mealReasons[i] ? mealReasons[i] : undefined
+        });
+      });
+    }
+    tasks.push({
+      name: 'steps',
+      type: 'steps',
+      done: dailySteps >= stepsGoal,
+      value: dailySteps,
       reason: dailySteps < stepsGoal ? 'Не достигнута цель по шагам' : undefined
     });
     return tasks;
@@ -1689,85 +1780,87 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
               </div>
               
               {stepsError && (
-                <div style={{
-                  background: 'linear-gradient(135deg, #fef3cd 0%, #fef7e0 100%)',
-                  border: '1px solid #f6cc62',
-                  borderRadius: 12,
-                  padding: 16,
-                  marginBottom: 16,
-                  fontSize: 13,
-                  color: '#92400e',
-                  lineHeight: 1.5,
-                  whiteSpace: 'pre-line'
-                }}>
-                  <div style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    marginBottom: 8,
-                    fontWeight: 600 
+                <>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #fef3cd 0%, #fef7e0 100%)',
+                    border: '1px solid #f6cc62',
+                    borderRadius: 12,
+                    padding: 16,
+                    marginBottom: 16,
+                    fontSize: 13,
+                    color: '#92400e',
+                    lineHeight: 1.5,
+                    whiteSpace: 'pre-line'
                   }}>
-                    ℹ️ Информация о подсчете шагов
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      marginBottom: 8,
+                      fontWeight: 600 
+                    }}>
+                      ℹ️ Информация о подсчете шагов
+                    </div>
+                    {stepsError}
+                    
+                    {/* Кнопка для запроса разрешений */}
+                    {!hasStepsPermission && (
+                      <button
+                        onClick={() => setShowStepsPermission(true)}
+                        style={{
+                          marginTop: 12,
+                          padding: '8px 16px',
+                          borderRadius: 8,
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #10b981 0%, #22c55e 100%)',
+                          color: '#fff',
+                          fontSize: 14,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          width: '100%'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.background = 'linear-gradient(135deg, #059669 0%, #16a34a 100%)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.background = 'linear-gradient(135deg, #10b981 0%, #22c55e 100%)';
+                        }}
+                      >
+                        🔐 Разрешить доступ к шагам
+                      </button>
+                    )}
+                                   </div>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 12
+                  }}>
+                    <div style={{ 
+                      fontSize: 16, 
+                      color: '#1a1a1a',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8
+                    }}>
+                      Шаги сегодня
+                      {isLoadingSteps && (
+                        <div style={{
+                          width: 12,
+                          height: 12,
+                          border: '2px solid #e2e8f0',
+                          borderTop: '2px solid #2196f3',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite'
+                        }} />
+                      )}
+                      <span style={{ marginLeft: 8, color: '#64748b', fontSize: 13 }}>
+                        {`Осталось ${(stepsGoal - dailySteps).toLocaleString()} шагов до цели`}
+                      </span>
+                    </div>
                   </div>
-                  {stepsError}
-                  
-                  {/* Кнопка для запроса разрешений */}
-                  {!hasStepsPermission && (
-                    <button
-                      onClick={() => setShowStepsPermission(true)}
-                      style={{
-                        marginTop: 12,
-                        padding: '8px 16px',
-                        borderRadius: 8,
-                        border: 'none',
-                        background: 'linear-gradient(135deg, #10b981 0%, #22c55e 100%)',
-                        color: '#fff',
-                        fontSize: 14,
-                        fontWeight: 600,
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        width: '100%'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.target.style.background = 'linear-gradient(135deg, #059669 0%, #16a34a 100%)';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.target.style.background = 'linear-gradient(135deg, #10b981 0%, #22c55e 100%)';
-                      }}
-                    >
-                      🔐 Разрешить доступ к шагам
-                    </button>
-                  )}
-                </div>
+                </>
               )}
-              
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: 12
-              }}>
-                <div style={{ 
-                  fontSize: 16, 
-                  color: '#1a1a1a',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8
-                }}>
-                  Шаги сегодня
-                  {isLoadingSteps && (
-                    <div style={{
-                      width: 12,
-                      height: 12,
-                      border: '2px solid #e2e8f0',
-                      borderTop: '2px solid #2196f3',
-                      borderRadius: '50%',
-                      animation: 'spin 1s linear infinite'
-                    }} />
-                  )}
-                </div>
-                  `Осталось ${(stepsGoal - dailySteps).toLocaleString()} шагов до цели`
-                }
-              </div>
               
               {/* Информация об источнике данных */}
               <div style={{
@@ -1928,6 +2021,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                     <MealCard
                       key={meal.type + idx}
                       meal={meal}
+                      index={idx}
                       isCompleted={completedMeals[idx] ?? null}
                       onStatusChange={handleMealStatusChange}
                       style={{ marginBottom: 18 }}

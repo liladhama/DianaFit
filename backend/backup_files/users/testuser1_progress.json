@@ -1,0 +1,80 @@
+{
+  "workouts": 0,
+  "nutrition": 0,
+  "details": {
+    "meals": {
+      "breakfast": 0,
+      "lunch": 0,
+      "dinner": 0,
+      "snacks": 0
+    },
+    "weeklyProgress": [],
+    "commonIssues": [],
+    "improvements": {
+      "weekOverWeek": 0,
+      "trend": "up"
+    }
+  },
+  "lastUpdate": "2025-07-07T05:48:28.556Z",
+  "dailyProgress": {
+    "2025-07-07": {
+      "ate": false,
+      "workout": false,
+      "tasks": [
+        {
+          "name": "Динамическая планка",
+          "type": "workout",
+          "done": false
+        },
+        {
+          "name": "Скручивания лёжа",
+          "type": "workout",
+          "done": false
+        },
+        {
+          "name": "Прыгающий джек",
+          "type": "workout",
+          "done": false
+        },
+        {
+          "name": "Приседания широкой постановкой",
+          "type": "workout",
+          "done": true
+        },
+        {
+          "name": "Завтрак",
+          "type": "meal",
+          "done": false
+        },
+        {
+          "name": "Перекус",
+          "type": "meal",
+          "done": false
+        },
+        {
+          "name": "Обед",
+          "type": "meal",
+          "done": true
+        },
+        {
+          "name": "Полдник",
+          "type": "meal",
+          "done": true
+        },
+        {
+          "name": "Ужин",
+          "type": "meal",
+          "done": true
+        },
+        {
+          "name": "steps",
+          "type": "steps",
+          "done": false,
+          "value": 0,
+          "reason": "Не достигнута цель по шагам"
+        }
+      ],
+      "updatedAt": "2025-07-07T05:52:20.691Z"
+    }
+  }
+}

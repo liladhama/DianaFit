@@ -1,14 +1,14 @@
 {
-  "name": "dsfg",
+  "name": "asdf",
   "sex": "male",
-  "height_cm": 176,
-  "weight_kg": 100,
+  "height_cm": 183,
+  "weight_kg": 99,
   "gym_or_home": "home",
   "training_level": "beginner",
-  "activity_coef": 1.725,
+  "activity_coef": 1.2,
   "workouts_per_week": 5,
-  "diet_flags": "vegan",
+  "diet_flags": "fish",
   "userId": "testuser1",
-  "age": 30,
-  "goal": 5
+  "age": 28,
+  "goal": 3
 }

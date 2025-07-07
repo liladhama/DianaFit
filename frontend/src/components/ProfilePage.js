@@ -129,7 +129,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
     const fetchProgress = async () => {
       try {
         const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'default';
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user-progress/${userId}`);
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/progress/${userId}`);
         if (!response.ok) throw new Error('Failed to fetch progress');
         const data = await response.json();
         setProgressData(data);
