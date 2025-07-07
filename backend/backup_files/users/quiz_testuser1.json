@@ -1,13 +1,13 @@
 {
-  "name": "asdf",
+  "name": "ываа",
   "sex": "male",
-  "height_cm": 183,
-  "weight_kg": 99,
+  "height_cm": 179,
+  "weight_kg": 98,
   "gym_or_home": "home",
   "training_level": "beginner",
   "activity_coef": 1.2,
   "workouts_per_week": 5,
-  "diet_flags": "fish",
+  "diet_flags": "meat",
   "userId": "testuser1",
   "age": 28,
   "goal": 3

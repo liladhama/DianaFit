@@ -8,7 +8,8 @@ const ExerciseCard = ({
   isCompleted, 
   onStatusChange, 
   videoComponent,
-  style = {}
+  style = {},
+  reason // <--- добавлено
 }) => {
   const handleStatusChange = (completed) => {
     onStatusChange(index, completed);
@@ -119,6 +120,11 @@ const ExerciseCard = ({
           border: `1px solid ${isCompleted ? '#bbf7d0' : '#fecaca'}`
         }}>
           {isCompleted ? '✅ Упражнение выполнено' : '❌ Упражнение пропущено'}
+          {!isCompleted && reason && (
+            <div style={{ marginTop: 6, color: '#991b1b', fontSize: 12, fontStyle: 'italic' }}>
+              Причина: {typeof reason === 'object' ? (reason.text || JSON.stringify(reason)) : reason}
+            </div>
+          )}
         </div>
       )}
     </div>

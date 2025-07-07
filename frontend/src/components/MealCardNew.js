@@ -8,7 +8,8 @@ const MealCard = ({
   onStatusChange,
   style = {},
   selectedIdx = 0,
-  setSelectedIdx = () => {}
+  setSelectedIdx = () => {},
+  reason // <--- добавлено
 }) => {
   // AI-режим: если есть несколько вариантов (options)
   const isAI = Array.isArray(meal.options) && meal.options.length > 0;
@@ -376,6 +377,11 @@ const MealCard = ({
           border: `1px solid ${completed ? '#bbf7d0' : '#fecaca'}`
         }}>
           {completed ? '✅ Прием пищи выполнен' : '❌ Прием пищи пропущен'}
+          {!completed && reason && (
+            <div style={{ marginTop: 6, color: '#991b1b', fontSize: 12, fontStyle: 'italic' }}>
+              Причина: {typeof reason === 'object' ? (reason.text || JSON.stringify(reason)) : reason}
+            </div>
+          )}
         </div>
       )}
     </div>

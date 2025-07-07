@@ -15,7 +15,7 @@
       "trend": "up"
     }
   },
-  "lastUpdate": "2025-07-07T04:39:03.861Z",
+  "lastUpdate": "2025-07-07T07:34:18.179Z",
   "dailyProgress": {
     "2025-07-07": {
       "ate": false,
@@ -39,22 +39,40 @@
         {
           "name": "Приседания широкой постановкой",
           "type": "workout",
-          "done": false
+          "done": false,
+          "reason": {
+            "id": "sick",
+            "text": "🤒 Плохо себя чувствую",
+            "category": "health",
+            "timestamp": "2025-07-07T07:33:38.526Z"
+          }
         },
         {
           "name": "Завтрак",
           "type": "meal",
-          "done": false
+          "done": true
         },
         {
           "name": "Перекус",
           "type": "meal",
-          "done": false
+          "done": false,
+          "reason": {
+            "id": "expensive",
+            "text": "💰 Слишком дорого",
+            "category": "budget",
+            "timestamp": "2025-07-07T07:33:58.637Z"
+          }
         },
         {
           "name": "Обед",
           "type": "meal",
-          "done": false
+          "done": false,
+          "reason": {
+            "id": "dont_like",
+            "text": "😖 Не нравится вкус",
+            "category": "preference",
+            "timestamp": "2025-07-07T07:34:11.506Z"
+          }
         },
         {
           "name": "Полдник",
@@ -74,7 +92,7 @@
           "reason": "Не достигнута цель по шагам"
         }
       ],
-      "updatedAt": "2025-07-07T05:50:01.818Z"
+      "updatedAt": "2025-07-07T07:34:18.179Z"
     }
   }
 }

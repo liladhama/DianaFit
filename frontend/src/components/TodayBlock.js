@@ -891,12 +891,10 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       console.log('🏋️ Обрабатываем причину для упражнения:', { index, reasonData });
       // Сохраняем причину невыполнения упражнения
       const newReasons = { ...exerciseReasons, [index]: reasonData };
-      setExerciseReasons(newReasons);
-      
-      // Отмечаем упражнение как НЕ выполнено
       const updated = completedExercises.map((v, i) => i === index ? false : v);
+      setExerciseReasons(newReasons);
       setCompletedExercises(updated);
-      
+      // Отправляем на бэкенд с актуальными данными
       if (answers?.userId) {
         try {
           await fetch(`${API_URL}/api/progress`, {
@@ -905,7 +903,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
             body: JSON.stringify({
               userId: answers.userId,
               date: currentDay.date,
-              tasks: buildTasks()
+              tasks: buildTasksWithCustomExercises(updated, newReasons)
             })
           });
         } catch (error) {
@@ -1578,6 +1576,39 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     return tasks;
   }
 
+  // Добавить функцию:
+  function buildTasksWithCustomExercises(customExercises, customReasons) {
+    const tasks = [];
+    if (currentDay.workout?.exercises) {
+      currentDay.workout.exercises.forEach((ex, i) => {
+        tasks.push({
+          name: ex.name,
+          type: 'workout',
+          done: customExercises[i] === true,
+          reason: customExercises[i] === false && customReasons[i] ? customReasons[i] : undefined
+        });
+      });
+    }
+    if (Array.isArray(aiMeals) && aiMeals.length > 0) {
+      aiMeals.forEach((m, i) => {
+        tasks.push({
+          name: m.type || m.name,
+          type: 'meal',
+          done: completedMeals[i] === true,
+          reason: completedMeals[i] === false && mealReasons[i] ? mealReasons[i] : undefined
+        });
+      });
+    }
+    tasks.push({
+      name: 'steps',
+      type: 'steps',
+      done: dailySteps >= stepsGoal,
+      value: dailySteps,
+      reason: dailySteps < stepsGoal ? 'Не достигнута цель по шагам' : undefined
+    });
+    return tasks;
+  }
+
   // Сохраняем задачи на backend при каждом изменении (только после загрузки)
   useEffect(() => {
     if (!isLoaded || !answers?.userId || !currentDay?.date) return;
@@ -1740,39 +1771,23 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                     fontSize: 11,
                     fontWeight: 500,
                     fontFamily: 'Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-                    color: isLoadingSteps ? '#64748b' : '#ffffff',
+                                       color: isLoadingSteps ? '#666' : '#fff',
                     cursor: isLoadingSteps ? 'not-allowed' : 'pointer',
-                    transition: 'all 0.2s ease',
-                    boxShadow: isLoadingSteps 
-                      ? '0 1px 3px rgba(0, 0, 0, 0.1)'
-                      : '0 2px 6px rgba(79, 70, 229, 0.25)',
-                    letterSpacing: '0.2px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: 4,
-                    outline: 'none',
-                    height: 28
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isLoadingSteps) {
-                      e.target.style.boxShadow = '0 3px 8px rgba(79, 70, 229, 0.35)';
-                      e.target.style.background = 'linear-gradient(135deg, #5B52F0 0%, #7C3AED 100%)';
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isLoadingSteps) {
-                      e.target.style.boxShadow = '0 2px 6px rgba(79, 70, 229, 0.25)';
-                      e.target.style.background = 'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)';
-                    }
+                    gap: 4
                   }}
                 >
-                  <span style={{
-                    display: 'inline-block',
-                    animation: isLoadingSteps ? 'spin 1s linear infinite' : 'none',
-                    fontSize: 10
-                  }}>
-                    {isLoadingSteps ? '⟳' : '🔄'}
-                  </span>
+                  {isLoadingSteps && (
+                    <div style={{
+                      width: 12,
+                      height: 12,
+                      border: '2px solid #e2e8f0',
+                      borderTop: '2px solid #2196f3',
+                      borderRadius: '50%',
+                      animation: 'spin 1s linear infinite'
+                    }} />
+                  )}
                   <span style={{ fontSize: 11 }}>
                     {isLoadingSteps ? 'Обновление' : 'Обновить'}
                   </span>
@@ -1962,10 +1977,11 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                         isCompleted={(() => {
                           const value = completedExercises[i] ?? null; // Защита от undefined
                           console.log(`🏋️ Передаем в ExerciseCard[${i}]: исходное=${completedExercises[i]}, обработанное=${value}, typeof=${typeof value}, completedExercises.length=${completedExercises.length}`);
-                                                                                                     return value;
+                          return value;
                         })()}
                         onStatusChange={handleExerciseComplete}
                         videoComponent={videoComponent}
+                        reason={exerciseReasons[i]}
                       />
                     );
                   })}
@@ -2027,6 +2043,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                       style={{ marginBottom: 18 }}
                       selectedIdx={selectedIdx}
                       setSelectedIdx={setIdx}
+                      reason={mealReasons[idx]}
                     />
                   );
                 })}
