@@ -311,7 +311,14 @@ const MealCard = ({
                 borderRadius: 4,
                 fontSize: 11
               }}>
-                {typeof ingredient.amount === 'number' ? Math.round(ingredient.amount / 5) * 5 : ingredient.amount} {ingredient.unit}
+                {typeof ingredient.amount === 'number'
+                  ? (["г", "мл"].includes(ingredient.unit)
+                      ? Math.round(ingredient.amount / 5) * 5
+                      : (["щепотка", "ч.л.", "ст.л.", "кусочек", "ломтик", "стебель", "зубчик", "шт"].includes(ingredient.unit)
+                          ? (Math.round(ingredient.amount * 10) / 10).toString().replace(".0", "")
+                          : ingredient.amount)
+                    )
+                  : ingredient.amount} {ingredient.unit}
               </span>
             </div>
           ))}

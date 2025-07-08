@@ -1275,7 +1275,6 @@ function getDefaultGramWeight(name) {
 
 function scaleRecipeToTargets(recipe, target) {
   if (!recipe || !target) return recipe;
-  // Если у рецепта нет информации о БЖУ, возвращаем как есть
   if (
     typeof recipe.calories !== 'number' ||
     typeof recipe.protein !== 'number' ||
@@ -1284,11 +1283,14 @@ function scaleRecipeToTargets(recipe, target) {
   ) {
     return recipe;
   }
-  // Определяем коэффициент масштабирования по калориям
   const scale = target.calories / recipe.calories;
-  // --- Маппинг типовых весов для хлеба и подобных продуктов ---
   const breadKeywords = ['хлеб', 'батон', 'булка', 'багет', 'тост'];
-  const breadTypicalWeight = 35; // 1 кусочек хлеба = 35 г
+  const breadTypicalWeight = 35;
+  const NON_SCALABLE_INGREDIENTS = [
+    'лимонный сок', 'соль', 'перец', 'паприка', 'корица', 'зира', 'тимьян', 'мускатный орех',
+    'розмарин', 'базилик', 'укроп', 'петрушка', 'горчица', 'карри', 'куркума', 'приправа', 'специи',
+    'соевый соус', 'чеснок', 'лук', 'зелень', 'лавровый лист', 'ваниль', 'сахарозаменитель', 'мёд', 'сироп', 'экстракт'
+  ];
   // Масштабируем БЖУ и ингредиенты
   return {
     ...recipe,
@@ -1296,48 +1298,82 @@ function scaleRecipeToTargets(recipe, target) {
     protein: Math.round(recipe.protein * scale),
     fat: Math.round(recipe.fat * scale),
     carbs: Math.round(recipe.carbs * scale),
-    // Если есть ингредиенты с количеством, масштабируем их
     ingredients: Array.isArray(recipe.ingredients)
-      ? recipe.ingredients.map(ing => {
-          // Всегда в граммах для овощей/фруктов/зелени
-          if (typeof ing.name === 'string' && isGramOnlyIngredient(ing.name)) {
-            let baseAmount = ing.amount;
-            if ((baseAmount === 1 || !baseAmount) && (!ing.unit || ing.unit === 'шт')) {
-              baseAmount = getDefaultGramWeight(ing.name);
+      ? recipe.ingredients
+          .map(ing => {
+            // --- Не масштабируем малые ингредиенты ---
+            if (typeof ing.name === 'string' && NON_SCALABLE_INGREDIENTS.some(key => ing.name.toLowerCase().includes(key))) {
+              // Для специй и приправ с unit 'щепотка' — всегда минимум 1
+              if (["щепотка"].includes(ing.unit)) {
+                let amt = Math.round(ing.amount * Math.min(scale, 2));
+                if (!ing.amount || amt < 1) amt = 1;
+                return { ...ing, amount: amt, unit: ing.unit };
+              }
+              // Для 'ч.л.', 'ст.л.', 'кусочек', 'ломтик', 'стебель', 'зубчик' — минимум 0.5
+              if (["ч.л.", "ст.л.", "кусочек", "ломтик", "стебель", "зубчик"].includes(ing.unit)) {
+                let amt = Math.round(ing.amount * Math.min(scale, 2) * 10) / 10;
+                if (!ing.amount || amt < 0.5) amt = 0.5;
+                return { ...ing, amount: amt, unit: ing.unit };
+              }
+              // Для unit 'шт' и name содержит 'яйцо' или 'лаваш' — всегда минимум 1
+              if (ing.unit === 'шт' && (ing.name.toLowerCase().includes('яйцо') || ing.name.toLowerCase().includes('лаваш'))) {
+                let amt = Math.round(ing.amount * Math.min(scale, 2));
+                if (!ing.amount || amt < 1) amt = 1;
+                return { ...ing, amount: amt, unit: ing.unit };
+              }
+              // Масштабируем максимум в 2 раза и ограничиваем верхний предел для жидкостей и специй
+              let amt = Math.round(ing.amount * Math.min(scale, 2));
+              if (ing.unit === 'мл' || ing.unit === 'г') {
+                amt = Math.min(amt, 30);
+              }
+              if (amt < 0.5) amt = 0.5; // не допускаем 0 для специй
+              return { ...ing, amount: amt, unit: ing.unit };
             }
-            let grams = Math.round((baseAmount || 100) * scale);
-            if (grams <= 0) grams = getDefaultGramWeight(ing.name);
-            // Исправляем подозрительно маленькие значения
-            if (grams < 10) grams = getDefaultGramWeight(ing.name);
-            return {
-              ...ing,
-              amount: grams,
-              unit: 'г'
-            };
-          }
-          // Для хлеба и подобных продуктов всегда граммы
-          if (typeof ing.name === 'string' && breadKeywords.some(k => ing.name.toLowerCase().includes(k))) {
-            let grams = 0;
-            if (ing.unit && ['кусочек', 'ломтик', 'шт', 'piece', 'slice'].includes(ing.unit)) {
-              grams = Math.round((ing.amount || 1) * breadTypicalWeight * scale);
-            } else if (ing.unit === 'г' || !ing.unit) {
-              grams = Math.round((ing.amount || breadTypicalWeight) * scale);
+            // Всегда в граммах для овощей/фруктов/зелени
+            if (typeof ing.name === 'string' && isGramOnlyIngredient(ing.name)) {
+              let baseAmount = ing.amount;
+              if ((baseAmount === 1 || !baseAmount) && (!ing.unit || ing.unit === 'шт')) {
+                baseAmount = getDefaultGramWeight(ing.name);
+              }
+              let grams = Math.round((baseAmount || 100) * scale);
+              if (grams <= 0) grams = getDefaultGramWeight(ing.name);
+              if (grams < 10) grams = getDefaultGramWeight(ing.name);
+              return {
+                ...ing,
+                amount: grams,
+                unit: 'г'
+              };
             }
-            if (grams < 10) grams = breadTypicalWeight;
-            return {
-              ...ing,
-              amount: grams,
-              unit: 'г'
-            };
-          }
-          // Для других ингредиентов с числовым amount
-          if (typeof ing.amount === 'number') {
-            let amt = Math.round(ing.amount * scale);
-            if (amt < 0) amt = 0;
-            return { ...ing, amount: amt };
-          }
-          return ing;
-        })
+            // Для хлеба и подобных продуктов всегда граммы
+            if (typeof ing.name === 'string' && breadKeywords.some(k => ing.name.toLowerCase().includes(k))) {
+              let grams = 0;
+              if (ing.unit && ['кусочек', 'ломтик', 'шт', 'piece', 'slice'].includes(ing.unit)) {
+                grams = Math.round((ing.amount || 1) * breadTypicalWeight * scale);
+              } else if (ing.unit === 'г' || !ing.unit) {
+                grams = Math.round((ing.amount || breadTypicalWeight) * scale);
+              }
+              if (grams < 10) grams = breadTypicalWeight;
+              return {
+                ...ing,
+                amount: grams,
+                unit: 'г'
+              };
+            }
+            // Для unit 'шт' (кроме "яйцо"/"лаваш") — минимум 1
+            if (ing.unit === 'шт') {
+              let amt = Math.round(ing.amount * scale * 10) / 10;
+              if (!ing.amount || amt < 1) amt = 1;
+              return { ...ing, amount: amt, unit: ing.unit };
+            }
+            // Для других ингредиентов с числовым amount
+            if (typeof ing.amount === 'number') {
+              let amt = Math.round(ing.amount * scale * 10) / 10;
+              if (amt < 0.01) return null; // исключаем нули и отрицательные
+              return { ...ing, amount: amt };
+            }
+            return ing;
+          })
+          .filter(ing => ing && ing.amount > 0) // фильтрация нулей и null
       : recipe.ingredients
   };
 }

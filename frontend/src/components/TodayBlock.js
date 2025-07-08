@@ -243,10 +243,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   });
   const [stepsGoal] = useState(() => {
     const goal = currentDay.dailyStepsGoal || 10000;
-    
     // Принудительно устанавливаем 10000, если цель меньше или больше разумных пределов
-    const correctedGoal = (goal < 5000 || goal > 15000) ? 10000 : goal;
-    
+    const correctedGoal = (goal < 10000 || goal > 15000) ? 10000 : goal;
     console.log('🎯 Устанавливаем цель по шагам:', {
       originalGoal: goal,
       correctedGoal,
@@ -1229,7 +1227,27 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       const data = await res.json();
       if (data && (Array.isArray(data.tasks) || data.completedMealsArr || data.completedExercises)) {
         // Если tasks есть — используем их для tasks-based UI
-        if (Array.isArray(data.tasks)) setTasks(data.tasks);
+        if (Array.isArray(data.tasks)) {
+          setTasks(data.tasks);
+          // Парсим задачи для восстановления статусов и причин
+          const mealStates = [];
+          const mealReasonsObj = {};
+          const exerciseStates = [];
+          const exerciseReasonsObj = {};
+          data.tasks.forEach((task, idx) => {
+            if (task.type === 'meal') {
+              mealStates.push(task.done === true ? true : task.done === false ? false : null);
+              if (task.reason) mealReasonsObj[mealStates.length - 1] = task.reason;
+            } else if (task.type === 'workout') {
+              exerciseStates.push(task.done === true ? true : task.done === false ? false : null);
+              if (task.reason) exerciseReasonsObj[exerciseStates.length - 1] = task.reason;
+            }
+          });
+          if (mealStates.length) setCompletedMeals(mealStates);
+          if (Object.keys(mealReasonsObj).length) setMealReasons(mealReasonsObj);
+          if (exerciseStates.length) setCompletedExercises(exerciseStates);
+          if (Object.keys(exerciseReasonsObj).length) setExerciseReasons(exerciseReasonsObj);
+        }
         // Для обратной совместимости:
         if (data.completedMealsArr) setCompletedMeals(data.completedMealsArr);
         if (data.completedExercises) setCompletedExercises(data.completedExercises);

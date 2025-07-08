@@ -2,7 +2,7 @@
  * Утилиты для работы с рецептами и планом питания
  */
 
-import { recipesDB } from './recipesDB.js';
+import recipes from './recipesDB.js';
 import { callMistralAI } from './aiUtils.js';
 import { ingredientCalories } from './ingredientCalories.js';
 
@@ -135,8 +135,8 @@ function normalizeRecipeIngredients(recipe) {
 
 // Применяем нормализацию к базе рецептов при инициализации
 const normalizedRecipesDB = {};
-for (const type in recipesDB) {
-    normalizedRecipesDB[type] = recipesDB[type].map(normalizeRecipeIngredients);
+for (const type in recipes) {
+    normalizedRecipesDB[type] = recipes[type].map(normalizeRecipeIngredients);
 }
 
 const recipeUtils = {

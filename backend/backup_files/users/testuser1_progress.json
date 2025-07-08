@@ -15,81 +15,12 @@
       "trend": "up"
     }
   },
-  "lastUpdate": "2025-07-07T07:33:48.187Z",
+  "lastUpdate": "2025-07-08T02:47:45.474Z",
   "dailyProgress": {
-    "2025-07-07": {
+    "2025-07-08": {
       "ate": false,
       "workout": false,
       "tasks": [
-        {
-          "name": "Динамическая планка",
-          "type": "workout",
-          "done": false
-        },
-        {
-          "name": "Скручивания лёжа",
-          "type": "workout",
-          "done": true
-        },
-        {
-          "name": "Прыгающий джек",
-          "type": "workout",
-          "done": false,
-          "reason": {
-            "id": "injury",
-            "text": "🤕 Травма/боль",
-            "category": "health",
-            "timestamp": "2025-07-07T07:34:30.738Z"
-          }
-        },
-        {
-          "name": "Приседания широкой постановкой",
-          "type": "workout",
-          "done": false,
-          "reason": {
-            "id": "sick",
-            "text": "🤒 Плохо себя чувствую",
-            "category": "health",
-            "timestamp": "2025-07-07T07:33:38.526Z"
-          }
-        },
-        {
-          "name": "Завтрак",
-          "type": "meal",
-          "done": true
-        },
-        {
-          "name": "Перекус",
-          "type": "meal",
-          "done": false,
-          "reason": {
-            "id": "expensive",
-            "text": "💰 Слишком дорого",
-            "category": "budget",
-            "timestamp": "2025-07-07T07:33:58.637Z"
-          }
-        },
-        {
-          "name": "Обед",
-          "type": "meal",
-          "done": false,
-          "reason": {
-            "id": "dont_like",
-            "text": "😖 Не нравится вкус",
-            "category": "preference",
-            "timestamp": "2025-07-07T07:34:11.506Z"
-          }
-        },
-        {
-          "name": "Полдник",
-          "type": "meal",
-          "done": false
-        },
-        {
-          "name": "Ужин",
-          "type": "meal",
-          "done": false
-        },
         {
           "name": "steps",
           "type": "steps",
@@ -98,7 +29,7 @@
           "reason": "Не достигнута цель по шагам"
         }
       ],
-      "updatedAt": "2025-07-07T07:34:30.749Z"
+      "updatedAt": "2025-07-08T02:47:45.478Z"
     }
   }
 }

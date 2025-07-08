@@ -51,4 +51,24 @@ router.get('/summary', (req, res) => {
     }
 });
 
+// Получить прогресс по userId (для ProfilePage.js)
+router.get('/:userId', (req, res) => {
+    const { userId } = req.params;
+    if (!userId) {
+        return res.status(400).json({ error: 'userId обязателен' });
+    }
+    try {
+        const logger = new UserProgressLogger(userId);
+        // Можно возвращать прогресс за сегодня или summary, по желанию:
+        // const today = new Date().toISOString().slice(0, 10);
+        // const progress = logger.getDayProgress(today);
+        // res.json(progress);
+        // Или возвращать весь лог:
+        const log = logger.loadLog();
+        res.json(log);
+    } catch (e) {
+        res.status(500).json({ error: 'Ошибка получения прогресса' });
+    }
+});
+
 export default router;
