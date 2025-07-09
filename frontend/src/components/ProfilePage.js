@@ -87,7 +87,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
     const fetchNutritionFromBackend = async () => {
       try {
         const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'testuser1';
-        const response = await fetch(`/api/user/nutrition/${userId}`);
+        const response = await fetch(`http://localhost:3001/api/user/nutrition/${userId}`);
         if (response.ok) {
           const data = await response.json();
           console.log('Nutrition data from backend:', data);
@@ -140,51 +140,13 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
     const fetchProgress = async () => {
       try {
         const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'testuser1';
-        const response = await fetch(`/api/user/progress/${userId}`);
+        const response = await fetch(`http://localhost:3001/api/user-progress/${userId}`);
         if (!response.ok) throw new Error('Failed to fetch progress');
         const data = await response.json();
         
-        // Рассчитываем прогресс на основе данных из файла
-        const calculateProgress = (progressData) => {
-          const dailyProgress = progressData.dailyProgress || {};
-          const totalDays = Object.keys(dailyProgress).length;
-          
-          if (totalDays === 0) {
-            return { workouts: 0, nutrition: 0 };
-          }
-          
-          let completedMeals = 0;
-          let totalMeals = 0;
-          let completedWorkouts = 0;
-          let totalWorkouts = 0;
-          
-          Object.values(dailyProgress).forEach(day => {
-            if (day.ate !== undefined) {
-              totalMeals++;
-              if (day.ate) completedMeals++;
-            }
-            if (day.workout !== undefined) {
-              totalWorkouts++;
-              if (day.workout) completedWorkouts++;
-            }
-          });
-          
-          const nutritionProgress = totalMeals > 0 ? Math.round((completedMeals / totalMeals) * 100) : 0;
-          const workoutProgress = totalWorkouts > 0 ? Math.round((completedWorkouts / totalWorkouts) * 100) : 0;
-          
-          return {
-            workouts: workoutProgress,
-            nutrition: nutritionProgress
-          };
-        };
-        
-        const calculatedProgress = calculateProgress(data);
         console.log('Progress data from backend:', data);
-        console.log('Calculated progress:', calculatedProgress);
-        setProgressData({
-          ...data,
-          ...calculatedProgress
-        });
+        // Используем данные прогресса напрямую с бэкенда (без пересчета на фронте)
+        setProgressData(data);
       } catch (error) {
         console.error('Error fetching progress:', error);
       }
@@ -565,7 +527,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                   // Обновляем КБЖУ с бэкенда при изменении настроек
                   if (changes.weight || changes.height || changes.age || changes.activity_level || changes.goal) {
                     try {
-                      const response = await fetch(`/api/user/nutrition/${userId}`);
+                      const response = await fetch(`http://localhost:3001/api/user/nutrition/${userId}`);
                       if (response.ok) {
                         const data = await response.json();
                         setNutritionInfo(data);
@@ -643,7 +605,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                         fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
                         margin: 0
                       }}>
-                        Соблюдение диеты
+                        Приемы пищи в неделю
                       </p>
                     </div>
                   </div>
@@ -738,7 +700,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                         fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
                         margin: 0
                       }}>
-                        Выполнение планов
+                        Задания в неделю
                       </p>
                     </div>
                   </div>

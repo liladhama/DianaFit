@@ -114,6 +114,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   // Флаг загрузки статусов с backend
   const [isLoaded, setIsLoaded] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true); // Новый флаг для первоначальной загрузки
   // Массив задач (только реальные статусы)
   const [tasks, setTasks] = useState([]);
 
@@ -1221,10 +1222,18 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   // Функция для загрузки статусов выполнения дня с backend
   const fetchDayStatus = async () => {
-    if (!answers?.userId || !currentDay?.date) return;
+    if (!answers?.userId || !currentDay?.date) {
+      setIsInitialLoading(false); // Устанавливаем флаг даже если нет userId
+      return;
+    }
+    
     try {
+      console.log('🔄 Загружаем статусы дня:', { userId: answers.userId, date: currentDay.date });
       const res = await fetch(`${API_URL}/api/progress?userId=${answers.userId}&date=${currentDay.date}`);
       const data = await res.json();
+      
+      console.log('📥 Получены данные с сервера:', data);
+      
       if (data && (Array.isArray(data.tasks) || data.completedMealsArr || data.completedExercises)) {
         // Если tasks есть — используем их для tasks-based UI
         if (Array.isArray(data.tasks)) {
@@ -1243,22 +1252,38 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
               if (task.reason) exerciseReasonsObj[exerciseStates.length - 1] = task.reason;
             }
           });
+          
+          console.log('🍽️ Восстановленные состояния питания:', mealStates);
+          console.log('🏋️ Восстановленные состояния упражнений:', exerciseStates);
+          
           if (mealStates.length) setCompletedMeals(mealStates);
           if (Object.keys(mealReasonsObj).length) setMealReasons(mealReasonsObj);
           if (exerciseStates.length) setCompletedExercises(exerciseStates);
           if (Object.keys(exerciseReasonsObj).length) setExerciseReasons(exerciseReasonsObj);
         }
         // Для обратной совместимости:
-        if (data.completedMealsArr) setCompletedMeals(data.completedMealsArr);
-        if (data.completedExercises) setCompletedExercises(data.completedExercises);
+        if (data.completedMealsArr) {
+          console.log('🍽️ Устанавливаем completedMealsArr:', data.completedMealsArr);
+          setCompletedMeals(data.completedMealsArr);
+        }
+        if (data.completedExercises) {
+          console.log('🏋️ Устанавливаем completedExercises:', data.completedExercises);
+          setCompletedExercises(data.completedExercises);
+        }
       }
+      
+      setIsInitialLoading(false); // Завершаем первоначальную загрузку
+      console.log('✅ Статусы дня загружены успешно');
+      
     } catch (e) {
-      console.error('Ошибка загрузки статусов дня:', e);
+      console.error('❌ Ошибка загрузки статусов дня:', e);
+      setIsInitialLoading(false); // Завершаем загрузку даже при ошибке
     }
   };
 
   // Загружаем статусы при смене дня
   useEffect(() => {
+    setIsInitialLoading(true); // Сбрасываем флаг при смене дня
     fetchDayStatus();
     // eslint-disable-next-line
   }, [currentDay?.date, answers?.userId]);
@@ -1323,12 +1348,27 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   // --- СИНХРОНИЗАЦИЯ ПРОГРЕССА (POST /api/progress) ---
   useEffect(() => {
+    // Не отправляем данные, пока не завершена первоначальная загрузка
+    if (isInitialLoading) {
+      console.log('⏳ Пропускаем синхронизацию - идет первоначальная загрузка');
+      return;
+    }
+    
     if (!answers?.userId || !currentDay?.date) return;
+    
+    console.log('🔄 Синхронизируем прогресс с сервером:', {
+      completedMeals,
+      completedExercises,
+      userId: answers.userId,
+      date: currentDay.date
+    });
+    
     const payload = {
       userId: answers.userId,
       date: currentDay.date,
       tasks: buildTasks()
     };
+    
     fetch(`${API_URL}/api/progress`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1336,13 +1376,12 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     })
       .then(res => res.json())
       .then(data => {
-        // Можно добавить debug-лог
-        // console.log('[POST /api/progress] Ответ:', data);
+        console.log('✅ Прогресс синхронизирован с сервером:', data);
       })
       .catch(e => {
-        console.error('[POST /api/progress] Ошибка:', e);
+        console.error('❌ Ошибка синхронизации прогресса:', e);
       });
-  }, [completedExercises, completedMeals, dailySteps, stepsGoal, answers?.userId, currentDay?.date]);
+  }, [completedExercises, completedMeals, dailySteps, stepsGoal, answers?.userId, currentDay?.date, isInitialLoading]);
 
   // --- UI: Верхняя панель ---
   // Кнопка Диана АИ (слева)
@@ -2052,17 +2091,18 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                     });
                   };
                   return (
-                    <MealCard
-                      key={meal.type + idx}
-                      meal={meal}
-                      index={idx}
-                      isCompleted={completedMeals[idx] ?? null}
-                      onStatusChange={handleMealStatusChange}
-                      style={{ marginBottom: 18 }}
-                      selectedIdx={selectedIdx}
-                      setSelectedIdx={setIdx}
-                      reason={mealReasons[idx]}
-                    />
+                    <div key={meal.type + idx}>
+                      <MealCard
+                        meal={meal}
+                        index={idx}
+                        isCompleted={completedMeals[idx] ?? null}
+                        onStatusChange={handleMealStatusChange}
+                        style={{ marginBottom: 18 }}
+                        selectedIdx={selectedIdx}
+                        setSelectedIdx={setIdx}
+                        reason={mealReasons[idx]}
+                      />
+                    </div>
                   );
                 })}
               </div>

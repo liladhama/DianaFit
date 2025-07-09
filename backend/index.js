@@ -1040,27 +1040,10 @@ app.get('/api/user/progress', async (req, res) => {
 app.get('/api/user/progress/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        
-        // Читаем файл прогресса пользователя
-        const progressFile = path.join(__dirname, 'backup_files', 'users', `${userId}_progress.json`);
-        
-        if (!fs.existsSync(progressFile)) {
-            // Если файла прогресса нет, возвращаем пустые данные
-            return res.json({
-                workouts: 0,
-                nutrition: 0,
-                details: {
-                    meals: { breakfast: 0, lunch: 0, dinner: 0, snacks: 0 },
-                    weeklyProgress: [],
-                    commonIssues: [],
-                    improvements: { weekOverWeek: 0, trend: 'up' }
-                },
-                dailyProgress: {}
-            });
-        }
-        
-        // Читаем и возвращаем данные прогресса
-        const progressData = JSON.parse(fs.readFileSync(progressFile, 'utf-8'));
+        console.log('[DIAGNOSTIC] /api/user/progress/:userId userId:', userId);
+        const logger = new UserProgressLogger(userId);
+        const progressData = logger.loadLog();
+        console.log('[DIAGNOSTIC] progressData:', progressData);
         res.json(progressData);
     } catch (error) {
         console.error('Error getting user progress:', error);
@@ -1184,36 +1167,113 @@ export default app;
 
 // --- Реальные функции расчёта прогресса на основе planExecution ---
 function calculateWorkoutProgress(userHistory) {
-  // Считаем процент выполненных тренировок за последние 7 дней
+  // Считаем процент выполненных упражнений и активностей за последние 7 дней из dailyProgress
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const planExecution = userHistory.planExecution || [];
-  const workouts = planExecution.filter(e => e.mealType === 'workout' && new Date(e.timestamp) > weekAgo);
-  const total = workouts.length;
-  const done = workouts.filter(e => e.executed).length;
-  return total > 0 ? Math.round((done / total) * 100) : 0;
+  const dailyProgress = userHistory.dailyProgress || {};
+  
+  let totalActivities = 0;
+  let completedActivities = 0;
+  
+  console.log('[DEBUG] calculateWorkoutProgress - начинаем расчет');
+  console.log('[DEBUG] dailyProgress:', Object.keys(dailyProgress));
+  
+  // Проходим по всем дням за неделю
+  Object.entries(dailyProgress).forEach(([date, dayData]) => {
+    const dayDate = new Date(date);
+    console.log('[DEBUG] Проверяем день:', date, 'parsed:', dayDate.toISOString(), 'в диапазоне:', dayDate >= weekAgo && dayDate <= now);
+    
+    if (dayDate >= weekAgo && dayDate <= now) {
+      const tasks = dayData.tasks || [];
+      // Считаем все задания кроме приемов пищи (упражнения, шаги и т.д.)
+      const activityTasks = tasks.filter(task => 
+        task.type !== 'meal'
+      );
+      
+      console.log('[DEBUG] Активности дня:', date, 'activities:', activityTasks.length, 'tasks:', activityTasks.map(t => ({ name: t.name, type: t.type, done: t.done })));
+      
+      totalActivities += activityTasks.length;
+      completedActivities += activityTasks.filter(task => task.done).length;
+    }
+  });
+  
+  console.log('[DEBUG] totalActivities:', totalActivities, 'completedActivities:', completedActivities);
+  
+  const progress = totalActivities > 0 ? Math.round((completedActivities / totalActivities) * 100) : 0;
+  console.log('[DEBUG] Итоговый прогресс тренировок:', progress, '%');
+  
+  return progress;
 }
 
 function calculateNutritionProgress(userHistory) {
-  // Считаем процент выполненных приёмов пищи за последние 7 дней
+  // Считаем процент выполненных приёмов пищи за последние 7 дней из dailyProgress
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const planExecution = userHistory.planExecution || [];
-  const meals = planExecution.filter(e => e.mealType !== 'workout' && new Date(e.timestamp) > weekAgo);
-  const total = meals.length;
-  const done = meals.filter(e => e.executed).length;
-  return total > 0 ? Math.round((done / total) * 100) : 0;
+  const dailyProgress = userHistory.dailyProgress || {};
+  
+  let totalMeals = 0;
+  let completedMeals = 0;
+  
+  console.log('[DEBUG] calculateNutritionProgress - начинаем расчет');
+  console.log('[DEBUG] dailyProgress:', Object.keys(dailyProgress));
+  console.log('[DEBUG] now:', now.toISOString());
+  console.log('[DEBUG] weekAgo:', weekAgo.toISOString());
+  
+  // Проходим по всем дням за неделю
+  Object.entries(dailyProgress).forEach(([date, dayData]) => {
+    const dayDate = new Date(date);
+    console.log('[DEBUG] Проверяем день:', date, 'parsed:', dayDate.toISOString(), 'в диапазоне:', dayDate >= weekAgo && dayDate <= now);
+    
+    if (dayDate >= weekAgo && dayDate <= now) {
+      const tasks = dayData.tasks || [];
+      // Считаем только приемы пищи
+      const mealTasks = tasks.filter(task => task.type === 'meal');
+      
+      console.log('[DEBUG] Задания дня:', date, 'meals:', mealTasks.length, 'tasks:', tasks.map(t => ({ name: t.name, type: t.type, done: t.done })));
+      
+      totalMeals += mealTasks.length;
+      completedMeals += mealTasks.filter(task => task.done).length;
+    }
+  });
+  
+  console.log('[DEBUG] totalMeals:', totalMeals, 'completedMeals:', completedMeals);
+  
+  // Всегда считаем от недельной нормы 35 приемов пищи (5 приемов × 7 дней)
+  const expectedMealsPerWeek = 35;
+  
+  const progress = Math.round((completedMeals / expectedMealsPerWeek) * 100);
+  console.log('[DEBUG] Итоговый прогресс питания:', progress, '% (', completedMeals, 'из', expectedMealsPerWeek, ')');
+  
+  return progress;
 }
 
 function calculateMealAdherence(userHistory, mealType) {
-  // Процент выполнения по каждому приёму пищи за неделю
+  // Процент выполнения по каждому приёму пищи за неделю из dailyProgress
   const now = new Date();
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const planExecution = userHistory.planExecution || [];
-  const meals = planExecution.filter(e => e.mealType === mealType && new Date(e.timestamp) > weekAgo);
-  const total = meals.length;
-  const done = meals.filter(e => e.executed).length;
-  return total > 0 ? Math.round((done / total) * 100) : 0;
+  const dailyProgress = userHistory.dailyProgress || {};
+  
+  let totalMealsOfType = 0;
+  let completedMealsOfType = 0;
+  
+  // Проходим по всем дням за неделю
+  Object.entries(dailyProgress).forEach(([date, dayData]) => {
+    const dayDate = new Date(date);
+    if (dayDate >= weekAgo && dayDate <= now) {
+      const tasks = dayData.tasks || [];
+      // Ищем конкретный тип приема пищи
+      const mealTasks = tasks.filter(task => 
+        task.type === 'meal' && 
+        task.name && 
+        task.name.toLowerCase().includes(mealType.toLowerCase())
+      );
+      
+      totalMealsOfType += mealTasks.length;
+      completedMealsOfType += mealTasks.filter(task => task.done).length;
+    }
+  });
+  
+  return totalMealsOfType > 0 ? Math.round((completedMealsOfType / totalMealsOfType) * 100) : 0;
 }
 
 function calculateWeeklyProgress(userHistory) {
@@ -1275,16 +1335,14 @@ app.get('/api/user/day-status/:userId', async (req, res) => {
 app.get('/api/user/nutrition/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        
-        // Читаем файл данных пользователя
         const userFile = path.join(__dirname, 'backup_files', 'users', `quiz_${userId}.json`);
-        
+        console.log('[DIAGNOSTIC] /api/user/nutrition/:userId userId:', userId);
+        console.log('[DIAGNOSTIC] userFile:', userFile);
         if (!fs.existsSync(userFile)) {
+            console.log('[DIAGNOSTIC] userFile not found:', userFile);
             return res.status(404).json({ error: 'User data not found' });
         }
-        
         const userData = JSON.parse(fs.readFileSync(userFile, 'utf-8'));
-        
         // Расчет BMR и КБЖУ как в programApi.js
         const age = userData.age || 25;
         const weight = userData.weight_kg || 65;
@@ -1327,7 +1385,7 @@ app.get('/api/user/nutrition/:userId', async (req, res) => {
             deficit: Math.round(deficit)
         });
     } catch (error) {
-        console.error('Error calculating nutrition:', error);
+        console.error('Error getting user nutrition:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

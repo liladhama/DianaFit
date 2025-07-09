@@ -2,5 +2,20 @@
     "github.copilot.nextEditSuggestions.enabled": true,
     "github.copilot.chat.completionContext.typescript.mode": "on",
     "github.copilot.chat.languageContext.inline.typescript.enabled": true,
-    "github.copilot.chat.languageContext.fix.typescript.enabled": true
+    "github.copilot.chat.languageContext.fix.typescript.enabled": true,
+    "terminal.integrated.shell.windows": "cmd.exe",
+    "terminal.integrated.shellArgs.windows": [],
+    "terminal.integrated.automationShell.windows": "cmd.exe",
+    "terminal.integrated.profiles.windows": {
+        "Command Prompt": {
+            "path": "cmd.exe",
+            "args": [],
+            "icon": "terminal-cmd"
+        },
+        "PowerShell": {
+            "source": "PowerShell",
+            "icon": "terminal-powershell"
+        }
+    },
+    "terminal.integrated.defaultProfile.windows": "Command Prompt"
 }

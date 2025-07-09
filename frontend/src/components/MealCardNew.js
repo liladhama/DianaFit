@@ -61,6 +61,8 @@ const MealCard = ({
   // --- ОТЛАДКА: выводим структуру данных ---
   console.log('[MealCardNew] meal:', meal);
   console.log('[MealCardNew] mealInfo:', mealInfo);
+  console.log('[MealCardNew] isCompleted prop:', isCompleted, 'type:', typeof isCompleted);
+  console.log('[MealCardNew] completed (internal):', completed, 'type:', typeof completed);
 
   // --- Улучшенное определение калорий и макроэлементов ---
   let calories = 0;

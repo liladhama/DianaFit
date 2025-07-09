@@ -1,14 +1,14 @@
 {
-  "name": "ыва",
+  "name": "ываыва",
   "sex": "male",
-  "height_cm": 182,
-  "weight_kg": 86,
+  "height_cm": 184,
+  "weight_kg": 99,
   "gym_or_home": "home",
-  "training_level": "beginner",
-  "activity_coef": 1.2,
+  "training_level": "advanced",
+  "activity_coef": 1.375,
   "workouts_per_week": 5,
-  "diet_flags": "vegetarian_eggs",
+  "diet_flags": "vegetarian_no_eggs",
   "userId": "testuser1",
-  "age": 24,
-  "goal": 5
+  "age": 25,
+  "goal": 3
 }
