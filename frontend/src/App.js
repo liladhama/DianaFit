@@ -68,37 +68,36 @@ function App() {
   useEffect(() => {
     console.log('Проверка Telegram WebApp...');
     console.log('window.Telegram:', window.Telegram);
-    
+
     if (window.Telegram?.WebApp) {
       console.log('Telegram WebApp найден');
-      window.Telegram.WebApp.ready();
-      
-      // Ждем немного для полной инициализации
-      setTimeout(() => {
-        console.log('Telegram WebApp данные:', window.Telegram.WebApp.initDataUnsafe);
-        
-        // Получаем аватарку пользователя
-        const avatar = getUserAvatar();
-        setUserAvatar(avatar);
-        console.log('User avatar:', avatar);
-        
-        // Дополнительная отладочная информация
-        if (window.Telegram.WebApp.initDataUnsafe?.user) {
-          const user = window.Telegram.WebApp.initDataUnsafe.user;
-          console.log('Пользователь Telegram:', {
-            id: user.id,
-            first_name: user.first_name,
-            username: user.username,
-            photo_url: user.photo_url
-          });
-        } else {
-          console.log('Данные пользователя Telegram не найдены');
-        }
-      }, 1000);
+      try {
+        window.Telegram.WebApp.ready();
+
+        setTimeout(() => {
+          console.log('Telegram WebApp данные:', window.Telegram.WebApp.initDataUnsafe);
+
+          const avatar = getUserAvatar();
+          setUserAvatar(avatar);
+          console.log('User avatar:', avatar);
+
+          if (window.Telegram.WebApp.initDataUnsafe?.user) {
+            const user = window.Telegram.WebApp.initDataUnsafe.user;
+            console.log('Пользователь Telegram:', {
+              id: user.id,
+              first_name: user.first_name,
+              username: user.username,
+              photo_url: user.photo_url
+            });
+          } else {
+            console.error('Данные пользователя Telegram не найдены');
+          }
+        }, 1000);
+      } catch (error) {
+        console.error('Ошибка при инициализации Telegram WebApp:', error);
+      }
     } else {
-      console.log('Telegram WebApp не найден - возможно, запущено не в Telegram');
-      // Для тестирования вне Telegram можно установить тестовую аватарку
-      // setUserAvatar('https://via.placeholder.com/60x60/0088cc/ffffff?text=U');
+      console.warn('Telegram WebApp не найден - возможно, запущено не в Telegram');
     }
   }, []);
 
@@ -353,7 +352,7 @@ function App() {
           { type: 'Ужин', meal: getDinnerByDiet(quizAnswers.diet_flags, i + 1), calories: 350, time: '19:00' }
         ],
         dailySteps: 0,
-        dailyStepsGoal: level === 'beginner' ? 8000 : 10000,
+        dailyStepsGoal: level === 'beginner' ? 10000 : 15000,
         completedExercises: isWorkoutDay ? new Array(3).fill(null) : [],
         completedMealsArr: new Array(5).fill(null),
         completedWorkout: false,
@@ -541,7 +540,7 @@ function App() {
           { type: 'Ужин', meal: { name: 'ИИ-рецепт ужина (fallback)', ingredients: [] }, calories: 350, time: '19:00' }
         ],
         dailySteps: 0,
-        dailyStepsGoal: level === 'beginner' ? 8000 : 10000,
+        dailyStepsGoal: level === 'beginner' ? 10000 : 15000,
         completedExercises: isWorkoutDay ? new Array(3).fill(null) : [],
         completedMealsArr: new Array(5).fill(null),
         completedWorkout: false,
@@ -1371,6 +1370,8 @@ function App() {
             🖼️ Тест аватарки
           </button>
           
+                   
+                   
                    
           {/* Тестовые кнопки скрыты в продакшене */}
           {process.env.NODE_ENV === 'development' && (

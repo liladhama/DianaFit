@@ -80,9 +80,20 @@ export default function StoryQuiz({ onFinish }) {
   const total = quizConfig ? quizConfig.length : 0;
 
   useEffect(() => {
-    fetch('/quizConfig.json')
+    // Проверка наличия данных пользователя
+    fetch('/api/user/data')
       .then(res => res.json())
-      .then(setQuizConfig);
+      .then(data => {
+        if (data && data.answers) {
+          // Если данные пользователя существуют, пропускаем квиз
+          if (onFinish) onFinish(data.answers);
+        } else {
+          // Если данных нет, загружаем конфигурацию квиза
+          fetch('/quizConfig.json')
+            .then(res => res.json())
+            .then(setQuizConfig);
+        }
+      });
   }, []);
 
   useEffect(() => {

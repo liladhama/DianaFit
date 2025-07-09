@@ -23,18 +23,12 @@
         {
           "name": "Завтрак",
           "type": "meal",
-          "done": false,
-          "reason": {
-            "id": "no_products",
-            "text": "🛒 Не было продуктов",
-            "category": "resources",
-            "timestamp": "2025-07-09T09:29:16.569Z"
-          }
+          "done": false
         },
         {
           "name": "Перекус",
           "type": "meal",
-          "done": true
+          "done": false
         },
         {
           "name": "Обед",
@@ -59,8 +53,8 @@
           "reason": "Не достигнута цель по шагам"
         }
       ],
-      "updatedAt": "2025-07-09T09:36:24.019Z"
+      "updatedAt": "2025-07-09T09:29:07.381Z"
     }
   },
-  "lastUpdate": "2025-07-09T09:36:24.020Z"
-}
+  "lastUpdate": "2025-07-09T09:29:07.382Z"
+}}
