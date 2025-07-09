@@ -7,10 +7,105 @@ import TodayBlock from './components/TodayBlock';
 import TestWeek from './components/TestWeek';
 import VideoTest from './components/VideoTest';
 import AITestPage from './components/AITestPage';
+import { API_URL } from './config/api';
 
-// Временно используем только production URL для тестирования ИИ
-// const API_URL = 'https://dianafit.onrender.com';
-const API_URL = 'http://localhost:3001';
+// 🚨 ГЛОБАЛЬНЫЙ ПЕРЕХВАТЧИК ВСЕХ FETCH-ЗАПРОСОВ ДЛЯ ОТЛАДКИ
+const originalFetch = window.fetch;
+window.fetch = async (...args) => {
+  const [url, options = {}] = args;
+  console.log(`🌐 ГЛОБАЛЬНЫЙ FETCH: ${url}`, options);
+  
+  try {
+    const response = await originalFetch(...args);
+    
+    // Клонируем response для проверки содержимого
+    const responseClone = response.clone();
+    const contentType = response.headers.get('content-type');
+    
+    console.log(`📊 ГЛОБАЛЬНЫЙ ОТВЕТ для ${url}:`, {
+      status: response.status,
+      statusText: response.statusText,
+      contentType,
+      url: response.url,
+      ok: response.ok
+    });
+    
+    // Если ожидается JSON, но получен HTML - логируем первые символы
+    if (contentType && !contentType.includes('application/json') && contentType.includes('text/html')) {
+      const text = await responseClone.text();
+      console.error(`🚨 ПОЛУЧЕН HTML ВМЕСТО JSON для ${url}:`, text.substring(0, 200));
+    }
+    
+    return response;
+  } catch (error) {
+    console.error(`🚨 ГЛОБАЛЬНАЯ ОШИБКА FETCH для ${url}:`, error);
+    throw error;
+  }
+};
+
+// Универсальная функция для fetch с детальным логированием
+const safeFetch = async (url, options = {}) => {
+  try {
+    console.log(`🔄 Начинаем fetch-запрос: ${url}`);
+    console.log(`📋 Опции запроса:`, options);
+    
+    const response = await fetch(url, options);
+    
+    console.log(`📊 Ответ получен:`, {
+      status: response.status,
+      statusText: response.statusText,
+      headers: [...response.headers.entries()],
+      url: response.url,
+      ok: response.ok
+    });
+    
+    if (!response.ok) {
+      console.error(`❌ Ошибка HTTP: ${response.status} ${response.statusText}`);
+      // Попробуем получить текст ответа для диагностики
+      const text = await response.text();
+      console.error(`📄 Текст ответа (первые 500 символов):`, text.substring(0, 500));
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    
+    // Проверяем, что получили JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType || !contentType.includes('application/json')) {
+      const text = await response.text();
+      console.error(`❌ Ожидался JSON, получен:`, contentType);
+      console.error(`📄 Полученный контент:`, text.substring(0, 500));
+      throw new Error(`Ожидался JSON, получен: ${contentType}`);
+    }
+    
+    const data = await response.json();
+    console.log(`✅ JSON успешно обработан:`, data);
+    return data;
+    
+  } catch (error) {
+    console.error(`❌ Ошибка в safeFetch для ${url}:`, error);
+    
+    // Если это ошибка подключения к backend
+    if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+      console.error(`🚨 BACKEND НЕ ЗАПУЩЕН! Запустите backend сервер: npm start в папке backend`);
+      throw new Error('Backend сервер не доступен. Запустите backend сервер.');
+    }
+    
+    throw error;
+  }
+};
+
+// Функция проверки доступности backend
+const checkBackendHealth = async () => {
+  try {
+    const response = await fetch(`${API_URL}/health`, { 
+      method: 'GET',
+      timeout: 5000 
+    });
+    return response.ok;
+  } catch (error) {
+    console.error('🚨 Backend недоступен:', error);
+    return false;
+  }
+};
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -41,6 +136,19 @@ function App() {
   React.useEffect(() => {
     localStorage.removeItem('dianafit_premium');
     console.log('🔄 Приложение запущено в базовом режиме');
+    
+    // Добавим проверку всех данных в localStorage
+    console.log('📦 Содержимое localStorage:', Object.keys(localStorage));
+    const programKeys = Object.keys(localStorage).filter(key => key.startsWith('program_'));
+    console.log('🗂️ Программы в localStorage:', programKeys);
+    
+    // Проверим состояние переменных
+    console.log('📊 Начальное состояние App:', {
+      showSplash,
+      showTodayBlock,
+      answers,
+      programId
+    });
   }, []);
 
   // Функция для получения аватарки пользователя
@@ -68,36 +176,37 @@ function App() {
   useEffect(() => {
     console.log('Проверка Telegram WebApp...');
     console.log('window.Telegram:', window.Telegram);
-
+    
     if (window.Telegram?.WebApp) {
       console.log('Telegram WebApp найден');
-      try {
-        window.Telegram.WebApp.ready();
-
-        setTimeout(() => {
-          console.log('Telegram WebApp данные:', window.Telegram.WebApp.initDataUnsafe);
-
-          const avatar = getUserAvatar();
-          setUserAvatar(avatar);
-          console.log('User avatar:', avatar);
-
-          if (window.Telegram.WebApp.initDataUnsafe?.user) {
-            const user = window.Telegram.WebApp.initDataUnsafe.user;
-            console.log('Пользователь Telegram:', {
-              id: user.id,
-              first_name: user.first_name,
-              username: user.username,
-              photo_url: user.photo_url
-            });
-          } else {
-            console.error('Данные пользователя Telegram не найдены');
-          }
-        }, 1000);
-      } catch (error) {
-        console.error('Ошибка при инициализации Telegram WebApp:', error);
-      }
+      window.Telegram.WebApp.ready();
+      
+      // Ждем немного для полной инициализации
+      setTimeout(() => {
+        console.log('Telegram WebApp данные:', window.Telegram.WebApp.initDataUnsafe);
+        
+        // Получаем аватарку пользователя
+        const avatar = getUserAvatar();
+        setUserAvatar(avatar);
+        console.log('User avatar:', avatar);
+        
+        // Дополнительная отладочная информация
+        if (window.Telegram.WebApp.initDataUnsafe?.user) {
+          const user = window.Telegram.WebApp.initDataUnsafe.user;
+          console.log('Пользователь Telegram:', {
+            id: user.id,
+            first_name: user.first_name,
+            username: user.username,
+            photo_url: user.photo_url
+          });
+        } else {
+          console.log('Данные пользователя Telegram не найдены');
+        }
+      }, 1000);
     } else {
-      console.warn('Telegram WebApp не найден - возможно, запущено не в Telegram');
+      console.log('Telegram WebApp не найден - возможно, запущено не в Telegram');
+      // Для тестирования вне Telegram можно установить тестовую аватарку
+      // setUserAvatar('https://via.placeholder.com/60x60/0088cc/ffffff?text=U');
     }
   }, []);
 
@@ -181,6 +290,152 @@ function App() {
     const timer = setTimeout(() => setShowSplash(false), 4000); // 4 секунды
     return () => clearTimeout(timer);
   }, []);
+
+  // Проверка существующего пользователя - только после окончания splash и только если нет активного квиза
+  useEffect(() => {
+    console.log('🔍 useEffect проверки пользователя сработал, showSplash:', showSplash);
+    // Проверяем только если splash уже не показывается
+    if (showSplash) {
+      console.log('⏳ Splash еще показывается, пропускаем проверку');
+      return;
+    }
+    
+    console.log('🚀 Splash закончился, запускаем проверку пользователя');
+    
+    const checkExistingUser = async () => {
+      try {
+        const userId = 'newtestuser999'; // ВРЕМЕННО ИЗМЕНЯЕМ для теста
+        console.log('🔍 Проверяем существующего пользователя после splash:', userId);
+        
+        const response = await fetch(`http://localhost:3001/api/user/quiz-answers/${userId}`);
+        console.log('📊 Ответ от backend:', {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok
+        });
+        
+        if (response.status === 404) {
+          console.log('👤 Новый пользователь, квиз не найден - остаемся в квизе');
+          // НЕ трогаем состояние - оставляем как есть (квиз)
+          return;
+        }
+        
+        if (response.ok) {
+          const quizData = await response.json();
+          console.log('✅ Найдены данные квиза:', quizData);
+          
+          // Проверяем есть ли уже сохраненная недельная программа
+          let existingProgramId = localStorage.getItem('programId');
+          let shouldCreateNewProgram = false;
+          
+          if (existingProgramId) {
+            const existingProgram = localStorage.getItem(`program_${existingProgramId}`);
+            if (existingProgram) {
+              try {
+                const program = JSON.parse(existingProgram);
+                const createdAt = new Date(program.createdAt);
+                const now = new Date();
+                const daysPassed = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+                
+                console.log('📅 Проверка существующей программы:', {
+                  programId: existingProgramId,
+                  createdAt: program.createdAt,
+                  daysPassed,
+                  isExpired: daysPassed >= 7
+                });
+                
+                if (daysPassed >= 7) {
+                  console.log('⏰ Программа устарела (прошло 7+ дней), нужно создать новую');
+                  shouldCreateNewProgram = true;
+                } else {
+                  console.log('✅ Программа актуальна, используем существующую');
+                  setProgramId(existingProgramId);
+                  setAnswers(quizData);
+                  setShowTodayBlock(true);
+                  return;
+                }
+              } catch (error) {
+                console.error('❌ Ошибка при парсинге существующей программы:', error);
+                shouldCreateNewProgram = true;
+              }
+            } else {
+              console.log('❌ Программа с ID не найдена в localStorage');
+              shouldCreateNewProgram = true;
+            }
+          } else {
+            console.log('❌ ProgramId не найден в localStorage');
+            shouldCreateNewProgram = true;
+          }
+          
+          if (shouldCreateNewProgram) {
+            console.log('🔄 Создаем новую недельную программу на основе прогресса...');
+            
+            // Проверяем, есть ли API для получения недельной программы
+            try {
+              const weeklyResponse = await fetch(`${API_URL}/api/user/weekly-program/${userId}`);
+              
+              if (weeklyResponse.status === 410) {
+                // Программа устарела на сервере, нужен пересчет
+                console.log('⏰ Серверная программа тоже устарела, запрашиваем новую');
+                const regenerateResponse = await fetch(`${API_URL}/api/user/weekly-program/${userId}/regenerate`, {
+                  method: 'POST'
+                });
+                
+                if (regenerateResponse.ok) {
+                  const newProgram = await regenerateResponse.json();
+                  console.log('✅ Новая программа получена с сервера:', newProgram);
+                  
+                  // Сохраняем новую программу
+                  const newProgramId = `program_${userId}_${Date.now()}`;
+                  localStorage.setItem(`program_${newProgramId}`, JSON.stringify(newProgram.program));
+                  localStorage.setItem('programId', newProgramId);
+                  setProgramId(newProgramId);
+                  setAnswers(quizData);
+                  setShowTodayBlock(true);
+                  return;
+                }
+              } else if (weeklyResponse.ok) {
+                // Есть актуальная программа на сервере
+                const weeklyProgram = await weeklyResponse.json();
+                console.log('✅ Получена актуальная программа с сервера:', weeklyProgram);
+                
+                const newProgramId = `program_${userId}_${Date.now()}`;
+                localStorage.setItem(`program_${newProgramId}`, JSON.stringify(weeklyProgram));
+                localStorage.setItem('programId', newProgramId);
+                setProgramId(newProgramId);
+                setAnswers(quizData);
+                setShowTodayBlock(true);
+                return;
+              }
+            } catch (serverError) {
+              console.error('❌ Ошибка при работе с сервером:', serverError);
+            }
+            
+            // Fallback: создаем демо программу
+            console.log('🔄 Fallback: создаем демо программу');
+            const demoProgram = createMonthlyProgramDemo(quizData);
+            setProgramId(demoProgram);
+            setAnswers(quizData);
+            setShowTodayBlock(true);
+          }
+        } else {
+          console.log('👤 Ошибка получения данных пользователя - остаемся в квизе');
+          // НЕ трогаем состояние
+        }
+      } catch (error) {
+        console.error('❌ Ошибка проверки пользователя:', error);
+        // НЕ трогаем состояние при ошибке
+      }
+    };
+
+    // Запускаем проверку только через 1 секунду после исчезновения splash
+    console.log('⏰ Устанавливаем таймер на проверку пользователя через 1 секунду');
+    const timer = setTimeout(() => {
+      console.log('⏰ Таймер сработал, запускаем checkExistingUser');
+      checkExistingUser();
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [showSplash]); // Зависимость от showSplash!
 
   // Функция для получения упражнений для дня с привязкой к видео
   function getExercisesForDay(location, workoutNumber, level) {
@@ -352,7 +607,7 @@ function App() {
           { type: 'Ужин', meal: getDinnerByDiet(quizAnswers.diet_flags, i + 1), calories: 350, time: '19:00' }
         ],
         dailySteps: 0,
-        dailyStepsGoal: level === 'beginner' ? 10000 : 15000,
+        dailyStepsGoal: level === 'beginner' ? 8000 : 10000,
         completedExercises: isWorkoutDay ? new Array(3).fill(null) : [],
         completedMealsArr: new Array(5).fill(null),
         completedWorkout: false,
@@ -383,8 +638,29 @@ function App() {
   }
 
   async function handleQuizFinish(quizAnswers) {
+    console.log('🎯 HANDLEQUIZFINISH ВЫЗВАН! Данные квиза:', quizAnswers);
+    console.log('🚨 ПРОВЕРЬТЕ - ОТКУДА ВЫЗЫВАЕТСЯ HANDLEQUIZFINISH?');
+    
     // ВРЕМЕННО для локального теста:
-    quizAnswers.userId = 'testuser1';
+    const userId = 'newtestuser999'; // используем тот же тестовый ID что и для проверки
+    quizAnswers.userId = userId;
+    
+    // Сохраняем данные квиза на сервере
+    try {
+      console.log('💾 Сохраняем данные квиза на сервере...');
+      const saveResponse = await safeFetch(`${API_URL}/api/user/quiz-answers/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(quizAnswers)
+      });
+      
+      console.log('✅ Результат сохранения квиза:', saveResponse);
+    } catch (error) {
+      console.error('❌ Ошибка сохранения квиза:', error);
+      // Продолжаем выполнение даже если сохранение не удалось
+    }
     
     console.log('🎯 Квиз завершен, создаем персональную программу через ИИ...');
     
@@ -402,7 +678,7 @@ function App() {
         console.log('⏰ Запрос к ИИ прерван по таймауту (15 секунд)');
       }, 15000); // 15 секунд таймаут
       
-      const response = await fetch(`${API_URL}/api/calculate-plan`, {
+      const data = await safeFetch(`${API_URL}/api/calculate-plan`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -413,17 +689,10 @@ function App() {
       
       clearTimeout(timeoutId);
       
-      console.log('📨 Получен ответ от backend, статус:', response.status);
-      
-      if (!response.ok) {
-        throw new Error(`Backend error: ${response.status} ${response.statusText}`);
-      }
-      
-      const result = await response.json();
-      console.log('✅ Получен ответ от ИИ:', result);
+      console.log('✅ Получен ответ от ИИ:', data);
       
       // Парсим и обрабатываем ответ от ИИ
-      const aiGeneratedProgram = parseAIResponse(result.plan, quizAnswers);
+      const aiGeneratedProgram = parseAIResponse(data.plan, quizAnswers);
       
       if (aiGeneratedProgram) {
         console.log('✅ ИИ программа обработана:', aiGeneratedProgram);
@@ -540,7 +809,7 @@ function App() {
           { type: 'Ужин', meal: { name: 'ИИ-рецепт ужина (fallback)', ingredients: [] }, calories: 350, time: '19:00' }
         ],
         dailySteps: 0,
-        dailyStepsGoal: level === 'beginner' ? 10000 : 15000,
+        dailyStepsGoal: level === 'beginner' ? 8000 : 10000,
         completedExercises: isWorkoutDay ? new Array(3).fill(null) : [],
         completedMealsArr: new Array(5).fill(null),
         completedWorkout: false,
@@ -1173,6 +1442,7 @@ function App() {
             { name: 'Оливковое масло', amount: 5, unit: 'мл' }
           ]
         }
+
       ],
       default: [
         { 
@@ -1370,8 +1640,6 @@ function App() {
             🖼️ Тест аватарки
           </button>
           
-                   
-                   
                    
           {/* Тестовые кнопки скрыты в продакшене */}
           {process.env.NODE_ENV === 'development' && (
