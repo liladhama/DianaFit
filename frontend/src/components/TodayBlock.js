@@ -26,7 +26,9 @@ if (!document.querySelector('#spinner-styles')) {
 }
 
 // --- Переключатель между локальным и продакшн сервером ---
-const API_URL = 'https://dianafit.onrender.com';
+const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+  ? 'http://localhost:3001'
+  : 'https://dianafit.onrender.com';
 
 // Мотивационные цитаты от Дианы
 const motivationalQuotes = [
@@ -1742,8 +1744,6 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           // Показываем загрузку персонального плана
           <div style={{ ...cardStyle, textAlign: 'center' }}>
             <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, color: '#1a1a1a' }}>
-          <div style={{ ...cardStyle, textAlign: 'center' }}>
-            <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, color: '#1a1a1a' }}>
               📅 Загружаем ваш персональный план...
             </div>
             <div style={{ fontSize: 14, color: '#666' }}>
@@ -2231,8 +2231,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         isVisible={showReasonModal}
         onClose={() => setShowReasonModal(false)}
         onReasonSelected={handleReasonSelected}
-        type={reasonModalData.type}
-        itemName={reasonModalData.itemName}
+        type={reasonModalData?.type || ''}
+        itemName={reasonModalData?.itemName || ''}
       />
     </div>
   );
