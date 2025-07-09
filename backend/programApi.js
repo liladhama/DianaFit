@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
 import recipeUtils from './utils/recipeUtils.js';
 import { callMistralAI } from './utils/aiUtils.js';
+import mealPlanCalculator from './utils/mealPlanCalculator.js';
 
 // В памяти (для примера)
 const programs = {};
@@ -44,7 +45,6 @@ function getHomeWorkoutTitle(dayNumber) {
     4: 'День 4 | HIIT (вт) — 40 с работа / 20 с отдых',
     5: 'День 5 | К (нп) — 5 кругов, бег на месте'
   };
-  return titles[((dayNumber - 1) % 5) + 1];
 }
 
 function getGymExercises(dayNumber) {

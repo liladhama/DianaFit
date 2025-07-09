@@ -25,62 +25,51 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
     weeklyResults: []
   });
 
-  // --- Корректная формула BMR (Миффлин или Харрис) ---
-  function calculateBMR(weight, height, age, sex = 'female', method = 'mifflin') {
-    if (method === 'mifflin') {
-      if (sex === 'male') {
-        return 66.5 + 13.75 * weight + 5.003 * height - 6.755 * age;
-      } else {
-        return 655 + 9.563 * weight + 1.850 * height - 4.676 * age;
-      }
-    } else if (method === 'harris') {
-      if (sex === 'male') {
-        return 88.36 + 13.4 * weight + 4.8 * height - 5.7 * age;
-      } else {
-        return 10 * weight + 6.25 * height - 5 * age - 161;
-      }
+  // --- Формула BMR как на бэкенде (Харрис-Бенедикта) ---
+  function calculateBMR(weight, height, age, sex = 'female') {
+    if (sex === 'male') {
+      return 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+    } else {
+      return 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
     }
-    return 1200; // fallback
   }
 
-  // --- Функция расчёта КБЖУ на основе данных пользователя ---
+  // --- Функция расчёта КБЖУ на основе данных пользователя (как на бэкенде) ---
   function calculateMacrosFromQuiz(quiz) {
     // Поддержка weight и weight_kg
     const weight = Number(quiz.weight) || Number(quiz.weight_kg) || 60;
     const height = Number(quiz.height) || Number(quiz.height_cm) || 165;
     const age = Number(quiz.age) || 30;
     const sex = (quiz.gender || quiz.sex || 'female').toLowerCase();
-    const method = 'mifflin';
-    let bmr = calculateBMR(weight, height, age, sex, method);
-    // Коэффициент активности
-    const activityMap = {
-      'low': 1.2,
-      'medium': 1.375,
-      'high': 1.55,
-      'very_high': 1.725
-    };
-    const activity = quiz.activity_level || quiz.activity_coef || 'medium';
-    const activityCoef = activityMap[activity] || 1.375;
-    let calories_before_goal = Math.round(bmr * activityCoef);
-    let calories = calories_before_goal;
-    // --- Новый расчёт дефицита по goal (3/4/5 кг в месяц) ---
+    const activity = quiz.activity_coef || 1.375;
+    
+    let bmr = calculateBMR(weight, height, age, sex);
+    
+    // --- Расчёт дефицита по goal (3/4/5 кг в месяц) как на бэкенде ---
     const goal = Number(quiz.goal);
     let deficit = 0;
+    let calories;
+    
     if ([3,4,5].includes(goal)) {
       deficit = goal * 7700 / 30;
-      calories = Math.round(calories_before_goal - deficit);
+      calories = Math.round(bmr * activity - deficit);
+    } else {
+      calories = Math.round(bmr * activity);
     }
-    // Лог для отладки
+    
+    // Минимум 1400 ккал для всех (по базе Дианы)
+    calories = Math.max(1400, calories);
+    
+    // Расчёт БЖУ как на бэкенде
+    const protein = Math.round(weight * 1.8);
+    const fat = Math.round(weight * 0.9);
+    const carbs = Math.round((calories - (protein * 4 + fat * 9)) / 4);
+    
     console.log('[DEBUG КБЖУ]', {
-      weight, height, age, sex, bmr, activityCoef, calories_before_goal, calories, goal, deficit
+      weight, height, age, sex, bmr, activity, deficit, calories, protein, fat, carbs
     });
-    // Минимум 1000 ккал
-    calories = Math.max(1000, calories);
-    const protein = Math.max(0, Math.round(weight * 1.7));
-    const fats = Math.max(0, Math.round(weight * 0.9));
-    const carbs = Math.max(0, Math.round((calories - (protein*4 + fats*9)) / 4));
-    console.log('[DEBUG КБЖУ итог]', {calories, protein, fats, carbs});
-    return { calories, protein, fats, carbs };
+    
+    return { calories, protein, fats: fat, carbs };
   }
 
   // --- Функция округления КБЖУ ---
@@ -93,12 +82,34 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
     };
   }
 
-  // --- КБЖУ рассчитываем только на фронте ---
+  // --- КБЖУ загружаем с бэкенда ---
   useEffect(() => {
-    if (answers && Object.keys(answers).length > 0) {
-      const macros = calculateMacrosFromQuiz(answers);
-      setNutritionInfo(roundMacros(macros));
-    }
+    const fetchNutritionFromBackend = async () => {
+      try {
+        const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'testuser1';
+        const response = await fetch(`/api/user/nutrition/${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Nutrition data from backend:', data);
+          setNutritionInfo(data);
+        } else {
+          // Если нет данных на бэкенде, используем локальный расчет
+          if (answers && Object.keys(answers).length > 0) {
+            const macros = calculateMacrosFromQuiz(answers);
+            setNutritionInfo(roundMacros(macros));
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching nutrition from backend:', error);
+        // Fallback к локальному расчету при ошибке
+        if (answers && Object.keys(answers).length > 0) {
+          const macros = calculateMacrosFromQuiz(answers);
+          setNutritionInfo(roundMacros(macros));
+        }
+      }
+    };
+
+    fetchNutritionFromBackend();
   }, [answers]);
 
   // Получаем реальные данные о прогрессе
@@ -124,15 +135,56 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
     }));
   }, []); // Пустой массив зависимостей - создаётся только один раз
 
-  // Загрузка данных прогресса
+  // Загрузка данных прогресса из файла userid_progress.json
   React.useEffect(() => {
     const fetchProgress = async () => {
       try {
         const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'testuser1';
-        const response = await fetch(`${process.env.REACT_APP_API_URL}/api/progress/${userId}`);
+        const response = await fetch(`/api/user/progress/${userId}`);
         if (!response.ok) throw new Error('Failed to fetch progress');
         const data = await response.json();
-        setProgressData(data);
+        
+        // Рассчитываем прогресс на основе данных из файла
+        const calculateProgress = (progressData) => {
+          const dailyProgress = progressData.dailyProgress || {};
+          const totalDays = Object.keys(dailyProgress).length;
+          
+          if (totalDays === 0) {
+            return { workouts: 0, nutrition: 0 };
+          }
+          
+          let completedMeals = 0;
+          let totalMeals = 0;
+          let completedWorkouts = 0;
+          let totalWorkouts = 0;
+          
+          Object.values(dailyProgress).forEach(day => {
+            if (day.ate !== undefined) {
+              totalMeals++;
+              if (day.ate) completedMeals++;
+            }
+            if (day.workout !== undefined) {
+              totalWorkouts++;
+              if (day.workout) completedWorkouts++;
+            }
+          });
+          
+          const nutritionProgress = totalMeals > 0 ? Math.round((completedMeals / totalMeals) * 100) : 0;
+          const workoutProgress = totalWorkouts > 0 ? Math.round((completedWorkouts / totalWorkouts) * 100) : 0;
+          
+          return {
+            workouts: workoutProgress,
+            nutrition: nutritionProgress
+          };
+        };
+        
+        const calculatedProgress = calculateProgress(data);
+        console.log('Progress data from backend:', data);
+        console.log('Calculated progress:', calculatedProgress);
+        setProgressData({
+          ...data,
+          ...calculatedProgress
+        });
       } catch (error) {
         console.error('Error fetching progress:', error);
       }
@@ -510,11 +562,24 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                   console.log('Updating settings:', changes);
                   setQuizAnswers(prev => ({ ...prev, ...changes }));
                   
-                  // Пересчитываем БЖУ при изменении настроек
+                  // Обновляем КБЖУ с бэкенда при изменении настроек
                   if (changes.weight || changes.height || changes.age || changes.activity_level || changes.goal) {
-                    // Пересчитываем БЖУ при изменении настроек
-                    const macros = calculateMacrosFromQuiz({ ...quizAnswers, ...changes });
-                    setNutritionInfo(roundMacros(macros));
+                    try {
+                      const response = await fetch(`/api/user/nutrition/${userId}`);
+                      if (response.ok) {
+                        const data = await response.json();
+                        setNutritionInfo(data);
+                      } else {
+                        // Fallback к локальному расчету
+                        const macros = calculateMacrosFromQuiz({ ...quizAnswers, ...changes });
+                        setNutritionInfo(roundMacros(macros));
+                      }
+                    } catch (error) {
+                      console.error('Error fetching updated nutrition:', error);
+                      // Fallback к локальному расчету
+                      const macros = calculateMacrosFromQuiz({ ...quizAnswers, ...changes });
+                      setNutritionInfo(roundMacros(macros));
+                    }
                   }
                 } catch (error) {
                   console.error('Error updating settings:', error);
@@ -742,7 +807,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                 }}>
                   Мои показатели БЖУ
                 </h3>
-                {nutritionInfo && (() => {
+                {nutritionInfo && !nutritionInfo.error && (() => {
                   const items = [
                     { label: 'Белки', value: `${nutritionInfo.protein}г`, color: '#48bb78', icon: '🥩' },
                     { label: 'Жиры', value: `${nutritionInfo.fats}г`, color: '#ed8936', icon: '🥑' },
@@ -800,6 +865,30 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                     </div>
                   );
                 })()}
+                {nutritionInfo?.error && (
+                  <div style={{
+                    background: 'rgba(255, 0, 0, 0.1)',
+                    borderRadius: 12,
+                    padding: 16,
+                    textAlign: 'center',
+                    border: '1px solid rgba(255, 0, 0, 0.2)',
+                    color: '#ff4444'
+                  }}>
+                    Ошибка загрузки данных КБЖУ: {nutritionInfo.error}
+                  </div>
+                )}
+                {!nutritionInfo && (
+                  <div style={{
+                    background: 'rgba(255, 255, 255, 0.1)',
+                    borderRadius: 12,
+                    padding: 16,
+                    textAlign: 'center',
+                    border: '1px solid rgba(255, 255, 255, 0.2)',
+                    color: '#666'
+                  }}>
+                    Загрузка данных КБЖУ...
+                  </div>
+                )}
               </div>
             </div>
           </>

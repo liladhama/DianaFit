@@ -12,6 +12,7 @@ import UserProgressLogger from './userProgressLogger.js';
 import recipeRouter from './routes/recipeRoutes.js';
 import { saveQuizToFile } from './programApi.js';
 import progressRouter from './routes/progressRoutes.js';
+import mealPlanCalculator from './utils/mealPlanCalculator.js';
 
 dotenv.config();
 
@@ -51,12 +52,10 @@ app.get('/api/quiz-config', (req, res) => {
   });
 });
 
-// Принять ответы теста и вернуть план (заглушка)
+// Принять ответы теста и вернуть план (теперь только по базе, без ИИ)
 app.post('/api/calculate-plan', async (req, res) => {
   const answers = req.body;
-  console.log('[DEBUG calculate-plan] answers:', answers);
   const userId = answers.userId || answers.id || answers.telegram_id || 'default';
-  console.log('[DEBUG calculate-plan] userId:', userId);
   if (userId) {
     try {
       saveQuizToFile(userId, answers);
@@ -64,140 +63,45 @@ app.post('/api/calculate-plan', async (req, res) => {
       console.error('Ошибка сохранения квиза:', e);
     }
   }
-  const userEmbedding = answers.embedding || Array(1536).fill(0); // TODO: заменить на реальный embedding
-  const relevantChunks = findRelevantChunks(userEmbedding, 5);
-
-  // Загружаем базу знаний Дианы
-  const dianaKnowledge = loadDianaKnowledge();
-
-  const systemPrompt = `Ты — эксперт по похудению Диана с обширными знаниями о рецептах, питании и диетологии из всех доступных источников. 
-
-ВАЖНО: Отвечай ВСЕГДА в стиле и манере Дианы, используя её словечки, формулировки и подход:
-- Говори просто и понятно, "грубо говоря", "в принципе", "условно говоря"
-- Будь дружелюбной и поддерживающей
-- Объясняй почему что-то работает или не работает
-- Упоминай о важности здоровых привычек и умеренности
-- Предупреждай о рисках экстремальных диет
-
-БАЗА ЗНАНИЙ ДИАНЫ (используй для СТИЛЯ и ОСНОВНЫХ ПРИНЦИПОВ):
-${dianaKnowledge.substring(0, 1500)}...
-
-КРИТИЧЕСКИ ВАЖНЫЕ ПРАВИЛА ПО ПИТАНИЮ:
-- АБСОЛЮТНО ВСЕ блюда в ОДНОМ дне должны быть РАЗНЫМИ
-- КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНЫ любые повторы блюд в течение одного дня
-- Перекусы и полдники в одном дне НИКОГДА не должны быть похожи или содержать одинаковые основные продукты
-- Используй МАКСИМАЛЬНО РАЗНООБРАЗНЫЕ рецепты, не ограничиваясь только базой знаний
-
-ИНСТРУКЦИЯ ПО СОСТАВЛЕНИЮ МАКСИМАЛЬНО РАЗНООБРАЗНОГО ПИТАНИЯ:
-1. СНАЧАЛА выпиши ВСЕ приемы пищи одного дня (завтрак, обед, ужин, перекусы)
-2. ПРОВЕРЬ, что нет НИ ОДНОГО повторяющегося блюда или ингредиента
-3. ИЗМЕНИ любые похожие или повторяющиеся блюда на СОВЕРШЕННО ДРУГИЕ
-4. ИСПОЛЬЗУЙ свои знания о мировой кухне - предлагай блюда средиземноморской, азиатской, мексиканской, европейской и других кухонь
-
-ВИДЫ ИСТОЧНИКОВ БЕЛКА, КОТОРЫЕ ДОЛЖНЫ БЫТЬ РАВНОМЕРНО РАСПРЕДЕЛЕНЫ:
-- Мясо: говядина, телятина, курица, индейка, кролик, утка, баранина - используй РАЗНЫЕ виды в течение недели
-- Рыба: треска, лосось, тунец, форель, скумбрия, сибас, дорадо, минтай - чередуй жирную и нежирную рыбу
-- Морепродукты: креветки, мидии, кальмары, осьминог, гребешки - отличный вариант для разнообразия
-- Молочные: творог, сыр, кефир, йогурт, ряженка, скир - используй разные виды в разные дни
-- Яйца: куриные, перепелиные, яичные белки - готовь различными способами
-- Растительные: тофу, темпе, сейтан, нут, чечевица, фасоль, киноа, грибы - включай регулярно
-
-НИКОГДА НЕ ДОПУСКАЙ ТАКИХ ОШИБОК:
-- "Яблоко с миндалем" и "Яблоко с орехами" - это почти одинаковые блюда, используй ПОЛНОСТЬЮ РАЗНЫЕ продукты
-- "Творог с ягодами" на завтрак и "Творог с медом" на полдник - недопустимо, используй РАЗНЫЕ белковые основы
-- "Куриная грудка с овощами" и "Куриное филе с овощным салатом" - это почти одинаковые блюда
-- Повторение одного вида белка в течение дня (например, курица на обед и ужин) - ЗАПРЕЩЕНО
-
-ВАЖНО: В течение недели используй ВСЕ категории источников белка и МАКСИМАЛЬНО разнообразные углеводы и жиры.
-
-Используй знания из всех известных тебе источников для составления персонального плана похудения на 4 недели.
-
-СТРОГИЕ ПРАВИЛА ПО СОСТАВЛЕНИЮ ПЛАНА ПИТАНИЯ:
-1. НЕ ПОВТОРЯЙ блюда в рамках одного дня! Каждый прием пищи (завтрак, обед, ужин, перекус, полдник) должен быть АБСОЛЮТНО УНИКАЛЬНЫМ.
-2. КАТЕГОРИЧЕСКИ ЗАПРЕЩЕНО использовать одни и те же продукты в разных приемах пищи одного дня. Если на завтрак был творог, то больше в этот день творога быть не должно.
-3. ИСПОЛЬЗУЙ РАЗНЫЕ ИСТОЧНИКИ БЕЛКА в течение дня: говядина, курица, индейка, телятина, кролик, морепродукты, рыба, яйца, творог, тофу и т.д.
-4. Не повторяй одинаковые блюда чаще чем 1 раз в 5 дней.
-5. ИСПОЛЬЗУЙ свои знания о ВСЕХ возможных рецептах и блюдах МИРОВОЙ КУХНИ, НЕ ОГРАНИЧИВАЯСЬ базой знаний. Добавляй блюда из разных кухонь мира: средиземноморской, азиатской, латиноамериканской, европейской и т.д.
-6. Для каждого источника белка предлагай не менее 5 РАЗНЫХ вариантов приготовления.
-
-ОБЯЗАТЕЛЬНО учти тип питания пользователя:
-- Если выбрал "vegetarian_eggs" (Вегетарианство 🥚) - включай яйца, молочные продукты, НО НЕ ВКЛЮЧАЙ мясо и рыбу
-- Если выбрал "vegetarian_no_eggs" (Вегетарианство) - НЕ включай яйца, мясо, рыбу, но включай молочные продукты
-- Если выбрал "vegan" (Веганство) - НЕ включай мясо, рыбу, яйца, молочные продукты
-- Если выбрал "meat" (Мясная диета) - включай мясо, ограничь углеводы
-- Если выбрал "fish" (Рыбная диета) - включай рыбу, морепродукты, ограничь красное мясо
-
-Для каждого блюда ОБЯЗАТЕЛЬНО указывай:
-1. Название блюда (уникальное в рамках дня)
-2. Список ингредиентов с граммовками (amount и unit)
-3. Калорийность
-
-ВАЖНО ПРОВЕРИТЬ ПЕРЕД ОТВЕТОМ:
-- Нет повторяющихся блюд в рамках одного дня
-- Нет однотипных перекусов и полдников (например, если перекус - яблоко с миндалем, то полдник должен быть другим)
-- Разнообразие типов блюд (не только каши или салаты)
-
-Форматируй ответ строго в JSON:
-{
-  "weeks": [
-    {
-      "week": 1,
-      "days": [
-        {
-          "day": 1,
-          "date": "YYYY-MM-DD",
-          "isWorkoutDay": true/false,
-          "workout": { ... если isWorkoutDay true },
-          "meals": [
-            {
-              "type": "Завтрак",
-              "meal": {
-                "name": "Название блюда",
-                "ingredients": [
-                  {"name": "Ингредиент", "amount": 100, "unit": "г"},
-                  {"name": "Ингредиент2", "amount": 200, "unit": "мл"}
-                ]
-              },
-              "calories": 320,
-              "time": "08:00"
-            }
-          ]
-        }
-      ]
-    }
-  ]
-}`;
-  const userPrompt = `Ответы пользователя: ${JSON.stringify(answers)}
-
-Особенно важно учесть:
-- Тип питания: ${answers.diet_flags || 'default'}
-- Место тренировок: ${answers.gym_or_home || 'дом'}  
-- Количество тренировок в неделю: ${answers.workouts_per_week || 3}
-- Уровень подготовки: ${answers.training_level || 'beginner'}
-- Цель по весу: ${answers.goal_weight_loss || 'weight_loss'}
-
-КРИТИЧЕСКИ ВАЖНО:
-- Разнообразь блюда в течение дня
-- Избегай повторений одного и того же блюда на перекус и полдник
-- Используй разные источники белка, углеводов и жиров
-- Создай максимально разнообразный рацион для поддержания интереса к диете
-
-Релевантные знания:\n${relevantChunks.map(c => c.text).join('\n---\n')}
-
-ВАЖНО: Генерируй план на 4 недели (28 дней) с учетом указанного типа питания и граммовками для каждого ингредиента!`;
-
   try {
-    const aiResponse = await callMistralAI([
-      { role: 'system', content: systemPrompt },
-      { role: 'user', content: userPrompt }
-    ]);
-    
-    // Проверяем и исправляем повторяющиеся блюда в плане
-    const fixedResponse = checkAndFixMealDuplicates(aiResponse);
-    
-    res.json({ plan: fixedResponse });
+    // 1. Расчет КБЖУ пользователя
+    const macros = mealPlanCalculator.calculateUserMacros(answers);
+    // 2. Распределение калорий по приемам пищи
+    const mealCalories = mealPlanCalculator.distributeMealCalories(macros.calories);
+    // 3. Для каждого приема пищи подобрать 5 вариантов из базы с масштабированием
+    const mealTypes = ['Завтрак', 'Перекус', 'Обед', 'Полдник', 'Ужин'];
+    const dietType = answers.diet_flags || 'meat';
+    const days = [];
+    for (let day = 1; day <= 7; day++) {
+      const meals = mealTypes.map(type => {
+        const options = mealPlanCalculator.getMealOptionsByTypeAndDiet(
+          type,
+          dietType,
+          mealCalories[type],
+          5
+        );
+        return {
+          type,
+          options,
+          targetCalories: mealCalories[type]
+        };
+      });
+      days.push({
+        day,
+        date: new Date(Date.now() + (day - 1) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+        isWorkoutDay: (day % 2 === 1),
+        workout: (day % 2 === 1) ? { exercises: [], duration: 30, difficulty: answers.training_level || 'beginner' } : null,
+        meals
+      });
+    }
+    res.json({
+      plan: {
+        weeks: [{ week: 1, days }],
+        macros
+      }
+    });
   } catch (e) {
-    res.status(500).json({ error: 'AI error', details: e.message });
+    res.status(500).json({ error: 'Ошибка генерации плана', details: e.message });
   }
 });
 
@@ -1132,6 +1036,38 @@ app.get('/api/user/progress', async (req, res) => {
     }
 });
 
+// Эндпоинт для получения прогресса пользователя по userId
+app.get('/api/user/progress/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Читаем файл прогресса пользователя
+        const progressFile = path.join(__dirname, 'backup_files', 'users', `${userId}_progress.json`);
+        
+        if (!fs.existsSync(progressFile)) {
+            // Если файла прогресса нет, возвращаем пустые данные
+            return res.json({
+                workouts: 0,
+                nutrition: 0,
+                details: {
+                    meals: { breakfast: 0, lunch: 0, dinner: 0, snacks: 0 },
+                    weeklyProgress: [],
+                    commonIssues: [],
+                    improvements: { weekOverWeek: 0, trend: 'up' }
+                },
+                dailyProgress: {}
+            });
+        }
+        
+        // Читаем и возвращаем данные прогресса
+        const progressData = JSON.parse(fs.readFileSync(progressFile, 'utf-8'));
+        res.json(progressData);
+    } catch (error) {
+        console.error('Error getting user progress:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 // Эндпоинт для обновления ответов квиза
 app.post('/api/user/update-quiz-answers', async (req, res) => {
     try {
@@ -1331,6 +1267,67 @@ app.get('/api/user/day-status/:userId', async (req, res) => {
         res.json({ mealStatus, completedMealsArr, completedExercises });
     } catch (error) {
         console.error('Error getting day status:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// Эндпоинт для получения КБЖУ пользователя
+app.get('/api/user/nutrition/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        
+        // Читаем файл данных пользователя
+        const userFile = path.join(__dirname, 'backup_files', 'users', `quiz_${userId}.json`);
+        
+        if (!fs.existsSync(userFile)) {
+            return res.status(404).json({ error: 'User data not found' });
+        }
+        
+        const userData = JSON.parse(fs.readFileSync(userFile, 'utf-8'));
+        
+        // Расчет BMR и КБЖУ как в programApi.js
+        const age = userData.age || 25;
+        const weight = userData.weight_kg || 65;
+        const height = userData.height_cm || 165;
+        const sex = userData.sex || 'female';
+        const activity = userData.activity_coef || 1.375;
+        const goal = userData.goal || 4;
+        
+        let bmr;
+        if (sex === 'male') {
+            bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+        } else {
+            bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+        }
+        
+        // Итоговые калории с учётом цели
+        let dailyCalories;
+        let deficit = 0;
+        if ([3,4,5].includes(goal)) {
+            deficit = goal * 7700 / 30;
+            dailyCalories = Math.round(bmr * activity - deficit);
+        } else {
+            dailyCalories = Math.round(bmr * activity);
+        }
+        
+        // Минимум 1400 ккал для всех (по базе Дианы)
+        dailyCalories = Math.max(1400, dailyCalories);
+        
+        // Расчёт БЖУ
+        const protein = Math.round(weight * 1.8);
+        const fat = Math.round(weight * 0.9);
+        const carbs = Math.round((dailyCalories - (protein * 4 + fat * 9)) / 4);
+        
+        res.json({
+            calories: dailyCalories,
+            protein: protein,
+            fats: fat,
+            carbs: carbs,
+            bmr: Math.round(bmr),
+            deficit: Math.round(deficit)
+        });
+    } catch (error) {
+        console.error('Error calculating nutrition:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
