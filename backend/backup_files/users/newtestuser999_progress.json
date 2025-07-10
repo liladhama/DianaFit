@@ -16,10 +16,30 @@
     }
   },
   "dailyProgress": {
-    "2025-07-09": {
+    "2025-07-10": {
       "ate": false,
       "workout": false,
       "tasks": [
+        {
+          "name": "Динамическая планка",
+          "type": "workout",
+          "done": false
+        },
+        {
+          "name": "Скручивания лёжа",
+          "type": "workout",
+          "done": false
+        },
+        {
+          "name": "Прыгающий джек",
+          "type": "workout",
+          "done": true
+        },
+        {
+          "name": "Приседания широкой постановкой",
+          "type": "workout",
+          "done": true
+        },
         {
           "name": "Завтрак",
           "type": "meal",
@@ -28,12 +48,12 @@
         {
           "name": "Перекус",
           "type": "meal",
-          "done": false
+          "done": true
         },
         {
           "name": "Обед",
           "type": "meal",
-          "done": false
+          "done": true
         },
         {
           "name": "Полдник",
@@ -43,7 +63,7 @@
         {
           "name": "Ужин",
           "type": "meal",
-          "done": true
+          "done": false
         },
         {
           "name": "steps",
@@ -53,8 +73,8 @@
           "reason": "Не достигнута цель по шагам"
         }
       ],
-      "updatedAt": "2025-07-09T09:28:53.255Z"
+      "updatedAt": "2025-07-10T05:39:37.190Z"
     }
   },
-  "lastUpdate": "2025-07-09T09:28:53.256Z"
-}}
+  "lastUpdate": "2025-07-10T05:39:37.190Z"
+}

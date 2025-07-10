@@ -1389,3 +1389,26 @@ app.get('/api/user/nutrition/:userId', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+// Эндпоинт для получения ответов квиза пользователя
+app.get('/api/user/quiz-answers/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const userFile = path.join(__dirname, 'backup_files', 'users', `quiz_${userId}.json`);
+        console.log('[DIAGNOSTIC] /api/user/quiz-answers/:userId userId:', userId);
+        console.log('[DIAGNOSTIC] userFile:', userFile);
+        
+        if (!fs.existsSync(userFile)) {
+            console.log('[DIAGNOSTIC] Quiz file not found:', userFile);
+            return res.status(404).json({ error: 'Quiz data not found' });
+        }
+        
+        const quizData = JSON.parse(fs.readFileSync(userFile, 'utf-8'));
+        console.log('[DIAGNOSTIC] Quiz data loaded:', quizData);
+        
+        res.json(quizData);
+    } catch (error) {
+        console.error('Error getting user quiz answers:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});

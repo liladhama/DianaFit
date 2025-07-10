@@ -119,6 +119,69 @@ function App() {
   const [showVideoTest, setShowVideoTest] = useState(false);
   const [showAITest, setShowAITest] = useState(false);
   const [userAvatar, setUserAvatar] = useState(null);
+  const [todayDay, setTodayDay] = useState(null); // Добавляем todayDay как состояние
+
+  // Обновляем todayDay при изменении programId
+  useEffect(() => {
+    console.log('🔄 App.js: useEffect для todayDay вызван:', { answers: !!answers, programId });
+    
+    if (answers && programId) {
+      const localProgram = localStorage.getItem(`program_${programId}`);
+      if (localProgram) {
+        const program = JSON.parse(localProgram);
+        console.log('🔍 App.js: Загруженная программа для todayDay:', { 
+          programType: typeof program, 
+          hasData: !!program,
+          keys: Object.keys(program || {}),
+          hasDays: !!program.days,
+          daysLength: program.days?.length
+        });
+        
+        const todayStr = new Date().toISOString().slice(0, 10);
+        
+        // Проверяем структуру программы и получаем массив дней
+        let days = null;
+        if (Array.isArray(program)) {
+          days = program;
+        } else if (program && program.days && Array.isArray(program.days)) {
+          days = program.days;
+        } else if (program && Array.isArray(program.data)) {
+          days = program.data;
+        }
+        
+        if (days && Array.isArray(days)) {
+          const foundDay = days.find(d => d.date === todayStr);
+          console.log('📅 App.js: Устанавливаем todayDay:', {
+            todayStr,
+            foundDay: !!foundDay,
+            totalDays: days.length,
+            dayWorkout: foundDay?.workout?.title,
+            dayLocation: foundDay?.workout?.location,
+            dayIsWorkoutDay: foundDay?.isWorkoutDay,
+            dayExercises: foundDay?.workout?.exercises?.length || 0
+          });
+          setTodayDay(foundDay);
+          console.log('✅ App.js: setTodayDay() вызван с:', foundDay);
+          
+          // Автоматически показываем TodayBlock когда todayDay загружается
+          if (foundDay && !showTodayBlock) {
+            console.log('🎯 App.js: todayDay загружен, автоматически показываем TodayBlock');
+            setShowTodayBlock(true);
+          }
+        } else {
+          console.error('❌ App.js: Программа не содержит массив дней:', program);
+          setTodayDay(null);
+        }
+      } else {
+        console.log('❌ App.js: Программа не найдена в localStorage для programId:', programId);
+        setTodayDay(null);
+      }
+    } else {
+      console.log('❌ App.js: Нет answers или programId для todayDay');
+      setTodayDay(null);
+    }
+  }, [answers, programId, showTodayBlock]); // Зависимость от answers, programId и showTodayBlock
+
   const [isPremium, setIsPremium] = useState(false); // Состояние премиум доступа
   const [isPaymentShown, setIsPaymentShown] = useState(false); // Отслеживаем показ страницы оплаты
 
@@ -223,64 +286,6 @@ function App() {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, []);
-
-  // Получаем текущий день из созданной программы
-  let todayDay = null;
-  if (answers && programId) {
-    // Сначала пробуем загрузить из созданной программы
-    const localProgram = localStorage.getItem(`program_${programId}`);
-    if (localProgram) {
-      const program = JSON.parse(localProgram);
-      console.log('🔍 App.js: Загруженная программа:', { 
-        programType: typeof program, 
-        isArray: Array.isArray(program),
-        hasData: !!program,
-        keys: Object.keys(program || {}),
-        program 
-      });
-      
-      const todayStr = new Date().toISOString().slice(0, 10);
-      
-      // Проверяем структуру программы и получаем массив дней
-      let days = null;
-      if (Array.isArray(program)) {
-        days = program;
-      } else if (program && program.days && Array.isArray(program.days)) {
-        days = program.days;
-      } else if (program && Array.isArray(program.data)) {
-        days = program.data;
-      }
-      
-      if (days && Array.isArray(days)) {
-        todayDay = days.find(d => d.date === todayStr);
-        console.log('📅 App.js: Поиск сегодняшнего дня:', {
-          todayStr,
-          foundDay: !!todayDay,
-          totalDays: days.length,
-          dayWorkout: todayDay?.workout?.title,
-          dayLocation: todayDay?.workout?.location
-        });
-      } else {
-        console.error('❌ App.js: Программа не содержит массив дней:', program);
-      }
-    }
-    
-    // Если не найден, используем мок-данные как fallback
-    if (!todayDay) {
-      const days = [
-        { date: '2024-06-03', title: 'Понедельник', workout: { title: 'Тренировка 1', exercises: [{ name: 'Приседания', reps: 15 }, { name: 'Отжимания', reps: 10 }] }, meals: [{ type: 'Завтрак', menu: 'Овсянка' }, { type: 'Обед', menu: 'Курица с рисом' }], completed: false },
-        { date: '2024-06-04', title: 'Вторник', workout: { title: 'Тренировка 2', exercises: [{ name: 'Планка', reps: 60 }, { name: 'Выпады', reps: 12 }] }, meals: [{ type: 'Завтрак', menu: 'Яичница' }, { type: 'Обед', menu: 'Рыба с овощами' }], completed: false },
-        { date: '2024-06-05', title: 'Среда', workout: { title: 'Тренировка 3', exercises: [{ name: 'Скручивания', reps: 20 }, { name: 'Приседания', reps: 15 }] }, meals: [{ type: 'Завтрак', menu: 'Творог' }, { type: 'Обед', menu: 'Гречка с курицей' }], completed: false },
-        { date: '2024-06-06', title: 'Четверг', workout: { title: 'Тренировка 4', exercises: [{ name: 'Выпады', reps: 12 }, { name: 'Планка', reps: 60 }] }, meals: [{ type: 'Завтрак', menu: 'Омлет' }, { type: 'Обед', menu: 'Говядина с овощами' }], completed: false },
-        { date: '2024-06-07', title: 'Пятница', workout: { title: 'Тренировка 5', exercises: [{ name: 'Отжимания', reps: 10 }, { name: 'Скручивания', reps: 20 }] }, meals: [{ type: 'Завтрак', menu: 'Гречка' }, { type: 'Обед', menu: 'Рыба с картофелем' }], completed: false },
-        { date: '2024-06-08', title: 'Суббота', workout: { title: 'Тренировка 6', exercises: [{ name: 'Приседания', reps: 15 }, { name: 'Планка', reps: 60 }] }, meals: [{ type: 'Завтрак', menu: 'Овсянка' }, { type: 'Обед', menu: 'Курица с овощами' }], completed: false },
-        { date: '2024-06-09', title: 'Воскресенье', workout: { title: 'Отдых', exercises: [] }, meals: [{ type: 'Завтрак', menu: 'Фрукты' }, { type: 'Обед', menu: 'Салат' }], completed: false },
-      ];
-      const todayStr = new Date().toISOString().slice(0, 10);
-      todayDay = days.find(d => d.date === todayStr) || days[0];
-      console.log('⚠️ App.js: Используем мок-данные как fallback для сегодняшнего дня');
-    }
-  }
 
   useEffect(() => {
     // Автоматическое расширение окна Telegram WebApp
@@ -413,7 +418,7 @@ function App() {
             
             // Fallback: создаем демо программу
             console.log('🔄 Fallback: создаем демо программу');
-            const demoProgram = createMonthlyProgramDemo(quizData);
+            const demoProgram = createProgram(quizData);
             setProgramId(demoProgram);
             setAnswers(quizData);
             setShowTodayBlock(true);
@@ -535,12 +540,13 @@ function App() {
   }
 
   // Создание месячной программы на основе ответов квиза (демо версия)
-  function createMonthlyProgramDemo(quizAnswers) {
+  function createProgram(quizAnswers) {
     const workoutsPerWeek = parseInt(quizAnswers.workouts_per_week) || 3;
     const location = quizAnswers.gym_or_home === 'gym' ? 'gym' : 'home'; // Исправлено: сравниваем с 'gym'
     const startDate = new Date(quizAnswers.start_date || new Date());
     const goal = quizAnswers.goal_weight_loss || 'weight_loss';
     const level = quizAnswers.training_level || 'beginner';
+    const userId = quizAnswers.userId || tgUserId || quizAnswers.name || 'user';
     
     console.log('🎯 Создаем демо программу локально');
     console.log('📋 Параметры:', { workoutsPerWeek, location, goal, level });
@@ -608,7 +614,7 @@ function App() {
         ],
         dailySteps: 0,
         dailyStepsGoal: level === 'beginner' ? 8000 : 10000,
-        completedExercises: isWorkoutDay ? new Array(3).fill(null) : [],
+        completedExercises: isWorkoutDay ? new Array(4).fill(null) : [],
         completedMealsArr: new Array(5).fill(null),
         completedWorkout: false,
         completedMeals: false
@@ -618,13 +624,13 @@ function App() {
     }
     
     // Сохраняем программу в localStorage
-    const programId = `demo-${quizAnswers.name || 'user'}-${Date.now()}`;
+    const programId = `program_${userId}_${Date.now()}`;
     const program = {
       programId,
-      userId: quizAnswers.name || 'user',
+      userId,
       profile: quizAnswers,
       days,
-      type: 'monthly-demo',
+      type: 'monthly',
       createdAt: new Date().toISOString()
     };
     
@@ -639,13 +645,11 @@ function App() {
 
   async function handleQuizFinish(quizAnswers) {
     console.log('🎯 HANDLEQUIZFINISH ВЫЗВАН! Данные квиза:', quizAnswers);
-    console.log('🚨 ПРОВЕРЬТЕ - ОТКУДА ВЫЗЫВАЕТСЯ HANDLEQUIZFINISH?');
-    
     // ВРЕМЕННО для локального теста:
-    const userId = 'newtestuser999'; // используем тот же тестовый ID что и для проверки
+    const userId = 'newtestuser999';
     quizAnswers.userId = userId;
-    
-    // Сохраняем данные квиза на сервере
+
+    // Сохраняем данные квиза на сервере (опционально, можно оставить для статистики)
     try {
       console.log('💾 Сохраняем данные квиза на сервере...');
       const saveResponse = await safeFetch(`${API_URL}/api/user/quiz-answers/${userId}`, {
@@ -655,65 +659,24 @@ function App() {
         },
         body: JSON.stringify(quizAnswers)
       });
-      
       console.log('✅ Результат сохранения квиза:', saveResponse);
     } catch (error) {
       console.error('❌ Ошибка сохранения квиза:', error);
-      // Продолжаем выполнение даже если сохранение не удалось
     }
-    
-    console.log('🎯 Квиз завершен, создаем персональную программу через ИИ...');
-    
+
     setAnswers(quizAnswers);
-    
+
+    // --- ВСЕГДА создаём только демо-программу ---
     try {
-      // Отправляем данные квиза в backend для генерации через ИИ
-      console.log('📡 Отправляем данные в backend для генерации программы...');
-      console.log('📋 Данные квиза:', quizAnswers);
-      
-      // Добавляем таймаут для запроса
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => {
-        controller.abort();
-        console.log('⏰ Запрос к ИИ прерван по таймауту (15 секунд)');
-      }, 15000); // 15 секунд таймаут
-      
-      const data = await safeFetch(`${API_URL}/api/calculate-plan`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(quizAnswers),
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      console.log('✅ Получен ответ от ИИ:', data);
-      
-      // Парсим и обрабатываем ответ от ИИ
-      const aiGeneratedProgram = parseAIResponse(data.plan, quizAnswers);
-      
-      if (aiGeneratedProgram) {
-        console.log('✅ ИИ программа обработана:', aiGeneratedProgram);
-        setProgramId(aiGeneratedProgram);
-        setShowTodayBlock(true);
+      const demoProgramId = createProgram(quizAnswers);
+      if (demoProgramId) {
+        localStorage.setItem('programId', demoProgramId);
+        setProgramId(demoProgramId);
       } else {
-        throw new Error('Не удалось обработать ответ ИИ');
+        console.error('❌ Не удалось создать демо-программу');
       }
-      
-    } catch (error) {
-      if (error.name === 'AbortError') {
-        console.error('⏰ Запрос к ИИ прерван по таймауту');
-      } else {
-        console.error('❌ Ошибка генерации через ИИ:', error);
-      }
-      console.log('🔄 Используем локальную демо-версию как fallback...');
-      
-      // Fallback: используем демо программу
-      const demoProgram = createMonthlyProgramDemo(quizAnswers);
-      setProgramId(demoProgram);
-      setShowTodayBlock(true);
+    } catch (e) {
+      console.error('❌ Ошибка при создании демо-программы:', e);
     }
   }
 
@@ -795,26 +758,33 @@ function App() {
         dayNumber: i + 1,
         isWorkoutDay,
         workout: isWorkoutDay ? {
-          title: `День ${workoutNumber} | ИИ-тренировка (${location === 'gym' ? 'Зал' : 'Дом'})`,
-          exercises: getAIExercisesForDay(location, workoutNumber, level, textResponse),
+          title: location === 'gym' 
+            ? `День ${workoutNumber} | Тренировка в зале`
+            : `День ${workoutNumber} | Домашняя тренировка`,
+          exercises: getExercisesForDay(location, workoutNumber, level),
           duration: level === 'beginner' ? 30 : 45,
           difficulty: level,
           location: location
         } : null,
         meals: [
-          { type: 'Завтрак', meal: { name: 'ИИ-рецепт завтрака (fallback)', ingredients: [] }, calories: 320, time: '08:00' },
-          { type: 'Перекус', meal: { name: 'ИИ-рецепт перекуса (fallback)', ingredients: [] }, calories: 80, time: '11:00' },
-          { type: 'Обед', meal: { name: 'ИИ-рецепт обеда (fallback)', ingredients: [] }, calories: 450, time: '14:00' },
-          { type: 'Полдник', meal: { name: 'ИИ-рецепт полдника (fallback)', ingredients: [] }, calories: 120, time: '17:00' },
-          { type: 'Ужин', meal: { name: 'ИИ-рецепт ужина (fallback)', ingredients: [] }, calories: 350, time: '19:00' }
+          { type: 'Завтрак', meal: getBreakfastByDiet(quizAnswers.diet_flags, i + 1), calories: 320, time: '08:00' },
+          { type: 'Перекус', meal: getSnackByDiet(quizAnswers.diet_flags, i + 1), calories: 80, time: '11:00' },
+          { type: 'Обед', meal: getLunchByDiet(quizAnswers.diet_flags, i + 1), calories: 450, time: '14:00' },
+          { type: 'Полдник', meal: getSnackByDiet(quizAnswers.diet_flags, i + 1, true), calories: 120, time: '17:00' },
+          { type: 'Ужин', meal: getDinnerByDiet(quizAnswers.diet_flags, i + 1), calories: 350, time: '19:00' }
         ],
         dailySteps: 0,
         dailyStepsGoal: level === 'beginner' ? 8000 : 10000,
-        completedExercises: isWorkoutDay ? new Array(3).fill(null) : [],
+        completedExercises: isWorkoutDay ? new Array(4).fill(null) : [],
         completedMealsArr: new Array(5).fill(null),
         completedWorkout: false,
         completedMeals: false
       };
+      
+      if (isWorkoutDay) {
+        console.log(`🏋️‍♀️ ИИ День ${i + 1}: тренировка создана с ${day.workout.exercises?.length || 0} упражнениями`);
+        console.log(`🎯 Упражнения:`, day.workout.exercises?.map(ex => ex.name).join(', '));
+      }
       
       days.push(day);
     }
@@ -826,15 +796,12 @@ function App() {
   function getAIExercisesForDay(location, workoutNumber, level, aiText) {
     console.log('🤖 Генерируем ИИ-упражнения для:', { location, workoutNumber, level });
     
-    // Пробуем извлечь упражнения из текста ИИ
-    const exercises = extractExercisesFromAIText(aiText, location);
+    // Временно используем только fallback - базовые упражнения
+    const exercises = getExercisesForDay(location, workoutNumber, level);
+    console.log('🔧 ИИ fallback упражнения (количество):', exercises?.length);
+    console.log('🔧 ИИ fallback упражнения (первое):', exercises?.[0]);
     
-    if (exercises && exercises.length > 0) {
-      return exercises;
-    }
-    
-    // Fallback: используем наши базовые упражнения
-    return getExercisesForDay(location, workoutNumber, level);
+    return exercises;
   }
 
   // Функция для извлечения упражнений из текста ИИ
@@ -906,19 +873,26 @@ function App() {
         // Преобразуем недели в дни
         const days = [];
         
+        // Используем правильную начальную дату
+        const startDate = new Date(quizAnswers.start_date || new Date());
+        
         parsedResponse.weeks.forEach(week => {
           if (week.days && week.days.length > 0) {
             week.days.forEach(day => {
+              // Вычисляем правильную дату для каждого дня
+              const currentDate = new Date(startDate);
+              currentDate.setDate(startDate.getDate() + days.length);
+              
               const formattedDay = {
-                date: day.date || new Date(Date.now() + days.length * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-                title: new Date(day.date || Date.now() + days.length * 24 * 60 * 60 * 1000).toLocaleDateString('ru-RU', { weekday: 'long' }),
+                date: day.date || currentDate.toISOString().slice(0, 10),
+                title: currentDate.toLocaleDateString('ru-RU', { weekday: 'long' }),
                 dayNumber: days.length + 1,
                 isWorkoutDay: day.isWorkoutDay || false,
                 workout: day.workout || null,
                 meals: day.meals || [],
                 dailySteps: 0,
                 dailyStepsGoal: 10000,
-                completedExercises: day.workout ? new Array(day.workout.exercises?.length || 3).fill(null) : [],
+                completedExercises: day.isWorkoutDay ? new Array(4).fill(null) : [], // Фиксированно 4 упражнения
                 completedMealsArr: new Array(5).fill(null),
                 completedWorkout: false,
                 completedMeals: false
@@ -1461,6 +1435,16 @@ function App() {
     return options[index];
   }
 
+  // Отладочные логи для todayDay
+  console.log('🔍 App.js RENDER: todayDay состояние:', {
+    todayDay: todayDay,
+    hasTodayDay: !!todayDay,
+    todayWorkout: todayDay?.workout?.title,
+    isWorkoutDay: todayDay?.isWorkoutDay,
+    programId: programId,
+    answers: !!answers
+  });
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100vw', background: '#fff' }}>
       {showVideoTest ? (
@@ -1718,6 +1702,21 @@ function App() {
           }}
         />
       ) : showTodayBlock ? (
+        (() => {
+          console.log('🎯 App.js РЕНДЕР: Передаем данные в TodayBlock:', {
+            todayDay: !!todayDay,
+            todayDayIsNull: todayDay === null,
+            todayDayType: typeof todayDay,
+            todayDayWorkout: todayDay?.workout?.title,
+            todayDayIsWorkoutDay: todayDay?.isWorkoutDay,
+            todayDayExercises: todayDay?.workout?.exercises?.length,
+            todayDayDate: todayDay?.date,
+            answers: !!answers,
+            programId,
+            fullTodayDay: todayDay
+          });
+          return null;
+        })(),
         <TodayBlock 
           day={todayDay} 
           answers={answers}

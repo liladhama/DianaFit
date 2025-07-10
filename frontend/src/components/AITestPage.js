@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dianafit.onrender.com';
+const API_URL = 'https://dianafit.onrender.com';
 
 export default function AITestPage() {
   const [messages, setMessages] = useState([

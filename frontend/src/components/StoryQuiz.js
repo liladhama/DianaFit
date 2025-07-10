@@ -80,19 +80,13 @@ export default function StoryQuiz({ onFinish }) {
   const total = quizConfig ? quizConfig.length : 0;
 
   useEffect(() => {
-    // Проверка наличия данных пользователя
-    fetch('/api/user/data')
+    // Загружаем конфигурацию квиза (убираем автоматическую проверку пользователя)
+    // Проверка пользователя теперь происходит в App.js
+    fetch('/quizConfig.json')
       .then(res => res.json())
-      .then(data => {
-        if (data && data.answers) {
-          // Если данные пользователя существуют, пропускаем квиз
-          if (onFinish) onFinish(data.answers);
-        } else {
-          // Если данных нет, загружаем конфигурацию квиза
-          fetch('/quizConfig.json')
-            .then(res => res.json())
-            .then(setQuizConfig);
-        }
+      .then(setQuizConfig)
+      .catch(error => {
+        console.error('Ошибка загрузки конфигурации квиза:', error);
       });
   }, []);
 

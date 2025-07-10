@@ -19,7 +19,11 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
         const program = JSON.parse(localProgram);
         setPersonalProgram(program);
         console.log('📅 TestWeek: Персональная программа загружена:', program);
-        console.log('📅 TestWeek: Данные дней:', program.days.slice(0, 7));
+        if (program.days && Array.isArray(program.days)) {
+          console.log('📅 TestWeek: Данные дней:', program.days.slice(0, 7));
+        } else {
+          console.log('❌ TestWeek: program.days не является массивом:', program.days);
+        }
       } else {
         console.log('❌ TestWeek: Программа не найдена в localStorage для ID:', programId);
       }
@@ -35,7 +39,7 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
 
   // Данные тренировочной недели - только из персональной программы
   const getTestWeekData = () => {
-    if (personalProgram && personalProgram.days) {
+    if (personalProgram && personalProgram.days && Array.isArray(personalProgram.days)) {
       // Берем первые 7 дней из программы
       console.log('📅 TestWeek: Используем персональную программу, дней:', personalProgram.days.length);
       const result = personalProgram.days.slice(0, 7).map((day, index) => ({
@@ -49,7 +53,7 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
     }
     
     // Если нет программы - показываем что надо создать программу
-    console.log('❌ TestWeek: Персональная программа не загружена');
+    console.log('❌ TestWeek: Персональная программа не загружена или days не является массивом');
     return [];
   };
 

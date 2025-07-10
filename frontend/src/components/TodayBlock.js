@@ -26,9 +26,7 @@ if (!document.querySelector('#spinner-styles')) {
 }
 
 // --- Переключатель между локальным и продакшн сервером ---
-const API_URL = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
-  ? 'http://localhost:3001'
-  : 'https://dianafit.onrender.com';
+const API_URL = 'https://dianafit.onrender.com';
 
 // Мотивационные цитаты от Дианы
 const motivationalQuotes = [
@@ -84,6 +82,28 @@ const checkboxButtonStyle = (completed) => ({
 });
 
 export default function TodayBlock({ day, answers, onBackToWeek, programId, isPremium, activatePremium, setIsPaymentShown, userAvatar, onProfileClick }) {
+  // Логируем весь пропс day для анализа структуры
+  console.log('🎯 TodayBlock получил day:', {
+    dayExists: !!day,
+    dayIsNull: day === null,
+    dayIsUndefined: day === undefined,
+    dayType: typeof day,
+    dayKeys: day ? Object.keys(day) : [],
+    dayDate: day?.date,
+    dayTitle: day?.title,
+    isWorkoutDay: day?.isWorkoutDay,
+    hasWorkout: !!day?.workout,
+    workoutTitle: day?.workout?.title,
+    workoutLocation: day?.workout?.location,
+    workoutDuration: day?.workout?.duration,
+    hasExercises: !!day?.workout?.exercises,
+    exercisesLength: day?.workout?.exercises?.length || 0,
+    exercisesArray: day?.workout?.exercises,
+    hasCompletedExercises: !!day?.completedExercises,
+    completedExercisesLength: day?.completedExercises?.length || 0,
+    fullDay: day
+  });
+
   // Состояние для персонального плана
   const [personalPlan, setPersonalPlan] = useState(null);
   const [loadingPlan, setLoadingPlan] = useState(false);
@@ -122,7 +142,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   const [completedMeals, setCompletedMeals] = useState([]);
 
   // Используем персональный план если он есть, иначе переданный день или мок
-  const currentDay = personalPlan || day || {
+  const currentDay = day || personalPlan || {
     date: '2024-06-03',
     title: 'Понедельник',
     workout: { title: 'Домашняя тренировка №2', exercises: [ { name: 'Приседания', reps: 15 }, { name: 'Отжимания', reps: 10 } ] },
@@ -1546,7 +1566,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         }
       }
       // Если не нашли в localStorage, пробуем обратиться к серверу
-      const API_URL = process.env.REACT_APP_BACKEND_URL || 'https://dianafit.onrender.com';
+      const API_URL = 'http://localhost:3001';
       const response = await fetch(`${API_URL}/api/program/today?programId=${programId}`);
       const data = await response.json();
       if (data.success) {
@@ -2231,8 +2251,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         isVisible={showReasonModal}
         onClose={() => setShowReasonModal(false)}
         onReasonSelected={handleReasonSelected}
-        type={reasonModalData?.type || ''}
-        itemName={reasonModalData?.itemName || ''}
+        type={reasonModalData.type}
+        itemName={reasonModalData.itemName}
       />
     </div>
   );

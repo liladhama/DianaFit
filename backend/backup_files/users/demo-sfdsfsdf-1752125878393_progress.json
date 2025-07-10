@@ -16,20 +16,34 @@
     }
   },
   "dailyProgress": {
-    "2025-07-09": {
+    "2025-07-10": {
       "ate": false,
       "workout": false,
       "tasks": [
         {
+          "name": "Динамическая планка",
+          "type": "workout",
+          "done": false
+        },
+        {
+          "name": "Скручивания лёжа",
+          "type": "workout",
+          "done": false
+        },
+        {
+          "name": "Прыгающий джек",
+          "type": "workout",
+          "done": false
+        },
+        {
+          "name": "Приседания широкой постановкой",
+          "type": "workout",
+          "done": false
+        },
+        {
           "name": "Завтрак",
           "type": "meal",
-          "done": false,
-          "reason": {
-            "id": "no_products",
-            "text": "🛒 Не было продуктов",
-            "category": "resources",
-            "timestamp": "2025-07-09T09:29:16.569Z"
-          }
+          "done": false
         },
         {
           "name": "Перекус",
@@ -44,12 +58,12 @@
         {
           "name": "Полдник",
           "type": "meal",
-          "done": true
+          "done": false
         },
         {
           "name": "Ужин",
           "type": "meal",
-          "done": true
+          "done": false
         },
         {
           "name": "steps",
@@ -59,8 +73,8 @@
           "reason": "Не достигнута цель по шагам"
         }
       ],
-      "updatedAt": "2025-07-09T09:36:24.019Z"
+      "updatedAt": "2025-07-10T05:38:29.099Z"
     }
   },
-  "lastUpdate": "2025-07-09T09:36:24.020Z"
+  "lastUpdate": "2025-07-10T05:38:29.101Z"
 }
