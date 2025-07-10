@@ -400,11 +400,7 @@ function App() {
       try {
         const userId = 'newtestuser999'; // ВРЕМЕННО ИЗМЕНЯЕМ для теста
         console.log('🔍 Проверяем существующего пользователя после splash:', userId);
-<<<<<<< HEAD
         // Используем API_URL вместо localhost
-=======
-        
->>>>>>> ed6c1d9fac235ac362c7c915bb5c59cb289f041f
         const response = await fetch(`${API_URL}/api/user/quiz-answers/${userId}`);
         console.log('📊 Ответ от backend:', {
           status: response.status,

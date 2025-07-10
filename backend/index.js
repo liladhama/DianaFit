@@ -10,7 +10,6 @@ import { fileURLToPath } from 'url';
 import UserProgressLogger from './userProgressLogger.js';
 // Импортируем роутер рецептов
 import recipeRouter from './routes/recipeRoutes.js';
-import { saveQuizToFile } from './programApi.js';
 import progressRouter from './routes/progressRoutes.js';
 import mealPlanCalculator from './utils/mealPlanCalculator.js';
 
