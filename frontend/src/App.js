@@ -723,6 +723,43 @@ function App() {
     } catch (e) {
       console.error('❌ Ошибка при создании демо-программы:', e);
     }
+    
+    // Сразу после сохранения квиза - создаем и сохраняем недельную программу на сервере
+    try {
+      console.log('🔄 App.js: Сразу после сохранения квиза - создаем и сохраняем недельную программу на сервере');
+      const weeklyProgramId = await createAndSaveWeeklyProgram(quizAnswers);
+      if (weeklyProgramId) {
+        console.log('✅ Новая недельная программа успешно создана и сохранена на сервере:', weeklyProgramId);
+        localStorage.setItem('programId', weeklyProgramId);
+        setProgramId(weeklyProgramId);
+      } else {
+        console.error('❌ Не удалось создать недельную программу на сервере');
+      }
+    } catch (e) {
+      console.error('❌ Ошибка при создании недельной программы на сервере:', e);
+    }
+  }
+
+  // Функция для создания и сохранения недельной программы на сервере
+  async function createAndSaveWeeklyProgram(quizAnswers) {
+    try {
+      const userId = tgUserId || quizAnswers.userId || quizAnswers.name || 'user';
+      const response = await fetch(`${API_URL}/api/user/weekly-program/${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quizAnswers })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return data.programId;
+    } catch (error) {
+      console.error('❌ Ошибка при создании и сохранении недельной программы на сервере:', error);
+      return null;
+    }
   }
 
   // Функция для парсинга ответа ИИ и преобразования в формат программы
