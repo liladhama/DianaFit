@@ -119,7 +119,63 @@ function App() {
   const [showVideoTest, setShowVideoTest] = useState(false);
   const [showAITest, setShowAITest] = useState(false);
   const [userAvatar, setUserAvatar] = useState(null);
-  const [todayDay, setTodayDay] = useState(null); // Добавляем todayDay как состояние
+  const [todayDay, setTodayDay] = useState(null);
+  const [isPremium, setIsPremium] = useState(false);
+  const [isPaymentShown, setIsPaymentShown] = useState(false);
+  // --- Новый стейт для Telegram userId ---
+  const [tgUserId, setTgUserId] = useState(null);
+
+  // Получаем Telegram userId при инициализации
+  useEffect(() => {
+    const id = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+    if (id) {
+      setTgUserId(id.toString());
+      console.log('✅ Получен Telegram userId:', id);
+    } else {
+      setTgUserId(null);
+      console.log('❌ Telegram userId не найден');
+    }
+  }, []);
+
+  // --- Загрузка answers/programId по Telegram userId ---
+  useEffect(() => {
+    if (!showSplash && tgUserId) {
+      // Пробуем загрузить answers и программу с backend
+      (async () => {
+        try {
+          // 1. Получаем answers (квиз) по userId
+          const quizRes = await fetch(`${API_URL}/api/user/quiz-answers/${tgUserId}`);
+          if (quizRes.ok) {
+            const quizData = await quizRes.json();
+            // 2. Пробуем найти актуальную программу на сервере
+            const weeklyRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}`);
+            if (weeklyRes.ok) {
+              const weeklyProgram = await weeklyRes.json();
+              // Сохраняем в localStorage и стейты
+              const newProgramId = `program_${tgUserId}_${Date.now()}`;
+              localStorage.setItem(`program_${newProgramId}`, JSON.stringify(weeklyProgram));
+              localStorage.setItem('programId', newProgramId);
+              setProgramId(newProgramId);
+              setAnswers({ ...quizData, userId: tgUserId });
+              setShowTodayBlock(true);
+              return;
+            }
+            // Если нет программы — только квиз
+            setAnswers({ ...quizData, userId: tgUserId });
+            setShowTodayBlock(false);
+          } else {
+            // Нет answers — показываем квиз
+            setAnswers(null);
+            setShowTodayBlock(false);
+          }
+        } catch (e) {
+          console.error('❌ Ошибка загрузки answers/programId по Telegram userId:', e);
+          setAnswers(null);
+          setShowTodayBlock(false);
+        }
+      })();
+    }
+  }, [showSplash, tgUserId]);
 
   // Обновляем todayDay при изменении programId
   useEffect(() => {
@@ -181,9 +237,6 @@ function App() {
       setTodayDay(null);
     }
   }, [answers, programId, showTodayBlock]); // Зависимость от answers, programId и showTodayBlock
-
-  const [isPremium, setIsPremium] = useState(false); // Состояние премиум доступа
-  const [isPaymentShown, setIsPaymentShown] = useState(false); // Отслеживаем показ страницы оплаты
 
   // Функция активации премиум доступа (для тестирования)
   const activatePremium = () => {
@@ -646,29 +699,19 @@ function App() {
   }
 
   async function handleQuizFinish(quizAnswers) {
-    console.log('🎯 HANDLEQUIZFINISH ВЫЗВАН! Данные квиза:', quizAnswers);
-    // ВРЕМЕННО для локального теста:
-    const userId = 'newtestuser999';
+    // Используем Telegram userId
+    const userId = tgUserId || quizAnswers.userId || quizAnswers.name || 'user';
     quizAnswers.userId = userId;
-
-    // Сохраняем данные квиза на сервере (опционально, можно оставить для статистики)
     try {
-      console.log('💾 Сохраняем данные квиза на сервере...');
-      const saveResponse = await safeFetch(`${API_URL}/api/user/quiz-answers/${userId}`, {
+      await safeFetch(`${API_URL}/api/user/quiz-answers/${userId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(quizAnswers)
       });
-      console.log('✅ Результат сохранения квиза:', saveResponse);
     } catch (error) {
       console.error('❌ Ошибка сохранения квиза:', error);
     }
-
     setAnswers(quizAnswers);
-
-    // --- ВСЕГДА создаём только демо-программу ---
     try {
       const demoProgramId = createProgram(quizAnswers);
       if (demoProgramId) {
@@ -1409,7 +1452,6 @@ function App() {
       ],
       fish: [
         { 
- 
           name: 'Треска на пару с овощами', 
           ingredients: [
             { name: 'Треска филе', amount: 120, unit: 'г' },
