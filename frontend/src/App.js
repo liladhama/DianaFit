@@ -546,6 +546,8 @@ function App() {
     const startDate = new Date(quizAnswers.start_date || new Date());
     const goal = quizAnswers.goal_weight_loss || 'weight_loss';
     const level = quizAnswers.training_level || 'beginner';
+    // Получаем Telegram userId, если он есть
+    const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
     const userId = quizAnswers.userId || tgUserId || quizAnswers.name || 'user';
     
     console.log('🎯 Создаем демо программу локально');
@@ -1407,6 +1409,7 @@ function App() {
       ],
       fish: [
         { 
+ 
           name: 'Треска на пару с овощами', 
           ingredients: [
             { name: 'Треска филе', amount: 120, unit: 'г' },
