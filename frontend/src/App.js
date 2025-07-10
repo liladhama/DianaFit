@@ -141,7 +141,7 @@ function App() {
   // --- Загрузка answers/programId по Telegram userId ---
   useEffect(() => {
     if (!showSplash && tgUserId) {
-      setIsLoadingUserData(true); // старт загрузки
+      setIsLoadingUserData(true);
       (async () => {
         try {
           // 1. Получаем answers (квиз) по userId
@@ -149,10 +149,9 @@ function App() {
           if (quizRes.ok) {
             const quizData = await quizRes.json();
             // 2. Пробуем найти актуальную программу на сервере
-            const weeklyRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}`);
+            let weeklyRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}`);
             if (weeklyRes.ok) {
               const weeklyProgram = await weeklyRes.json();
-              // Сохраняем в localStorage и стейты
               const newProgramId = `program_${tgUserId}_${Date.now()}`;
               localStorage.setItem(`program_${newProgramId}`, JSON.stringify(weeklyProgram));
               localStorage.setItem('programId', newProgramId);
@@ -161,19 +160,51 @@ function App() {
               setShowTodayBlock(true);
               setIsLoadingUserData(false);
               return;
+            } else if (weeklyRes.status === 410) {
+              // Программа устарела — пересоздаём
+              const regenRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}/regenerate`, { method: 'POST' });
+              if (regenRes.ok) {
+                const newProgram = await regenRes.json();
+                const newProgramId = `program_${tgUserId}_${Date.now()}`;
+                localStorage.setItem(`program_${newProgramId}`, JSON.stringify(newProgram));
+                localStorage.setItem('programId', newProgramId);
+                setProgramId(newProgramId);
+                setAnswers({ ...quizData, userId: tgUserId });
+                setShowTodayBlock(true);
+                setIsLoadingUserData(false);
+                return;
+              }
+            } else if (weeklyRes.status === 404) {
+              // Нет программы — создаём новую
+              const createRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...quizData, userId: tgUserId })
+              });
+              if (createRes.ok) {
+                const createdProgram = await createRes.json();
+                const programData = createdProgram.program || createdProgram; // на случай разных форматов ответа
+                const newProgramId = `program_${tgUserId}_${Date.now()}`;
+                localStorage.setItem(`program_${newProgramId}`, JSON.stringify(programData));
+                localStorage.setItem('programId', newProgramId);
+                setProgramId(newProgramId);
+                setAnswers({ ...quizData, userId: tgUserId });
+                setShowTodayBlock(true);
+                setIsLoadingUserData(false);
+                return;
+              }
             }
-            // Если нет программы — только квиз
+            // Если не удалось получить/создать программу — fallback
             setAnswers({ ...quizData, userId: tgUserId });
             setShowTodayBlock(false);
             setIsLoadingUserData(false);
           } else {
-            // Нет answers — показываем квиз
             setAnswers(null);
             setShowTodayBlock(false);
             setIsLoadingUserData(false);
           }
         } catch (e) {
-          console.error('❌ Ошибка загрузки answers/programId по Telegram userId:', e);
+          console.error('❌ Ошибка загрузки/создания программы по Telegram userId:', e);
           setAnswers(null);
           setShowTodayBlock(false);
           setIsLoadingUserData(false);
@@ -1397,7 +1428,7 @@ function App() {
     
     const options = lunches[dietType] || lunches.default;
     // Используем номер дня для детерминированного выбора обеда
-    const index = (dayNumber - 1) % options.length;
+    const index = (dayNumber -  1) % options.length;
     return options[index];
   }
 
