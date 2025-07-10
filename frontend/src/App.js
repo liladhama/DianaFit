@@ -124,6 +124,7 @@ function App() {
   const [isPaymentShown, setIsPaymentShown] = useState(false);
   // --- Новый стейт для Telegram userId ---
   const [tgUserId, setTgUserId] = useState(null);
+  const [isLoadingUserData, setIsLoadingUserData] = useState(true); // Новый флаг загрузки пользователя
 
   // Получаем Telegram userId при инициализации
   useEffect(() => {
@@ -140,7 +141,7 @@ function App() {
   // --- Загрузка answers/programId по Telegram userId ---
   useEffect(() => {
     if (!showSplash && tgUserId) {
-      // Пробуем загрузить answers и программу с backend
+      setIsLoadingUserData(true); // старт загрузки
       (async () => {
         try {
           // 1. Получаем answers (квиз) по userId
@@ -158,20 +159,24 @@ function App() {
               setProgramId(newProgramId);
               setAnswers({ ...quizData, userId: tgUserId });
               setShowTodayBlock(true);
+              setIsLoadingUserData(false);
               return;
             }
             // Если нет программы — только квиз
             setAnswers({ ...quizData, userId: tgUserId });
             setShowTodayBlock(false);
+            setIsLoadingUserData(false);
           } else {
             // Нет answers — показываем квиз
             setAnswers(null);
             setShowTodayBlock(false);
+            setIsLoadingUserData(false);
           }
         } catch (e) {
           console.error('❌ Ошибка загрузки answers/programId по Telegram userId:', e);
           setAnswers(null);
           setShowTodayBlock(false);
+          setIsLoadingUserData(false);
         }
       })();
     }
@@ -863,11 +868,6 @@ function App() {
         completedMeals: false
       };
       
-      if (isWorkoutDay) {
-        console.log(`🏋️‍♀️ ИИ День ${i + 1}: тренировка создана с ${day.workout.exercises?.length || 0} упражнениями`);
-        console.log(`🎯 Упражнения:`, day.workout.exercises?.map(ex => ex.name).join(', '));
-      }
-      
       days.push(day);
     }
     
@@ -1529,7 +1529,9 @@ function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100vw', background: '#fff' }}>
-      {showVideoTest ? (
+      {(showSplash || isLoadingUserData) ? (
+        <SplashScreen />
+      ) : showVideoTest ? (
         <div>
           <VideoTest />
         </div>
