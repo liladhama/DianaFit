@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import dietUtils from '../utils/dietUtils';
 import QuizSettings from './QuizSettings.js';
 import DianaNotification from './DianaNotification.js';
+import { API_URL } from '../config/api';
 
 // Используем функции из default export
 const getDietIcon = dietUtils.getDietIcon;
@@ -87,7 +88,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
     const fetchNutritionFromBackend = async () => {
       try {
         const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'testuser1';
-        const response = await fetch(`http://localhost:3001/api/user/nutrition/${userId}`);
+        const response = await fetch(`${API_URL}/api/user/nutrition/${userId}`);
         if (response.ok) {
           const data = await response.json();
           console.log('Nutrition data from backend:', data);
@@ -140,7 +141,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
     const fetchProgress = async () => {
       try {
         const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'testuser1';
-        const response = await fetch(`http://localhost:3001/api/user-progress/${userId}`);
+        const response = await fetch(`${API_URL}/api/user-progress/${userId}`);
         if (!response.ok) throw new Error('Failed to fetch progress');
         const data = await response.json();
         
@@ -163,7 +164,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
     const fetchQuizAnswers = async () => {
       try {
         const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'testuser1';
-        const response = await fetch(`http://localhost:3001/api/user/quiz-answers/${userId}`);
+        const response = await fetch(`${API_URL}/api/user/quiz-answers/${userId}`);
         if (response.ok) {
           const data = await response.json();
           // Приводим возраст к строке для корректного отображения
@@ -181,7 +182,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
   const handleQuizSettingsChange = async () => {
     try {
       const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'testuser1';
-      const response = await fetch(`http://localhost:3001/api/user/quiz-answers/${userId}`);
+      const response = await fetch(`${API_URL}/api/user/quiz-answers/${userId}`);
       if (response.ok) {
         const data = await response.json();
         setQuizAnswers(data);
@@ -527,7 +528,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                   // Обновляем КБЖУ с бэкенда при изменении настроек
                   if (changes.weight || changes.height || changes.age || changes.activity_level || changes.goal) {
                     try {
-                      const response = await fetch(`http://localhost:3001/api/user/nutrition/${userId}`);
+                      const response = await fetch(`${API_URL}/api/user/nutrition/${userId}`);
                       if (response.ok) {
                         const data = await response.json();
                         setNutritionInfo(data);
