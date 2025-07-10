@@ -159,6 +159,7 @@ function App() {
               setAnswers({ ...quizData, userId: tgUserId });
               setShowTodayBlock(true);
               setIsLoadingUserData(false);
+              setShowSplash(false); // <--- ЯВНО СКРЫВАЕМ SPLASH
               return;
             } else if (weeklyRes.status === 410) {
               // Программа устарела — пересоздаём
@@ -172,6 +173,7 @@ function App() {
                 setAnswers({ ...quizData, userId: tgUserId });
                 setShowTodayBlock(true);
                 setIsLoadingUserData(false);
+                setShowSplash(false); // <--- ЯВНО СКРЫВАЕМ SPLASH
                 return;
               }
             } else if (weeklyRes.status === 404) {
@@ -191,6 +193,7 @@ function App() {
                 setAnswers({ ...quizData, userId: tgUserId });
                 setShowTodayBlock(true);
                 setIsLoadingUserData(false);
+                setShowSplash(false); // <--- ЯВНО СКРЫВАЕМ SPLASH
                 return;
               }
             }
@@ -198,16 +201,19 @@ function App() {
             setAnswers({ ...quizData, userId: tgUserId });
             setShowTodayBlock(false);
             setIsLoadingUserData(false);
+            setShowSplash(false); // <--- ЯВНО СКРЫВАЕМ SPLASH
           } else {
             setAnswers(null);
             setShowTodayBlock(false);
             setIsLoadingUserData(false);
+            setShowSplash(false); // <--- ЯВНО СКРЫВАЕМ SPLASH
           }
         } catch (e) {
           console.error('❌ Ошибка загрузки/создания программы по Telegram userId:', e);
           setAnswers(null);
           setShowTodayBlock(false);
           setIsLoadingUserData(false);
+          setShowSplash(false); // <--- ЯВНО СКРЫВАЕМ SPLASH
         }
       })();
     }
@@ -1561,9 +1567,12 @@ function App() {
     answers: !!answers
   });
 
+  // Явный лог для контроля splash
+  console.log('showSplash:', showSplash, 'isLoadingUserData:', isLoadingUserData);
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100vw', background: '#fff' }}>
-      {(showSplash || isLoadingUserData) ? (
+      {showSplash ? (
         <SplashScreen />
       ) : showVideoTest ? (
         <div>
@@ -1574,7 +1583,89 @@ function App() {
           <AITestPage />
         </div>
       ) : null}
-      
+
+      {/* Dev-кнопки для теста, показывать только в режиме разработки */}
+      {process.env.NODE_ENV === 'development' && showSplash && (
+        <div>
+          <button 
+            onClick={() => setShowVideoTest(true)}
+            style={{ 
+              position: 'fixed', 
+              bottom: '20px', 
+              left: '20px', 
+              zIndex: 1000, 
+              padding: '10px 15px', 
+              backgroundColor: '#007bff', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: '5px',
+              fontSize: '14px'
+            }}
+          >
+            🎥 Тест видео
+          </button>
+          <button 
+            onClick={() => setShowAITest(true)}
+            style={{ 
+              position: 'fixed', 
+              bottom: '80px', 
+              left: '20px', 
+              zIndex: 1000, 
+              padding: '10px 15px', 
+              backgroundColor: '#28a745', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: '5px',
+              fontSize: '14px'
+            }}
+          >
+            🤖 Тест ИИ
+          </button>
+          <button 
+            onClick={() => window.open('/connection-test.html', '_blank')}
+            style={{ 
+              position: 'fixed', 
+              bottom: '140px', 
+              left: '20px', 
+              zIndex: 1000, 
+              padding: '10px 15px', 
+              backgroundColor: '#ffc107', 
+              color: 'black', 
+              border: 'none', 
+              borderRadius: '5px',
+              fontSize: '14px'
+            }}
+          >
+            🔗 Тест соединения
+          </button>
+          <button 
+            onClick={() => {
+              console.log('=== TELEGRAM DEBUG INFO ===');
+              console.log('window.Telegram:', window.Telegram);
+              console.log('WebApp:', window.Telegram?.WebApp);
+              console.log('initDataUnsafe:', window.Telegram?.WebApp?.initDataUnsafe);
+              console.log('user:', window.Telegram?.WebApp?.initDataUnsafe?.user);
+              console.log('userAvatar state:', userAvatar);
+              alert('Проверьте консоль для отладочной информации Telegram');
+            }}
+            style={{ 
+              position: 'fixed', 
+              bottom: '200px', 
+              left: '20px', 
+              zIndex: 1000, 
+              padding: '10px 15px', 
+              backgroundColor: '#6f42c1', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: '5px',
+              fontSize: '14px'
+            }}
+          >
+            🐛 Debug Telegram
+          </button>
+        </div>
+      )}
+
       {/* Аватарка пользователя из Telegram в правом верхнем углу */}
       {/* Показываем только на странице TestWeek (тренировочная неделя), но НЕ в профиле и НЕ на странице оплаты */}
       {!showSplash && showTestWeek && !showProfile && !isPaymentShown && (
@@ -1640,143 +1731,6 @@ function App() {
       {showSplash ? (
         <div>
           <SplashScreen />
-          <button 
-            onClick={() => setShowVideoTest(true)}
-            style={{ 
-              position: 'fixed', 
-              bottom: '20px', 
-              left: '20px', 
-              zIndex: 1000, 
-              padding: '10px 15px', 
-              backgroundColor: '#007bff', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '5px',
-              fontSize: '14px'
-            }}
-          >
-            🎥 Тест видео
-          </button>
-          <button 
-            onClick={() => setShowAITest(true)}
-            style={{ 
-              position: 'fixed', 
-              bottom: '80px', 
-              left: '20px', 
-              zIndex: 1000, 
-              padding: '10px 15px', 
-              backgroundColor: '#28a745', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '5px',
-              fontSize: '14px'
-            }}
-          >
-            🤖 Тест ИИ
-          </button>
-          <button 
-            onClick={() => window.open('/connection-test.html', '_blank')}
-            style={{ 
-              position: 'fixed', 
-              bottom: '140px', 
-              left: '20px', 
-              zIndex: 1000, 
-              padding: '10px 15px', 
-              backgroundColor: '#ffc107', 
-              color: 'black', 
-              border: 'none', 
-              borderRadius: '5px',
-              fontSize: '14px'
-            }}
-          >
-            🔗 Тест соединения
-          </button>
-          
-          {/* Временная кнопка для проверки Telegram данных */}
-          <button 
-            onClick={() => {
-              console.log('=== TELEGRAM DEBUG INFO ===');
-              console.log('window.Telegram:', window.Telegram);
-              console.log('WebApp:', window.Telegram?.WebApp);
-              console.log('initDataUnsafe:', window.Telegram?.WebApp?.initDataUnsafe);
-              console.log('user:', window.Telegram?.WebApp?.initDataUnsafe?.user);
-              console.log('userAvatar state:', userAvatar);
-              alert('Проверьте консоль для отладочной информации Telegram');
-            }}
-            style={{ 
-              position: 'fixed', 
-              bottom: '200px', 
-              left: '20px', 
-              zIndex: 1000, 
-              padding: '10px 15px', 
-              backgroundColor: '#6f42c1', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '5px',
-              fontSize: '14px'
-            }}
-          >
-            🐛 Debug Telegram
-          </button>
-          
-          {/* Кнопка для тестирования аватарки */}
-          <button 
-            onClick={() => {
-              const testAvatar = 'https://avatars.githubusercontent.com/u/1?v=4';
-              setUserAvatar(testAvatar);
-              console.log('Установлена тестовая аватарка:', testAvatar);
-            }}
-            style={{ 
-              position: 'fixed', 
-              bottom: '260px', 
-              left: '20px', 
-              zIndex: 1000, 
-              padding: '10px 15px', 
-              backgroundColor: '#e83e8c', 
-              color: 'white', 
-              border: 'none', 
-              borderRadius: '5px',
-              fontSize: '14px'
-            }}
-          >
-            🖼️ Тест аватарки
-          </button>
-          
-                   
-          {/* Тестовые кнопки скрыты в продакшене */}
-          {process.env.NODE_ENV === 'development' && (
-            <>
-              {/* Кнопка быстрой активации/деактивации премиума - только для разработки */}
-              <button 
-                onClick={() => {
-                  if (isPremium) {
-                    setIsPremium(false);
-                    setUnlocked(false);
-                    localStorage.removeItem('dianafit_premium');
-                    alert('❌ Премиум доступ деактивирован!');
-                  } else {
-                    activatePremium();
-                    alert('🎉 Премиум доступ активирован! Теперь можно тестировать ИИ-чат.');
-                  }
-                }}
-                style={{ 
-                  position: 'fixed', 
-                  bottom: '320px', 
-                  left: '20px', 
-                  zIndex: 1000, 
-                  padding: '10px 15px', 
-                  backgroundColor: isPremium ? '#4CAF50' : '#FFD700', 
-                  color: isPremium ? 'white' : 'black', 
-                  border: 'none', 
-                  borderRadius: '5px',
-                  fontSize: '14px',
-                  fontWeight: 'bold'
-                }}
-              >
-                {isPremium ? '✅ Премиум ВКЛ' : '💎 Премиум ВЫКЛ'}
-              </button>
-            </>
-          )}
         </div>
       ) : showProfile ? (
         <ProfilePage
