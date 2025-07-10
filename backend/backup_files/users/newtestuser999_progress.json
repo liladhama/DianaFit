@@ -21,26 +21,6 @@
       "workout": false,
       "tasks": [
         {
-          "name": "Динамическая планка",
-          "type": "workout",
-          "done": false
-        },
-        {
-          "name": "Скручивания лёжа",
-          "type": "workout",
-          "done": false
-        },
-        {
-          "name": "Прыгающий джек",
-          "type": "workout",
-          "done": true
-        },
-        {
-          "name": "Приседания широкой постановкой",
-          "type": "workout",
-          "done": true
-        },
-        {
           "name": "Завтрак",
           "type": "meal",
           "done": false
@@ -48,12 +28,12 @@
         {
           "name": "Перекус",
           "type": "meal",
-          "done": true
+          "done": false
         },
         {
           "name": "Обед",
           "type": "meal",
-          "done": true
+          "done": false
         },
         {
           "name": "Полдник",
@@ -73,8 +53,8 @@
           "reason": "Не достигнута цель по шагам"
         }
       ],
-      "updatedAt": "2025-07-10T05:39:37.190Z"
+      "updatedAt": "2025-07-10T20:58:04.957Z"
     }
   },
-  "lastUpdate": "2025-07-10T05:39:37.190Z"
+  "lastUpdate": "2025-07-10T20:58:04.957Z"
 }

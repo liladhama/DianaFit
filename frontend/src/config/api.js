@@ -1,4 +1,10 @@
 // Единая конфигурация API URL для всего приложения
-export const API_URL = 'https://dianafit.onrender.com';
-
+let API_URL;
+const host = typeof window !== 'undefined' && window.location ? window.location.hostname : '';
+if (host === 'localhost' || host === '127.0.0.1') {
+  API_URL = 'http://localhost:3001';
+} else {
+  API_URL = 'https://dianafit.onrender.com';
+}
+export { API_URL };
 console.log('API_URL установлен на:', API_URL);

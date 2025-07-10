@@ -8,6 +8,7 @@ import MealCard from './MealCardNew';
 import MealBlock from './MealBlock';
 import { getWorkoutLocation, getDayId, getExerciseEnglishName, getVideoPathForExercise } from '../utils/videoUtils';
 import chatDianaIcon from '../assets/icons/chat-diana-icon.png';
+import { API_URL } from '../config/api';
 
 // Добавляем CSS анимацию для спиннера
 const spinnerStyles = `
@@ -24,9 +25,6 @@ if (!document.querySelector('#spinner-styles')) {
   style.textContent = spinnerStyles;
   document.head.appendChild(style);
 }
-
-// --- Переключатель между локальным и продакшн сервером ---
-const API_URL = 'https://dianafit.onrender.com';
 
 // Мотивационные цитаты от Дианы
 const motivationalQuotes = [
@@ -1566,7 +1564,6 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         }
       }
       // Если не нашли в localStorage, пробуем обратиться к серверу
-      const API_URL = 'http://localhost:3001';
       const response = await fetch(`${API_URL}/api/program/today?programId=${programId}`);
       const data = await response.json();
       if (data.success) {

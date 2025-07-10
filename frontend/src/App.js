@@ -311,8 +311,8 @@ function App() {
       try {
         const userId = 'newtestuser999'; // ВРЕМЕННО ИЗМЕНЯЕМ для теста
         console.log('🔍 Проверяем существующего пользователя после splash:', userId);
-        
-        const response = await fetch(`http://localhost:3001/api/user/quiz-answers/${userId}`);
+        // Используем API_URL вместо localhost
+        const response = await fetch(`${API_URL}/api/user/quiz-answers/${userId}`);
         console.log('📊 Ответ от backend:', {
           status: response.status,
           statusText: response.statusText,
@@ -429,7 +429,10 @@ function App() {
         }
       } catch (error) {
         console.error('❌ Ошибка проверки пользователя:', error);
-        // НЕ трогаем состояние при ошибке
+        // При ошибке явно скрываем splash и показываем fallback/demo
+        setShowSplash(false);
+        setShowTodayBlock(false);
+        // Можно добавить показ заглушки или сообщения об ошибке
       }
     };
 
