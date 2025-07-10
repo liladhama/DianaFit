@@ -119,7 +119,99 @@ function App() {
   const [showVideoTest, setShowVideoTest] = useState(false);
   const [showAITest, setShowAITest] = useState(false);
   const [userAvatar, setUserAvatar] = useState(null);
-  const [todayDay, setTodayDay] = useState(null); // Добавляем todayDay как состояние
+  const [todayDay, setTodayDay] = useState(null);
+  const [isPremium, setIsPremium] = useState(false);
+  const [isPaymentShown, setIsPaymentShown] = useState(false);
+  // --- Новый стейт для Telegram userId ---
+  const [tgUserId, setTgUserId] = useState(null);
+  const [isLoadingUserData, setIsLoadingUserData] = useState(true); // Новый флаг загрузки пользователя
+
+  // Получаем Telegram userId при инициализации
+  useEffect(() => {
+    const id = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+    if (id) {
+      setTgUserId(id.toString());
+      console.log('✅ Получен Telegram userId:', id);
+    } else {
+      setTgUserId(null);
+      console.log('❌ Telegram userId не найден');
+    }
+  }, []);
+
+  // --- Загрузка answers/programId по Telegram userId ---
+  useEffect(() => {
+    if (!showSplash && tgUserId) {
+      setIsLoadingUserData(true);
+      (async () => {
+        try {
+          // 1. Получаем answers (квиз) по userId
+          const quizRes = await fetch(`${API_URL}/api/user/quiz-answers/${tgUserId}`);
+          if (quizRes.ok) {
+            const quizData = await quizRes.json();
+            // 2. Пробуем найти актуальную программу на сервере
+            let weeklyRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}`);
+            if (weeklyRes.ok) {
+              const weeklyProgram = await weeklyRes.json();
+              const newProgramId = `program_${tgUserId}_${Date.now()}`;
+              localStorage.setItem(`program_${newProgramId}`, JSON.stringify(weeklyProgram));
+              localStorage.setItem('programId', newProgramId);
+              setProgramId(newProgramId);
+              setAnswers({ ...quizData, userId: tgUserId });
+              setShowTodayBlock(true);
+              setIsLoadingUserData(false);
+              return;
+            } else if (weeklyRes.status === 410) {
+              // Программа устарела — пересоздаём
+              const regenRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}/regenerate`, { method: 'POST' });
+              if (regenRes.ok) {
+                const newProgram = await regenRes.json();
+                const newProgramId = `program_${tgUserId}_${Date.now()}`;
+                localStorage.setItem(`program_${newProgramId}`, JSON.stringify(newProgram));
+                localStorage.setItem('programId', newProgramId);
+                setProgramId(newProgramId);
+                setAnswers({ ...quizData, userId: tgUserId });
+                setShowTodayBlock(true);
+                setIsLoadingUserData(false);
+                return;
+              }
+            } else if (weeklyRes.status === 404) {
+              // Нет программы — создаём новую
+              const createRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...quizData, userId: tgUserId })
+              });
+              if (createRes.ok) {
+                const createdProgram = await createRes.json();
+                const programData = createdProgram.program || createdProgram; // на случай разных форматов ответа
+                const newProgramId = `program_${tgUserId}_${Date.now()}`;
+                localStorage.setItem(`program_${newProgramId}`, JSON.stringify(programData));
+                localStorage.setItem('programId', newProgramId);
+                setProgramId(newProgramId);
+                setAnswers({ ...quizData, userId: tgUserId });
+                setShowTodayBlock(true);
+                setIsLoadingUserData(false);
+                return;
+              }
+            }
+            // Если не удалось получить/создать программу — fallback
+            setAnswers({ ...quizData, userId: tgUserId });
+            setShowTodayBlock(false);
+            setIsLoadingUserData(false);
+          } else {
+            setAnswers(null);
+            setShowTodayBlock(false);
+            setIsLoadingUserData(false);
+          }
+        } catch (e) {
+          console.error('❌ Ошибка загрузки/создания программы по Telegram userId:', e);
+          setAnswers(null);
+          setShowTodayBlock(false);
+          setIsLoadingUserData(false);
+        }
+      })();
+    }
+  }, [showSplash, tgUserId]);
 
   // Обновляем todayDay при изменении programId
   useEffect(() => {
@@ -181,9 +273,6 @@ function App() {
       setTodayDay(null);
     }
   }, [answers, programId, showTodayBlock]); // Зависимость от answers, programId и showTodayBlock
-
-  const [isPremium, setIsPremium] = useState(false); // Состояние премиум доступа
-  const [isPaymentShown, setIsPaymentShown] = useState(false); // Отслеживаем показ страницы оплаты
 
   // Функция активации премиум доступа (для тестирования)
   const activatePremium = () => {
@@ -311,7 +400,11 @@ function App() {
       try {
         const userId = 'newtestuser999'; // ВРЕМЕННО ИЗМЕНЯЕМ для теста
         console.log('🔍 Проверяем существующего пользователя после splash:', userId);
+<<<<<<< HEAD
         // Используем API_URL вместо localhost
+=======
+        
+>>>>>>> ed6c1d9fac235ac362c7c915bb5c59cb289f041f
         const response = await fetch(`${API_URL}/api/user/quiz-answers/${userId}`);
         console.log('📊 Ответ от backend:', {
           status: response.status,
@@ -649,29 +742,19 @@ function App() {
   }
 
   async function handleQuizFinish(quizAnswers) {
-    console.log('🎯 HANDLEQUIZFINISH ВЫЗВАН! Данные квиза:', quizAnswers);
-    // ВРЕМЕННО для локального теста:
-    const userId = 'newtestuser999';
+    // Используем Telegram userId
+    const userId = tgUserId || quizAnswers.userId || quizAnswers.name || 'user';
     quizAnswers.userId = userId;
-
-    // Сохраняем данные квиза на сервере (опционально, можно оставить для статистики)
     try {
-      console.log('💾 Сохраняем данные квиза на сервере...');
-      const saveResponse = await safeFetch(`${API_URL}/api/user/quiz-answers/${userId}`, {
+      await safeFetch(`${API_URL}/api/user/quiz-answers/${userId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(quizAnswers)
       });
-      console.log('✅ Результат сохранения квиза:', saveResponse);
     } catch (error) {
       console.error('❌ Ошибка сохранения квиза:', error);
     }
-
     setAnswers(quizAnswers);
-
-    // --- ВСЕГДА создаём только демо-программу ---
     try {
       const demoProgramId = createProgram(quizAnswers);
       if (demoProgramId) {
@@ -682,6 +765,43 @@ function App() {
       }
     } catch (e) {
       console.error('❌ Ошибка при создании демо-программы:', e);
+    }
+    
+    // Сразу после сохранения квиза - создаем и сохраняем недельную программу на сервере
+    try {
+      console.log('🔄 App.js: Сразу после сохранения квиза - создаем и сохраняем недельную программу на сервере');
+      const weeklyProgramId = await createAndSaveWeeklyProgram(quizAnswers);
+      if (weeklyProgramId) {
+        console.log('✅ Новая недельная программа успешно создана и сохранена на сервере:', weeklyProgramId);
+        localStorage.setItem('programId', weeklyProgramId);
+        setProgramId(weeklyProgramId);
+      } else {
+        console.error('❌ Не удалось создать недельную программу на сервере');
+      }
+    } catch (e) {
+      console.error('❌ Ошибка при создании недельной программы на сервере:', e);
+    }
+  }
+
+  // Функция для создания и сохранения недельной программы на сервере
+  async function createAndSaveWeeklyProgram(quizAnswers) {
+    try {
+      const userId = tgUserId || quizAnswers.userId || quizAnswers.name || 'user';
+      const response = await fetch(`${API_URL}/api/user/weekly-program/${userId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ quizAnswers })
+      });
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      return data.programId;
+    } catch (error) {
+      console.error('❌ Ошибка при создании и сохранении недельной программы на сервере:', error);
+      return null;
     }
   }
 
@@ -785,11 +905,6 @@ function App() {
         completedWorkout: false,
         completedMeals: false
       };
-      
-      if (isWorkoutDay) {
-        console.log(`🏋️‍♀️ ИИ День ${i + 1}: тренировка создана с ${day.workout.exercises?.length || 0} упражнениями`);
-        console.log(`🎯 Упражнения:`, day.workout.exercises?.map(ex => ex.name).join(', '));
-      }
       
       days.push(day);
     }
@@ -1320,7 +1435,7 @@ function App() {
     
     const options = lunches[dietType] || lunches.default;
     // Используем номер дня для детерминированного выбора обеда
-    const index = (dayNumber - 1) % options.length;
+    const index = (dayNumber -  1) % options.length;
     return options[index];
   }
 
@@ -1412,7 +1527,6 @@ function App() {
       ],
       fish: [
         { 
- 
           name: 'Треска на пару с овощами', 
           ingredients: [
             { name: 'Треска филе', amount: 120, unit: 'г' },
@@ -1453,7 +1567,9 @@ function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100vw', background: '#fff' }}>
-      {showVideoTest ? (
+      {(showSplash || isLoadingUserData) ? (
+        <SplashScreen />
+      ) : showVideoTest ? (
         <div>
           <VideoTest />
         </div>

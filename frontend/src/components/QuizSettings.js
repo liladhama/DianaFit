@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_URL } from '../config/api';
 
 const QuizSettings = () => {
     const [userAnswers, setUserAnswers] = useState({});
@@ -8,8 +9,6 @@ const QuizSettings = () => {
     const [debugUserId, setDebugUserId] = useState('');
     const [debugStatus, setDebugStatus] = useState('');
     const [debugError, setDebugError] = useState('');
-
-    const API_URL = 'https://dianafit.onrender.com';
 
     // Получаем userAnswers напрямую из API при монтировании и после каждого сохранения
     const fetchUserAnswers = async () => {

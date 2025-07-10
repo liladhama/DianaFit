@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-
-const API_URL = 'https://dianafit.onrender.com';
+import { API_URL } from '../config/api';
 
 export default function AITestPage() {
   const [messages, setMessages] = useState([

@@ -1,8 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import dianaIcon from '../assets/icons/diana.png';
-
-// Временно используем только production URL для тестирования ИИ
-const API_URL = 'https://dianafit.onrender.com';
+import { API_URL } from '../config/api';
 
 const DianaChat = ({ onClose, isPremium = false }) => {
   const [messages, setMessages] = useState([
