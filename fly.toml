@@ -1,0 +1,18 @@
+app = "dianafit"
+primary_region = "fra"
+
+[build]
+  # Можно добавить build-артефакты, если нужно
+
+[env]
+  # Здесь можно задать переменные окружения
+
+[services]
+  internal_port = 3001
+  protocol = "tcp"
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
