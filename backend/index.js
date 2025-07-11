@@ -16,7 +16,7 @@ import mealPlanCalculator from './utils/mealPlanCalculator.js';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3000;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Разрешить CORS для всех источников (для локальной отладки и Telegram)
@@ -1159,8 +1159,8 @@ app.post('/api/generate-weekly-plan', async (req, res) => {
     }
 });
 
-app.listen(PORT, () => {
-  console.log(`✅ Сервер запущен на порту ${PORT}`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Server running on port ${PORT}`);
 });
 
 console.log('=== BACKEND INDEX.JS ЗАПУЩЕН ===');
