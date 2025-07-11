@@ -689,19 +689,16 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       // Собираем статистику за последние 7 дней
       const weekStats = [];
       const today = new Date();
-      
+      const telegramUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user';
       for (let i = 6; i >= 0; i--) {
         const date = new Date(today);
         date.setDate(date.getDate() - i);
         const dateStr = date.toISOString().slice(0, 10);
-        
         const statsKey = `completion_stats_${dateStr}`;
         const dayStats = localStorage.getItem(statsKey);
-        
         if (dayStats) {
           weekStats.push(JSON.parse(dayStats));
         } else {
-          // Добавляем пустой день если нет данных
           weekStats.push({
             date: dateStr,
             completionPercentage: 0,
@@ -715,16 +712,14 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           });
         }
       }
-      
       console.log('📈 Статистика недели:', weekStats);
-      
       try {
         const response = await fetch(`${API_URL}/api/weekly-analytics`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             weekStats,
-            userId: 'demo_user',
+            userId: telegramUserId,
             programId: programId || 'demo_program'
           })
         });
@@ -887,7 +882,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   // КНОПКА ОБНОВЛЕНИЯ ВАРИАНТОВ ПИТАНИЯ
   const handleRefreshMeals = () => {
     fetchAIMealPlan();
-    setCompletedMeals([]); // Сбросить статусы
+    // setCompletedMeals([]); // Убрано: не сбрасываем статусы
     setSelectedMealOptionIdx([]); // Сбросить выбранные варианты
   };
 

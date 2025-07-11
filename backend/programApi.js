@@ -135,18 +135,40 @@ router.post('/program', async (req, res) => {
         title: location === 'gym' ? getGymWorkoutTitle(i + 1) : getHomeWorkoutTitle(i + 1),
         exercises: location === 'gym' ? getGymExercises(i + 1) : getHomeExercises(i + 1)
       } : null,
-      meals: [
-        { name: 'Завтрак', menu: 'Овсянка, банан, чай' },
-        { name: 'Обед', menu: 'Курица, гречка, салат' },
-        { name: 'Ужин', menu: 'Творог, яблоко' }
-      ],
       completedWorkout: false,
       completedMeals: false,
       completedExercises: isWorkoutDay ? [false, false, false] : [],
       completedMealsArr: [false, false, false]
     };
   });
-  programs[programId] = { userId, profile, days };
+  // Сохраняем только расписание тренировок и статусы выполнения
+  const programData = {
+    userId,
+    trainingType: location,
+    weeklySchedule: days.map(d => ({ date: d.date, workout: d.workout })),
+    weeklyPlan: days.map(d => ({ date: d.date, workout: d.workout, isWorkoutDay: !!d.workout })),
+  };
+  // Сохраняем в user-файл только programData
+  let userData = {};
+  if (fs.existsSync(userDataPath)) {
+    userData = JSON.parse(fs.readFileSync(userDataPath, 'utf-8'));
+  }
+  // Удаляем profile и menu на всех уровнях
+  if (userData.profile) delete userData.profile;
+  if (userData.menu) delete userData.menu;
+  if (userData.program && userData.program.profile) delete userData.program.profile;
+  if (userData.program && userData.program.days) {
+    userData.program.days.forEach(day => {
+      if (day.meals) {
+        day.meals.forEach(meal => {
+          if (meal.menu) delete meal.menu;
+        });
+      }
+    });
+  }
+  // Сохраняем только programData
+  userData.programData = programData;
+  fs.writeFileSync(userDataPath, JSON.stringify(userData, null, 2), 'utf-8');
   res.json({ success: true, programId });
 });
 
@@ -1467,7 +1489,17 @@ router.post('/user/weekly-program/:userId', async (req, res) => {
     const programData = req.body;
     console.log('[WEEKLY PROGRAM][START] userId:', userId, '| programData:', typeof programData, programData && Object.keys(programData));
     let userData = readUserData(userId);
-    userData.userId = userId;
+    // Фильтрация programData: удаляем profile и menu
+    if (programData.profile) delete programData.profile;
+    if (programData.days) {
+      programData.days.forEach(day => {
+        if (day.meals) {
+          day.meals.forEach(meal => {
+            if (meal.menu) delete meal.menu;
+          });
+        }
+      });
+    }
     userData.program = programData;
     userData.createdAt = userData.createdAt || new Date().toISOString();
     if (!userData.progress) userData.progress = [];

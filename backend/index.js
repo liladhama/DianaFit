@@ -54,16 +54,22 @@ app.get('/api/quiz-config', (req, res) => {
 // Принять ответы теста и вернуть план (теперь только по базе, без ИИ)
 app.post('/api/calculate-plan', async (req, res) => {
   const answers = req.body;
-  const userId = answers.userId || answers.id || answers.telegram_id || 'default';
-  if (userId) {
-    try {
-      let userData = readUserData(userId);
-      userData.userId = userId;
-      userData.quiz = answers;
-      writeUserData(userId, userData);
-    } catch (e) {
-      console.error('Ошибка сохранения квиза:', e);
-    }
+  const userId = answers.userId;
+  if (!userId) {
+    return res.status(400).json({ error: 'userId (Telegram) is required' });
+  }
+  try {
+    let userData = readUserData(userId);
+    userData.userId = userId;
+    userData.quiz = answers;
+    // Не сохраняем меню/варианты блюд!
+    // Сохраняем только тип тренировки, расписание и недельный план
+    if (answers.trainingType) userData.trainingType = answers.trainingType;
+    if (answers.weeklySchedule) userData.weeklySchedule = answers.weeklySchedule;
+    if (answers.weeklyPlan) userData.weeklyPlan = answers.weeklyPlan;
+    writeUserData(userId, userData);
+  } catch (e) {
+    console.error('Ошибка сохранения квиза:', e);
   }
   try {
     // 1. Расчет КБЖУ пользователя

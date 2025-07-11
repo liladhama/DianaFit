@@ -184,33 +184,13 @@ class UserProgressLogger {
         return recommendations;
     }
 
-    // Загрузка лога с дополнительными проверками
-    loadLog() {
-        const logPath = this.getUserLogPath();
-        if (!fs.existsSync(logPath)) {
-            const defaultStructure = this.getDefaultProgressStructure();
-            fs.writeFileSync(logPath, JSON.stringify(defaultStructure, null, 2), 'utf8');
-            return defaultStructure;
-        }
-        let content;
-        try {
-            content = fs.readFileSync(logPath, 'utf8');
-            if (!content || content.trim() === '') throw new Error('Empty file');
-            const parsed = JSON.parse(content);
-            // Гарантируем наличие dailyProgress
-            if (!parsed.dailyProgress) parsed.dailyProgress = {};
-            return parsed;
-        } catch (e) {
-            // Если файл пустой или битый, сбрасываем к дефолтной структуре
-            const defaultStructure = this.getDefaultProgressStructure();
-            fs.writeFileSync(logPath, JSON.stringify(defaultStructure, null, 2), 'utf8');
-            return defaultStructure;
-        }
-    }
-
     // Получение дефолтной структуры прогресса
-    getDefaultProgressStructure() {
+    getDefaultProgressStructure(existing = {}) {
         return {
+            ...('quiz' in existing ? { quiz: existing.quiz } : {}),
+            ...('program' in existing ? { program: existing.program } : {}),
+            ...('progress' in existing ? { progress: existing.progress } : {}),
+            ...('dailyProgress' in existing ? { dailyProgress: existing.dailyProgress } : { dailyProgress: {} }),
             workouts: 0,
             nutrition: 0,
             details: {
@@ -219,9 +199,31 @@ class UserProgressLogger {
                 commonIssues: [],
                 improvements: { weekOverWeek: 0, trend: 'up' }
             },
-            dailyProgress: {},
             lastUpdate: new Date().toISOString()
         };
+    }
+
+    // Загрузка лога с дополнительными проверками
+    loadLog() {
+        const logPath = this.getUserLogPath();
+        let existing = {};
+        if (fs.existsSync(logPath)) {
+            try {
+                const content = fs.readFileSync(logPath, 'utf8');
+                if (content && content.trim() !== '') {
+                    existing = JSON.parse(content);
+                }
+            } catch (e) {
+                // Если файл битый, игнорируем
+            }
+        }
+        if (!fs.existsSync(logPath) || !existing.dailyProgress) {
+            const defaultStructure = this.getDefaultProgressStructure(existing);
+            fs.writeFileSync(logPath, JSON.stringify(defaultStructure, null, 2), 'utf8');
+            return defaultStructure;
+        }
+        if (!existing.dailyProgress) existing.dailyProgress = {};
+        return existing;
     }
 
     // Сохранение лога с атомарной записью
