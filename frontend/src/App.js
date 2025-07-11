@@ -126,6 +126,7 @@ function App() {
   const [tgUserId, setTgUserId] = useState(null);
   const [isLoadingUserData, setIsLoadingUserData] = useState(true); // Новый флаг загрузки пользователя
   const [weekData, setWeekData] = useState(null);
+  const [showQuiz, setShowQuiz] = useState(false); // Новый стейт для показа квиза
 
   // Получаем Telegram userId при инициализации
   useEffect(() => {
