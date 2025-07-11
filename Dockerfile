@@ -1,6 +1,7 @@
 FROM node:20.18.0-slim
 WORKDIR /app
 COPY . .
+EXPOSE 3000
 # Установить зависимости для корня (если есть package.json)
 RUN if [ -f package.json ]; then npm ci || true; fi
 # Установить зависимости для backend
