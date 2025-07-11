@@ -4,59 +4,25 @@ import DianaChat from './DianaChat';
 import "../fonts/fonts.css";
 import chatDianaIcon from '../assets/icons/chat-diana-icon.png';
 
-export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: propIsPremium, activatePremium, setIsPaymentShown, programId }) {
+export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: propIsPremium, activatePremium, setIsPaymentShown, weekData }) {
   const [selectedDay, setSelectedDay] = useState(null);
   const [showPayment, setShowPayment] = useState(false);
   const [showDianaChat, setShowDianaChat] = useState(false);
-  const [isPremium, setIsPremium] = useState(propIsPremium || false); // Используем проп или локальное состояние
-  const [personalProgram, setPersonalProgram] = useState(null);
+  const [isPremium, setIsPremium] = useState(propIsPremium || false);
 
-  // Загружаем персональную программу
-  React.useEffect(() => {
-    if (programId) {
-      const localProgram = localStorage.getItem(`program_${programId}`);
-      if (localProgram) {
-        const program = JSON.parse(localProgram);
-        setPersonalProgram(program);
-        console.log('📅 TestWeek: Персональная программа загружена:', program);
-        if (program.days && Array.isArray(program.days)) {
-          console.log('📅 TestWeek: Данные дней:', program.days.slice(0, 7));
-        } else {
-          console.log('❌ TestWeek: program.days не является массивом:', program.days);
-        }
-      } else {
-        console.log('❌ TestWeek: Программа не найдена в localStorage для ID:', programId);
-      }
-    } else {
-      console.log('❌ TestWeek: programId не передан');
-    }
-  }, [programId]);
-
-  // Синхронизируем с пропом isPremium
-  React.useEffect(() => {
-    setIsPremium(propIsPremium || false);
-  }, [propIsPremium]);
-
-  // Данные тренировочной недели - только из персональной программы
+  // Данные тренировочной недели - только из weekData
   const getTestWeekData = () => {
-    if (personalProgram && personalProgram.days && Array.isArray(personalProgram.days)) {
-      // Берем первые 7 дней из программы
-      console.log('📅 TestWeek: Используем персональную программу, дней:', personalProgram.days.length);
-      const result = personalProgram.days.slice(0, 7).map((day, index) => ({
+    if (weekData && weekData.days && Array.isArray(weekData.days)) {
+      const result = weekData.days.slice(0, 7).map((day, index) => ({
         day: day.title,
         date: new Date(day.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long' }),
-        unlocked: index < 3 || isPremium, // первые 3 дня всегда открыты, остальные - только в премиум
-        planData: day // добавляем данные плана
+        unlocked: index < 3 || isPremium,
+        planData: day
       }));
-      console.log('📅 TestWeek: Результат из персональной программы:', result);
       return result;
     }
-    
-    // Если нет программы - показываем что надо создать программу
-    console.log('❌ TestWeek: Персональная программа не загружена или days не является массивом');
     return [];
   };
-
   const testWeekData = getTestWeekData();
 
   function handleDayClick(index) {

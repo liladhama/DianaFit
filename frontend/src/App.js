@@ -125,6 +125,7 @@ function App() {
   // --- Новый стейт для Telegram userId ---
   const [tgUserId, setTgUserId] = useState(null);
   const [isLoadingUserData, setIsLoadingUserData] = useState(true); // Новый флаг загрузки пользователя
+  const [weekData, setWeekData] = useState(null);
 
   // Получаем Telegram userId при инициализации
   useEffect(() => {
@@ -138,147 +139,84 @@ function App() {
     }
   }, []);
 
-  // --- Загрузка answers/programId по Telegram userId ---
+  // --- Загрузка answers/weekData по Telegram userId ---
   useEffect(() => {
     if (!showSplash && tgUserId) {
       setIsLoadingUserData(true);
-      (async () => {
-        try {
-          // 1. Получаем answers (квиз) по userId
-          const quizRes = await fetch(`${API_URL}/api/user/quiz-answers/${tgUserId}`);
-          if (quizRes.ok) {
-            const quizData = await quizRes.json();
-            // 2. Пробуем найти актуальную программу на сервере
-            let weeklyRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}`);
-            if (weeklyRes.ok) {
-              const weeklyProgram = await weeklyRes.json();
-              const newProgramId = `program_${tgUserId}_${Date.now()}`;
-              localStorage.setItem(`program_${newProgramId}`, JSON.stringify(weeklyProgram));
-              localStorage.setItem('programId', newProgramId);
-              setProgramId(newProgramId);
-              setAnswers({ ...quizData, userId: tgUserId });
-              setShowTodayBlock(true);
-              setIsLoadingUserData(false);
-              setShowSplash(false); // <--- ЯВНО СКРЫВАЕМ SPLASH
-              return;
-            } else if (weeklyRes.status === 410) {
-              // Программа устарела — пересоздаём
-              const regenRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}/regenerate`, { method: 'POST' });
-              if (regenRes.ok) {
-                const newProgram = await regenRes.json();
-                const newProgramId = `program_${tgUserId}_${Date.now()}`;
-                localStorage.setItem(`program_${newProgramId}`, JSON.stringify(newProgram));
-                localStorage.setItem('programId', newProgramId);
-                setProgramId(newProgramId);
-                setAnswers({ ...quizData, userId: tgUserId });
+      const fetchWithRetry = async (retries = 5, delay = 400) => {
+        // 1. Получаем answers (квиз) по userId
+        const quizRes = await fetch(`${API_URL}/api/user/quiz-answers/${tgUserId}`);
+        let quizData = null;
+        if (quizRes.ok) {
+          quizData = await quizRes.json();
+        }
+        // 2. Получаем историю и программу (всё в одном файле)
+        let weeklyRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}`);
+        if (weeklyRes.ok) {
+          const weeklyProgram = await weeklyRes.json();
+          setWeekData(weeklyProgram);
+          setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
+          setShowTodayBlock(true);
+          setIsLoadingUserData(false);
+          setShowSplash(false);
+          return;
+        } else if (weeklyRes.status === 410) {
+          // Программа устарела — пересоздаём
+          const regenRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}/regenerate`, { method: 'POST' });
+          if (regenRes.ok) {
+            const newProgram = await regenRes.json();
+            setWeekData(newProgram);
+            setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
+            setShowTodayBlock(true);
+            setIsLoadingUserData(false);
+            setShowSplash(false);
+            return;
+          }
+        } else if (weeklyRes.status === 404) {
+          // Нет программы — создаём новую
+          const createRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(quizData ? { ...quizData, userId: tgUserId } : { userId: tgUserId })
+          });
+          if (createRes.ok) {
+            // После создания ждем и пробуем получить программу с задержкой и retry
+            for (let i = 0; i < retries; i++) {
+              await new Promise(res => setTimeout(res, delay));
+              let retryRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}`);
+              if (retryRes.ok) {
+                const programData = await retryRes.json();
+                setWeekData(programData);
+                setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
                 setShowTodayBlock(true);
                 setIsLoadingUserData(false);
-                setShowSplash(false); // <--- ЯВНО СКРЫВАЕМ SPLASH
-                return;
-              }
-            } else if (weeklyRes.status === 404) {
-              // Нет программы — создаём новую
-              const createRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...quizData, userId: tgUserId })
-              });
-              if (createRes.ok) {
-                const createdProgram = await createRes.json();
-                const programData = createdProgram.program || createdProgram; // на случай разных форматов ответа
-                const newProgramId = `program_${tgUserId}_${Date.now()}`;
-                localStorage.setItem(`program_${newProgramId}`, JSON.stringify(programData));
-                localStorage.setItem('programId', newProgramId);
-                setProgramId(newProgramId);
-                setAnswers({ ...quizData, userId: tgUserId });
-                setShowTodayBlock(true);
-                setIsLoadingUserData(false);
-                setShowSplash(false); // <--- ЯВНО СКРЫВАЕМ SPLASH
+                setShowSplash(false);
                 return;
               }
             }
-            // Если не удалось получить/создать программу — fallback
-            setAnswers({ ...quizData, userId: tgUserId });
-            setShowTodayBlock(false);
-            setIsLoadingUserData(false);
-            setShowSplash(false); // <--- ЯВНО СКРЫВАЕМ SPLASH
-          } else {
-            setAnswers(null);
-            setShowTodayBlock(false);
-            setIsLoadingUserData(false);
-            setShowSplash(false); // <--- ЯВНО СКРЫВАЕМ SPLASH
           }
-        } catch (e) {
-          console.error('❌ Ошибка загрузки/создания программы по Telegram userId:', e);
-          setAnswers(null);
-          setShowTodayBlock(false);
-          setIsLoadingUserData(false);
-          setShowSplash(false); // <--- ЯВНО СКРЫВАЕМ SPLASH
         }
-      })();
+        // Если не удалось получить/создать программу — fallback
+        setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
+        setShowTodayBlock(false);
+        setIsLoadingUserData(false);
+        setShowSplash(false);
+      };
+      fetchWithRetry();
     }
   }, [showSplash, tgUserId]);
 
-  // Обновляем todayDay при изменении programId
+  // Обновляем todayDay при изменении weekData
   useEffect(() => {
-    console.log('🔄 App.js: useEffect для todayDay вызван:', { answers: !!answers, programId });
-    
-    if (answers && programId) {
-      const localProgram = localStorage.getItem(`program_${programId}`);
-      if (localProgram) {
-        const program = JSON.parse(localProgram);
-        console.log('🔍 App.js: Загруженная программа для todayDay:', { 
-          programType: typeof program, 
-          hasData: !!program,
-          keys: Object.keys(program || {}),
-          hasDays: !!program.days,
-          daysLength: program.days?.length
-        });
-        
-        const todayStr = new Date().toISOString().slice(0, 10);
-        
-        // Проверяем структуру программы и получаем массив дней
-        let days = null;
-        if (Array.isArray(program)) {
-          days = program;
-        } else if (program && program.days && Array.isArray(program.days)) {
-          days = program.days;
-        } else if (program && Array.isArray(program.data)) {
-          days = program.data;
-        }
-        
-        if (days && Array.isArray(days)) {
-          const foundDay = days.find(d => d.date === todayStr);
-          console.log('📅 App.js: Устанавливаем todayDay:', {
-            todayStr,
-            foundDay: !!foundDay,
-            totalDays: days.length,
-            dayWorkout: foundDay?.workout?.title,
-            dayLocation: foundDay?.workout?.location,
-            dayIsWorkoutDay: foundDay?.isWorkoutDay,
-            dayExercises: foundDay?.workout?.exercises?.length || 0
-          });
-          setTodayDay(foundDay);
-          console.log('✅ App.js: setTodayDay() вызван с:', foundDay);
-          
-          // Автоматически показываем TodayBlock когда todayDay загружается
-          if (foundDay && !showTodayBlock) {
-            console.log('🎯 App.js: todayDay загружен, автоматически показываем TodayBlock');
-            setShowTodayBlock(true);
-          }
-        } else {
-          console.error('❌ App.js: Программа не содержит массив дней:', program);
-          setTodayDay(null);
-        }
-      } else {
-        console.log('❌ App.js: Программа не найдена в localStorage для programId:', programId);
-        setTodayDay(null);
-      }
+    if (answers && weekData && Array.isArray(weekData.days)) {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const foundDay = weekData.days.find(d => d.date === todayStr);
+      setTodayDay(foundDay);
+      if (foundDay && !showTodayBlock) setShowTodayBlock(true);
     } else {
-      console.log('❌ App.js: Нет answers или programId для todayDay');
       setTodayDay(null);
     }
-  }, [answers, programId, showTodayBlock]); // Зависимость от answers, programId и showTodayBlock
+  }, [answers, weekData, showTodayBlock]);
 
   // Функция активации премиум доступа (для тестирования)
   const activatePremium = () => {
@@ -646,7 +584,7 @@ function App() {
     const level = quizAnswers.training_level || 'beginner';
     // Получаем Telegram userId, если он есть
     const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
-    const userId = quizAnswers.userId || tgUserId || quizAnswers.name || 'user';
+    const userId = quizAnswers.userId || tgUserId || 'user';
     
     console.log('🎯 Создаем демо программу локально');
     console.log('📋 Параметры:', { workoutsPerWeek, location, goal, level });
@@ -744,12 +682,12 @@ function App() {
   }
 
   async function handleQuizFinish(quizAnswers) {
-    // Используем Telegram userId
-    const userId = tgUserId || quizAnswers.userId || quizAnswers.name || 'user';
+    // Используем только Telegram userId или newtestuser999
+    const userId = tgUserId || 'newtestuser999';
     quizAnswers.userId = userId;
     try {
       await safeFetch(`${API_URL}/api/user/quiz-answers/${userId}`, {
-        method: 'PUT',
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(quizAnswers)
       });
@@ -788,19 +726,42 @@ function App() {
   // Функция для создания и сохранения недельной программы на сервере
   async function createAndSaveWeeklyProgram(quizAnswers) {
     try {
-      const userId = tgUserId || quizAnswers.userId || quizAnswers.name || 'user';
+      const userId = tgUserId || 'newtestuser999';
+      // Генерируем объект программы
+      const programId = createProgram(quizAnswers);
+      const programData = JSON.parse(localStorage.getItem(`program_${programId}`));
       const response = await fetch(`${API_URL}/api/user/weekly-program/${userId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ quizAnswers })
+        body: JSON.stringify(programData)
       });
-      
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
-      
       const data = await response.json();
-      return data.programId;
+      
+      // После создания делаем retry с задержкой для получения программы и отображения TodayBlock
+      const retries = 5;
+      const delay = 500;
+      for (let i = 0; i < retries; i++) {
+        await new Promise(res => setTimeout(res, delay));
+        try {
+          let retryRes = await fetch(`${API_URL}/api/user/weekly-program/${userId}`);
+          if (retryRes.ok) {
+            const weeklyProgram = await retryRes.json();
+            setWeekData(weeklyProgram);
+            setShowTodayBlock(true);
+            setShowSplash(false);
+            setIsLoadingUserData(false);
+            console.log('✅ WeekData загружена после создания программы, TodayBlock активирован');
+            break;
+          }
+        } catch (retryError) {
+          console.warn(`Попытка ${i + 1} получить программу неудачна:`, retryError);
+        }
+      }
+      
+      return data.program?.program?.programId || null;
     } catch (error) {
       console.error('❌ Ошибка при создании и сохранении недельной программы на сервере:', error);
       return null;
@@ -1763,7 +1724,7 @@ function App() {
           isPremium={isPremium}
           activatePremium={activatePremium}
           setIsPaymentShown={setIsPaymentShown}
-          programId={programId}
+          weekData={weekData}
           onStartProgram={() => {
             setShowTestWeek(false);
             setShowToday(true);

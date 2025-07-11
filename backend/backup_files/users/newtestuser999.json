@@ -1,0 +1,6265 @@
+{
+  "workouts": 0,
+  "nutrition": 0,
+  "details": {
+    "meals": {
+      "breakfast": 0,
+      "lunch": 0,
+      "dinner": 0,
+      "snacks": 0
+    },
+    "weeklyProgress": [],
+    "commonIssues": [],
+    "improvements": {
+      "weekOverWeek": 0,
+      "trend": "up"
+    }
+  },
+  "dailyProgress": {
+    "2024-06-03": {
+      "ate": false,
+      "workout": false,
+      "tasks": [
+        {
+          "name": "Приседания",
+          "type": "workout",
+          "done": false
+        },
+        {
+          "name": "Отжимания",
+          "type": "workout",
+          "done": false
+        },
+        {
+          "name": "Завтрак",
+          "type": "meal",
+          "done": false
+        },
+        {
+          "name": "Перекус",
+          "type": "meal",
+          "done": false
+        },
+        {
+          "name": "Обед",
+          "type": "meal",
+          "done": false
+        },
+        {
+          "name": "Полдник",
+          "type": "meal",
+          "done": false
+        },
+        {
+          "name": "Ужин",
+          "type": "meal",
+          "done": false
+        },
+        {
+          "name": "steps",
+          "type": "steps",
+          "done": false,
+          "value": 0,
+          "reason": "Не достигнута цель по шагам"
+        }
+      ],
+      "updatedAt": "2025-07-11T00:31:52.287Z"
+    }
+  },
+  "lastUpdate": "2025-07-11T00:31:52.287Z"
+} {
+                  "name": "Помидоры",
+                  "amount": 70,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сыр твердый",
+                  "amount": 30,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сливочное масло",
+                  "amount": 10,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Куриная грудка с рисом и овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 150,
+                  "unit": "г"
+                },
+                {
+                  "name": "Рис бурый",
+                  "amount": 60,
+                  "unit": "г (сухой)"
+                },
+                {
+                  "name": "Брокколи",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Морковь",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-12",
+        "title": "суббота",
+        "dayNumber": 2,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 1 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            },
+            {
+              "name": "Скручивания лёжа",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "lying_crunches"
+            },
+            {
+              "name": "Прыгающий джек",
+              "reps": "3x20",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "jumping_jacks"
+            },
+            {
+              "name": "Приседания широкой постановкой",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "wide_stance_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Творог с курицей и зеленью",
+              "ingredients": [
+                {
+                  "name": "Творог 5%",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Зелень микс",
+                  "amount": 15,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 5,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Говядина с гречкой",
+              "ingredients": [
+                {
+                  "name": "Говядина постная",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Гречка",
+                  "amount": 60,
+                  "unit": "г (сухая)"
+                },
+                {
+                  "name": "Лук репчатый",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Подсолнечное масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-13",
+        "title": "воскресенье",
+        "dayNumber": 3,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 2 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Выпады реверанс",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "curtsy_lunges"
+            },
+            {
+              "name": "Румынская тяга с резинкой",
+              "reps": "3x15",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "romanian_deadlift_resistance_band"
+            },
+            {
+              "name": "Тяга резинки двумя руками",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "resistance_band_row_both_hands"
+            },
+            {
+              "name": "Тяга резинки одной рукой",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "single_arm_resistance_band_row"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Омлет с беконом",
+              "ingredients": [
+                {
+                  "name": "Яйца куриные",
+                  "amount": 150,
+                  "unit": "г (3 шт)"
+                },
+                {
+                  "name": "Бекон",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 70,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сыр твердый",
+                  "amount": 30,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сливочное масло",
+                  "amount": 10,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Куриная грудка с рисом и овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 150,
+                  "unit": "г"
+                },
+                {
+                  "name": "Рис бурый",
+                  "amount": 60,
+                  "unit": "г (сухой)"
+                },
+                {
+                  "name": "Брокколи",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Морковь",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-14",
+        "title": "понедельник",
+        "dayNumber": 4,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 3 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Приседания с отведением ноги",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "squat_with_side_leg_raise"
+            },
+            {
+              "name": "Статичные выпады",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "stationary_lunges"
+            },
+            {
+              "name": "Динамические отжимания в планке",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "dynamic_plank_push_up"
+            },
+            {
+              "name": "Тяга резинки одной рукой",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "single_arm_resistance_band_row"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Творог с курицей и зеленью",
+              "ingredients": [
+                {
+                  "name": "Творог 5%",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Зелень микс",
+                  "amount": 15,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 5,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Говядина с гречкой",
+              "ingredients": [
+                {
+                  "name": "Говядина постная",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Гречка",
+                  "amount": 60,
+                  "unit": "г (сухая)"
+                },
+                {
+                  "name": "Лук репчатый",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Подсолнечное масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-15",
+        "title": "вторник",
+        "dayNumber": 5,
+        "isWorkoutDay": false,
+        "workout": null,
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Омлет с беконом",
+              "ingredients": [
+                {
+                  "name": "Яйца куриные",
+                  "amount": 150,
+                  "unit": "г (3 шт)"
+                },
+                {
+                  "name": "Бекон",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 70,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сыр твердый",
+                  "amount": 30,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сливочное масло",
+                  "amount": 10,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Куриная грудка с рисом и овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 150,
+                  "unit": "г"
+                },
+                {
+                  "name": "Рис бурый",
+                  "amount": 60,
+                  "unit": "г (сухой)"
+                },
+                {
+                  "name": "Брокколи",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Морковь",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-16",
+        "title": "среда",
+        "dayNumber": 6,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 4 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Сведение лопаток",
+              "reps": "3x15",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "shoulder_blade_squeezes"
+            },
+            {
+              "name": "Приседания с подъёмом на носки",
+              "reps": "3x12",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "squats_with_calf_raise"
+            },
+            {
+              "name": "Скручивания",
+              "reps": "3x20",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "crunches"
+            },
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Творог с курицей и зеленью",
+              "ingredients": [
+                {
+                  "name": "Творог 5%",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Зелень микс",
+                  "amount": 15,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 5,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Говядина с гречкой",
+              "ingredients": [
+                {
+                  "name": "Говядина постная",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Гречка",
+                  "amount": 60,
+                  "unit": "г (сухая)"
+                },
+                {
+                  "name": "Лук репчатый",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Подсолнечное масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-17",
+        "title": "четверг",
+        "dayNumber": 7,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 5 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Захлёсты",
+              "reps": "3x30 сек",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "butt_kicks"
+            },
+            {
+              "name": "Классические приседания",
+              "reps": "3x15",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "classic_squats"
+            },
+            {
+              "name": "Ягодичный мостик",
+              "reps": "3x12",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "glute_bridge"
+            },
+            {
+              "name": "Приседания плие",
+              "reps": "3x15",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "plie_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Омлет с беконом",
+              "ingredients": [
+                {
+                  "name": "Яйца куриные",
+                  "amount": 150,
+                  "unit": "г (3 шт)"
+                },
+                {
+                  "name": "Бекон",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 70,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сыр твердый",
+                  "amount": 30,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сливочное масло",
+                  "amount": 10,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Куриная грудка с рисом и овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 150,
+                  "unit": "г"
+                },
+                {
+                  "name": "Рис бурый",
+                  "amount": 60,
+                  "unit": "г (сухой)"
+                },
+                {
+                  "name": "Брокколи",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Морковь",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-18",
+        "title": "пятница",
+        "dayNumber": 8,
+        "isWorkoutDay": false,
+        "workout": null,
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Творог с курицей и зеленью",
+              "ingredients": [
+                {
+                  "name": "Творог 5%",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Зелень микс",
+                  "amount": 15,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 5,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Говядина с гречкой",
+              "ingredients": [
+                {
+                  "name": "Говядина постная",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Гречка",
+                  "amount": 60,
+                  "unit": "г (сухая)"
+                },
+                {
+                  "name": "Лук репчатый",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Подсолнечное масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-19",
+        "title": "суббота",
+        "dayNumber": 9,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 1 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            },
+            {
+              "name": "Скручивания лёжа",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "lying_crunches"
+            },
+            {
+              "name": "Прыгающий джек",
+              "reps": "3x20",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "jumping_jacks"
+            },
+            {
+              "name": "Приседания широкой постановкой",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "wide_stance_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Омлет с беконом",
+              "ingredients": [
+                {
+                  "name": "Яйца куриные",
+                  "amount": 150,
+                  "unit": "г (3 шт)"
+                },
+                {
+                  "name": "Бекон",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 70,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сыр твердый",
+                  "amount": 30,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сливочное масло",
+                  "amount": 10,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Куриная грудка с рисом и овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 150,
+                  "unit": "г"
+                },
+                {
+                  "name": "Рис бурый",
+                  "amount": 60,
+                  "unit": "г (сухой)"
+                },
+                {
+                  "name": "Брокколи",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Морковь",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-20",
+        "title": "воскресенье",
+        "dayNumber": 10,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 2 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Выпады реверанс",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "curtsy_lunges"
+            },
+            {
+              "name": "Румынская тяга с резинкой",
+              "reps": "3x15",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "romanian_deadlift_resistance_band"
+            },
+            {
+              "name": "Тяга резинки двумя руками",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "resistance_band_row_both_hands"
+            },
+            {
+              "name": "Тяга резинки одной рукой",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "single_arm_resistance_band_row"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Творог с курицей и зеленью",
+              "ingredients": [
+                {
+                  "name": "Творог 5%",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Зелень микс",
+                  "amount": 15,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 5,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Говядина с гречкой",
+              "ingredients": [
+                {
+                  "name": "Говядина постная",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Гречка",
+                  "amount": 60,
+                  "unit": "г (сухая)"
+                },
+                {
+                  "name": "Лук репчатый",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Подсолнечное масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-21",
+        "title": "понедельник",
+        "dayNumber": 11,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 3 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Приседания с отведением ноги",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "squat_with_side_leg_raise"
+            },
+            {
+              "name": "Статичные выпады",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "stationary_lunges"
+            },
+            {
+              "name": "Динамические отжимания в планке",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "dynamic_plank_push_up"
+            },
+            {
+              "name": "Тяга резинки одной рукой",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "single_arm_resistance_band_row"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Омлет с беконом",
+              "ingredients": [
+                {
+                  "name": "Яйца куриные",
+                  "amount": 150,
+                  "unit": "г (3 шт)"
+                },
+                {
+                  "name": "Бекон",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 70,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сыр твердый",
+                  "amount": 30,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сливочное масло",
+                  "amount": 10,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Куриная грудка с рисом и овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 150,
+                  "unit": "г"
+                },
+                {
+                  "name": "Рис бурый",
+                  "amount": 60,
+                  "unit": "г (сухой)"
+                },
+                {
+                  "name": "Брокколи",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Морковь",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-22",
+        "title": "вторник",
+        "dayNumber": 12,
+        "isWorkoutDay": false,
+        "workout": null,
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Творог с курицей и зеленью",
+              "ingredients": [
+                {
+                  "name": "Творог 5%",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Зелень микс",
+                  "amount": 15,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 5,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Говядина с гречкой",
+              "ingredients": [
+                {
+                  "name": "Говядина постная",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Гречка",
+                  "amount": 60,
+                  "unit": "г (сухая)"
+                },
+                {
+                  "name": "Лук репчатый",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Подсолнечное масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-23",
+        "title": "среда",
+        "dayNumber": 13,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 4 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Сведение лопаток",
+              "reps": "3x15",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "shoulder_blade_squeezes"
+            },
+            {
+              "name": "Приседания с подъёмом на носки",
+              "reps": "3x12",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "squats_with_calf_raise"
+            },
+            {
+              "name": "Скручивания",
+              "reps": "3x20",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "crunches"
+            },
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Омлет с беконом",
+              "ingredients": [
+                {
+                  "name": "Яйца куриные",
+                  "amount": 150,
+                  "unit": "г (3 шт)"
+                },
+                {
+                  "name": "Бекон",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 70,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сыр твердый",
+                  "amount": 30,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сливочное масло",
+                  "amount": 10,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Куриная грудка с рисом и овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 150,
+                  "unit": "г"
+                },
+                {
+                  "name": "Рис бурый",
+                  "amount": 60,
+                  "unit": "г (сухой)"
+                },
+                {
+                  "name": "Брокколи",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Морковь",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-24",
+        "title": "четверг",
+        "dayNumber": 14,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 5 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Захлёсты",
+              "reps": "3x30 сек",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "butt_kicks"
+            },
+            {
+              "name": "Классические приседания",
+              "reps": "3x15",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "classic_squats"
+            },
+            {
+              "name": "Ягодичный мостик",
+              "reps": "3x12",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "glute_bridge"
+            },
+            {
+              "name": "Приседания плие",
+              "reps": "3x15",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "plie_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Творог с курицей и зеленью",
+              "ingredients": [
+                {
+                  "name": "Творог 5%",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Зелень микс",
+                  "amount": 15,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 5,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Говядина с гречкой",
+              "ingredients": [
+                {
+                  "name": "Говядина постная",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Гречка",
+                  "amount": 60,
+                  "unit": "г (сухая)"
+                },
+                {
+                  "name": "Лук репчатый",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Подсолнечное масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-25",
+        "title": "пятница",
+        "dayNumber": 15,
+        "isWorkoutDay": false,
+        "workout": null,
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Омлет с беконом",
+              "ingredients": [
+                {
+                  "name": "Яйца куриные",
+                  "amount": 150,
+                  "unit": "г (3 шт)"
+                },
+                {
+                  "name": "Бекон",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 70,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сыр твердый",
+                  "amount": 30,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сливочное масло",
+                  "amount": 10,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Куриная грудка с рисом и овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 150,
+                  "unit": "г"
+                },
+                {
+                  "name": "Рис бурый",
+                  "amount": 60,
+                  "unit": "г (сухой)"
+                },
+                {
+                  "name": "Брокколи",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Морковь",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-26",
+        "title": "суббота",
+        "dayNumber": 16,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 1 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            },
+            {
+              "name": "Скручивания лёжа",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "lying_crunches"
+            },
+            {
+              "name": "Прыгающий джек",
+              "reps": "3x20",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "jumping_jacks"
+            },
+            {
+              "name": "Приседания широкой постановкой",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "wide_stance_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Творог с курицей и зеленью",
+              "ingredients": [
+                {
+                  "name": "Творог 5%",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Зелень микс",
+                  "amount": 15,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 5,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Говядина с гречкой",
+              "ingredients": [
+                {
+                  "name": "Говядина постная",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Гречка",
+                  "amount": 60,
+                  "unit": "г (сухая)"
+                },
+                {
+                  "name": "Лук репчатый",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Подсолнечное масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-27",
+        "title": "воскресенье",
+        "dayNumber": 17,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 2 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Выпады реверанс",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "curtsy_lunges"
+            },
+            {
+              "name": "Румынская тяга с резинкой",
+              "reps": "3x15",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "romanian_deadlift_resistance_band"
+            },
+            {
+              "name": "Тяга резинки двумя руками",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "resistance_band_row_both_hands"
+            },
+            {
+              "name": "Тяга резинки одной рукой",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "single_arm_resistance_band_row"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Омлет с беконом",
+              "ingredients": [
+                {
+                  "name": "Яйца куриные",
+                  "amount": 150,
+                  "unit": "г (3 шт)"
+                },
+                {
+                  "name": "Бекон",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 70,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сыр твердый",
+                  "amount": 30,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сливочное масло",
+                  "amount": 10,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Куриная грудка с рисом и овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 150,
+                  "unit": "г"
+                },
+                {
+                  "name": "Рис бурый",
+                  "amount": 60,
+                  "unit": "г (сухой)"
+                },
+                {
+                  "name": "Брокколи",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Морковь",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-28",
+        "title": "понедельник",
+        "dayNumber": 18,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 3 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Приседания с отведением ноги",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "squat_with_side_leg_raise"
+            },
+            {
+              "name": "Статичные выпады",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "stationary_lunges"
+            },
+            {
+              "name": "Динамические отжимания в планке",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "dynamic_plank_push_up"
+            },
+            {
+              "name": "Тяга резинки одной рукой",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "single_arm_resistance_band_row"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Творог с курицей и зеленью",
+              "ingredients": [
+                {
+                  "name": "Творог 5%",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Зелень микс",
+                  "amount": 15,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 5,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Говядина с гречкой",
+              "ingredients": [
+                {
+                  "name": "Говядина постная",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Гречка",
+                  "amount": 60,
+                  "unit": "г (сухая)"
+                },
+                {
+                  "name": "Лук репчатый",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Подсолнечное масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-29",
+        "title": "вторник",
+        "dayNumber": 19,
+        "isWorkoutDay": false,
+        "workout": null,
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Омлет с беконом",
+              "ingredients": [
+                {
+                  "name": "Яйца куриные",
+                  "amount": 150,
+                  "unit": "г (3 шт)"
+                },
+                {
+                  "name": "Бекон",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 70,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сыр твердый",
+                  "amount": 30,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сливочное масло",
+                  "amount": 10,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Куриная грудка с рисом и овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 150,
+                  "unit": "г"
+                },
+                {
+                  "name": "Рис бурый",
+                  "amount": 60,
+                  "unit": "г (сухой)"
+                },
+                {
+                  "name": "Брокколи",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Морковь",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-30",
+        "title": "среда",
+        "dayNumber": 20,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 4 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Сведение лопаток",
+              "reps": "3x15",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "shoulder_blade_squeezes"
+            },
+            {
+              "name": "Приседания с подъёмом на носки",
+              "reps": "3x12",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "squats_with_calf_raise"
+            },
+            {
+              "name": "Скручивания",
+              "reps": "3x20",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "crunches"
+            },
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Творог с курицей и зеленью",
+              "ingredients": [
+                {
+                  "name": "Творог 5%",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Зелень микс",
+                  "amount": 15,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 5,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Говядина с гречкой",
+              "ingredients": [
+                {
+                  "name": "Говядина постная",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Гречка",
+                  "amount": 60,
+                  "unit": "г (сухая)"
+                },
+                {
+                  "name": "Лук репчатый",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Подсолнечное масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-31",
+        "title": "четверг",
+        "dayNumber": 21,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 5 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Захлёсты",
+              "reps": "3x30 сек",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "butt_kicks"
+            },
+            {
+              "name": "Классические приседания",
+              "reps": "3x15",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "classic_squats"
+            },
+            {
+              "name": "Ягодичный мостик",
+              "reps": "3x12",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "glute_bridge"
+            },
+            {
+              "name": "Приседания плие",
+              "reps": "3x15",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "plie_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Омлет с беконом",
+              "ingredients": [
+                {
+                  "name": "Яйца куриные",
+                  "amount": 150,
+                  "unit": "г (3 шт)"
+                },
+                {
+                  "name": "Бекон",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 70,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сыр твердый",
+                  "amount": 30,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сливочное масло",
+                  "amount": 10,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Куриная грудка с рисом и овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 150,
+                  "unit": "г"
+                },
+                {
+                  "name": "Рис бурый",
+                  "amount": 60,
+                  "unit": "г (сухой)"
+                },
+                {
+                  "name": "Брокколи",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Морковь",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-01",
+        "title": "пятница",
+        "dayNumber": 22,
+        "isWorkoutDay": false,
+        "workout": null,
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Творог с курицей и зеленью",
+              "ingredients": [
+                {
+                  "name": "Творог 5%",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Зелень микс",
+                  "amount": 15,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 5,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Говядина с гречкой",
+              "ingredients": [
+                {
+                  "name": "Говядина постная",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Гречка",
+                  "amount": 60,
+                  "unit": "г (сухая)"
+                },
+                {
+                  "name": "Лук репчатый",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Подсолнечное масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-02",
+        "title": "суббота",
+        "dayNumber": 23,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 1 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            },
+            {
+              "name": "Скручивания лёжа",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "lying_crunches"
+            },
+            {
+              "name": "Прыгающий джек",
+              "reps": "3x20",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "jumping_jacks"
+            },
+            {
+              "name": "Приседания широкой постановкой",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "wide_stance_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Омлет с беконом",
+              "ingredients": [
+                {
+                  "name": "Яйца куриные",
+                  "amount": 150,
+                  "unit": "г (3 шт)"
+                },
+                {
+                  "name": "Бекон",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 70,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сыр твердый",
+                  "amount": 30,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сливочное масло",
+                  "amount": 10,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Куриная грудка с рисом и овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 150,
+                  "unit": "г"
+                },
+                {
+                  "name": "Рис бурый",
+                  "amount": 60,
+                  "unit": "г (сухой)"
+                },
+                {
+                  "name": "Брокколи",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Морковь",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-03",
+        "title": "воскресенье",
+        "dayNumber": 24,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 2 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Выпады реверанс",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "curtsy_lunges"
+            },
+            {
+              "name": "Румынская тяга с резинкой",
+              "reps": "3x15",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "romanian_deadlift_resistance_band"
+            },
+            {
+              "name": "Тяга резинки двумя руками",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "resistance_band_row_both_hands"
+            },
+            {
+              "name": "Тяга резинки одной рукой",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "single_arm_resistance_band_row"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Творог с курицей и зеленью",
+              "ingredients": [
+                {
+                  "name": "Творог 5%",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Зелень микс",
+                  "amount": 15,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 5,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Говядина с гречкой",
+              "ingredients": [
+                {
+                  "name": "Говядина постная",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Гречка",
+                  "amount": 60,
+                  "unit": "г (сухая)"
+                },
+                {
+                  "name": "Лук репчатый",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Подсолнечное масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-04",
+        "title": "понедельник",
+        "dayNumber": 25,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 3 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Приседания с отведением ноги",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "squat_with_side_leg_raise"
+            },
+            {
+              "name": "Статичные выпады",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "stationary_lunges"
+            },
+            {
+              "name": "Динамические отжимания в планке",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "dynamic_plank_push_up"
+            },
+            {
+              "name": "Тяга резинки одной рукой",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "single_arm_resistance_band_row"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Омлет с беконом",
+              "ingredients": [
+                {
+                  "name": "Яйца куриные",
+                  "amount": 150,
+                  "unit": "г (3 шт)"
+                },
+                {
+                  "name": "Бекон",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 70,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сыр твердый",
+                  "amount": 30,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сливочное масло",
+                  "amount": 10,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Куриная грудка с рисом и овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 150,
+                  "unit": "г"
+                },
+                {
+                  "name": "Рис бурый",
+                  "amount": 60,
+                  "unit": "г (сухой)"
+                },
+                {
+                  "name": "Брокколи",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Морковь",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-05",
+        "title": "вторник",
+        "dayNumber": 26,
+        "isWorkoutDay": false,
+        "workout": null,
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Творог с курицей и зеленью",
+              "ingredients": [
+                {
+                  "name": "Творог 5%",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Зелень микс",
+                  "amount": 15,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 5,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Говядина с гречкой",
+              "ingredients": [
+                {
+                  "name": "Говядина постная",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Гречка",
+                  "amount": 60,
+                  "unit": "г (сухая)"
+                },
+                {
+                  "name": "Лук репчатый",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Подсолнечное масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-06",
+        "title": "среда",
+        "dayNumber": 27,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 4 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Сведение лопаток",
+              "reps": "3x15",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "shoulder_blade_squeezes"
+            },
+            {
+              "name": "Приседания с подъёмом на носки",
+              "reps": "3x12",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "squats_with_calf_raise"
+            },
+            {
+              "name": "Скручивания",
+              "reps": "3x20",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "crunches"
+            },
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Омлет с беконом",
+              "ingredients": [
+                {
+                  "name": "Яйца куриные",
+                  "amount": 150,
+                  "unit": "г (3 шт)"
+                },
+                {
+                  "name": "Бекон",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 70,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сыр твердый",
+                  "amount": 30,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сливочное масло",
+                  "amount": 10,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Куриная грудка с рисом и овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 150,
+                  "unit": "г"
+                },
+                {
+                  "name": "Рис бурый",
+                  "amount": 60,
+                  "unit": "г (сухой)"
+                },
+                {
+                  "name": "Брокколи",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Морковь",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-07",
+        "title": "четверг",
+        "dayNumber": 28,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 5 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Захлёсты",
+              "reps": "3x30 сек",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "butt_kicks"
+            },
+            {
+              "name": "Классические приседания",
+              "reps": "3x15",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "classic_squats"
+            },
+            {
+              "name": "Ягодичный мостик",
+              "reps": "3x12",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "glute_bridge"
+            },
+            {
+              "name": "Приседания плие",
+              "reps": "3x15",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "plie_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Творог с курицей и зеленью",
+              "ingredients": [
+                {
+                  "name": "Творог 5%",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Зелень микс",
+                  "amount": 15,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 5,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Говядина с гречкой",
+              "ingredients": [
+                {
+                  "name": "Говядина постная",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Гречка",
+                  "amount": 60,
+                  "unit": "г (сухая)"
+                },
+                {
+                  "name": "Лук репчатый",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Подсолнечное масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-08",
+        "title": "пятница",
+        "dayNumber": 29,
+        "isWorkoutDay": false,
+        "workout": null,
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Омлет с беконом",
+              "ingredients": [
+                {
+                  "name": "Яйца куриные",
+                  "amount": 150,
+                  "unit": "г (3 шт)"
+                },
+                {
+                  "name": "Бекон",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 70,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сыр твердый",
+                  "amount": 30,
+                  "unit": "г"
+                },
+                {
+                  "name": "Сливочное масло",
+                  "amount": 10,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Куриная грудка с рисом и овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 150,
+                  "unit": "г"
+                },
+                {
+                  "name": "Рис бурый",
+                  "amount": 60,
+                  "unit": "г (сухой)"
+                },
+                {
+                  "name": "Брокколи",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Морковь",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-09",
+        "title": "суббота",
+        "dayNumber": 30,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 1 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            },
+            {
+              "name": "Скручивания лёжа",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "lying_crunches"
+            },
+            {
+              "name": "Прыгающий джек",
+              "reps": "3x20",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "jumping_jacks"
+            },
+            {
+              "name": "Приседания широкой постановкой",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "wide_stance_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "meal": {
+              "name": "Творог с курицей и зеленью",
+              "ingredients": [
+                {
+                  "name": "Творог 5%",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Зелень микс",
+                  "amount": 15,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 5,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "meal": {
+              "name": "Говядина с гречкой",
+              "ingredients": [
+                {
+                  "name": "Говядина постная",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Гречка",
+                  "amount": 60,
+                  "unit": "г (сухая)"
+                },
+                {
+                  "name": "Лук репчатый",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры",
+                  "amount": 100,
+                  "unit": "г"
+                },
+                {
+                  "name": "Подсолнечное масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "meal": {
+              "name": "Куриные кусочки с овощами",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка отварная",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 50,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 50,
+                  "unit": "г"
+                }
+              ]
+            },
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "meal": {
+              "name": "Куриная грудка с салатом",
+              "ingredients": [
+                {
+                  "name": "Куриная грудка",
+                  "amount": 120,
+                  "unit": "г"
+                },
+                {
+                  "name": "Листья салата",
+                  "amount": 80,
+                  "unit": "г"
+                },
+                {
+                  "name": "Огурец",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Помидоры черри",
+                  "amount": 60,
+                  "unit": "г"
+                },
+                {
+                  "name": "Оливковое масло",
+                  "amount": 10,
+                  "unit": "мл"
+                }
+              ]
+            },
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      }
+    ],
+    "type": "monthly",
+    "createdAt": "2025-07-11T00:31:22.368Z"
+  },
+  "createdAt": "2025-07-11T00:31:22.364Z",
+  "progress": [],
+  "dailyProgress": {
+    "2025-07-11": {
+      "ate": false,
+      "workout": false,
+      "tasks": [
+        {
+          "name": "Завтрак",
+          "type": "meal",
+          "done": false
+        },
+        {
+          "name": "Перекус",
+          "type": "meal",
+          "done": false
+        },
+        {
+          "name": "Обед",
+          "type": "meal",
+          "done": false
+        },
+        {
+          "name": "Полдник",
+          "type": "meal",
+          "done": false
+        },
+        {
+          "name": "Ужин",
+          "type": "meal",
+          "done": false
+        },
+        {
+          "name": "steps",
+          "type": "steps",
+          "done": false,
+          "value": 0,
+          "reason": "Не достигнута цель по шагам"
+        }
+      ],
+      "updatedAt": "2025-07-11T00:31:36.062Z"
+    },
+    "2024-06-03": {
+      "ate": false,
+      "workout": false,
+      "tasks": [
+        {
+          "name": "Приседания",
+          "type": "workout",
+          "done": false
+        },
+        {
+          "name": "Отжимания",
+          "type": "workout",
+          "done": false
+        },
+        {
+          "name": "Завтрак",
+          "type": "meal",
+          "done": false
+        },
+        {
+          "name": "Перекус",
+          "type": "meal",
+          "done": false
+        },
+        {
+          "name": "Обед",
+          "type": "meal",
+          "done": false
+        },
+        {
+          "name": "Полдник",
+          "type": "meal",
+          "done": false
+        },
+        {
+          "name": "Ужин",
+          "type": "meal",
+          "done": false
+        },
+        {
+          "name": "steps",
+          "type": "steps",
+          "done": false,
+          "value": 0,
+          "reason": "Не достигнута цель по шагам"
+        }
+      ],
+      "updatedAt": "2025-07-11T00:31:52.279Z"
+    }
+  },
+  "lastUpdate": "2025-07-11T00:31:52.279Z"
+}

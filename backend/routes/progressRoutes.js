@@ -12,11 +12,12 @@ router.post('/', async (req, res) => {
     }
     try {
         const logger = new UserProgressLogger(userId);
+        console.log('[PROGRESS ROUTE] saveDayProgress userId:', userId, '| logPath:', logger.getUserLogPath());
         console.log('[PROGRESS ROUTE] saveDayProgress tasks:', tasks);
         await logger.saveDayProgress({ date, ate, workout, tasks });
         res.json({ success: true });
     } catch (e) {
-        console.error('[PROGRESS ROUTE] Ошибка сохранения прогресса:', e);
+        console.error('[PROGRESS ROUTE] Ошибка сохранения прогресса:', e, '| userId:', userId);
         res.status(500).json({ error: 'Ошибка сохранения прогресса' });
     }
 });
@@ -29,9 +30,11 @@ router.get('/', (req, res) => {
     }
     try {
         const logger = new UserProgressLogger(userId);
+        console.log('[PROGRESS ROUTE] getDayProgress userId:', userId, '| logPath:', logger.getUserLogPath());
         const progress = logger.getDayProgress(date);
         res.json(progress);
     } catch (e) {
+        console.error('[PROGRESS ROUTE] Ошибка получения прогресса:', e, '| userId:', userId);
         res.status(500).json({ error: 'Ошибка получения прогресса' });
     }
 });

@@ -57,7 +57,10 @@ app.post('/api/calculate-plan', async (req, res) => {
   const userId = answers.userId || answers.id || answers.telegram_id || 'default';
   if (userId) {
     try {
-      saveQuizToFile(userId, answers);
+      let userData = readUserData(userId);
+      userData.userId = userId;
+      userData.quiz = answers;
+      writeUserData(userId, userData);
     } catch (e) {
       console.error('Ошибка сохранения квиза:', e);
     }
@@ -1393,21 +1396,44 @@ app.get('/api/user/nutrition/:userId', async (req, res) => {
 app.get('/api/user/quiz-answers/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        const userFile = path.join(__dirname, 'backup_files', 'users', `quiz_${userId}.json`);
-        console.log('[DIAGNOSTIC] /api/user/quiz-answers/:userId userId:', userId);
-        console.log('[DIAGNOSTIC] userFile:', userFile);
-        
-        if (!fs.existsSync(userFile)) {
-            console.log('[DIAGNOSTIC] Quiz file not found:', userFile);
+        const userData = readUserData(userId);
+        if (!userData.quiz) {
             return res.status(404).json({ error: 'Quiz data not found' });
         }
-        
-        const quizData = JSON.parse(fs.readFileSync(userFile, 'utf-8'));
-        console.log('[DIAGNOSTIC] Quiz data loaded:', quizData);
-        
-        res.json(quizData);
+        res.json(userData.quiz);
     } catch (error) {
         console.error('Error getting user quiz answers:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+// Эндпоинт для сохранения ответов квиза пользователя
+app.post('/api/user/quiz-answers/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const quizData = req.body;
+        let userData = readUserData(userId);
+        userData.quiz = quizData;
+        writeUserData(userId, userData);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error saving user quiz answers:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// --- Универсальный путь к файлу пользователя ---
+function getUserDataPath(userId) {
+  return path.join(__dirname, 'backup_files', 'users', `${userId}.json`);
+}
+function readUserData(userId) {
+  const file = getUserDataPath(userId);
+  if (fs.existsSync(file)) {
+    return JSON.parse(fs.readFileSync(file, 'utf-8'));
+  }
+  return { userId };
+}
+function writeUserData(userId, data) {
+  const file = getUserDataPath(userId);
+  fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf-8');
+}

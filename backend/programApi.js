@@ -2,7 +2,7 @@
 import express from 'express';
 const router = express.Router();
 import fs from 'fs';
-import path from 'path';
+import path, { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { spawnSync } from 'child_process';
 import recipeUtils from './utils/recipeUtils.js';
@@ -13,7 +13,7 @@ import fetch from 'node-fetch';
 // В памяти (для примера)
 const programs = {};
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = dirname(fileURLToPath(import.meta.url));
 // Удалена загрузка knowledge_base_full.jsonl, так как она не используется
 
 // --- Глобальные константы для распределения КБЖУ и типов диет ---
@@ -1204,25 +1204,25 @@ router.post('/ai-meal-plan', async (req, res) => {
   }
 });
 
-// --- Прокси-роут: /api/user/weekly-program/:userId возвращает данные из прогресса пользователя ---
-router.get('/user/weekly-program/:userId', async (req, res) => {
+// Проксирующий роут для /api/generate-recipe (перенаправляет на /api/recipes/generate-recipe)
+router.post('/generate-recipe', async (req, res) => {
   try {
-    const userId = req.params.userId;
-    const UserProgressLogger = (await import('./userProgressLogger.js')).default;
-    const logger = new UserProgressLogger(userId);
-    const log = logger.loadLog();
-    if (!log) {
-      return res.status(404).json({ error: 'User progress not found' });
-    }
-    // days: массив дней из dailyProgress (или пустой)
-    let days = [];
-    if (log.dailyProgress && typeof log.dailyProgress === 'object') {
-      days = Object.entries(log.dailyProgress).map(([date, data]) => ({ date, ...data }));
-    }
-    res.json({ ...log, days });
+    const response = await fetch('http://localhost:3001/api/recipes/generate-recipe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req.body)
+    });
+    const data = await response.text();
+    res.status(response.status).send(data);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ success: false, error: error.message });
   }
+});
+
+// Заглушка для /api/get-today-plan (примерная структура)
+router.post('/get-today-plan', async (req, res) => {
+  // Здесь можно реализовать реальную логику, если потребуется
+  res.status(501).json({ success: false, error: 'Эндпоинт не реализован' });
 });
 
 // --- AI-подбор меню по КБЖУ и базе рецептов с несколькими вариантами для каждого приёма пищи ---
@@ -1431,5 +1431,79 @@ function scaleRecipeToTargets(recipe, target) {
   }
 }
 
-// Экспортируем роуты
+// --- Универсальный путь к файлу пользователя ---
+function getUserDataPath(userId) {
+  return path.join(__dirname, 'backup_files', 'users', `${userId}.json`);
+}
+
+// --- Универсальная функция чтения данных пользователя ---
+function readUserData(userId) {
+  const file = getUserDataPath(userId);
+  if (fs.existsSync(file)) {
+    return JSON.parse(fs.readFileSync(file, 'utf-8'));
+  }
+  return { userId };
+}
+
+// --- Универсальная функция записи данных пользователя ---
+function writeUserData(userId, data) {
+  const file = getUserDataPath(userId);
+  fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+// --- Сохранить недельную программу пользователя ---
+router.post('/user/weekly-program/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const programData = req.body;
+    console.log('[WEEKLY PROGRAM][START] userId:', userId, '| programData:', typeof programData, programData && Object.keys(programData));
+    let userData = readUserData(userId);
+    userData.userId = userId;
+    userData.program = programData;
+    userData.createdAt = userData.createdAt || new Date().toISOString();
+    if (!userData.progress) userData.progress = [];
+    writeUserData(userId, userData);
+    console.log('[WEEKLY PROGRAM][END] Программа сохранена для пользователя:', userId);
+    res.json({ success: true, program: userData });
+  } catch (error) {
+    console.error('[WEEKLY PROGRAM] Ошибка сохранения программы:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// --- Получить недельную программу пользователя ---
+router.get('/user/weekly-program/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const userData = readUserData(userId);
+    if (!userData.program) {
+      return res.status(404).json({ error: 'Program not found' });
+    }
+    res.json(userData.program);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// --- Обновление прогресса пользователя ---
+router.patch('/user/weekly-program/:userId/progress', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const { date, completedWorkout, completedMeals } = req.body;
+    let userData = readUserData(userId);
+    if (!userData.progress) userData.progress = [];
+    let day = userData.progress.find(d => d.date === date);
+    if (!day) {
+      day = { date };
+      userData.progress.push(day);
+    }
+    if (typeof completedWorkout === 'boolean') day.completedWorkout = completedWorkout;
+    if (Array.isArray(completedMeals)) day.completedMeals = completedMeals;
+    writeUserData(userId, userData);
+    res.json({ success: true, progress: day });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 export default router;
