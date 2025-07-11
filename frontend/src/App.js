@@ -173,6 +173,36 @@ function App() {
             return;
           }
         } else if (weeklyRes.status === 404) {
+          if (!quizData) {
+            // Нет квиза — показываем форму квиза, не создаём программу!
+            setShowQuiz(true);
+            setIsLoadingUserData(false);
+            setShowSplash(false);
+            return;
+          }
+          // Есть квиз — создаём программу
+          const createRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...quizData, userId: tgUserId })
+          });
+          if (createRes.ok) {
+            // После создания ждем и пробуем получить программу с задержкой и retry
+            for (let i = 0; i < retries; i++) {
+              await new Promise(res => setTimeout(res, delay));
+              let retryRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}`);
+              if (retryRes.ok) {
+                const programData = await retryRes.json();
+                setWeekData(programData);
+                setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
+                setShowTodayBlock(true);
+                setIsLoadingUserData(false);
+                setShowSplash(false);
+                return;
+              }
+            }
+          }
+        } else if (weeklyRes.status === 404) {
           // Нет программы — создаём новую
           const createRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}`, {
             method: 'POST',
