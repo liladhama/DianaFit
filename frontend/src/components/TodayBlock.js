@@ -1317,6 +1317,16 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     // eslint-disable-next-line
   }, [currentDay?.date, answers?.userId]);
 
+  // Гарантируем, что answers.userId всегда Telegram userId
+  useEffect(() => {
+    if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
+      if (answers && !answers.userId) {
+        answers.userId = window.Telegram.WebApp.initDataUnsafe.user.id;
+        console.log('✅ Telegram userId установлен в answers:', answers.userId);
+      }
+    }
+  }, [answers]);
+
   // --- Новая функция для отправки статуса приема пищи на backend ---
   // Обработчик выбора состояния приема пищи (съел/не съел)
   const handleMealStatusChange = async (idx, completed) => {
