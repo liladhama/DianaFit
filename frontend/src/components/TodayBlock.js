@@ -9,6 +9,7 @@ import MealBlock from './MealBlock';
 import { getWorkoutLocation, getDayId, getExerciseEnglishName, getVideoPathForExercise } from '../utils/videoUtils';
 import chatDianaIcon from '../assets/icons/chat-diana-icon.png';
 import { API_URL } from '../config/api';
+import { generateMealsForDay } from '../utils/generateMealsForDay';
 
 // Добавляем CSS анимацию для спиннера
 const spinnerStyles = `
@@ -846,39 +847,49 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     }
   }, [dailySteps]);
 
-  // Загружаем AI-план питания при монтировании
-  useEffect(() => {
-    async function fetchAIMealPlan() {
-      if (!answers) {
-        console.warn('AI meal plan: нет answers, запрос не отправляется');
-        return;
-      }
-      setAiLoading(true);
-      setAiError(null);
-      try {
-        console.log('AI meal plan: отправляем профиль:', answers);
-        const res = await fetch(`${API_URL}/api/ai-meal-plan`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ profile: answers })
-        });
-        console.log('AI meal plan: статус ответа:', res.status);
-        const data = await res.json();
-        console.log('AI meal plan: ответ сервера:', data);
-        if (data.success && data.meals) {
-          setAiMeals(data.meals);
-        } else {
-          setAiError(data.error || 'Ошибка генерации плана питания');
-        }
-      } catch (e) {
-        setAiError('Ошибка подключения к AI');
-        console.error('AI meal plan: ошибка запроса:', e);
-      } finally {
-        setAiLoading(false);
-      }
+  // --- Вынести функцию загрузки AI-питания наружу ---
+  async function fetchAIMealPlan() {
+    if (!answers) {
+      console.warn('AI meal plan: нет answers, запрос не отправляется');
+      return;
     }
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      console.log('AI meal plan: отправляем профиль:', answers);
+      const res = await fetch(`${API_URL}/api/ai-meal-plan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profile: answers })
+      });
+      console.log('AI meal plan: статус ответа:', res.status);
+      const data = await res.json();
+      console.log('AI meal plan: ответ сервера:', data);
+      if (data.success && data.meals) {
+        setAiMeals(data.meals);
+      } else {
+        setAiError(data.error || 'Ошибка генерации плана питания');
+      }
+    } catch (e) {
+      setAiError('Ошибка подключения к AI');
+      console.error('AI meal plan: ошибка запроса:', e);
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  // useEffect для первичной загрузки
+  useEffect(() => {
     fetchAIMealPlan();
+    // eslint-disable-next-line
   }, [answers]);
+
+  // КНОПКА ОБНОВЛЕНИЯ ВАРИАНТОВ ПИТАНИЯ
+  const handleRefreshMeals = () => {
+    fetchAIMealPlan();
+    setCompletedMeals([]); // Сбросить статусы
+    setSelectedMealOptionIdx([]); // Сбросить выбранные варианты
+  };
 
   // Вычисляем общие калории и БЖУ
   const totalCalories = currentDay.meals?.reduce((sum, meal) => sum + (meal.calories || 0), 0) || 1530;
@@ -1706,6 +1717,45 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       });
   }, [isLoaded, completedExercises, completedMeals, dailySteps, exerciseReasons, mealReasons, currentDay?.date, answers?.userId]);
 
+  // --- КРАСИВАЯ КНОПКА ОБНОВЛЕНИЯ ВАРИАНТОВ ПИТАНИЯ (UI)
+  const refreshMealsButton = (
+    <div style={{ display: 'flex', justifyContent: 'center', margin: '24px 0' }}>
+      <button
+        onClick={async () => {
+          await handleRefreshMeals();
+          setCompletedMeals([]); // Явно сбрасываем статусы выбора
+          setSelectedMealOptionIdx([]); // Сбросить выбранные варианты
+        }}
+        style={{
+          padding: '14px 32px',
+          borderRadius: '18px',
+          background: 'linear-gradient(90deg, #2196f3 0%, #00c6ff 100%)',
+          color: '#fff',
+          fontWeight: 700,
+          fontSize: '18px',
+          border: 'none',
+          cursor: 'pointer',
+          boxShadow: '0 4px 16px rgba(33,150,243,0.12)',
+          transition: 'all 0.2s',
+          letterSpacing: '0.5px',
+          outline: 'none',
+          position: 'relative',
+          zIndex: 2
+        }}
+        onMouseEnter={e => {
+          e.currentTarget.style.transform = 'scale(1.04)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(33,150,243,0.18)';
+        }}
+        onMouseLeave={e => {
+          e.currentTarget.style.transform = 'scale(1)';
+          e.currentTarget.style.boxShadow = '0 4px 16px rgba(33,150,243,0.12)';
+        }}
+      >
+        🔄 Обновить варианты питания
+      </button>
+    </div>
+  );
+
   return (
     <div
       style={{
@@ -2140,6 +2190,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                     </div>
                   );
                 })}
+                {/* Кнопка обновления вариантов питания */}
+                {refreshMealsButton}
               </div>
             )}
 

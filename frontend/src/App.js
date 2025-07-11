@@ -644,11 +644,11 @@ function App() {
           location: location
         } : null,
         meals: [
-          { type: 'Завтрак', meal: getBreakfastByDiet(quizAnswers.diet_flags, i + 1), calories: 320, time: '08:00' },
-          { type: 'Перекус', meal: getSnackByDiet(quizAnswers.diet_flags, i + 1), calories: 80, time: '11:00' },
-          { type: 'Обед', meal: getLunchByDiet(quizAnswers.diet_flags, i + 1), calories: 450, time: '14:00' },
-          { type: 'Полдник', meal: getSnackByDiet(quizAnswers.diet_flags, i + 1, true), calories: 120, time: '17:00' },
-          { type: 'Ужин', meal: getDinnerByDiet(quizAnswers.diet_flags, i + 1), calories: 350, time: '19:00' }
+          { type: 'Завтрак', menu: getBreakfastByDiet(quizAnswers.diet_flags, i + 1), calories: 320, time: '08:00' },
+          { type: 'Перекус', menu: getSnackByDiet(quizAnswers.diet_flags, i + 1), calories: 80, time: '11:00' },
+          { type: 'Обед', menu: getLunchByDiet(quizAnswers.diet_flags, i + 1), calories: 450, time: '14:00' },
+          { type: 'Полдник', menu: getSnackByDiet(quizAnswers.diet_flags, i + 1, true), calories: 120, time: '17:00' },
+          { type: 'Ужин', menu: getDinnerByDiet(quizAnswers.diet_flags, i + 1), calories: 350, time: '19:00' }
         ],
         dailySteps: 0,
         dailyStepsGoal: level === 'beginner' ? 8000 : 10000,
@@ -855,11 +855,11 @@ function App() {
           location: location
         } : null,
         meals: [
-          { type: 'Завтрак', meal: getBreakfastByDiet(quizAnswers.diet_flags, i + 1), calories: 320, time: '08:00' },
-          { type: 'Перекус', meal: getSnackByDiet(quizAnswers.diet_flags, i + 1), calories: 80, time: '11:00' },
-          { type: 'Обед', meal: getLunchByDiet(quizAnswers.diet_flags, i + 1), calories: 450, time: '14:00' },
-          { type: 'Полдник', meal: getSnackByDiet(quizAnswers.diet_flags, i + 1, true), calories: 120, time: '17:00' },
-          { type: 'Ужин', meal: getDinnerByDiet(quizAnswers.diet_flags, i + 1), calories: 350, time: '19:00' }
+          { type: 'Завтрак', menu: getBreakfastByDiet(quizAnswers.diet_flags, i + 1), calories: 320, time: '08:00' },
+          { type: 'Перекус', menu: getSnackByDiet(quizAnswers.diet_flags, i + 1), calories: 80, time: '11:00' },
+          { type: 'Обед', menu: getLunchByDiet(quizAnswers.diet_flags, i + 1), calories: 450, time: '14:00' },
+          { type: 'Полдник', menu: getSnackByDiet(quizAnswers.diet_flags, i + 1, true), calories: 120, time: '17:00' },
+          { type: 'Ужин', menu: getDinnerByDiet(quizAnswers.diet_flags, i + 1), calories: 350, time: '19:00' }
         ],
         dailySteps: 0,
         dailyStepsGoal: level === 'beginner' ? 8000 : 10000,

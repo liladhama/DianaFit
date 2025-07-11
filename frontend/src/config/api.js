@@ -4,7 +4,7 @@ const host = typeof window !== 'undefined' && window.location ? window.location.
 if (host === 'localhost' || host === '127.0.0.1') {
   API_URL = 'http://localhost:3001';
 } else {
-  API_URL = 'https://dianafit.onrender.com';
+  API_URL = 'https://dianafit.fly.dev'; // изменено на Fly.io
 }
 export { API_URL };
 console.log('API_URL установлен на:', API_URL);

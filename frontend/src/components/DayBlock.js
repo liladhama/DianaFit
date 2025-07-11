@@ -36,7 +36,7 @@ export default function DayBlock({ day, openable = true, locked = false }) {
           <div>
             <b>Меню:</b>
             <ul>
-              {day.meals.map((meal, i) => <li key={i}><b>{meal.name || meal.type}:</b> {meal.menu}</li>)}
+              {day.meals.map((meal, i) => <li key={i}><b>{meal.menu || meal.meal || meal.type}:</b> {meal.menu || meal.meal}</li>)}
             </ul>
           </div>
         </div>
