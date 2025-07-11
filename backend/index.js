@@ -16,7 +16,7 @@ import mealPlanCalculator from './utils/mealPlanCalculator.js';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // Разрешить CORS для всех источников (для локальной отладки и Telegram)
