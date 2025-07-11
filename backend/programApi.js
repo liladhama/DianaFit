@@ -108,15 +108,25 @@ function getHomeExercises(dayNumber) {
 // POST /api/program — генерация и сохранение полной программы через ИИ
 router.post('/program', async (req, res) => {
   const { userId, profile } = req.body;
+  // Проверка: есть ли квиз у пользователя
+  const userDataPath = path.join(__dirname, 'backup_files', 'users', `${userId}.json`);
+  let quizData = null;
+  if (fs.existsSync(userDataPath)) {
+    const userData = JSON.parse(fs.readFileSync(userDataPath, 'utf-8'));
+    quizData = userData.quiz;
+  }
+  if (!quizData) {
+    return res.status(400).json({ error: 'Сначала пройдите квиз!' });
+  }
+
   const programId = userId + '-' + Date.now();
   const startDate = profile.start_date || new Date().toISOString().slice(0, 10);
-  const workoutsPerWeek = profile.workouts_per_week || 3; // по умолчанию 3 тренировки
-  const location = profile.gym_or_home || 'home'; // зал или дом
+  const workoutsPerWeek = profile.workouts_per_week || 3;
+  const location = profile.gym_or_home || 'home';
 
   // --- ЗАГЛУШКА: возвращаем фейковый план без вызова ИИ ---
   const days = Array.from({ length: 7 }).map((_, i) => {
-    const isWorkoutDay = i < workoutsPerWeek; // первые N дней недели - тренировочные
-    
+    const isWorkoutDay = i < workoutsPerWeek;
     return {
       title: `День ${i + 1}`,
       date: new Date(Date.now() + i * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
@@ -136,7 +146,6 @@ router.post('/program', async (req, res) => {
       completedMealsArr: [false, false, false]
     };
   });
-  
   programs[programId] = { userId, profile, days };
   res.json({ success: true, programId });
 });
