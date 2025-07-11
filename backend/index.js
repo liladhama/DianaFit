@@ -23,7 +23,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(cors({
   origin: [
     'https://diana-fit.vercel.app',
-    'https://dianafit.onrender.com',
+    'https://dianafit.fly.dev',
     'http://localhost:3000',
     'http://127.0.0.1:3000',
     'http://localhost:3001',
