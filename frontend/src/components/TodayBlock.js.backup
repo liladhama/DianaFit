@@ -18,11 +18,60 @@ const spinnerStyles = `
   }
 `;
 
+// Добавляем CSS стили для слайдера
+const sliderStyles = `
+  input[type="range"]::-webkit-slider-thumb {
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+    transition: all 0.2s ease;
+  }
+  
+  input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+  }
+  
+  input[type="range"]::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #4F46E5 0%, #6366F1 100%);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+  }
+  
+  input[type="range"]::-webkit-slider-track {
+    height: 8px;
+    border-radius: 4px;
+    background: #e2e8f0;
+  }
+  
+  input[type="range"]::-moz-range-track {
+    height: 8px;
+    border-radius: 4px;
+    background: #e2e8f0;
+    border: none;
+  }
+`;
+
 // Вставляем стили в head, если их еще нет
 if (!document.querySelector('#spinner-styles')) {
   const style = document.createElement('style');
   style.id = 'spinner-styles';
   style.textContent = spinnerStyles;
+  document.head.appendChild(style);
+}
+
+if (!document.querySelector('#slider-styles')) {
+  const style = document.createElement('style');
+  style.id = 'slider-styles';
+  style.textContent = sliderStyles;
   document.head.appendChild(style);
 }
 
@@ -109,7 +158,6 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   
   // Состояние для чата с Дианой
   const [showDianaChat, setShowDianaChat] = useState(false);
-  
 
   // Состояние для модала причин невыполнения
   const [showReasonModal, setShowReasonModal] = useState(false);
@@ -149,6 +197,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       { type: 'Ужин', menu: 'Запеченная рыба с салатом', calories: 380 }
     ],
     completed: false,
+    dailySteps: 0, // Убираем мок данные - только реальные шаги
+    dailyStepsGoal: 10000
   };
   
   // Логируем данные для отладки
@@ -245,19 +295,644 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   const hasTelegramWebApp = window.Telegram?.WebApp;
   
+  // Состояние для ручного управления шагами (только ручной режим)
+  const [dailySteps, setDailySteps] = useState(() => {
+    // Загружаем сохраненные шаги из localStorage
+    const savedSteps = localStorage.getItem('dianafit_daily_steps');
+    const savedDate = localStorage.getItem('dianafit_steps_date');
+    const today = new Date().toDateString();
+    
+    if (savedSteps && savedDate === today) {
+      return parseInt(savedSteps);
+    }
+    return 0;
+  });
+  
+  const [stepsGoal] = useState(() => {
+    const goal = currentDay.dailyStepsGoal || 10000;
+    const correctedGoal = (goal < 10000 || goal > 15000) ? 10000 : goal;
+    console.log('🎯 Устанавливаем цель по шагам:', correctedGoal);
+    return correctedGoal;
+  });
+  
+  // Состояние для ручного управления шагами
+  const [isManualStepsMode, setIsManualStepsMode] = useState(true); // Всегда ручной режим
+  const [manualSteps, setManualSteps] = useState(() => {
+    const savedSteps = localStorage.getItem('dianafit_daily_steps');
+    const savedDate = localStorage.getItem('dianafit_steps_date');
+    const today = new Date().toDateString();
+    
+    if (savedSteps && savedDate === today) {
+      return parseInt(savedSteps);
+    }
+    return 0;
+  });
+  
+  // Заглушки для совместимости с оставшимся кодом
+  const [hasStepsPermission, setHasStepsPermission] = useState(false);
+  const [showStepsPermission, setShowStepsPermission] = useState(false);
+  const [stepsError, setStepsError] = useState(null);
+  const [isLoadingSteps, setIsLoadingSteps] = useState(false);
+  
   const [aiAnalysis, setAiAnalysis] = useState('');
   const [loadingAI, setLoadingAI] = useState(false);
   
   // Получаем случайную мотивационную цитату
   const todayQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
 
-  // Проверка разрешений при загрузке компонента
+  // Инициализация ручных шагов при загрузке компонента
   useEffect(() => {
-  }, []);
+    if (manualSteps > 0) {
+      setDailySteps(manualSteps);
+    }
+  }, [manualSteps]);
 
   // Проверка существующих разрешений
+  const checkStepsPermission = () => {
+    try {
+      const savedAuth = localStorage.getItem('dianafit_health_auth');
+      const hasAskedBefore = localStorage.getItem('dianafit_steps_permission_asked');
+      
+      if (savedAuth) {
+        const authData = JSON.parse(savedAuth);
+        
+        // Проверяем не истек ли токен
+        if (authData.expires && authData.expires < Date.now()) {
+          localStorage.removeItem('dianafit_health_auth');
+          setHasStepsPermission(false);
+          // Если токен истек, показываем модал для повторной авторизации
+          setTimeout(() => {
+            setShowStepsPermission(true);
+          }, 2000);
+          return;
+        }
+        
+        setHasStepsPermission(true);
+        console.log('✅ Найдены сохраненные разрешения:', authData.type);
+      } else {
+        setHasStepsPermission(false);
+        
+        // Если пользователь еще не видел запрос разрешения - показываем модал
+        if (!hasAskedBefore) {
+          console.log('🔐 Первый визит - показываем модал разрешений через 3 секунды');
+          setTimeout(() => {
+            setShowStepsPermission(true);
+            // Отмечаем, что уже показывали запрос
+            localStorage.setItem('dianafit_steps_permission_asked', 'true');
+          }, 3000); // 3 секунды задержки для лучшего UX
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка проверки разрешений:', error);
+      setHasStepsPermission(false);
+      // При ошибке тоже показываем модал
+      setTimeout(() => {
+        setShowStepsPermission(true);
+      }, 2000);
+    }
+  };
 
-  // ...existing code...
+  // Обработчик получения разрешения
+  const handlePermissionGranted = (authType) => {
+    setHasStepsPermission(true);
+    setShowStepsPermission(false);
+    console.log('✅ Разрешение получено:', authType);
+    
+    // Сразу пытаемся получить данные о шагах
+    setTimeout(() => {
+      getStepsFromDevice();
+    }, 1000);
+  };
+
+  // Получение данных из авторизованных API
+  const getAuthorizedStepsData = async () => {
+    try {
+      const savedAuth = localStorage.getItem('dianafit_health_auth');
+      if (!savedAuth) return null;
+
+      const authData = JSON.parse(savedAuth);
+
+      switch (authData.type) {
+        case 'google_fit':
+          return await getGoogleFitSteps();
+        case 'ios_motion':
+          return await getIOSMotionSteps();
+        case 'web_sensors':
+          return await getWebSensorSteps();
+        default:
+          console.log('Неизвестный тип авторизации:', authData.type);
+          return null;
+      }
+    } catch (error) {
+      console.error('Ошибка получения авторизованных данных:', error);
+      return null;
+    }
+  };
+
+  // Получение шагов из Google Fit API
+  const getGoogleFitSteps = async () => {
+    try {
+      if (!window.gapi || !window.gapi.auth2) {
+        console.log('Google API не инициализирован');
+        return null;
+      }
+
+      const authInstance = window.gapi.auth2.getAuthInstance();
+      if (!authInstance || !authInstance.isSignedIn.get()) {
+        console.log('Пользователь не авторизован в Google');
+        return null;
+      }
+
+      const today = new Date();
+      const startTime = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+      const endTime = Date.now();
+
+      const response = await window.gapi.client.fitness.users.dataSources.dataPointChanges.list({
+        userId: 'me',
+        dataSourceId: 'derived:com.google.step_count.delta:com.google.android.gms:estimated_steps',
+        startTime: startTime * 1000000, // наносекунды
+        endTime: endTime * 1000000
+      });
+
+      if (response.result.point && response.result.point.length > 0) {
+        const totalSteps = response.result.point.reduce((sum, point) => {
+          return sum + (point.value[0].intVal || 0);
+        }, 0);
+        
+        console.log('📊 Google Fit шаги:', totalSteps);
+        return totalSteps;
+      }
+
+      return 0;
+    } catch (error) {
+      console.error('Ошибка получения данных Google Fit:', error);
+      return null;
+    }
+  };
+
+  // Получение шагов из iOS датчиков движения
+  const getIOSMotionSteps = async () => {
+    try {
+      // Для iOS используем approximation на основе акселерометра
+      // В реальном приложении здесь была бы более сложная логика
+      const savedSteps = localStorage.getItem('dianafit_ios_steps_cache');
+      const savedDate = localStorage.getItem('dianafit_ios_steps_date');
+      const today = new Date().toDateString();
+
+      if (savedSteps && savedDate === today) {
+        return parseInt(savedSteps);
+      }
+
+      // Базовая симуляция на основе времени (для демонстрации)
+      // const hoursToday = new Date().getHours();
+      // const approximateSteps = Math.floor(hoursToday * 400 + Math.random() * 1000);
+      // localStorage.setItem('dianafit_ios_steps_cache', approximateSteps.toString());
+      // localStorage.setItem('dianafit_ios_steps_date', today);
+      // console.log('📊 iOS Motion шаги (приблизительно):', approximateSteps);
+      // return approximateSteps;
+    } catch (error) {
+      console.error('Ошибка получения данных iOS Motion:', error);
+      return null;
+    }
+  };
+
+  // Получение шагов из веб-датчиков
+  const getWebSensorSteps = async () => {
+    try {
+      // Для веб-браузеров используем базовую оценку
+      const savedSteps = localStorage.getItem('dianafit_web_steps_cache');
+      const savedDate = localStorage.getItem('dianafit_web_steps_date');
+      const today = new Date().toDateString();
+
+      if (savedSteps && savedDate === today) {
+        return parseInt(savedSteps);
+      }
+      // const estimatedSteps = Math.floor(hoursToday * 300 + Math.random() * 800);
+      // localStorage.setItem('dianafit_web_steps_cache', estimatedSteps.toString());
+      // localStorage.setItem('dianafit_web_steps_date', today);
+      // console.log('📊 Web Sensors шаги (оценка):', estimatedSteps);
+      // return estimatedSteps;
+    } catch (error) {
+      console.error('Ошибка получения данных Web Sensors:', error);
+      return null;
+    }
+  };
+
+  // Функция для получения реальных данных о шагах с устройства
+  const getStepsFromDevice = async () => {
+    console.log('🚶 Начинаем получение данных о шагах...');
+    setIsLoadingSteps(true);
+    setStepsError(null);
+    
+    // Проверяем, запущено ли на компьютере - если да, принудительно очищаем localStorage
+    const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const hasTelegram = window.Telegram?.WebApp;
+    
+    if (!isMobile && !hasTelegram) {
+      console.log('🖥️ Компьютер обнаружен - принудительно очищаем localStorage');
+      localStorage.removeItem('dianafit_daily_steps');
+      localStorage.removeItem('dianafit_steps_date');
+      setDailySteps(0);
+      setStepsError('Подсчет шагов доступен только на мобильных устройствах');
+      setIsLoadingSteps(false);
+      return;
+    }
+    
+    // Объявляем переменные в области видимости функции
+    const savedSteps = localStorage.getItem('dianafit_daily_steps');
+    const savedDate = localStorage.getItem('dianafit_steps_date');
+    const today = new Date().toDateString();
+    console.log('📱 LocalStorage данные:', { savedSteps, savedDate, today });
+    
+    // Очищаем устаревшие данные из localStorage
+    if (savedDate && savedDate !== today) {
+      console.log('🧹 Очищаем устаревшие данные из localStorage');
+      localStorage.removeItem('dianafit_daily_steps');
+      localStorage.removeItem('dianafit_steps_date');
+    }
+    
+    try {
+      
+      // 1. ПРИОРИТЕТ: Попытка получить данные через авторизованные API
+      if (hasStepsPermission) {
+        console.log('🔐 Используем авторизованные API для получения шагов...');
+        const authorizedSteps = await getAuthorizedStepsData();
+        
+        if (authorizedSteps !== null && authorizedSteps >= 0) {
+          setDailySteps(authorizedSteps);
+          saveStepsToStorage(authorizedSteps);
+          console.log('✅ Шаги получены через авторизованные API:', authorizedSteps);
+          setIsLoadingSteps(false);
+          return;
+        } else {
+          console.log('⚠️ Авторизованные API не вернули данные, пробуем другие методы...');
+        }
+      }
+      
+      // 2. Попытка получить данные через Telegram WebApp API
+      if (window.Telegram?.WebApp) {
+        const tg = window.Telegram.WebApp;
+        
+        // Проверяем, есть ли доступ к данным пользователя
+        if (tg.initDataUnsafe?.user) {
+          console.log('Пользователь Telegram найден, проверяем данные о здоровье...');
+          
+          // В будущих версиях Telegram может добавить Health API
+          if (tg.initDataUnsafe.user.health_data?.steps) {
+            const steps = tg.initDataUnsafe.user.health_data.steps;
+            setDailySteps(steps);
+            saveStepsToStorage(steps);
+            console.log('✅ Шаги получены из Telegram WebApp:', steps);
+            setIsLoadingSteps(false);
+            return;
+          }
+        }
+      }
+
+      // 3. Проверяем сохраненные данные за сегодня только если они актуальны
+      if (savedSteps && savedDate === today) {
+        setDailySteps(parseInt(savedSteps));
+        console.log('💾 Данные о шагах загружены из кэша:', savedSteps);
+        setIsLoadingSteps(false);
+        return;
+      }
+
+      // 4. Если никакие API недоступны - предлагаем авторизацию
+      console.log('❌ Данные о шагах недоступны: никакие API не подключены');
+      
+      setDailySteps(0);
+      
+      // Формируем информативное сообщение для пользователя
+      const userAgent = navigator.userAgent;
+      let stepsMessage = '';
+      
+      if (!hasStepsPermission) {
+        stepsMessage = '🔐 Для автоматического подсчета шагов требуется разрешение на доступ к данным о физической активности.\n\n';
+        stepsMessage += '💡 Нажмите кнопку "Разрешить доступ" чтобы:\n';
+        
+        if (/Android/i.test(userAgent)) {
+          stepsMessage += '• Подключиться к Google Fit\n';
+          stepsMessage += '• Получать данные о шагах автоматически\n';
+          stepsMessage += '• Синхронизировать с фитнес-браслетами';
+        } else if (/iPhone|iPad|iPod/i.test(userAgent)) {
+          stepsMessage += '• Подключиться к приложению "Здоровье"\n';
+          stepsMessage += '• Получать данные с Apple Watch\n';
+          stepsMessage += '• Синхронизировать с фитнес-приложениями';
+        } else {
+          stepsMessage += '• Получить доступ к датчикам движения\n';
+          stepsMessage += '• Отслеживать активность в браузере\n';
+          stepsMessage += '• Подключить внешние устройства';
+        }
+      } else {
+        stepsMessage = 'Автоматический подсчет шагов временно недоступен.\n\n';
+        
+        if (/Android/i.test(userAgent)) {
+          stepsMessage += '📱 На Android шаги хранятся в:\n';
+          stepsMessage += '• Google Fit (встроенное приложение)\n';
+          stepsMessage += '• Samsung Health (на Samsung)\n';
+          stepsMessage += '• Встроенный счетчик Android\n\n';
+          stepsMessage += '� Попробуйте обновить данные или проверьте подключение к интернету';
+        } else if (/iPhone|iPad|iPod/i.test(userAgent)) {
+          stepsMessage += '📱 На iOS шаги хранятся в:\n';
+          stepsMessage += '• Приложение "Здоровье" (HealthKit)\n';
+          stepsMessage += '• Встроенный счетчик iPhone\n\n';
+          stepsMessage += '� Попробуйте обновить данные или проверьте разрешения';
+        } else {
+          stepsMessage += '🔒 Веб-браузеры имеют ограниченный доступ к данным о шагах.\n\n';
+          stepsMessage += '💡 Для лучшего опыта:\n';
+          stepsMessage += '• Используйте мобильное устройство\n';
+          stepsMessage += '• Откройте через Telegram\n';
+          stepsMessage += '• Подключите фитнес-браслет';
+        }
+      }
+      
+      setStepsError(stepsMessage);
+      
+      console.log('💡 Совет: Для получения реальных данных о шагах требуется авторизация через OAuth');
+      
+    } catch (error) {
+      console.error('Ошибка при получении данных о шагах:', error);
+      setStepsError('Ошибка доступа к данным о физической активности');
+      
+      // Пытаемся загрузить сохраненные данные (используем уже объявленные переменные)
+      if (savedSteps && savedDate === today) {
+        setDailySteps(parseInt(savedSteps));
+      } else {
+        setDailySteps(0);
+        saveStepsToStorage(0);
+      }
+    } finally {
+      setIsLoadingSteps(false);
+    }
+  };
+
+  // Функции для ручного управления шагами
+  const handleManualStepsToggle = () => {
+    const newMode = !isManualStepsMode;
+    setIsManualStepsMode(newMode);
+    localStorage.setItem('dianafit_manual_steps_mode', newMode.toString());
+    
+    if (newMode) {
+      // Переключаемся в ручной режим
+      setManualSteps(dailySteps);
+      localStorage.setItem('dianafit_manual_steps', dailySteps.toString());
+      setShowStepsSlider(true);
+    } else {
+      // Возвращаемся к автоматическому режиму
+      setShowStepsSlider(false);
+      localStorage.removeItem('dianafit_manual_steps');
+      getStepsFromDevice();
+    }
+  };
+
+  const handleManualStepsChange = (event) => {
+    const newSteps = parseInt(event.target.value);
+    setManualSteps(newSteps);
+    setDailySteps(newSteps);
+    localStorage.setItem('dianafit_manual_steps', newSteps.toString());
+    saveStepsToStorage(newSteps);
+  };
+
+  const handleStepsSliderSubmit = () => {
+    setShowStepsSlider(false);
+    console.log('✅ Шаги установлены вручную:', manualSteps);
+  };
+
+  const saveStepsToStorage = (steps) => {
+    const today = new Date().toDateString();
+    localStorage.setItem('dianafit_daily_steps', steps.toString());
+    localStorage.setItem('dianafit_steps_date', today);
+  };
+
+  // Глобальные функции для отладки (доступны в консоли браузера)
+  useEffect(() => {
+    // Функция для очистки данных о шагах
+    window.clearStepsData = () => {
+      console.log('🧹 Принудительная очистка всех данных о шагах');
+      localStorage.removeItem('dianafit_daily_steps');
+      localStorage.removeItem('dianafit_steps_date');
+      localStorage.removeItem('dianafit_health_auth');
+      localStorage.removeItem('dianafit_steps_permission_asked');
+      setDailySteps(0);
+      setStepsError(null);
+      setHasStepsPermission(false);
+      console.log('✅ Все данные о шагах очищены');
+    };
+    
+    // Функция для проверки всех программ в localStorage
+    window.checkPrograms = () => {
+      console.log('🔍 Проверяем все программы в localStorage:');
+      const programs = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith('program_')) {
+          try {
+            const program = JSON.parse(localStorage.getItem(key));
+            programs.push({ key, program });
+            console.log(`📋 Программа ${key}:`, {
+              name: program.name,
+              daysCount: program.days?.length,
+              firstDay: program.days?.[0],
+              stepsGoals: program.days?.map(d => ({ date: d.date, goal: d.dailyStepsGoal }))
+            });
+          } catch (e) {
+            console.log(`❌ Ошибка парсинга программы ${key}:`, e);
+          }
+        }
+      }
+      return programs;
+    };
+    
+    // Функция для диагностики шагомера
+    window.diagnoseStepCounter = () => {
+      console.log('🔍 Диагностика шагомера:');
+      console.log('📱 User Agent:', navigator.userAgent);
+      console.log('🌐 Is Mobile:', /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent));
+      console.log('📱 Telegram WebApp:', !!window.Telegram?.WebApp);
+      console.log('🔑 Permissions API:', !!navigator.permissions);
+      console.log('� Has Steps Permission:', hasStepsPermission);
+      console.log('�💾 LocalStorage шаги:', localStorage.getItem('dianafit_daily_steps'));
+      console.log('📅 LocalStorage дата:', localStorage.getItem('dianafit_steps_date'));
+      console.log('🔐 Auth Data:', localStorage.getItem('dianafit_health_auth'));
+      console.log('🎯 Текущая цель:', stepsGoal);
+      console.log('👣 Текущие шаги:', dailySteps);
+      console.log('⚠️ Ошибка шагов:', stepsError);
+      console.log('🌐 Google API загружен:', !!window.gapi);
+      console.log('🔗 Google Auth инициализирован:', !!(window.gapi?.auth2?.getAuthInstance));
+    };
+    
+    // Функция для принудительного запроса разрешений
+    window.requestStepsPermission = () => {
+      console.log('🔐 Принудительно открываем модал разрешений');
+      setShowStepsPermission(true);
+    };
+    
+    // Функция для сброса флага "уже спрашивали разрешение"
+    window.resetPermissionAsked = () => {
+      console.log('🔄 Сбрасываем флаг "уже спрашивали разрешение"');
+      localStorage.removeItem('dianafit_steps_permission_asked');
+      console.log('✅ Флаг сброшен. При следующем заходе модал покажется автоматически');
+    };
+
+    // Функция для еженедельной аналитики
+    window.runWeeklyAnalytics = async () => {
+      console.log('📊 Запускаем еженедельную аналитику...');
+      
+      // Собираем статистику за последние 7 дней
+      const weekStats = [];
+      const today = new Date();
+      const telegramUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user';
+      for (let i = 6; i >= 0; i--) {
+        const date = new Date(today);
+        date.setDate(date.getDate() - i);
+        const dateStr = date.toISOString().slice(0, 10);
+        const statsKey = `completion_stats_${dateStr}`;
+        const dayStats = localStorage.getItem(statsKey);
+        if (dayStats) {
+          weekStats.push(JSON.parse(dayStats));
+        } else {
+          weekStats.push({
+            date: dateStr,
+            completionPercentage: 0,
+            totalExercises: 0,
+            completedExercises: 0,
+            totalMeals: 0,
+            completedMeals: 0,
+            stepsCompleted: false,
+            exerciseReasons: {},
+            mealReasons: {}
+          });
+        }
+      }
+      console.log('📈 Статистика недели:', weekStats);
+      try {
+        const response = await fetch(`${API_URL}/api/weekly-analytics`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            weekStats,
+            userId: telegramUserId,
+            programId: programId || 'demo_program'
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          console.log('🎯 Анализ недели получен:', result.analysis);
+          
+          // Показываем краткий отчет в консоли
+          console.log(`📊 Средний процент выполнения: ${result.analysis.weekSummary.avgCompletion}%`);
+          console.log(`✅ Успешных дней: ${result.analysis.weekSummary.completedDays}`);
+          console.log(`⚠️ Сложных дней: ${result.analysis.weekSummary.strugglingDays}`);
+          console.log(`💬 Сообщение: ${result.analysis.motivationalMessage}`);
+          
+          if (result.analysis.recommendations.length > 0) {
+            console.log('🎯 Рекомендации:');
+            result.analysis.recommendations.forEach((rec, i) => {
+              console.log(`  ${i + 1}. ${rec.title}: ${rec.text}`);
+            });
+          }
+          
+          return result.analysis;
+        } else {
+          console.error('❌ Ошибка анализа:', result.error);
+        }
+      } catch (error) {
+        console.error('❌ Ошибка сети при анализе:', error);
+      }
+    };
+    
+    // Функция для очистки всех программ
+    window.clearPrograms = () => {
+      console.log('🧹 Очищаем все программы в localStorage');
+      Object.keys(localStorage).filter(key => key.startsWith('program_')).forEach(key => {
+        console.log('🗑️ Удаляем:', key);
+        localStorage.removeItem(key);
+      });
+      console.log('✅ Все программы очищены. Обновите страницу для создания новой программы.');
+    };
+
+    // Функция для пересоздания программы с корректными начальными значениями
+    window.recreateProgram = () => {
+      console.log('🔄 Пересоздаем программу с правильными начальними значениями...');
+      
+      // Очищаем старые программы
+      Object.keys(localStorage).filter(key => key.startsWith('program_')).forEach(key => {
+        localStorage.removeItem(key);
+      });
+      
+      console.log('✅ Старые программы удалены. Перезагрузите страницу для создания новой программы.');
+      setTimeout(() => {
+        window.location.reload();
+      }, 1000);
+    };
+
+    console.log('🛠️ Отладочные функции добавлены в window:');
+    console.log('   clearStepsData() - очистить данные о шагах');
+    console.log('   checkPrograms() - проверить программы в localStorage');
+    console.log('   diagnoseStepCounter() - диагностика шагомера');
+    console.log('   requestStepsPermission() - открыть модал разрешений');
+    console.log('   resetPermissionAsked() - сбросить флаг "уже спрашивали"');
+    console.log('   runWeeklyAnalytics() - запустить анализ недели');
+    console.log('   recreateProgram() - пересоздать программу с начальными значениями');
+    
+    return () => {
+      delete window.clearStepsData;
+      delete window.checkPrograms;
+      delete window.diagnoseStepCounter;
+      delete window.requestStepsPermission;
+      delete window.resetPermissionAsked;
+      delete window.runWeeklyAnalytics;
+      delete window.recreateProgram;
+    };
+  }, [dailySteps, stepsGoal, stepsError, hasStepsPermission]);
+
+  // Загружаем данные о шагах при монтировании компонента
+  useEffect(() => {
+    // При первом запуске проверяем и очищаем старые данные
+    const clearOldStepsData = () => {
+      const savedDate = localStorage.getItem('dianafit_steps_date');
+      const today = new Date().toDateString();
+      
+      console.log('🔍 Проверяем данные в localStorage:', {
+        savedDate, 
+        today, 
+        savedSteps: localStorage.getItem('dianafit_daily_steps')
+      });
+      
+      if (savedDate && savedDate !== today) {
+        console.log('🧹 Очищаем устаревшие данные о шагах при запуске');
+        localStorage.removeItem('dianafit_daily_steps');
+        localStorage.removeItem('dianafit_steps_date');
+      }
+      
+      // Дополнительная проверка: если нет даты, но есть шаги - тоже очищаем
+      if (!savedDate && localStorage.getItem('dianafit_daily_steps')) {
+        console.log('🧹 Очищаем данные без даты');
+        localStorage.removeItem('dianafit_daily_steps');
+      }
+    };
+    
+    clearOldStepsData();
+    getStepsFromDevice();
+  }, []);
+
+  // Автоматическое обновление данных о шагах каждые 5 минут
+  useEffect(() => {
+    const interval = setInterval(() => {
+      getStepsFromDevice();
+    }, 5 * 60 * 1000); // 5 минут
+
+    return () => clearInterval(interval);
+  }, []);
+
+  // Сохраняем шаги при изменении
+  useEffect(() => {
+    if (dailySteps > 0) {
+      saveStepsToStorage(dailySteps);
+    }
+  }, [dailySteps]);
 
   // --- Вынести функцию загрузки AI-питания наружу ---
   async function fetchAIMealPlan() {
@@ -604,6 +1279,12 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       completedTasks += completedMeals.filter(Boolean).length;
     }
 
+    // Считаем шаги (если достигнута цель - засчитываем как выполненное)
+    totalTasks += 1; // Цель по шагам
+    if (dailySteps >= stepsGoal) {
+      completedTasks += 1;
+    }
+
     return totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
   };
 
@@ -620,6 +1301,9 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         completedExercises: completedExercises.filter(Boolean).length,
         totalMeals: currentDay.meals?.length || 0,
         completedMeals: completedMeals.filter(Boolean).length,
+        stepsGoal,
+        actualSteps: dailySteps,
+        stepsCompleted: dailySteps >= stepsGoal,
         exerciseReasons,
         mealReasons,
         lastUpdated: new Date().toISOString()
@@ -633,7 +1317,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     if (currentDay.date) {
       saveCompletionStats();
     }
-  }, [completedExercises, completedMeals, exerciseReasons, mealReasons, completionPercentage]);
+  }, [completedExercises, completedMeals, dailySteps, exerciseReasons, mealReasons, completionPercentage]);
 
   // Отладочный useEffect для мониторинга изменений в массивах статусов
   useEffect(() => {
@@ -823,7 +1507,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       .catch(e => {
         console.error('❌ Ошибка синхронизации прогресса:', e);
       });
-  }, [completedExercises, completedMeals, answers?.userId, currentDay?.date, isInitialLoading]);
+  }, [completedExercises, completedMeals, dailySteps, stepsGoal, answers?.userId, currentDay?.date, isInitialLoading]);
 
   // --- UI: Верхняя панель ---
   // Кнопка Диана АИ (слева)
@@ -969,7 +1653,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         const todayPlan = program.days.find(d => d.date === today);
         if (todayPlan) {
           console.log('✅ План на сегодня загружен из localStorage:', todayPlan);
-          console.log(' Проверка упражнений в плане:', todayPlan.workout?.exercises);
+          console.log('🎯 Цель по шагам из плана:', todayPlan.dailyStepsGoal);
+          console.log('🎥 Проверка упражнений в плане:', todayPlan.workout?.exercises);
           setPersonalPlan(todayPlan);
           setLoadingPlan(false);
           return;
@@ -978,6 +1663,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           const firstDay = program.days[0];
           if (firstDay) {
             console.log('📅 Сегодняшний день не найден, используем первый день программы:', firstDay);
+            console.log('🎯 Цель по шагам из первого дня:', firstDay.dailyStepsGoal);
             console.log('🎥 Проверка упражнений в первом дне:', firstDay.workout?.exercises);
             setPersonalPlan(firstDay);
             setLoadingPlan(false);
@@ -1028,6 +1714,14 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         });
       });
     }
+    // Шаги
+    tasks.push({
+      name: 'steps',
+      type: 'steps',
+      done: dailySteps >= stepsGoal,
+      value: dailySteps, // <--- добавлено число шагов
+      reason: dailySteps < stepsGoal ? 'Не достигнута цель по шагам' : undefined
+    });
     return tasks;
   }
 
@@ -1054,6 +1748,13 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         });
       });
     }
+    tasks.push({
+      name: 'steps',
+      type: 'steps',
+      done: dailySteps >= stepsGoal,
+      value: dailySteps,
+      reason: dailySteps < stepsGoal ? 'Не достигнута цель по шагам' : undefined
+    });
     return tasks;
   }
 
@@ -1080,6 +1781,13 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         });
       });
     }
+    tasks.push({
+      name: 'steps',
+      type: 'steps',
+      done: dailySteps >= stepsGoal,
+      value: dailySteps,
+      reason: dailySteps < stepsGoal ? 'Не достигнута цель по шагам' : undefined
+    });
     return tasks;
   }
 
@@ -1104,7 +1812,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       .catch(e => {
         console.error('[DEBUG] Ошибка отправки tasks на backend:', e);
       });
-  }, [isLoaded, completedExercises, completedMeals, exerciseReasons, mealReasons, currentDay?.date, answers?.userId]);
+  }, [isLoaded, completedExercises, completedMeals, dailySteps, exerciseReasons, mealReasons, currentDay?.date, answers?.userId]);
 
   // --- КРАСИВАЯ КНОПКА ОБНОВЛЕНИЯ ВАРИАНТОВ ПИТАНИЯ (UI)
   const refreshMealsButton = (
@@ -1119,6 +1827,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           padding: '14px 32px',
           borderRadius: '18px',
           background: 'linear-gradient(90deg, #2196f3 0%, #00c6ff 100%)',
+         
           color: '#fff',
           fontWeight: 700,
           fontSize: '18px',
@@ -1259,6 +1968,312 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
               <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>Сегодня</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a' }}>
                 {getCurrentDateString()}
+              </div>
+            </div>
+
+            {/* 2. Блок активности (шаги) — перемещён вверх */}
+            <div style={cardStyle}>
+              <div style={{
+                ...headerStyle,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span>🚶 Шагометр</span>
+                <div style={{
+                  fontSize: 12,
+                  color: '#10b981',
+                  fontWeight: 500,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}>
+                  <span>🎯</span>
+                  <span>Ручной ввод</span>
+                </div>
+              </div>
+              
+              {stepsError && (
+                <>
+                  <div style={{
+                    background: 'linear-gradient(135deg, #fef3cd 0%, #fef7e0 100%)',
+                    border: '1px solid #f6cc62',
+                    borderRadius: 12,
+                    padding: 16,
+                    marginBottom: 16,
+                    fontSize: 13,
+                    color: '#92400e',
+                    lineHeight: 1.5,
+                    whiteSpace: 'pre-line'
+                  }}>
+                    <div style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      marginBottom: 8,
+                      fontWeight: 600 
+                    }}>
+                      ℹ️ Информация о подсчете шагов
+                    </div>
+                    {stepsError}
+                    
+                    {/* Кнопка для запроса разрешений */}
+                    {!hasStepsPermission && (
+                      <button
+                        onClick={() => setShowStepsPermission(true)}
+                        style={{
+                          marginTop: 12,
+                          padding: '8px 16px',
+                          borderRadius: 8,
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #10b981 0%, #22c55e 100%)',
+                          color: '#fff',
+                          fontSize: 14,
+                          fontWeight: 600,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          width: '100%'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.target.style.background = 'linear-gradient(135deg, #059669 0%, #16a34a 100%)';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.target.style.background = 'linear-gradient(135deg, #10b981 0%, #22c55e 100%)';
+                        }}
+                      >
+                        🔐 Разрешить доступ к шагам
+                      </button>
+                    )}
+                                   </div>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: 12
+                  }}>
+                    <div style={{ 
+                      fontSize: 16, 
+                      color: '#1a1a1a',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8
+                    }}>
+                      Шаги сегодня
+                      {isLoadingSteps && (
+                        <div style={{
+                          width: 12,
+                          height: 12,
+                          border: '2px solid #e2e8f0',
+                          borderTop: '2px solid #2196f3',
+                          borderRadius: '50%',
+                          animation: 'spin 1s linear infinite'
+                        }} />
+                      )}
+                      <span style={{ marginLeft: 8, color: '#64748b', fontSize: 13 }}>
+                        {`Осталось ${(stepsGoal - dailySteps).toLocaleString()} шагов до цели`}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Прогресс бар для шагов */}
+                  <div style={{
+                    marginTop: 16,
+                    width: '100%',
+                    height: 12,
+                    background: '#e5e7eb',
+                    borderRadius: 6,
+                    overflow: 'hidden',
+                    position: 'relative'
+                  }}>
+                    <div style={{
+                      width: `${Math.min((dailySteps / stepsGoal) * 100, 100)}%`,
+                      height: '100%',
+                      background: '#4F46E5',
+                      transition: 'width 0.3s ease'
+                    }} />
+                  </div>
+
+                  {/* Слайдер для ручного ввода шагов */}
+                  {isManualStepsMode && (
+                    <div style={{
+                      marginTop: 20,
+                      padding: 16,
+                      background: 'linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%)',
+                      borderRadius: 12,
+                      border: '1px solid #e2e8f0'
+                    }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: 12
+                      }}>
+                        <span style={{ fontSize: 14, fontWeight: 600, color: '#374151' }}>
+                          🎯 Укажите количество шагов
+                        </span>
+                        <span style={{ 
+                          fontSize: 18, 
+                          fontWeight: 700, 
+                          color: '#4F46E5',
+                          minWidth: 80,
+                          textAlign: 'right'
+                        }}>
+                          {manualSteps.toLocaleString()}
+                        </span>
+                      </div>
+                      
+                      <div style={{ position: 'relative', marginBottom: 16 }}>
+                        <input
+                          type="range"
+                          min="0"
+                          max="25000"
+                          step="100"
+                          value={manualSteps}
+                          onChange={handleManualStepsChange}
+                          style={{
+                            width: '100%',
+                            height: 8,
+                            borderRadius: 4,
+                            background: '#e2e8f0',
+                            outline: 'none',
+                            appearance: 'none',
+                            WebkitAppearance: 'none',
+                            cursor: 'pointer'
+                          }}
+                        />
+                      </div>
+                      
+                      <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        fontSize: 12,
+                        color: '#6b7280',
+                        marginBottom: 12
+                      }}>
+                        <span>0 шагов</span>
+                        <span>25,000 шагов</span>
+                      </div>
+                      
+                      <div style={{
+                        display: 'flex',
+                        gap: 8,
+                        marginTop: 12
+                      }}>
+                        <button
+                          onClick={() => {
+                            setManualSteps(5000);
+                            setDailySteps(5000);
+                            localStorage.setItem('dianafit_manual_steps', '5000');
+                            saveStepsToStorage(5000);
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: '8px 12px',
+                            borderRadius: 8,
+                            border: '1px solid #e2e8f0',
+                            background: '#fff',
+                            color: '#374151',
+                            fontSize: 12,
+                            fontWeight: 500,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          5,000
+                        </button>
+                        <button
+                          onClick={() => {
+                            setManualSteps(10000);
+                            setDailySteps(10000);
+                            localStorage.setItem('dianafit_manual_steps', '10000');
+                            saveStepsToStorage(10000);
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: '8px 12px',
+                            borderRadius: 8,
+                            border: '1px solid #e2e8f0',
+                            background: '#fff',
+                            color: '#374151',
+                            fontSize: 12,
+                            fontWeight: 500,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          10,000
+                        </button>
+                        <button
+                          onClick={() => {
+                            setManualSteps(15000);
+                            setDailySteps(15000);
+                            localStorage.setItem('dianafit_manual_steps', '15000');
+                            saveStepsToStorage(15000);
+                          }}
+                          style={{
+                            flex: 1,
+                            padding: '8px 12px',
+                            borderRadius: 8,
+                            border: '1px solid #e2e8f0',
+                            background: '#fff',
+                            color: '#374151',
+                            fontSize: 12,
+                            fontWeight: 500,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          15,000
+                        </button>
+                      </div>
+                      
+                      <div style={{
+                        marginTop: 12,
+                        padding: 12,
+                        background: '#fef3cd',
+                        borderRadius: 8,
+                        border: '1px solid #fbbf24'
+                      }}>
+                        <div style={{
+                          fontSize: 12,
+                          color: '#92400e',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6
+                        }}>
+                          <span>💡</span>
+                          <span>Используйте слайдер или кнопки для установки количества шагов</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+              
+              {/* Информация об источнике данных */}
+              <div style={{
+                fontSize: 11,
+                color: '#9ca3af',
+                textAlign: 'center',
+                marginTop: 8,
+                fontStyle: 'italic',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6
+              }}>
+                {isManualStepsMode ? (
+                  <>
+                    <span style={{ color: '#10b981' }}>🎯</span>
+                    Ручной ввод активен
+                  </>
+                ) : hasStepsPermission ? (
+                  <>
+                    <span style={{ color: '#10b981' }}>🔐</span>
+                    Авторизованное подключение активно
+                  </>
+                ) : (
+                  <>
+                    <span style={{ color: '#f59e0b' }}>⚠️</span>
+                    Требуется разрешение для автоматической синхронизации
+                  </>
+                )}
               </div>
             </div>
 
@@ -1504,6 +2519,13 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           isPremium={isPremium}
         />
       )}
+      
+      {/* Модал для запроса разрешений на доступ к шагам */}
+      <StepsPermissionModal
+        isVisible={showStepsPermission}
+        onClose={() => setShowStepsPermission(false)}
+        onPermissionGranted={handlePermissionGranted}
+      />
       
       {/* Модал для выбора причины невыполнения */}
       <ReasonModal
