@@ -189,8 +189,10 @@ const MealCard = ({
           fontSize: 17,
           fontWeight: 700,
           color: '#1e293b',
-          lineHeight: 1.3,
-          letterSpacing: '-0.02em',
+          lineHeight: 1.4,
+          letterSpacing: '0.02em',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+          wordSpacing: 'normal',
           display: 'flex',
           alignItems: 'center',
           gap: 8

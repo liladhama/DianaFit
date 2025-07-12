@@ -1089,12 +1089,14 @@ router.post('/generate-meal-plan', async (req, res) => {
         });
       }
     }
-    // Для каждого приема пищи подбираем 5 блюд с максимально близкой калорийностью и подходящим dietType
+    // Для каждого приема пищи берем любые блюда по типу и диете, затем масштабируем под целевые калории
     const detailedMeals = mealTypes.map((type, idx) => {
       const recipes = allRecipes.filter(r => r.type === type && allowedDietTypes.includes(r.dietType));
-      const sorted = [...recipes].sort((a, b) => Math.abs(a.calories - mealTargets[idx].calories) - Math.abs(b.calories - mealTargets[idx].calories));
+      // Перемешиваем блюда для разнообразия
+      const shuffled = [...recipes].sort(() => Math.random() - 0.5);
       const target = mealTargets[idx];
-      const options = sorted.slice(0, 5).map(r => scaleRecipeToTargets(r, target));
+      // Масштабируем ингредиенты под целевые калории
+      const options = shuffled.slice(0, 5).map(r => scaleRecipeToTargets(r, target));
       return { type, options };
     });
     console.log('=== BEFORE DEBUG MEAL TARGETS ===');
@@ -1214,12 +1216,14 @@ router.post('/ai-meal-plan', async (req, res) => {
         });
       }
     }
-    // Для каждого приема пищи подбираем 5 блюд с максимально близкой калорийностью и подходящим dietType
+    // Для каждого приема пищи берем любые блюда по типу и диете, затем масштабируем под целевые калории
     const detailedMeals = mealTypes.map((type, idx) => {
       const recipes = allRecipes.filter(r => r.type === type && allowedDietTypes.includes(r.dietType));
-      const sorted = [...recipes].sort((a, b) => Math.abs(a.calories - mealTargets[idx].calories) - Math.abs(b.calories - mealTargets[idx].calories));
+      // Перемешиваем блюда для разнообразия
+      const shuffled = [...recipes].sort(() => Math.random() - 0.5);
       const target = mealTargets[idx];
-      const options = sorted.slice(0, 5).map(r => scaleRecipeToTargets(r, target));
+      // Масштабируем ингредиенты под целевые калории
+      const options = shuffled.slice(0, 5).map(r => scaleRecipeToTargets(r, target));
       return { type, options };
     });
 
@@ -1336,12 +1340,14 @@ router.post('/ai-meal-plan', async (req, res) => {
         });
       }
     }
-    // Для каждого приема пищи подбираем 5 блюд с максимально близкой калорийностью и подходящим dietType
+    // Для каждого приема пищи берем любые блюда по типу и диете, затем масштабируем под целевые калории
     const detailedMeals = mealTypes.map((type, idx) => {
       const recipes = allRecipes.filter(r => r.type === type && allowedDietTypes.includes(r.dietType));
-      const sorted = [...recipes].sort((a, b) => Math.abs(a.calories - mealTargets[idx].calories) - Math.abs(b.calories - mealTargets[idx].calories));
+      // Перемешиваем блюда для разнообразия
+      const shuffled = [...recipes].sort(() => Math.random() - 0.5);
       const target = mealTargets[idx];
-      const options = sorted.slice(0, 5).map(r => scaleRecipeToTargets(r, target));
+      // Масштабируем ингредиенты под целевые калории
+      const options = shuffled.slice(0, 5).map(r => scaleRecipeToTargets(r, target));
       return { type, options };
     });
 
@@ -1436,30 +1442,21 @@ function scaleRecipeToTargets(recipe, target) {
   ) {
     return recipe;
   }
+  
+  // Всегда масштабируем под целевые калории
   const scale = target.calories / recipe.calories;
-  const breadKeywords = ['хлеб', 'батон', 'булка', 'багет', 'тост'];
-  const breadTypicalWeight = 35;
-  const NON_SCALABLE_INGREDIENTS = [
-    'лимонный сок', 'соль', 'перец', 'паприка', 'корица', 'зира', 'тимьян', 'мускатный орех',
-    'розмарин', 'базилик', 'кинза', 'укроп', 'петрушка', 'чеснок', 'имбирь', 'горчица', 'хрен', 'лавровый лист'
-  ];
-  // Масштабируем только если это не хлеб и ингредиенты не содержат лимонный сок, соль и пряности
-  if (!breadKeywords.some(k => recipe.name.toLowerCase().includes(k)) && 
-      !NON_SCALABLE_INGREDIENTS.some(ing => recipe.name.toLowerCase().includes(ing))) {
-    return {
-      ...recipe,
-      calories: Math.round(recipe.calories * scale),
-      protein: Math.round(recipe.protein * scale),
-      fat: Math.round(recipe.fat * scale),
-      carbs: Math.round(recipe.carbs * scale),
-      ingredients: recipe.ingredients.map(ing => ({
-        ...ing,
-        amount: Math.round(ing.amount * scale)
-      }))
-    };
-  } else {
-    return recipe;
-  }
+  
+  return {
+    ...recipe,
+    calories: Math.round(recipe.calories * scale),
+    protein: Math.round(recipe.protein * scale),
+    fat: Math.round(recipe.fat * scale),
+    carbs: Math.round(recipe.carbs * scale),
+    ingredients: recipe.ingredients.map(ing => ({
+      ...ing,
+      amount: Math.round(ing.amount * scale * 10) / 10 // Округляем до 0.1 для точности
+    }))
+  };
 }
 
 // --- Универсальный путь к файлу пользователя ---

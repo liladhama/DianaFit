@@ -90,14 +90,18 @@ const MealCard = ({
               borderRadius: 12,
               borderLeft: '4px solid #3b82f6'
             }}>
-              <h4 style={{
-                fontSize: 18,
-                fontWeight: 700,
-                color: '#1e293b',
-                margin: 0,
-                lineHeight: 1.3,
-                letterSpacing: '-0.02em'
-              }}>
+              <h4 
+                className="meal-name-text"
+                style={{
+                  fontSize: 18,
+                  fontWeight: 700,
+                  color: '#1e293b',
+                  margin: 0,
+                  lineHeight: 1.4,
+                  letterSpacing: '0.02em',
+                  fontFamily: 'system-ui, -apple-system, sans-serif',
+                  wordSpacing: 'normal'
+                }}>
                 🍽️ {mealName}
               </h4>
             </div>

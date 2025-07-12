@@ -561,7 +561,8 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
               color: '#fff',
               textAlign: 'center',
               marginBottom: 32,
-              letterSpacing: '-0.02em',
+              letterSpacing: '0.02em',
+              fontFamily: 'system-ui, -apple-system, sans-serif',
               color: '#222'
             }}>
               Прогресс за неделю
@@ -950,7 +951,8 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
                 fontWeight: 800,
-                letterSpacing: '-0.02em',
+                letterSpacing: '0.02em',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
                 color: '#222'
               }}>
                 -{quizAnswers.goal || 3} кг

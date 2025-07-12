@@ -1,4 +1,2287 @@
 {
+  "quiz": {
+    "name": "авыаыва",
+    "sex": "male",
+    "age": 24,
+    "height_cm": 184,
+    "weight_kg": 106,
+    "goal": 3,
+    "gym_or_home": "home",
+    "training_level": "beginner",
+    "activity_coef": 1.725,
+    "workouts_per_week": 5,
+    "diet_flags": "vegan",
+    "userId": "demo_user_local_test"
+  },
+  "program": {
+    "programId": "program_demo_user_local_test_1752309568742",
+    "userId": "demo_user_local_test",
+    "days": [
+      {
+        "date": "2025-07-12",
+        "title": "суббота",
+        "dayNumber": 1,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 1 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            },
+            {
+              "name": "Скручивания лёжа",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "lying_crunches"
+            },
+            {
+              "name": "Прыгающий джек",
+              "reps": "3x20",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "jumping_jacks"
+            },
+            {
+              "name": "Приседания широкой постановкой",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "wide_stance_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-13",
+        "title": "воскресенье",
+        "dayNumber": 2,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 2 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Выпады реверанс",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "curtsy_lunges"
+            },
+            {
+              "name": "Румынская тяга с резинкой",
+              "reps": "3x15",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "romanian_deadlift_resistance_band"
+            },
+            {
+              "name": "Тяга резинки двумя руками",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "resistance_band_row_both_hands"
+            },
+            {
+              "name": "Тяга резинки одной рукой",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "single_arm_resistance_band_row"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-14",
+        "title": "понедельник",
+        "dayNumber": 3,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 3 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Приседания с отведением ноги",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "squat_with_side_leg_raise"
+            },
+            {
+              "name": "Статичные выпады",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "stationary_lunges"
+            },
+            {
+              "name": "Динамические отжимания в планке",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "dynamic_plank_push_up"
+            },
+            {
+              "name": "Тяга резинки одной рукой",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "single_arm_resistance_band_row"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-15",
+        "title": "вторник",
+        "dayNumber": 4,
+        "isWorkoutDay": false,
+        "workout": null,
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-16",
+        "title": "среда",
+        "dayNumber": 5,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 4 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Сведение лопаток",
+              "reps": "3x15",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "shoulder_blade_squeezes"
+            },
+            {
+              "name": "Приседания с подъёмом на носки",
+              "reps": "3x12",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "squats_with_calf_raise"
+            },
+            {
+              "name": "Скручивания",
+              "reps": "3x20",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "crunches"
+            },
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-17",
+        "title": "четверг",
+        "dayNumber": 6,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 5 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Захлёсты",
+              "reps": "3x30 сек",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "butt_kicks"
+            },
+            {
+              "name": "Классические приседания",
+              "reps": "3x15",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "classic_squats"
+            },
+            {
+              "name": "Ягодичный мостик",
+              "reps": "3x12",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "glute_bridge"
+            },
+            {
+              "name": "Приседания плие",
+              "reps": "3x15",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "plie_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-18",
+        "title": "пятница",
+        "dayNumber": 7,
+        "isWorkoutDay": false,
+        "workout": null,
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-19",
+        "title": "суббота",
+        "dayNumber": 8,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 1 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            },
+            {
+              "name": "Скручивания лёжа",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "lying_crunches"
+            },
+            {
+              "name": "Прыгающий джек",
+              "reps": "3x20",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "jumping_jacks"
+            },
+            {
+              "name": "Приседания широкой постановкой",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "wide_stance_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-20",
+        "title": "воскресенье",
+        "dayNumber": 9,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 2 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Выпады реверанс",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "curtsy_lunges"
+            },
+            {
+              "name": "Румынская тяга с резинкой",
+              "reps": "3x15",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "romanian_deadlift_resistance_band"
+            },
+            {
+              "name": "Тяга резинки двумя руками",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "resistance_band_row_both_hands"
+            },
+            {
+              "name": "Тяга резинки одной рукой",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "single_arm_resistance_band_row"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-21",
+        "title": "понедельник",
+        "dayNumber": 10,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 3 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Приседания с отведением ноги",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "squat_with_side_leg_raise"
+            },
+            {
+              "name": "Статичные выпады",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "stationary_lunges"
+            },
+            {
+              "name": "Динамические отжимания в планке",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "dynamic_plank_push_up"
+            },
+            {
+              "name": "Тяга резинки одной рукой",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "single_arm_resistance_band_row"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-22",
+        "title": "вторник",
+        "dayNumber": 11,
+        "isWorkoutDay": false,
+        "workout": null,
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-23",
+        "title": "среда",
+        "dayNumber": 12,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 4 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Сведение лопаток",
+              "reps": "3x15",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "shoulder_blade_squeezes"
+            },
+            {
+              "name": "Приседания с подъёмом на носки",
+              "reps": "3x12",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "squats_with_calf_raise"
+            },
+            {
+              "name": "Скручивания",
+              "reps": "3x20",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "crunches"
+            },
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-24",
+        "title": "четверг",
+        "dayNumber": 13,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 5 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Захлёсты",
+              "reps": "3x30 сек",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "butt_kicks"
+            },
+            {
+              "name": "Классические приседания",
+              "reps": "3x15",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "classic_squats"
+            },
+            {
+              "name": "Ягодичный мостик",
+              "reps": "3x12",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "glute_bridge"
+            },
+            {
+              "name": "Приседания плие",
+              "reps": "3x15",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "plie_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-25",
+        "title": "пятница",
+        "dayNumber": 14,
+        "isWorkoutDay": false,
+        "workout": null,
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-26",
+        "title": "суббота",
+        "dayNumber": 15,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 1 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            },
+            {
+              "name": "Скручивания лёжа",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "lying_crunches"
+            },
+            {
+              "name": "Прыгающий джек",
+              "reps": "3x20",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "jumping_jacks"
+            },
+            {
+              "name": "Приседания широкой постановкой",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "wide_stance_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-27",
+        "title": "воскресенье",
+        "dayNumber": 16,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 2 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Выпады реверанс",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "curtsy_lunges"
+            },
+            {
+              "name": "Румынская тяга с резинкой",
+              "reps": "3x15",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "romanian_deadlift_resistance_band"
+            },
+            {
+              "name": "Тяга резинки двумя руками",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "resistance_band_row_both_hands"
+            },
+            {
+              "name": "Тяга резинки одной рукой",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "single_arm_resistance_band_row"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-28",
+        "title": "понедельник",
+        "dayNumber": 17,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 3 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Приседания с отведением ноги",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "squat_with_side_leg_raise"
+            },
+            {
+              "name": "Статичные выпады",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "stationary_lunges"
+            },
+            {
+              "name": "Динамические отжимания в планке",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "dynamic_plank_push_up"
+            },
+            {
+              "name": "Тяга резинки одной рукой",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "single_arm_resistance_band_row"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-29",
+        "title": "вторник",
+        "dayNumber": 18,
+        "isWorkoutDay": false,
+        "workout": null,
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-30",
+        "title": "среда",
+        "dayNumber": 19,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 4 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Сведение лопаток",
+              "reps": "3x15",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "shoulder_blade_squeezes"
+            },
+            {
+              "name": "Приседания с подъёмом на носки",
+              "reps": "3x12",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "squats_with_calf_raise"
+            },
+            {
+              "name": "Скручивания",
+              "reps": "3x20",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "crunches"
+            },
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-07-31",
+        "title": "четверг",
+        "dayNumber": 20,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 5 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Захлёсты",
+              "reps": "3x30 сек",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "butt_kicks"
+            },
+            {
+              "name": "Классические приседания",
+              "reps": "3x15",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "classic_squats"
+            },
+            {
+              "name": "Ягодичный мостик",
+              "reps": "3x12",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "glute_bridge"
+            },
+            {
+              "name": "Приседания плие",
+              "reps": "3x15",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "plie_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-01",
+        "title": "пятница",
+        "dayNumber": 21,
+        "isWorkoutDay": false,
+        "workout": null,
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-02",
+        "title": "суббота",
+        "dayNumber": 22,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 1 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            },
+            {
+              "name": "Скручивания лёжа",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "lying_crunches"
+            },
+            {
+              "name": "Прыгающий джек",
+              "reps": "3x20",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "jumping_jacks"
+            },
+            {
+              "name": "Приседания широкой постановкой",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "wide_stance_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-03",
+        "title": "воскресенье",
+        "dayNumber": 23,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 2 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Выпады реверанс",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "curtsy_lunges"
+            },
+            {
+              "name": "Румынская тяга с резинкой",
+              "reps": "3x15",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "romanian_deadlift_resistance_band"
+            },
+            {
+              "name": "Тяга резинки двумя руками",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "resistance_band_row_both_hands"
+            },
+            {
+              "name": "Тяга резинки одной рукой",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "single_arm_resistance_band_row"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-04",
+        "title": "понедельник",
+        "dayNumber": 24,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 3 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Приседания с отведением ноги",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "squat_with_side_leg_raise"
+            },
+            {
+              "name": "Статичные выпады",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "stationary_lunges"
+            },
+            {
+              "name": "Динамические отжимания в планке",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "dynamic_plank_push_up"
+            },
+            {
+              "name": "Тяга резинки одной рукой",
+              "reps": "4x20 сек",
+              "dayId": "day3_tabata",
+              "location": "home",
+              "videoName": "single_arm_resistance_band_row"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-05",
+        "title": "вторник",
+        "dayNumber": 25,
+        "isWorkoutDay": false,
+        "workout": null,
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-06",
+        "title": "среда",
+        "dayNumber": 26,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 4 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Сведение лопаток",
+              "reps": "3x15",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "shoulder_blade_squeezes"
+            },
+            {
+              "name": "Приседания с подъёмом на носки",
+              "reps": "3x12",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "squats_with_calf_raise"
+            },
+            {
+              "name": "Скручивания",
+              "reps": "3x20",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "crunches"
+            },
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day4_hiit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-07",
+        "title": "четверг",
+        "dayNumber": 27,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 5 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Захлёсты",
+              "reps": "3x30 сек",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "butt_kicks"
+            },
+            {
+              "name": "Классические приседания",
+              "reps": "3x15",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "classic_squats"
+            },
+            {
+              "name": "Ягодичный мостик",
+              "reps": "3x12",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "glute_bridge"
+            },
+            {
+              "name": "Приседания плие",
+              "reps": "3x15",
+              "dayId": "day5_cardio_advanced",
+              "location": "home",
+              "videoName": "plie_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-08",
+        "title": "пятница",
+        "dayNumber": 28,
+        "isWorkoutDay": false,
+        "workout": null,
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-09",
+        "title": "суббота",
+        "dayNumber": 29,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 1 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Динамическая планка",
+              "reps": "3x30 сек",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "dynamic_plank"
+            },
+            {
+              "name": "Скручивания лёжа",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "lying_crunches"
+            },
+            {
+              "name": "Прыгающий джек",
+              "reps": "3x20",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "jumping_jacks"
+            },
+            {
+              "name": "Приседания широкой постановкой",
+              "reps": "3x15",
+              "dayId": "day1_cardio_circuit",
+              "location": "home",
+              "videoName": "wide_stance_squats"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      },
+      {
+        "date": "2025-08-10",
+        "title": "воскресенье",
+        "dayNumber": 30,
+        "isWorkoutDay": true,
+        "workout": {
+          "title": "День 2 | Домашняя тренировка",
+          "exercises": [
+            {
+              "name": "Выпады реверанс",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "curtsy_lunges"
+            },
+            {
+              "name": "Румынская тяга с резинкой",
+              "reps": "3x15",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "romanian_deadlift_resistance_band"
+            },
+            {
+              "name": "Тяга резинки двумя руками",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "resistance_band_row_both_hands"
+            },
+            {
+              "name": "Тяга резинки одной рукой",
+              "reps": "3x12",
+              "dayId": "day2_functional_circuit",
+              "location": "home",
+              "videoName": "single_arm_resistance_band_row"
+            }
+          ],
+          "duration": 30,
+          "difficulty": "beginner",
+          "location": "home"
+        },
+        "meals": [
+          {
+            "type": "Завтрак",
+            "calories": 320,
+            "time": "08:00"
+          },
+          {
+            "type": "Перекус",
+            "calories": 80,
+            "time": "11:00"
+          },
+          {
+            "type": "Обед",
+            "calories": 450,
+            "time": "14:00"
+          },
+          {
+            "type": "Полдник",
+            "calories": 120,
+            "time": "17:00"
+          },
+          {
+            "type": "Ужин",
+            "calories": 350,
+            "time": "19:00"
+          }
+        ],
+        "dailySteps": 0,
+        "dailyStepsGoal": 8000,
+        "completedExercises": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedMealsArr": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "completedWorkout": false,
+        "completedMeals": false
+      }
+    ],
+    "type": "monthly",
+    "createdAt": "2025-07-12T08:39:28.742Z"
+  },
+  "progress": [],
   "dailyProgress": {
     "2025-07-12": {
       "ate": false,
@@ -7,38 +2290,32 @@
         {
           "name": "Динамическая планка",
           "type": "workout",
-          "done": true
+          "done": false
         },
         {
           "name": "Скручивания лёжа",
           "type": "workout",
-          "done": true
+          "done": false
         },
         {
           "name": "Прыгающий джек",
           "type": "workout",
-          "done": false,
-          "reason": {
-            "id": "tired",
-            "text": "😴 Слишком устал(а)",
-            "category": "energy",
-            "timestamp": "2025-07-12T07:39:34.289Z"
-          }
+          "done": false
         },
         {
           "name": "Приседания широкой постановкой",
           "type": "workout",
-          "done": true
+          "done": false
         },
         {
           "name": "Завтрак",
           "type": "meal",
-          "done": true
+          "done": false
         },
         {
           "name": "Перекус",
           "type": "meal",
-          "done": true
+          "done": false
         },
         {
           "name": "Обед",
@@ -56,7 +2333,7 @@
           "done": false
         }
       ],
-      "updatedAt": "2025-07-12T07:39:34.299Z"
+      "updatedAt": "2025-07-12T08:39:29.434Z"
     }
   },
   "workouts": 0,
@@ -75,5 +2352,5 @@
       "trend": "up"
     }
   },
-  "lastUpdate": "2025-07-12T07:39:34.299Z"
+  "lastUpdate": "2025-07-12T08:39:29.434Z"
 }
