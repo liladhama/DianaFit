@@ -51,6 +51,16 @@ const GRAM_INGREDIENTS = [
 ];
 
 // Дополнительные типовые веса для нестандартных unit
+// --- Функция округления количества ингредиентов ---
+function roundIngredientAmount(amount, unit) {
+    if (["шт", "кусочек", "ломтик", "стебель", "зубчик"].includes(unit)) {
+        return Math.round(amount);
+    }
+    if (["ч.л.", "ст.л.", "щепотка"].includes(unit)) {
+        return Math.round(amount * 2) / 2; // округление до 0.5
+    }
+    return amount;
+}
 const EXTRA_UNIT_WEIGHTS = {
     'кусочек': 35, // хлеб
     'ломтик': 20,
@@ -71,6 +81,8 @@ function normalizeIngredientUnits(ingredient) {
     const isGramType = GRAM_INGREDIENTS.some(key => name.includes(key));
     let unit = ingredient.unit;
     let amount = Number(ingredient.amount);
+    // Округляем количество
+    amount = roundIngredientAmount(amount, unit);
     // 0. Автоматическая нормализация специй и приправ
     if (SPICES.some(spice => name.includes(spice))) {
         // Если количество больше 10 г или не указано, ограничиваем до 1-5 г
