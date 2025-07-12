@@ -162,7 +162,6 @@ const VideoPlayer = ({ location, dayId, exerciseName, title }) => {
             borderRadius: '12px',
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
           }}
-          poster={`/videos/${location}/${dayId}/${exerciseName}_poster.jpg`} // опциональный постер
         >
           <source src={videoPath} type="video/mp4" />
           Ваш браузер не поддерживает видео.
