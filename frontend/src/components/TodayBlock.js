@@ -102,6 +102,21 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     fullDay: day
   });
 
+  // Состояние для сворачивания/разворачивания контейнеров
+  const [openContainers, setOpenContainers] = useState({
+    training: true,
+    nutrition: true,
+    motivation: true
+  });
+
+  // Функция для переключения состояния контейнера
+  const toggleContainer = (containerKey) => {
+    setOpenContainers(prev => ({
+      ...prev,
+      [containerKey]: !prev[containerKey]
+    }));
+  };
+
   // Состояние для персонального плана
   const [personalPlan, setPersonalPlan] = useState(null);
   const [loadingPlan, setLoadingPlan] = useState(false);
@@ -1264,102 +1279,118 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
             {/* 3. Блок тренировки */}
             <div style={cardStyle}>
-              <div style={headerStyle}>
-                🏋️‍♀️ Тренировка
+              <div 
+                style={{
+                  ...headerStyle,
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+                onClick={() => toggleContainer('training')}
+              >
+                <span>🏋️‍♀️ Тренировка</span>
+                <span style={{ fontSize: 14 }}>
+                  {openContainers.training ? '▼' : '▶'}
+                </span>
               </div>
               
-              {currentDay.workout && currentDay.workout.exercises && currentDay.workout.exercises.length > 0 ? (
+              {openContainers.training && (
                 <>
-                  <div style={{ fontSize: 18, fontWeight: 600, color: '#1a1a1a', marginBottom: 16 }}>
-                    {currentDay.workout.title || 'Тренировка'}
-                  </div>
-                  
-                  {currentDay.workout.exercises.map((ex, i) => {
-                    // Используем данные из упражнения, если они есть, иначе анализируем название тренировки
-                    const location = ex.location || currentDay.workout.location || getWorkoutLocation(currentDay.workout.title || currentDay.workout.name);
-                    const dayId = ex.dayId || getDayId(currentDay.workout.title || currentDay.workout.name, location);
-                    const exerciseName = getExerciseEnglishName(ex.name);
-                    
-                    console.log('🎥 TodayBlock видео данные для упражнения:', {
-                      exerciseName: ex.name,
-                      location,
-                      dayId,
-                      exerciseEnglishName: exerciseName,
-                      exerciseObject: ex,
-                      workoutObject: currentDay.workout,
-                      fullVideoPath: location && dayId && exerciseName ? `/videos/${location}/${dayId}/${exerciseName}.mp4` : null
-                    });
-                    
-                    // Создаем видео компонент
-                    const videoComponent = (location && dayId && (ex.videoName || exerciseName)) ? (
-                      <VideoPlayer 
-                        location={location}
-                        dayId={dayId}
-                        exerciseName={ex.videoName || exerciseName}
-                        title={ex.name}
-                      />
-                    ) : (
-                      <div style={{ 
-                        display: 'flex',
-                        justifyContent: 'center'
-                      }}>
-                        <div style={{
-
-                          width: '200px',
-                          height: '300px',
-                          background: '#e2e8f0',
-                          borderRadius: 12,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#94a3b8',
-                          fontSize: 14
-                        }}>
-                          <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎥</div>
-                          <div>Видео скоро</div>
-                          <div style={{ fontSize: '10px', marginTop: '8px', textAlign: 'center' }}>
-                            Отсутствуют данные:<br/>
-                            location: {location || 'нет'}<br/>
-                            dayId: {dayId || 'нет'}<br/>
-                            exerciseName: {exerciseName || 'нет'}
-                          </div>
-                        </div>
+                  {currentDay.workout && currentDay.workout.exercises && currentDay.workout.exercises.length > 0 ? (
+                    <>
+                      <div style={{ fontSize: 18, fontWeight: 600, color: '#1a1a1a', marginBottom: 16 }}>
+                        {currentDay.workout.title || 'Тренировка'}
                       </div>
-                    );
-                    
-                    return (
-                      <ExerciseCard
-                        key={i}
-                        exercise={ex}
-                        index={i}
-                        isCompleted={(() => {
-                          const value = completedExercises[i] ?? null; // Защита от undefined
-                          console.log(`🏋️ Передаем в ExerciseCard[${i}]: исходное=${completedExercises[i]}, обработанное=${value}, typeof=${typeof value}, completedExercises.length=${completedExercises.length}`);
-                          return value;
-                        })()}
-                        onStatusChange={handleExerciseComplete}
-                        videoComponent={videoComponent}
-                        reason={exerciseReasons[i]}
-                      />
-                    );
-                  })}
+                      
+                      {currentDay.workout.exercises.map((ex, i) => {
+                        // Используем данные из упражнения, если они есть, иначе анализируем название тренировки
+                        const location = ex.location || currentDay.workout.location || getWorkoutLocation(currentDay.workout.title || currentDay.workout.name);
+                        const dayId = ex.dayId || getDayId(currentDay.workout.title || currentDay.workout.name, location);
+                        const exerciseName = getExerciseEnglishName(ex.name);
+                        
+                        console.log('🎥 TodayBlock видео данные для упражнения:', {
+                          exerciseName: ex.name,
+                          location,
+                          dayId,
+                          exerciseEnglishName: exerciseName,
+                          exerciseObject: ex,
+                          workoutObject: currentDay.workout,
+                          fullVideoPath: location && dayId && exerciseName ? `/videos/${location}/${dayId}/${exerciseName}.mp4` : null
+                        });
+                        
+                        // Создаем видео компонент без постера, чтобы показывался первый кадр
+                        const videoComponent = (location && dayId && (ex.videoName || exerciseName)) ? (
+                          <VideoPlayer 
+                            location={location}
+                            dayId={dayId}
+                            exerciseName={ex.videoName || exerciseName}
+                            title={ex.name}
+                          />
+                        ) : (
+                          <div style={{ 
+                            display: 'flex',
+                            justifyContent: 'center'
+                          }}>
+                            <div style={{
+                              width: '200px',
+                              height: '300px',
+                              background: '#e2e8f0',
+                              borderRadius: 12,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              color: '#94a3b8',
+                              fontSize: 14
+                            }}>
+                              <div style={{ fontSize: '48px', marginBottom: '8px' }}>🎥</div>
+                              <div>Видео скоро</div>
+                              <div style={{ fontSize: '10px', marginTop: '8px', textAlign: 'center' }}>
+                                Отсутствуют данные:<br/>
+                                location: {location || 'нет'}<br/>
+                                dayId: {dayId || 'нет'}<br/>
+                                exerciseName: {exerciseName || 'нет'}
+                              </div>
+                            </div>
+                          </div>
+                        );
+                        
+                        return (
+                          <ExerciseCard
+                            key={i}
+                            exercise={ex}
+                            index={i}
+                            isCompleted={(() => {
+                              const value = completedExercises[i] ?? null; // Защита от undefined
+                              console.log(`🏋️ Передаем в ExerciseCard[${i}]: исходное=${completedExercises[i]}, обработанное=${value}, typeof=${typeof value}, completedExercises.length=${completedExercises.length}`);
+                              return value;
+                            })()}
+                            onStatusChange={handleExerciseComplete}
+                            videoComponent={videoComponent}
+                            reason={exerciseReasons[i]}
+                          />
+                        );
+                      })}
+                    </>
+                  ) : (
+                    <div style={{ 
+                      textAlign: 'center',
+                      padding: 24,
+                      background: 'linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%)',
+                      borderRadius: 12
+                    }}>
+                      <div style={{ fontSize: 48, marginBottom: 12 }}>🌿</div>
+                      <div style={{ fontSize: 18, fontWeight: 600, color: '#2d5a2d', marginBottom: 8 }}>
+                        Сегодня день отдыха
+                      </div>
+                      <div style={{ fontSize: 14, color: '#666' }}>
+                        Прогуляйся 10 000 шагов 💪
+                      </div>
+                    </div>
+                  )}
                 </>
-              ) : (
-                <div style={{ 
-                  textAlign: 'center',
-                  padding: 24,
-                  background: 'linear-gradient(135deg, #e8f5e8 0%, #f0f8f0 100%)',
-                  borderRadius: 12
-                }}>
-                  <div style={{ fontSize: 48, marginBottom: 12 }}>🌿</div>
-                  <div style={{ fontSize: 18, fontWeight: 600, color: '#2d5a2d', marginBottom: 8 }}>
-                    Сегодня день отдыха
-                  </div>
-                  <div style={{ fontSize: 14, color: '#666' }}>
-                    Прогуляйся 10 000 шагов 💪
-                  </div>
-                </div>
               )}
             </div>
 
@@ -1378,37 +1409,57 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                 ❌ {aiError}
               </div>
             ) : Array.isArray(aiMeals) && aiMeals.length > 0 && (
-              <div style={{ marginBottom: 24 }}>
-                <div style={{ fontWeight: 700, fontSize: 20, marginBottom: 12, color: '#3b82f6', letterSpacing: '-0.01em', textAlign: 'center' }}>🍽️ Питание на день</div>
-                {aiMeals.map((meal, idx) => {
-                  const isAI = Array.isArray(meal.options) && meal.options.length > 0;
-                  // Индекс выбранного варианта для этого приема пищи
-                  const selectedIdx = selectedMealOptionIdx[idx] || 0;
-                  // Функция для смены варианта
-                  const setIdx = (fn) => {
-                    setSelectedMealOptionIdx(prev => {
-                      const arr = [...prev];
-                      arr[idx] = typeof fn === 'function' ? fn(arr[idx] || 0) : fn;
-                      return arr;
-                    });
-                  };
-                  return (
-                    <div key={meal.type + idx}>
-                      <MealCard
-                        meal={meal}
-                        index={idx}
-                        isCompleted={completedMeals[idx] ?? null}
-                        onStatusChange={handleMealStatusChange}
-                        style={{ marginBottom: 18 }}
-                        selectedIdx={selectedIdx}
-                        setSelectedIdx={setIdx}
-                        reason={mealReasons[idx]}
-                      />
-                    </div>
-                  );
-                })}
-                {/* Кнопка обновления вариантов питания */}
-                {refreshMealsButton}
+              <div style={cardStyle}>
+                <div 
+                  style={{
+                    ...headerStyle,
+                    cursor: 'pointer',
+                    userSelect: 'none',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}
+                  onClick={() => toggleContainer('nutrition')}
+                >
+                  <span>🍽️ Питание</span>
+                  <span style={{ fontSize: 14 }}>
+                    {openContainers.nutrition ? '▼' : '▶'}
+                  </span>
+                </div>
+                
+                {openContainers.nutrition && (
+                  <>
+                    {aiMeals.map((meal, idx) => {
+                      const isAI = Array.isArray(meal.options) && meal.options.length > 0;
+                      // Индекс выбранного варианта для этого приема пищи
+                      const selectedIdx = selectedMealOptionIdx[idx] || 0;
+                      // Функция для смены варианта
+                      const setIdx = (fn) => {
+                        setSelectedMealOptionIdx(prev => {
+                          const arr = [...prev];
+                          arr[idx] = typeof fn === 'function' ? fn(arr[idx] || 0) : fn;
+                          return arr;
+                        });
+                      };
+                      return (
+                        <div key={meal.type + idx}>
+                          <MealCard
+                            meal={meal}
+                            index={idx}
+                            isCompleted={completedMeals[idx] ?? null}
+                            onStatusChange={handleMealStatusChange}
+                            style={{ marginBottom: 18 }}
+                            selectedIdx={selectedIdx}
+                            setSelectedIdx={setIdx}
+                            reason={mealReasons[idx]}
+                          />
+                        </div>
+                      );
+                    })}
+                    {/* Кнопка обновления вариантов питания */}
+                    {refreshMealsButton}
+                  </>
+                )}
               </div>
             )}
 
@@ -1417,19 +1468,40 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
               ...cardStyle,
               background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)',
               border: '1px solid #a5b4fc',
-              textAlign: 'center',
               marginBottom: 24
             }}>
-              <div style={{ fontSize: 24, marginBottom: 12 }}>💬</div>
-              <div style={{ 
-                fontSize: 16, 
-                fontStyle: 'italic', 
-                color: '#3730a3', 
-                lineHeight: 1.4,
-                fontWeight: 500
-              }}>
-                {todayQuote}
+              <div 
+                style={{
+                  ...headerStyle,
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: openContainers.motivation ? 16 : 0
+                }}
+                onClick={() => toggleContainer('motivation')}
+              >
+                <span>💬 Мотивация</span>
+                <span style={{ fontSize: 14 }}>
+                  {openContainers.motivation ? '▼' : '▶'}
+                </span>
               </div>
+              
+              {openContainers.motivation && (
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 24, marginBottom: 12 }}>💬</div>
+                  <div style={{ 
+                    fontSize: 16, 
+                    fontStyle: 'italic', 
+                    color: '#3730a3', 
+                    lineHeight: 1.4,
+                    fontWeight: 500
+                  }}>
+                    {todayQuote}
+                  </div>
+                </div>
+              )}
             </div>
           </>
         )}
