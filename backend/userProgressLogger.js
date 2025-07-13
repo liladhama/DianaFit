@@ -248,7 +248,9 @@ class UserProgressLogger {
     // Сохранение лога с атомарной записью
     async saveLog(log) {
         const logPath = this.getUserLogPath();
-        
+        const tmpPath = logPath + '.tmp';
+        const backupPath = logPath + '.bak';
+
         // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: загружаем существующий файл и сохраняем все поля
         let existing = {};
         if (fs.existsSync(logPath)) {
@@ -259,18 +261,31 @@ class UserProgressLogger {
                 }
             } catch (e) {
                 console.error('Ошибка загрузки существующего файла:', e);
+                // Делаем резервную копию битого файла
+                try {
+                    fs.copyFileSync(logPath, backupPath);
+                } catch (copyErr) {
+                    console.error('Ошибка резервного копирования битого файла:', copyErr);
+                }
             }
         }
-        
+
         // Объединяем данные - сохраняем ВСЕ поля из существующего файла
         const finalLog = {
             ...existing,  // Сохраняем все существующие поля (quiz, program, programData, etc.)
             ...log,       // Обновляем только переданные поля
             lastUpdate: new Date().toISOString()
         };
-        
+
         const jsonData = JSON.stringify(finalLog, null, 2);
-        await fs.promises.writeFile(logPath, jsonData, 'utf8');
+        // Атомарная запись: сначала во временный файл, затем rename
+        try {
+            await fs.promises.writeFile(tmpPath, jsonData, 'utf8');
+            fs.renameSync(tmpPath, logPath);
+        } catch (err) {
+            console.error('Ошибка атомарной записи лога:', err);
+            // В случае ошибки — не трогаем основной файл
+        }
     }
 }
 
