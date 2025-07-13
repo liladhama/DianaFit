@@ -169,7 +169,12 @@ router.post('/program', async (req, res) => {
       }
     });
   }
-  // Сохраняем только programData
+  // Сохраняем только programData, но если были weekPlan/weeklyPlan/weeklySchedule — переносим их
+  if (userData.programData) {
+    if (userData.programData.weekPlan && !programData.weekPlan) programData.weekPlan = userData.programData.weekPlan;
+    if (userData.programData.weeklyPlan && !programData.weeklyPlan) programData.weeklyPlan = userData.programData.weeklyPlan;
+    if (userData.programData.weeklySchedule && !programData.weeklySchedule) programData.weeklySchedule = userData.programData.weeklySchedule;
+  }
   userData.programData = programData;
   fs.writeFileSync(userDataPath, JSON.stringify(userData, null, 2), 'utf-8');
   res.json({ success: true });
