@@ -7,27 +7,27 @@
         {
           "name": "Динамическая планка",
           "type": "workout",
-          "done": null
+          "done": true
         },
         {
           "name": "Скручивания лёжа",
           "type": "workout",
-          "done": null
+          "done": true
         },
         {
           "name": "Прыгающий джек",
           "type": "workout",
-          "done": null
+          "done": true
         },
         {
           "name": "Приседания широкой постановкой",
           "type": "workout",
-          "done": null
+          "done": true
         },
         {
           "name": "Завтрак",
           "type": "meal",
-          "done": null
+          "done": true
         },
         {
           "name": "Перекус",
@@ -53,13 +53,13 @@
           "name": "Шаги",
           "type": "steps",
           "done": false,
-          "walking_minutes": 30,
-          "steps_estimated": 3500,
+          "walking_minutes": 60,
+          "steps_estimated": 7000,
           "goal": 10000,
           "status": "partial"
         }
       ],
-      "updatedAt": "2025-07-13T08:05:38.038Z"
+      "updatedAt": "2025-07-13T09:29:45.484Z"
     }
   },
   "workouts": 0,
@@ -78,5 +78,5 @@
       "trend": "up"
     }
   },
-  "lastUpdate": "2025-07-13T08:05:38.038Z"
+  "lastUpdate": "2025-07-13T09:29:45.484Z"
 }

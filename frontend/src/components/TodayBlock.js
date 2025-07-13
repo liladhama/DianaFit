@@ -234,6 +234,39 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   };
 
   // Синхронизация длины completedMeals с aiMeals (без сброса отмеченных значений)
+  // --- Подгружаем сохранённые шаги из currentDay (если есть) ---
+  useEffect(() => {
+    console.log('🚶 Отладка шагов в currentDay:', {
+      currentDay: currentDay,
+      dailySteps: currentDay?.dailySteps,
+      dailyStepsMinutes: currentDay?.dailyStepsMinutes,
+      walkingMinutes: currentDay?.walkingMinutes,
+      stepsCompleted: currentDay?.stepsCompleted,
+      allKeys: currentDay ? Object.keys(currentDay) : [],
+      hasStepsData: !!(currentDay?.dailySteps || currentDay?.dailyStepsMinutes || currentDay?.walkingMinutes)
+    });
+    
+    if (currentDay && (currentDay.dailySteps || currentDay.dailyStepsMinutes || currentDay.walkingMinutes)) {
+      // Если есть сохранённые шаги (в шагах или минутах)
+      let minutes = null;
+      if (currentDay.dailyStepsMinutes) {
+        minutes = currentDay.dailyStepsMinutes;
+      } else if (currentDay.walkingMinutes) {
+        minutes = currentDay.walkingMinutes;
+      } else if (currentDay.dailySteps) {
+        // Находим ближайший вариант по количеству шагов
+        const found = STEPS_OPTIONS.find(opt => Math.abs(opt.steps - currentDay.dailySteps) < 500);
+        if (found) minutes = found.minutes;
+      }
+      if (minutes) {
+        console.log('🚶 Устанавливаем шаги из данных:', { minutes, stepsFixed: true });
+        setWalkingMinutes(minutes);
+        setStepsFixed(true);
+        setStepsStatus(STEPS_OPTIONS.find(opt => opt.minutes === minutes)?.steps >= GOAL_STEPS);
+      }
+    }
+  }, [currentDay]);
+
   useEffect(() => {
     if (Array.isArray(aiMeals)) {
       if (completedMeals.length !== aiMeals.length) {
@@ -756,7 +789,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
               if (task.walking_minutes) {
                 setWalkingMinutes(task.walking_minutes);
                 setStepsStatus(task.done);
-                console.log('🚶 Восстановлены данные о шагах:', { minutes: task.walking_minutes, done: task.done });
+                setStepsFixed(true); // ВАЖНО: устанавливаем фиксацию, чтобы показывалась плашка, а не колесо
+                console.log('🚶 Восстановлены данные о шагах:', { minutes: task.walking_minutes, done: task.done, fixed: true });
               }
             }
           });
