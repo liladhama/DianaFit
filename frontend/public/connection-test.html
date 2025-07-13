@@ -83,13 +83,13 @@
 <body>
     <div class="container">
         <h1>🔗 Проверка соединения DianaFit</h1>
-        <p>Frontend: <strong>localhost:3000</strong> → Backend: <strong>localhost:3001</strong></p>
+        <p>Frontend: <strong>localhost:3000</strong> → Backend: <strong>https://dianafit.onrender.com</strong></p>
         
         <div class="status-box">
             <h2>📡 Статус соединения</h2>
             
             <div class="status loading" id="backend-status">
-                <span>Backend (localhost:3001)</span>
+                <span>Backend (https://dianafit.onrender.com)</span>
                 <span>⏳ Проверка...</span>
             </div>
             
@@ -141,7 +141,7 @@
     </div>
 
     <script>
-        const BACKEND_URL = 'http://localhost:3001';
+const BACKEND_URL = 'https://dianafit.onrender.com';
         
         // Автоматическая проверка при загрузке
         window.addEventListener('load', function() {
