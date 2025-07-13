@@ -4,6 +4,7 @@ const VideoPlayer = ({ location, dayId, exerciseName, title }) => {
   const [videoExists, setVideoExists] = useState(false);
   const [videoLoading, setVideoLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [posterUrl, setPosterUrl] = useState(null);
   const videoRef = useRef(null);
 
   const videoPath = `/videos/${location}/${dayId}/${exerciseName}.mp4`;
@@ -29,6 +30,40 @@ const VideoPlayer = ({ location, dayId, exerciseName, title }) => {
     
     checkVideo();
   }, [videoPath]);
+
+  // Получаем первый кадр видео и устанавливаем как poster
+  useEffect(() => {
+    if (!videoExists) return;
+    const video = document.createElement('video');
+    video.src = videoPath;
+    video.crossOrigin = 'anonymous';
+    video.muted = true;
+    video.playsInline = true;
+
+    // Ждём загрузки метаданных, чтобы знать длительность
+    video.addEventListener('loadedmetadata', () => {
+      // Ставим время на 0.1 секунды (или 0, если короткое видео)
+      const targetTime = video.duration > 0.2 ? 0.1 : 0;
+      video.currentTime = targetTime;
+    });
+
+    // Когда нужный кадр загружен
+    video.addEventListener('seeked', () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg');
+        setPosterUrl(dataUrl);
+      } catch (err) {
+        setPosterUrl(null);
+      }
+    });
+    // В случае ошибки загрузки видео
+    video.addEventListener('error', () => setPosterUrl(null));
+  }, [videoExists, videoPath]);
 
   // Функции для работы с полноэкранным режимом
   const toggleFullscreen = () => {
@@ -153,7 +188,11 @@ const VideoPlayer = ({ location, dayId, exerciseName, title }) => {
       <div style={{ position: 'relative', display: 'inline-block' }}>
         <video 
           ref={videoRef}
-          controls 
+          controls
+          playsInline
+          webkit-playsinline="true"
+          muted
+          poster={posterUrl || undefined}
           style={{ 
             maxWidth: '100%',
             maxHeight: '400px',
