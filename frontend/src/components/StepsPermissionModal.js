@@ -145,7 +145,7 @@ export default function StepsPermissionModal({ isVisible, onClose, onPermissionG
       const endTime = Date.now();
 
       const response = await window.gapi.client.fitness.users.dataSources.dataPointChanges.list({
-        userId: 'me',
+        userId: 'demo_user_local_test',
         dataSourceId: 'derived:com.google.step_count.delta:com.google.android.gms:estimated_steps',
         startTime: startTime * 1000000, // наносекунды
         endTime: endTime * 1000000

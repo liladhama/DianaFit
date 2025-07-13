@@ -18,6 +18,7 @@ const TYPICAL_WEIGHTS = {
     'яблоко': 150,
     'банан': 120,
     'лимон': 100,
+    'авокадо': 100, // добавляю авокадо
     'лук репчатый': 80,
     'лук': 80,
     'лук зеленый': 10,
@@ -76,13 +77,84 @@ const SPICES = [
   'соль', 'соль, перец', 'черный перец', 'паприка', 'корица', 'зира', 'тимьян', 'мускатный орех', 'перец чили', 'розмарин', 'базилик', 'укроп', 'петрушка', 'горчица', 'карри', 'куркума', 'приправа', 'специи'
 ];
 
+// Жидкие ингредиенты, которые должны быть в мл
+const LIQUID_INGREDIENTS = [
+  'лимонный сок', 'сок лимона', 'масло', 'молоко', 'вода', 'бульон', 'уксус', 'соус'
+];
+
 function normalizeIngredientUnits(ingredient) {
-    const name = ingredient.name.toLowerCase();
-    const isGramType = GRAM_INGREDIENTS.some(key => name.includes(key));
+    const name = ingredient.name ? ingredient.name.toLowerCase() : '';
     let unit = ingredient.unit;
     let amount = Number(ingredient.amount);
+    
+    // Отладочный лог для хлеба
+    if (name.includes('хлеб')) {
+        console.log('🍞 Хлеб найден:', { name, unit, amount });
+    }
+    
+    // Хлеб цельнозерновой: кусочек/кусочка → граммы
+    if (name.includes('хлеб') && (unit === 'кусочек' || unit === 'кусочка')) {
+        const typicalWeight = EXTRA_UNIT_WEIGHTS['кусочек'] || 35;
+        const grams = Math.round(amount * typicalWeight);
+        console.log('🍞 Хлеб конвертирован:', { amount, unit, grams });
+        return { ...ingredient, amount: grams, unit: 'г' };
+    }
+    // Авокадо: шт → граммы
+    if (name.includes('авокадо') && unit === 'шт') {
+        const typicalWeight = TYPICAL_WEIGHTS['авокадо'] || 75;
+        const grams = Math.round(amount * typicalWeight);
+        return { ...ingredient, amount: grams, unit: 'г' };
+    }
+    // Томаты черри: шт → граммы
+    if ((name.includes('томаты черри') || name.includes('помидоры черри')) && unit === 'шт') {
+        const typicalWeight = TYPICAL_WEIGHTS['помидоры черри'] || 15;
+        const grams = Math.round(amount * typicalWeight);
+        return { ...ingredient, amount: grams, unit: 'г' };
+    }
+    if (name.includes('лаваш') && unit === 'шт') {
+        amount = Math.round(amount);
+        return { ...ingredient, amount, unit };
+    }
+    // Специальная обработка для кабачка: всегда переводим в граммы
+    if (name.includes('кабачок') && unit === 'шт') {
+        const typicalWeight = TYPICAL_WEIGHTS['кабачок'] || 120;
+        const grams = Math.round(amount * typicalWeight);
+        return { ...ingredient, amount: grams, unit: 'г' };
+    }
+    // Специальная обработка для картофеля: всегда переводим в граммы
+    if (name.includes('картофель') && unit === 'шт') {
+        const typicalWeight = TYPICAL_WEIGHTS['картофель'] || 150;
+        const grams = Math.round(amount * typicalWeight);
+        return { ...ingredient, amount: grams, unit: 'г' };
+    }
+    // Специальная обработка для пасты карри
+    if (name.includes('паста карри') && unit === 'ч.л.') {
+        amount = roundIngredientAmount(amount, unit);
+        return { ...ingredient, amount, unit };
+    }
+    // Специальная обработка для томатной пасты
+    if (name.includes('томатная паста')) {
+        unit = 'ст.л.';
+        if (amount > 10) {
+            amount = 2; // максимум 2 ст.л.
+        }
+        amount = roundIngredientAmount(amount, unit);
+        return { ...ingredient, amount, unit };
+    }
+    // Специальная обработка для жидких ингредиентов: всегда в мл
+    if (LIQUID_INGREDIENTS.some(liquid => name.includes(liquid))) {
+        if (unit === 'г' || unit === 'гр' || unit === 'грамм') {
+            unit = 'мл';
+            // Для лимонного сока ограничиваем разумным количеством
+            if (name.includes('лимонный сок') && amount > 100) {
+                amount = 30; // 2 столовые ложки
+            }
+        }
+        return { ...ingredient, amount, unit };
+    }
     // Округляем количество
     amount = roundIngredientAmount(amount, unit);
+    const isGramType = GRAM_INGREDIENTS.some(key => name.includes(key));
     // 0. Автоматическая нормализация специй и приправ
     if (SPICES.some(spice => name.includes(spice))) {
         // Если количество больше 10 г или не указано, ограничиваем до 1-5 г
@@ -93,6 +165,8 @@ function normalizeIngredientUnits(ingredient) {
         // Если указана ложка/щепотка — оставляем, но не больше 5 г
         if (unit === 'ч.л.' || unit === 'ст.л.' || unit === 'щепотка') {
             if (isNaN(amount) || amount > 5 || amount <= 0) amount = 1;
+            // Округляем до 0.5
+            amount = roundIngredientAmount(amount, unit);
             return { ...ingredient, amount, unit };
         }
     }
@@ -315,5 +389,8 @@ const recipeUtils = {
         }
     }
 };
+
+// Экспортируем функцию нормализации отдельно
+export { normalizeIngredientUnits };
 
 export default recipeUtils;

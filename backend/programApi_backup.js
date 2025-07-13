@@ -2010,6 +2010,14 @@ router.put('/user/quiz-answers/:userId', async (req, res) => {
     }
     // Логируем, что реально приходит с фронта
     console.log('[QUIZ PUT BODY]', req.body);
+    // Если тело пустое или нет ключевых полей — не обновляем файл
+    const keys = Object.keys(req.body || {});
+    const importantFields = ['goal', 'weight', 'height', 'age', 'gender', 'diet_flags', 'workouts_per_week', 'gym_or_home'];
+    const hasImportant = keys.some(k => importantFields.includes(k));
+    if (!hasImportant) {
+      console.log('[QUIZ PUT] Нет важных данных, файл не обновляется');
+      return res.json({ success: false, message: 'Нет важных данных для обновления квиза', quiz });
+    }
     // Обновляем только переданные поля
     quiz = { ...quiz, ...req.body };
     quiz = cleanQuizGoalFields(quiz);

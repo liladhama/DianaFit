@@ -280,7 +280,9 @@ const MealCard = ({
           borderRadius: 12,
           padding: 12,
           marginBottom: 12,
-          borderLeft: '4px solid #8b5cf6'
+          borderLeft: '4px solid #8b5cf6',
+          width: '100%',
+          boxSizing: 'border-box'
         }}>
           <div style={{ 
             fontSize: 13, 
@@ -304,16 +306,34 @@ const MealCard = ({
               color: '#64748b',
               backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f8fafc',
               borderRadius: 6,
-              marginBottom: idx < ingredients.length - 1 ? 4 : 0
+              marginBottom: idx < ingredients.length - 1 ? 4 : 0,
+              minHeight: 28,
+              width: '100%',
+              boxSizing: 'border-box'
             }}>
-              <span style={{ fontWeight: 500 }}>{ingredient.name}</span>
-              <span style={{ 
-                fontWeight: 700, 
+              <span style={{
+                fontWeight: 500,
+                maxWidth: '70%',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+                lineHeight: 1.5,
+                minHeight: 18,
+                display: 'block',
+                letterSpacing: '0.06em',
+                fontFamily: 'Segoe UI, Arial, Tahoma, Geneva, Verdana, sans-serif',
+              }}>{ingredient.name}</span>
+              <span style={{
+                fontWeight: 700,
                 color: '#581c87',
                 backgroundColor: '#f3e8ff',
-                padding: '2px 6px',
-                borderRadius: 4,
-                fontSize: 11
+                padding: '2px 8px',
+                borderRadius: 6,
+                fontSize: 13,
+                flexShrink: 0,
+                minWidth: 40,
+                textAlign: 'right',
+                marginLeft: 8,
               }}>
                 {typeof ingredient.amount === 'number'
                   ? (["г", "мл"].includes(ingredient.unit)

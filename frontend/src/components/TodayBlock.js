@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import WheelPicker from './WheelPicker';
 import VideoPlayer from './VideoPlayer';
 import DianaChat from './DianaChat';
 import ReasonModal from './ReasonModal';
@@ -9,6 +10,10 @@ import { getWorkoutLocation, getDayId, getExerciseEnglishName, getVideoPathForEx
 import chatDianaIcon from '../assets/icons/chat-diana-icon.png';
 import { API_URL } from '../config/api';
 import { generateMealsForDay } from '../utils/generateMealsForDay';
+
+// Для WheelPicker (добавляем определение переменных)
+const stepMinutesArr = [20, 30, 40, 50, 60, 70, 80, 90];
+const stepLabels = stepMinutesArr.map(m => `${m} мин`);
 
 // Добавляем CSS анимацию для спиннера
 const spinnerStyles = `
@@ -63,7 +68,8 @@ const headerStyle = {
   marginBottom: 16,
   display: 'flex',
   alignItems: 'center',
-  gap: 8
+  gap: 8,
+  lineHeight: 1.2
 };
 
 const checkboxButtonStyle = (completed) => ({
@@ -106,6 +112,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   const [openContainers, setOpenContainers] = useState({
     training: true,
     nutrition: true,
+    steps: true,
     motivation: true
   });
 
@@ -180,16 +187,60 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   
   // Инициализируем массивы статусов как пустые, заполнение происходит в useEffect
   const [completedExercises, setCompletedExercises] = useState([]);
+  
+  // Состояние для шагов
+  // --- динамическое оформление блока шагов ---
+  let stepsBlockColor = '#ef4444'; // красный
+  let stepsBlockBg = 'linear-gradient(90deg, #fee2e2 0%, #fca5a5 100%)';
+  let stepsBlockBorder = '2px solid #ef4444';
+  let stepsBlockEmoji = '😕';
+  let stepsBlockStatus = 'Мало шагов';
+  let stepsBlockSteps = 0;
+
+  const [walkingMinutes, setWalkingMinutes] = useState(null); // null = не выбрано, число = выбранные минуты
+  const [stepsStatus, setStepsStatus] = useState(null); // null = не выбрано, true/false = выполнено/не выполнено
+  const [stepsFixed, setStepsFixed] = useState(false); // фиксировано ли значение шагов
+
+  // Константы для шагов
+  const STEPS_OPTIONS = [
+    { minutes: 20, steps: 2300, label: "20 минут ≈ 2 300 шагов" },
+    { minutes: 30, steps: 3500, label: "30 минут ≈ 3 500 шагов" },
+    { minutes: 40, steps: 4600, label: "40 минут ≈ 4 600 шагов" },
+    { minutes: 50, steps: 5800, label: "50 минут ≈ 5 800 шагов" },
+    { minutes: 60, steps: 7000, label: "60 минут ≈ 7 000 шагов" },
+    { minutes: 70, steps: 8120, label: "70 минут ≈ 8 120 шагов" },
+    { minutes: 80, steps: 9280, label: "80 минут ≈ 9 280 шагов" },
+    { minutes: 90, steps: 10440, label: "90 минут ≈ 10 440 шагов ✅" }
+  ];
+
+  const GOAL_STEPS = 10000;
+  const GOAL_MINUTES = 90;
+
+  // Функция для расчета прогресса шагов
+  const calculateStepsProgress = (minutes) => {
+    if (!minutes) return 0;
+    const selectedOption = STEPS_OPTIONS.find(opt => opt.minutes === minutes);
+    if (!selectedOption) return 0;
+    return Math.min((selectedOption.steps / GOAL_STEPS) * 100, 100);
+  };
+
+  // Функция для обработки выбора шагов
+  const handleStepsSelection = (minutes) => {
+    const selectedOption = STEPS_OPTIONS.find(opt => opt.minutes === minutes);
+    if (selectedOption) {
+      setWalkingMinutes(minutes);
+      setStepsStatus(selectedOption.steps >= GOAL_STEPS);
+    }
+  };
+
   // Синхронизация длины completedMeals с aiMeals (без сброса отмеченных значений)
   useEffect(() => {
     if (Array.isArray(aiMeals)) {
-      setCompletedMeals(prev => {
-        if (prev.length !== aiMeals.length) {
-          // Сохраняем отмеченные значения, новые элементы = null
-          return aiMeals.map((_, i) => prev[i] ?? null);
-        }
-        return prev;
-      });
+      if (completedMeals.length !== aiMeals.length) {
+        // Только если длина изменилась, пересчитываем массив (например, если вдруг добавили/убрали приём пищи)
+        setCompletedMeals(aiMeals.map((_, i) => completedMeals[i] ?? null));
+      }
+      // Если длина совпадает — ничего не делаем, completedMeals сохраняется
     } else if (completedMeals.length !== 0) {
       setCompletedMeals([]);
     }
@@ -203,59 +254,55 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       savedExercises: currentDay.completedExercises,
       savedMeals: currentDay.completedMealsArr,
       currentCompletedExercises: completedExercises,
-      currentCompletedMeals: completedMeals
+      currentCompletedMeals: completedMeals,
+      isLoaded: isLoaded,
+      dayProp: !!day,
+      personalPlan: !!personalPlan,
+      currentDaySource: day ? 'day prop' : personalPlan ? 'personalPlan' : 'mock'
     });
 
+    // ИСПРАВЛЕНО: НЕ используем статусы из currentDay, только структуру
+    // Статусы должны загружаться только с сервера через fetchDayStatus
     if (currentDay.workout?.exercises) {
-      const newExerciseStates = currentDay.workout.exercises.map((ex, i) => {
-        const saved = currentDay.completedExercises?.[i];
-        const result = saved ?? null; // null = не выбрано, true = выполнено, false = не выполнено
-        console.log(`🏋️ Упражнение ${i} (${ex.name}): сохранено=${saved}, результат=${result}, typeof=${typeof result}`);
-        return result;
-      });
+      const newExerciseStates = currentDay.workout.exercises.map(() => null);
+      console.log('🏋️ Инициализируем упражнения:', newExerciseStates);
       // Сравниваем массивы перед обновлением
       const isSame =
         completedExercises.length === newExerciseStates.length &&
         completedExercises.every((v, i) => v === newExerciseStates[i]);
-      if (!isSame) {
-        console.log('🏋️ Итоговый массив completedExercises ДО setCompletedExercises:', newExerciseStates);
+      if (!isSame && !isLoaded) {
+        console.log('🔄 Обновляем completedExercises на null (не загружено)');
+        // Инициализируем null значениями только если данные еще не загружены
         setCompletedExercises(newExerciseStates);
-        console.log('🏋️ setCompletedExercises вызван с:', newExerciseStates);
-      } else {
-        console.log('🏋️ Массив completedExercises не изменился, setState не вызывается');
+      } else if (isLoaded) {
+        console.log('✅ Данные уже загружены с сервера, не обновляем');
       }
     } else {
       if (completedExercises.length !== 0) {
-        console.log('🏋️ Нет упражнений, устанавливаем пустой массив');
         setCompletedExercises([]);
       }
     }
 
     if (currentDay.meals) {
-      const newMealStates = currentDay.meals.map((m, i) => {
-        const saved = currentDay.completedMealsArr?.[i];
-        const result = saved ?? null; // null = не выбрано, true = съедено, false = не съедено
-        console.log(`🍽️ Прием пищи ${i} (${m.type}): сохранено=${saved}, результат=${result}, typeof=${typeof result}`);
-        return result;
-      });
+      const newMealStates = currentDay.meals.map(() => null);
+      console.log('🍽️ Инициализируем питание:', newMealStates);
       // Сравниваем массивы перед обновлением
       const isSame =
         completedMeals.length === newMealStates.length &&
         completedMeals.every((v, i) => v === newMealStates[i]);
-      if (!isSame) {
-        console.log('🍽️ Итоговый массив completedMeals ДО setCompletedMeals:', newMealStates);
+      if (!isSame && !isLoaded) {
+        console.log('🔄 Обновляем completedMeals на null (не загружено)');
+        // Инициализируем null значениями только если данные еще не загружены
         setCompletedMeals(newMealStates);
-        console.log('🍽️ setCompletedMeals вызван с:', newMealStates);
-      } else {
-        console.log('🍽️ Массив completedMeals не изменился, setState не вызывается');
+      } else if (isLoaded) {
+        console.log('✅ Данные уже загружены с сервера, не обновляем');
       }
     } else {
       if (completedMeals.length !== 0) {
-        console.log('🍽️ Нет приемов пищи, устанавливаем пустой массив');
         setCompletedMeals([]);
       }
     }
-  }, [currentDay]);
+  }, [currentDay, isLoaded]);
   // Определяем, запущено ли на мобильном устройстве
   const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   const hasTelegramWebApp = window.Telegram?.WebApp;
@@ -273,6 +320,22 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   // Проверка существующих разрешений
 
   // ...existing code...
+  // вычисления оформления блока шагов (после STEPS_OPTIONS)
+  const selectedStepsOption = STEPS_OPTIONS.find(opt => opt.minutes === walkingMinutes);
+  stepsBlockSteps = selectedStepsOption?.steps || 0;
+  if (stepsBlockSteps >= GOAL_STEPS) {
+    stepsBlockColor = '#22c55e';
+    stepsBlockBg = 'linear-gradient(90deg, #e0f7fa 0%, #bbf7d0 100%)';
+    stepsBlockBorder = '2px solid #22c55e';
+    stepsBlockEmoji = '🎉';
+    stepsBlockStatus = '✔ Выполнено!';
+  } else if (stepsBlockSteps >= GOAL_STEPS * 0.7) {
+    stepsBlockColor = '#eab308';
+    stepsBlockBg = 'linear-gradient(90deg, #fef9c3 0%, #fde68a 100%)';
+    stepsBlockBorder = '2px solid #eab308';
+    stepsBlockEmoji = '🙂';
+    stepsBlockStatus = 'Почти норма';
+  }
 
   // --- Вынести функцию загрузки AI-питания наружу ---
   async function fetchAIMealPlan() {
@@ -426,13 +489,13 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       navigator.vibrate(100);
     }
     
-    if (localProgramId) {
+    if (answers?.userId) {
       try {
         await fetch(`${API_URL}/api/progress`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userId: localProgramId,
+            userId: answers.userId,
             date: currentDay.date,
             tasks: buildTasks()
           })
@@ -476,10 +539,10 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       navigator.vibrate(100); // 100ms вибрация при отметке как выполнено
     }
     
-    if (localProgramId) {
+    if (answers?.userId) {
       try {
         const payload = {
-          programId: localProgramId,
+          userId: answers.userId,
           date: currentDay.date,
           completedExercises: updated
         };
@@ -525,15 +588,17 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     const updated = completedMeals.map((v, i) => i === idx ? completed : v);
     setCompletedMeals(updated);
     // Явная отправка на backend с актуальным массивом
-    fetch(`${API_URL}/api/progress`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: localProgramId,
-        date: currentDay.date,
-        tasks: buildTasksWithMeals(updated)
-      })
-    });
+    if (answers?.userId) {
+      fetch(`${API_URL}/api/progress`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: answers.userId,
+          date: currentDay.date,
+          tasks: buildTasksWithMeals(updated)
+        })
+      });
+    }
   };
 
   async function handleMealChange(idx) {
@@ -563,13 +628,13 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     const updated = completedMeals.map((v, i) => i === idx ? willBeCompleted : v);
     setCompletedMeals(updated);
     
-    if (localProgramId) {
+    if (answers?.userId) {
       try {
         await fetch(`${API_URL}/api/progress`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            userId: localProgramId,
+            userId: answers.userId,
             date: currentDay.date,
             tasks: buildTasks()
           })
@@ -624,38 +689,15 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   const completionPercentage = calculateDayCompletionPercentage();
 
-  // Сохраняем статистику выполнения для аналитики
-  useEffect(() => {
-    const saveCompletionStats = () => {
-      const statsKey = `completion_stats_${currentDay.date}`;
-      const stats = {
-        date: currentDay.date,
-        completionPercentage,
-        totalExercises: currentDay.workout?.exercises?.length || 0,
-        completedExercises: completedExercises.filter(Boolean).length,
-        totalMeals: currentDay.meals?.length || 0,
-        completedMeals: completedMeals.filter(Boolean).length,
-        exerciseReasons,
-        mealReasons,
-        lastUpdated: new Date().toISOString()
-      };
-      
-      localStorage.setItem(statsKey, JSON.stringify(stats));
-      console.log('📊 Статистика дня сохранена:', stats);
-    };
-
-    // Сохраняем статистику при изменении данных
-    if (currentDay.date) {
-      saveCompletionStats();
-    }
-  }, [completedExercises, completedMeals, exerciseReasons, mealReasons, completionPercentage]);
+  // (Удалено сохранение статистики в localStorage)
 
   // Отладочный useEffect для мониторинга изменений в массивах статусов
   useEffect(() => {
     console.log('🔍 СОСТОЯНИЕ completedExercises изменилось:', {
       length: completedExercises.length,
       values: completedExercises,
-      types: completedExercises.map((val, i) => `[${i}]: ${val} (${typeof val})`)
+      types: completedExercises.map((val, i) => `[${i}]: ${val} (${typeof val})`),
+      isLoaded: isLoaded
     });
   }, [completedExercises]);
 
@@ -663,13 +705,24 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     console.log('🔍 СОСТОЯНИЕ completedMeals изменилось:', {
       length: completedMeals.length,
       values: completedMeals,
-      types: completedMeals.map((val, i) => `[${i}]: ${val} (${typeof val})`)
+      types: completedMeals.map((val, i) => `[${i}]: ${val} (${typeof val})`),
+      isLoaded: isLoaded
     });
   }, [completedMeals]);
+
+  // Отслеживание изменений шагов
+  useEffect(() => {
+    console.log('🔍 СОСТОЯНИЕ шагов изменилось:', {
+      walkingMinutes,
+      stepsStatus,
+      isLoaded
+    });
+  }, [walkingMinutes, stepsStatus]);
 
   // Функция для загрузки статусов выполнения дня с backend
   const fetchDayStatus = async () => {
     if (!answers?.userId || !currentDay?.date) {
+      console.log('⚠️ Пропускаем загрузку статусов:', { userId: answers?.userId, date: currentDay?.date });
       setIsInitialLoading(false); // Устанавливаем флаг даже если нет userId
       return;
     }
@@ -685,6 +738,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         // Если tasks есть — используем их для tasks-based UI
         if (Array.isArray(data.tasks)) {
           setTasks(data.tasks);
+          console.log('📝 Обрабатываем tasks:', data.tasks);
           // Парсим задачи для восстановления статусов и причин
           const mealStates = [];
           const mealReasonsObj = {};
@@ -697,50 +751,87 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
             } else if (task.type === 'workout') {
               exerciseStates.push(task.done === true ? true : task.done === false ? false : null);
               if (task.reason) exerciseReasonsObj[exerciseStates.length - 1] = task.reason;
+            } else if (task.type === 'steps') {
+              // Восстанавливаем данные о шагах
+              if (task.walking_minutes) {
+                setWalkingMinutes(task.walking_minutes);
+                setStepsStatus(task.done);
+                console.log('🚶 Восстановлены данные о шагах:', { minutes: task.walking_minutes, done: task.done });
+              }
             }
           });
           
           console.log('🍽️ Восстановленные состояния питания:', mealStates);
           console.log('🏋️ Восстановленные состояния упражнений:', exerciseStates);
           
-          if (mealStates.length) setCompletedMeals(mealStates);
+          if (mealStates.length) {
+            // Приводим все значения к null, true, false (false только если явно выбран "не съел")
+            const finalMealStates = mealStates.map(v => v === true ? true : v === false ? false : null);
+            console.log('🍽️ Устанавливаем finalMealStates:', finalMealStates);
+            setCompletedMeals(finalMealStates);
+          }
           if (Object.keys(mealReasonsObj).length) setMealReasons(mealReasonsObj);
-          if (exerciseStates.length) setCompletedExercises(exerciseStates);
+          if (exerciseStates.length) {
+            console.log('🏋️ Устанавливаем exerciseStates:', exerciseStates);
+            setCompletedExercises(exerciseStates);
+          }
           if (Object.keys(exerciseReasonsObj).length) setExerciseReasons(exerciseReasonsObj);
         }
         // Для обратной совместимости:
         if (data.completedMealsArr) {
           console.log('🍽️ Устанавливаем completedMealsArr:', data.completedMealsArr);
-          setCompletedMeals(data.completedMealsArr);
+          const finalMealStates = data.completedMealsArr.map(v => v === true ? true : v === false ? false : null);
+          console.log('🍽️ Финальные состояния питания:', finalMealStates);
+          setCompletedMeals(finalMealStates);
         }
         if (data.completedExercises) {
           console.log('🏋️ Устанавливаем completedExercises:', data.completedExercises);
           setCompletedExercises(data.completedExercises);
         }
+      } else {
+        console.log('📭 Нет данных с сервера, используем null значения');
       }
       
       setIsInitialLoading(false); // Завершаем первоначальную загрузку
-      console.log('✅ Статусы дня загружены успешно');
+      setIsLoaded(true); // Помечаем, что данные загружены с сервера
+      console.log('✅ Статусы дня загружены успешно, isLoaded = true');
       
     } catch (e) {
       console.error('❌ Ошибка загрузки статусов дня:', e);
       setIsInitialLoading(false); // Завершаем загрузку даже при ошибке
+      setIsLoaded(true); // Помечаем как загружено даже при ошибке
     }
   };
 
   // Загружаем статусы при смене дня
   useEffect(() => {
     setIsInitialLoading(true); // Сбрасываем флаг при смене дня
+    setIsLoaded(false); // Сбрасываем флаг загрузки
     fetchDayStatus();
     // eslint-disable-next-line
   }, [currentDay?.date, answers?.userId]);
 
-  // Гарантируем, что answers.userId всегда Telegram userId
+  // Принудительная перезагрузка при первом монтировании
+  useEffect(() => {
+    // Принудительно перезагружаем данные при первом запуске
+    if (answers?.userId && currentDay?.date) {
+      console.log('🔄 ПРИНУДИТЕЛЬНАЯ перезагрузка данных при монтировании');
+      setIsInitialLoading(true);
+      fetchDayStatus();
+    }
+  }, []);
+
+  // Унификация userId: Telegram ID в проде, demo_user_local_test локально
   useEffect(() => {
     if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
       if (answers && !answers.userId) {
         answers.userId = window.Telegram.WebApp.initDataUnsafe.user.id;
         console.log('✅ Telegram userId установлен в answers:', answers.userId);
+      }
+    } else {
+      if (answers && !answers.userId) {
+        answers.userId = 'demo_user_local_test';
+        console.log('✅ demo_user_local_test установлен в answers (локально):', answers.userId);
       }
     }
   }, [answers]);
@@ -838,7 +929,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       .catch(e => {
         console.error('❌ Ошибка синхронизации прогресса:', e);
       });
-  }, [completedExercises, completedMeals, answers?.userId, currentDay?.date, isInitialLoading]);
+  }, [completedExercises, completedMeals, walkingMinutes, stepsStatus, answers?.userId, currentDay?.date, isInitialLoading]);
 
   // --- UI: Верхняя панель ---
   // Кнопка Диана АИ (слева)
@@ -975,32 +1066,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     setPlanError(null);
     try {
       console.log('📅 Загружаем план на сегодня для программы:', programId);
-      // Сначала пробуем загрузить из localStorage (демо версия)
-      const localProgram = localStorage.getItem(`program_${programId}`);
-      if (localProgram) {
-        const program = JSON.parse(localProgram);
-        console.log('💾 Найдена программа в localStorage:', program);
-        const today = new Date().toISOString().slice(0, 10);
-        const todayPlan = program.days.find(d => d.date === today);
-        if (todayPlan) {
-          console.log('✅ План на сегодня загружен из localStorage:', todayPlan);
-          console.log(' Проверка упражнений в плане:', todayPlan.workout?.exercises);
-          setPersonalPlan(todayPlan);
-          setLoadingPlan(false);
-          return;
-        } else {
-          // Если сегодняшний день не найден, берем первый день программы
-          const firstDay = program.days[0];
-          if (firstDay) {
-            console.log('📅 Сегодняшний день не найден, используем первый день программы:', firstDay);
-            console.log('🎥 Проверка упражнений в первом дне:', firstDay.workout?.exercises);
-            setPersonalPlan(firstDay);
-            setLoadingPlan(false);
-            return;
-          }
-        }
-      }
-      // Если не нашли в localStorage, пробуем обратиться к серверу
+      
+      // ИСПРАВЛЕНО: загружаем только с сервера, не используем localStorage
       const response = await fetch(`${API_URL}/api/program/today?programId=${programId}`);
       const data = await response.json();
       if (data.success) {
@@ -1018,6 +1085,35 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     }
   };
 
+  // Очищаем устаревшие данные программы из localStorage при загрузке
+  useEffect(() => {
+    // Удаляем все программы из localStorage, чтобы загрузить свежие данные с сервера
+    const keysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith('program_')) {
+        keysToRemove.push(key);
+      }
+    }
+    keysToRemove.forEach(key => {
+      console.log('🗑️ Удаляем устаревшую программу из localStorage:', key);
+      localStorage.removeItem(key);
+    });
+    
+    // Также очищаем все данные пользователя, чтобы заставить перезагрузку
+    const userKeysToRemove = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && (key.includes('user_') || key.includes('demo_'))) {
+        userKeysToRemove.push(key);
+      }
+    }
+    userKeysToRemove.forEach(key => {
+      console.log('🗑️ Удаляем устаревшие данные пользователя из localStorage:', key);
+      localStorage.removeItem(key);
+    });
+  }, []);
+
   // Формируем массив задач для отправки
   function buildTasks() {
     const tasks = [];
@@ -1027,7 +1123,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         tasks.push({
           name: ex.name,
           type: 'workout',
-          done: completedExercises[i] === true, // строго true/false
+          done: completedExercises[i] === null ? null : completedExercises[i] === true, // сохраняем null
           reason: completedExercises[i] === false && exerciseReasons[i] ? exerciseReasons[i] : undefined
         });
       });
@@ -1038,9 +1134,22 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         tasks.push({
           name: m.type || m.name,
           type: 'meal',
-          done: completedMeals[i] === true, // строго true/false
+          done: completedMeals[i] === null ? null : completedMeals[i] === true, // сохраняем null
           reason: completedMeals[i] === false && mealReasons[i] ? mealReasons[i] : undefined
         });
+      });
+    }
+    // Шаги
+    if (walkingMinutes !== null) {
+      const selectedOption = STEPS_OPTIONS.find(opt => opt.minutes === walkingMinutes);
+      tasks.push({
+        name: 'Шаги',
+        type: 'steps',
+        done: stepsStatus,
+        walking_minutes: walkingMinutes,
+        steps_estimated: selectedOption ? selectedOption.steps : 0,
+        goal: GOAL_STEPS,
+        status: selectedOption && selectedOption.steps >= GOAL_STEPS ? 'complete' : 'partial'
       });
     }
     return tasks;
@@ -1054,7 +1163,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         tasks.push({
           name: ex.name,
           type: 'workout',
-          done: completedExercises[i] === true,
+          done: completedExercises[i] === null ? null : completedExercises[i] === true, // сохраняем null
           reason: completedExercises[i] === false && exerciseReasons[i] ? exerciseReasons[i] : undefined
         });
       });
@@ -1064,7 +1173,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         tasks.push({
           name: m.type || m.name,
           type: 'meal',
-          done: mealsArr[i] === true,
+          done: mealsArr[i] === null ? null : mealsArr[i] === true, // сохраняем null
           reason: mealsArr[i] === false && mealReasons[i] ? mealReasons[i] : undefined
         });
       });
@@ -1080,7 +1189,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         tasks.push({
           name: ex.name,
           type: 'workout',
-          done: customExercises[i] === true,
+          done: customExercises[i] === null ? null : customExercises[i] === true, // сохраняем null
           reason: customExercises[i] === false && customReasons[i] ? customReasons[i] : undefined
         });
       });
@@ -1090,7 +1199,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         tasks.push({
           name: m.type || m.name,
           type: 'meal',
-          done: completedMeals[i] === true,
+          done: completedMeals[i] === null ? null : completedMeals[i] === true, // сохраняем null
           reason: completedMeals[i] === false && mealReasons[i] ? mealReasons[i] : undefined
         });
       });
@@ -1098,28 +1207,9 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     return tasks;
   }
 
-  // Сохраняем задачи на backend при каждом изменении (только после загрузки)
-  useEffect(() => {
-    if (!isLoaded || !answers?.userId || !currentDay?.date) return;
-    const actualTasks = buildTasks();
-    console.log('[DEBUG] Отправка tasks на backend:', actualTasks);
-    fetch(`${API_URL}/api/progress`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: answers.userId,
-        date: currentDay.date,
-        tasks: actualTasks
-      })
-    })
-      .then(res => res.json())
-      .then(data => {
-        console.log('[DEBUG] Ответ от backend на POST /api/progress:', data);
-      })
-      .catch(e => {
-        console.error('[DEBUG] Ошибка отправки tasks на backend:', e);
-      });
-  }, [isLoaded, completedExercises, completedMeals, exerciseReasons, mealReasons, currentDay?.date, answers?.userId]);
+  // ОТКЛЮЧЕНО: Автоматическое сохранение задач при каждом изменении
+  // Причина: может затирать расписание недели при частых обновлениях
+  // Сохранение происходит при явных действиях пользователя в других местах кода
 
   // --- КРАСИВАЯ КНОПКА ОБНОВЛЕНИЯ ВАРИАНТОВ ПИТАНИЯ (UI)
   const refreshMealsButton = (
@@ -1127,7 +1217,6 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       <button
         onClick={async () => {
           await handleRefreshMeals();
-          setCompletedMeals([]); // Явно сбрасываем статусы выбора
           setSelectedMealOptionIdx([]); // Сбросить выбранные варианты
         }}
         style={{
@@ -1277,6 +1366,138 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
               </div>
             </div>
 
+            {/* 2. Блок шагов */}
+            <div style={{ ...cardStyle, marginBottom: 24 }}>
+              <div
+                style={{
+                  ...headerStyle,
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: openContainers.steps ? 16 : 0
+                }}
+                onClick={() => toggleContainer('steps')}
+              >
+                <span>🚶 Шаги</span>
+                <span style={{ fontSize: 20, lineHeight: 1.2, display: 'flex', alignItems: 'center' }}>
+                  {openContainers.steps ? '▼' : '▶'}
+                </span>
+              </div>
+              
+              {openContainers.steps && (
+                <div style={{ textAlign: 'center', marginBottom: 12 }}>
+                  <div style={{ marginBottom: 8, fontSize: 14, color: '#3b82f6', fontWeight: 600 }}>
+                    Рекомендуется: 90 минут (≈10 000 шагов)
+                  </div>
+                  {stepsFixed ? (
+                    <div
+                      style={{
+                        marginTop: 12,
+                        padding: '8px 0',
+                        fontSize: 16,
+                        fontWeight: 600,
+                        color: stepsBlockColor,
+                        background: stepsBlockBg,
+                        borderRadius: '14px',
+                        boxShadow: '0 2px 8px rgba(34,197,94,0.08)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        position: 'relative',
+                        border: stepsBlockBorder,
+                        transition: 'all 0.2s',
+                        flexWrap: 'nowrap',
+                        gap: 0,
+                      }}
+                    >
+                      <span style={{ fontSize: 26, marginRight: 12, marginLeft: 8 }}>{stepsBlockEmoji}</span>
+                      <span style={{ display: 'inline-block' }}>
+                        {walkingMinutes} мин ({stepsBlockSteps.toLocaleString()} шагов)
+                      </span>
+                      <button
+                        style={{
+                          marginLeft: 18,
+                          marginRight: 12,
+                          padding: '8px 22px',
+                          borderRadius: '12px',
+                          background: 'linear-gradient(90deg, #60a5fa 0%, #3b82f6 100%)',
+                          color: '#fff',
+                          fontWeight: 700,
+                          fontSize: '15px',
+                          fontFamily: 'Inter, Arial, sans-serif',
+                          border: 'none',
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 8px rgba(59,130,246,0.10)',
+                          transition: 'all 0.2s',
+                          outline: 'none',
+                          letterSpacing: '0.5px',
+                        }}
+                        onClick={() => setStepsFixed(false)}
+                      >
+                        Изменить
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <WheelPicker
+                        value={walkingMinutes ?? 30}
+                        onChange={handleStepsSelection}
+                        min={20}
+                        max={90}
+                        years={stepMinutesArr}
+                        labels={stepLabels}
+                      />
+                      <div style={{ marginTop: 12, fontSize: 15 }}>
+                        {walkingMinutes ? `Ты выбрал: ${walkingMinutes} мин (${STEPS_OPTIONS.find(opt => opt.minutes === walkingMinutes)?.steps.toLocaleString()} шагов)` : 'Выбери количество минут'}
+                      </div>
+                      <button
+                        style={{
+                          marginTop: 16,
+                          padding: '12px 32px',
+                          borderRadius: '16px',
+                          background: 'linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%)',
+                          color: '#fff',
+                          fontWeight: 700,
+                          fontSize: '16px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          boxShadow: '0 2px 8px rgba(59,130,246,0.12)',
+                          transition: 'all 0.2s',
+                          outline: 'none',
+                        }}
+                        onClick={async () => {
+                          // Сохраняем выбранное время ходьбы в план и отправляем в бэкап
+                          if (answers?.userId) {
+                            try {
+                              await fetch(`${API_URL}/api/progress`, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                  userId: answers.userId,
+                                  date: currentDay.date,
+                                  tasks: buildTasks()
+                                })
+                              });
+                              setStepsFixed(true);
+                            } catch (error) {
+                              console.error('❌ Ошибка сохранения шагов:', error);
+                            }
+                          }
+                        }}
+                      >
+                        Выбрать
+                      </button>
+                    </>
+                  )}
+                  <div style={{ marginTop: 8, fontSize: 14, color: walkingMinutes && STEPS_OPTIONS.find(opt => opt.minutes === walkingMinutes)?.steps >= GOAL_STEPS ? '#22c55e' : '#eab308' }}>
+                    {walkingMinutes && STEPS_OPTIONS.find(opt => opt.minutes === walkingMinutes)?.steps >= GOAL_STEPS ? '✅ Цель по шагам достигнута!' : 'Для активации жиросжигания важно поддерживать общую подвижность в течение дня.'}
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* 3. Блок тренировки */}
             <div style={cardStyle}>
               <div 
@@ -1286,12 +1507,13 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                   userSelect: 'none',
                   display: 'flex',
                   justifyContent: 'space-between',
-                  alignItems: 'center'
+                  alignItems: 'center',
+                  marginBottom: openContainers.training ? 16 : 0
                 }}
                 onClick={() => toggleContainer('training')}
               >
                 <span>🏋️‍♀️ Тренировка</span>
-                <span style={{ fontSize: 14 }}>
+                <span style={{ fontSize: 20, lineHeight: 1.2, display: 'flex', alignItems: 'center' }}>
                   {openContainers.training ? '▼' : '▶'}
                 </span>
               </div>
@@ -1417,12 +1639,13 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                     userSelect: 'none',
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center'
+                    alignItems: 'center',
+                    marginBottom: openContainers.nutrition ? 16 : 0
                   }}
                   onClick={() => toggleContainer('nutrition')}
                 >
                   <span>🍽️ Питание</span>
-                  <span style={{ fontSize: 14 }}>
+                  <span style={{ fontSize: 20, lineHeight: 1.2, display: 'flex', alignItems: 'center' }}>
                     {openContainers.nutrition ? '▼' : '▶'}
                   </span>
                 </div>
@@ -1446,7 +1669,11 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                           <MealCard
                             meal={meal}
                             index={idx}
-                            isCompleted={completedMeals[idx] ?? null}
+                            isCompleted={(() => {
+                              const value = completedMeals[idx] ?? null;
+                              console.log(`🍽️ Передаем в MealCard[${idx}]: исходное=${completedMeals[idx]}, обработанное=${value}, typeof=${typeof value}, completedMeals.length=${completedMeals.length}`);
+                              return value;
+                            })()}
                             onStatusChange={handleMealStatusChange}
                             style={{ marginBottom: 18 }}
                             selectedIdx={selectedIdx}
@@ -1463,7 +1690,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
               </div>
             )}
 
-            {/* 5. Мотивация дня */}
+            {/* 6. Мотивация дня */}
             <div style={{
               ...cardStyle,
               background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)',
@@ -1483,7 +1710,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                 onClick={() => toggleContainer('motivation')}
               >
                 <span>💬 Мотивация</span>
-                <span style={{ fontSize: 14 }}>
+                <span style={{ fontSize: 20, lineHeight: 1.2, display: 'flex', alignItems: 'center' }}>
                   {openContainers.motivation ? '▼' : '▶'}
                 </span>
               </div>

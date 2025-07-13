@@ -243,22 +243,27 @@ const MealCard = ({
               </div>
               <div style={{
                 display: 'flex',
-                flexWrap: 'wrap',
-                gap: 6
+                flexDirection: 'column',
+                gap: 8
               }}>
                 {ingredients.map((ingredient, idx) => (
-                  <span key={idx} style={{
-                    fontSize: 12,
-                    fontWeight: 500,
+                  <div key={idx} style={{
+                    fontSize: 14,
+                    fontWeight: 600,
                     color: '#581c87',
                     backgroundColor: '#f3e8ff',
-                    padding: '4px 8px',
-                    borderRadius: 6,
-                    border: '1px solid #d8b4fe',
-                    whiteSpace: 'nowrap'
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    border: '2px solid #d8b4fe',
+                    borderLeft: '4px solid #8b5cf6',
+                    marginBottom: 2,
+                    width: '100%',
+                    lineHeight: 1.5,
+                    wordBreak: 'break-word',
+                    display: 'block'
                   }}>
-                    {typeof ingredient === 'string' ? ingredient : `${ingredient.name}: ${Math.round(ingredient.amount / 5) * 5}${ingredient.unit || ''}`}
-                  </span>
+                    🥄 {typeof ingredient === 'string' ? ingredient : `${ingredient.name}: ${Math.round(ingredient.amount / 5) * 5}${ingredient.unit || ''}`}
+                  </div>
                 ))}
               </div>
             </div>

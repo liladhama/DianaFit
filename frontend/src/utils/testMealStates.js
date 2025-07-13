@@ -24,7 +24,7 @@ async function testMealStatesSaving() {
 
 // Функция для проверки работы API прогресса
 async function testProgressAPI() {
-    const userId = 'testuser1';
+    const userId = 'demo_user_local_test';
     const date = new Date().toISOString().split('T')[0];
     
     console.log('🔧 ТЕСТИРУЕМ API ПРОГРЕССА');

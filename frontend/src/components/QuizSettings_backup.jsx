@@ -233,7 +233,7 @@ const QuizSettings = ({ quizAnswers = {}, onSettingChange }) => {
 
     const fetchUserAnswers = async () => {
         try {
-            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'default';
+            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
             const response = await fetch(`${process.env.REACT_APP_API_URL}/api/user/quiz-answers/${userId}`);
             if (response.ok) {
                 const data = await response.json();
@@ -277,7 +277,7 @@ const QuizSettings = ({ quizAnswers = {}, onSettingChange }) => {
         setUserAnswers(updatedAnswers);
 
         try {
-            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'default';
+            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
             await fetch(`${process.env.REACT_APP_API_URL}/api/user/quiz-answers`, {
                 method: 'POST',
                 headers: {

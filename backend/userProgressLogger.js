@@ -78,16 +78,21 @@ class UserProgressLogger {
 
     // Сохранить прогресс (еда/тренировка/задачи) за конкретную дату
     async saveDayProgress({ date, ate, workout, tasks }) {
+        // Загружаем весь существующий лог
         const log = this.loadLog();
         if (!log.dailyProgress) {
             log.dailyProgress = {};
         }
+
+        // Обновляем только нужный день
         log.dailyProgress[date] = {
-            ate: !!ate,
-            workout: !!workout,
+            ate: ate === null ? null : !!ate,
+            workout: workout === null ? null : !!workout,
             tasks: Array.isArray(tasks) ? tasks : [],
             updatedAt: new Date().toISOString()
         };
+
+        // Сохраняем весь лог, чтобы не потерять остальные поля
         await this.saveLog(log);
     }
 
@@ -97,7 +102,8 @@ class UserProgressLogger {
         if (log.dailyProgress && log.dailyProgress[date]) {
             return log.dailyProgress[date];
         }
-        return { ate: false, workout: false };
+        // ИСПРАВЛЕНО: возвращаем null для несуществующих записей
+        return { ate: null, workout: null, tasks: [] };
     }
 
     // Получить сводку прогресса за период (и анализ причин)
@@ -189,6 +195,7 @@ class UserProgressLogger {
         return {
             ...('quiz' in existing ? { quiz: existing.quiz } : {}),
             ...('program' in existing ? { program: existing.program } : {}),
+            ...('programData' in existing ? { programData: existing.programData } : {}),
             ...('progress' in existing ? { progress: existing.progress } : {}),
             ...('dailyProgress' in existing ? { dailyProgress: existing.dailyProgress } : { dailyProgress: {} }),
             workouts: 0,
@@ -214,23 +221,55 @@ class UserProgressLogger {
                     existing = JSON.parse(content);
                 }
             } catch (e) {
-                // Если файл битый, игнорируем
+                console.error('Ошибка загрузки лога:', e);
             }
         }
-        if (!fs.existsSync(logPath) || !existing.dailyProgress) {
-            const defaultStructure = this.getDefaultProgressStructure(existing);
-            fs.writeFileSync(logPath, JSON.stringify(defaultStructure, null, 2), 'utf8');
-            return defaultStructure;
+        
+        // ИСПРАВЛЕНО: не перезаписываем файл, если он существует и содержит данные
+        if (!existing.dailyProgress) {
+            existing.dailyProgress = {};
         }
-        if (!existing.dailyProgress) existing.dailyProgress = {};
+        
+        // Инициализируем поля только если их нет
+        if (!('workouts' in existing)) existing.workouts = 0;
+        if (!('nutrition' in existing)) existing.nutrition = 0;
+        if (!('details' in existing)) {
+            existing.details = {
+                meals: { breakfast: 0, lunch: 0, dinner: 0, snacks: 0 },
+                weeklyProgress: [],
+                commonIssues: [],
+                improvements: { weekOverWeek: 0, trend: 'up' }
+            };
+        }
+        
         return existing;
     }
 
     // Сохранение лога с атомарной записью
     async saveLog(log) {
         const logPath = this.getUserLogPath();
-        log.lastUpdate = new Date().toISOString();
-        const jsonData = JSON.stringify(log, null, 2);
+        
+        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: загружаем существующий файл и сохраняем все поля
+        let existing = {};
+        if (fs.existsSync(logPath)) {
+            try {
+                const content = fs.readFileSync(logPath, 'utf8');
+                if (content && content.trim() !== '') {
+                    existing = JSON.parse(content);
+                }
+            } catch (e) {
+                console.error('Ошибка загрузки существующего файла:', e);
+            }
+        }
+        
+        // Объединяем данные - сохраняем ВСЕ поля из существующего файла
+        const finalLog = {
+            ...existing,  // Сохраняем все существующие поля (quiz, program, programData, etc.)
+            ...log,       // Обновляем только переданные поля
+            lastUpdate: new Date().toISOString()
+        };
+        
+        const jsonData = JSON.stringify(finalLog, null, 2);
         await fs.promises.writeFile(logPath, jsonData, 'utf8');
     }
 }

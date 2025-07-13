@@ -9,6 +9,10 @@ import recipeUtils from './utils/recipeUtils.js';
 import { callMistralAI } from './utils/aiUtils.js';
 import mealPlanCalculator from './utils/mealPlanCalculator.js';
 import fetch from 'node-fetch';
+import UserProgressLogger from './userProgressLogger.js';
+
+// Импортируем функцию нормализации ингредиентов
+import { normalizeIngredientUnits } from './utils/recipeUtils.js';
 
 // В памяти (для примера)
 const programs = {};
@@ -119,7 +123,6 @@ router.post('/program', async (req, res) => {
     return res.status(400).json({ error: 'Сначала пройдите квиз!' });
   }
 
-  const programId = userId + '-' + Date.now();
   const startDate = profile.start_date || new Date().toISOString().slice(0, 10);
   const workoutsPerWeek = profile.workouts_per_week || 3;
   const location = profile.gym_or_home || 'home';
@@ -135,10 +138,10 @@ router.post('/program', async (req, res) => {
         title: location === 'gym' ? getGymWorkoutTitle(i + 1) : getHomeWorkoutTitle(i + 1),
         exercises: location === 'gym' ? getGymExercises(i + 1) : getHomeExercises(i + 1)
       } : null,
-      completedWorkout: false,
-      completedMeals: false,
-      completedExercises: isWorkoutDay ? [false, false, false] : [],
-      completedMealsArr: [false, false, false]
+      completedWorkout: null,
+      completedMeals: null,
+      completedExercises: isWorkoutDay ? [null, null, null] : [],
+      completedMealsArr: [null, null, null]
     };
   });
   // Сохраняем только расписание тренировок и статусы выполнения
@@ -169,7 +172,7 @@ router.post('/program', async (req, res) => {
   // Сохраняем только programData
   userData.programData = programData;
   fs.writeFileSync(userDataPath, JSON.stringify(userData, null, 2), 'utf-8');
-  res.json({ success: true, programId });
+  res.json({ success: true });
 });
 
 // GET /api/program/week?programId=...&week=1
@@ -204,15 +207,16 @@ router.get('/program/week-stats', (req, res) => {
 
 // PATCH /api/program/day-complete
 router.patch('/program/day-complete', (req, res) => {
-  const { programId, date, completedWorkout, completedMeals, completedExercises, completedMealsArr } = req.body;
-  const program = programs[programId];
-  if (!program) return res.status(404).json({ error: 'not found' });
-  const day = program.days.find(d => d.date === date);
+  const { userId, date, completedWorkout, completedMeals, completedExercises, completedMealsArr } = req.body;
+  let userData = readUserData(userId);
+  if (!userData.programData || !userData.programData.weeklyPlan) return res.status(404).json({ error: 'program not found' });
+  const day = userData.programData.weeklyPlan.find(d => d.date === date);
   if (!day) return res.status(404).json({ error: 'day not found' });
-  if (typeof completedWorkout === 'boolean') day.completedWorkout = completedWorkout;
-  if (typeof completedMeals === 'boolean') day.completedMeals = completedMeals;
+  if (typeof completedWorkout !== 'undefined') day.completedWorkout = completedWorkout;
+  if (typeof completedMeals !== 'undefined') day.completedMeals = completedMeals;
   if (Array.isArray(completedExercises)) day.completedExercises = completedExercises;
   if (Array.isArray(completedMealsArr)) day.completedMealsArr = completedMealsArr;
+  writeUserData(userId, userData);
   res.json({ success: true });
 });
 
@@ -259,10 +263,10 @@ function generateMonthlySchedule(profile) {
       meals: generateMeals(goal, profile),
       dailySteps: 0,
       dailyStepsGoal: getDailyStepsGoal(profile),
-      completedExercises: isWorkoutDay ? new Array(3).fill(false) : [],
-      completedMealsArr: new Array(5).fill(false),
-      completedWorkout: false,
-      completedMeals: false
+      completedExercises: isWorkoutDay ? new Array(3).fill(null) : [],
+      completedMealsArr: new Array(5).fill(null),
+      completedWorkout: null,
+      completedMeals: null
     };
     
     days.push(day);
@@ -1452,10 +1456,17 @@ function scaleRecipeToTargets(recipe, target) {
     protein: Math.round(recipe.protein * scale),
     fat: Math.round(recipe.fat * scale),
     carbs: Math.round(recipe.carbs * scale),
-    ingredients: recipe.ingredients.map(ing => ({
-      ...ing,
-      amount: Math.round(ing.amount * scale * 10) / 10 // Округляем до 0.1 для точности
-    }))
+    ingredients: recipe.ingredients.map(ing => {
+      // Сначала масштабируем
+      const scaledIngredient = {
+        ...ing,
+        amount: Math.round(ing.amount * scale * 10) / 10 // Округляем до 0.1 для точности
+      };
+      
+      // Затем применяем нормализацию (округление специй, перевод в граммы и т.д.)
+      const normalizedIngredient = normalizeIngredientUnits(scaledIngredient);
+      return normalizedIngredient;
+    })
   };
 }
 
@@ -1485,7 +1496,11 @@ router.post('/user/weekly-program/:userId', async (req, res) => {
     const userId = req.params.userId;
     const programData = req.body;
     console.log('[WEEKLY PROGRAM][START] userId:', userId, '| programData:', typeof programData, programData && Object.keys(programData));
-    let userData = readUserData(userId);
+    
+    // ИСПРАВЛЕНО: используем UserProgressLogger вместо старых функций
+    const logger = new UserProgressLogger(userId);
+    const existingData = logger.loadLog();
+    
     // Фильтрация programData: удаляем profile и menu
     if (programData.profile) delete programData.profile;
     if (programData.days) {
@@ -1497,12 +1512,20 @@ router.post('/user/weekly-program/:userId', async (req, res) => {
         }
       });
     }
-    userData.program = programData;
-    userData.createdAt = userData.createdAt || new Date().toISOString();
-    if (!userData.progress) userData.progress = [];
-    writeUserData(userId, userData);
+    
+    // Сохраняем программу в общий файл
+    const updatedData = {
+      ...existingData, // Сохраняем все существующие данные
+      programData: programData, // Используем programData вместо program
+      program: programData, // Оставляем и program для обратной совместимости
+      createdAt: existingData.createdAt || new Date().toISOString()
+    };
+    
+    if (!updatedData.progress) updatedData.progress = [];
+    
+    await logger.saveLog(updatedData);
     console.log('[WEEKLY PROGRAM][END] Программа сохранена для пользователя:', userId);
-    res.json({ success: true, program: userData });
+    res.json({ success: true, program: updatedData });
   } catch (error) {
     console.error('[WEEKLY PROGRAM] Ошибка сохранения программы:', error);
     res.status(500).json({ error: error.message });
@@ -1513,12 +1536,18 @@ router.post('/user/weekly-program/:userId', async (req, res) => {
 router.get('/user/weekly-program/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
-    const userData = readUserData(userId);
-    if (!userData.program) {
+    // ИСПРАВЛЕНО: используем UserProgressLogger вместо старых функций
+    const logger = new UserProgressLogger(userId);
+    const userData = logger.loadLog();
+    
+    // Ищем программу в programData или program (для обратной совместимости)
+    const program = userData.programData || userData.program;
+    if (!program) {
       return res.status(404).json({ error: 'Program not found' });
     }
-    res.json(userData.program);
+    res.json(program);
   } catch (error) {
+    console.error('[GET WEEKLY PROGRAM] Ошибка загрузки программы:', error);
     res.status(500).json({ error: error.message });
   }
 });

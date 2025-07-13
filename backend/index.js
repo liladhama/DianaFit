@@ -58,16 +58,24 @@ app.post('/api/calculate-plan', async (req, res) => {
   if (!userId) {
     return res.status(400).json({ error: 'userId (Telegram) is required' });
   }
+  
   try {
-    let userData = readUserData(userId);
-    userData.userId = userId;
-    userData.quiz = answers;
-    // Не сохраняем меню/варианты блюд!
-    // Сохраняем только тип тренировки, расписание и недельный план
-    if (answers.trainingType) userData.trainingType = answers.trainingType;
-    if (answers.weeklySchedule) userData.weeklySchedule = answers.weeklySchedule;
-    if (answers.weeklyPlan) userData.weeklyPlan = answers.weeklyPlan;
-    writeUserData(userId, userData);
+    // ИСПРАВЛЕНО: используем UserProgressLogger вместо старых функций
+    const logger = new UserProgressLogger(userId);
+    const existingData = logger.loadLog();
+    
+    // Сохраняем ответы квиза и связанные данные
+    const updatedData = {
+      ...existingData, // Сохраняем все существующие данные
+      userId: userId,
+      quiz: answers,
+      trainingType: answers.trainingType,
+      weeklySchedule: answers.weeklySchedule,
+      weeklyPlan: answers.weeklyPlan
+    };
+    
+    await logger.saveLog(updatedData);
+    console.log('[CALCULATE-PLAN] Сохранены данные квиза для пользователя:', userId);
   } catch (e) {
     console.error('Ошибка сохранения квиза:', e);
   }

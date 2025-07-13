@@ -87,7 +87,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
   useEffect(() => {
     const fetchNutritionFromBackend = async () => {
       try {
-        const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'testuser1';
+        const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
         const response = await fetch(`${API_URL}/api/user/nutrition/${userId}`);
         if (response.ok) {
           const data = await response.json();
@@ -140,7 +140,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
   React.useEffect(() => {
     const fetchProgress = async () => {
       try {
-        const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'testuser1';
+        const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
         const response = await fetch(`${API_URL}/api/user-progress/${userId}`);
         if (!response.ok) throw new Error('Failed to fetch progress');
         const data = await response.json();
@@ -164,7 +164,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
   useEffect(() => {
     const fetchQuizAnswers = async () => {
       try {
-        const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'testuser1';
+        const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
         const response = await fetch(`${API_URL}/api/user/quiz-answers/${userId}`);
         if (response.ok) {
           const data = await response.json();
@@ -183,7 +183,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
   // Функция для обновления quizAnswers после изменений в QuizSettings
   const handleQuizSettingsChange = async () => {
     try {
-      const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'testuser1';
+      const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
       const response = await fetch(`${API_URL}/api/user/quiz-answers/${userId}`);
       if (response.ok) {
         const data = await response.json();

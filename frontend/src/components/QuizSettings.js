@@ -13,7 +13,7 @@ const QuizSettings = () => {
     // Получаем userAnswers напрямую из API при монтировании и после каждого сохранения
     const fetchUserAnswers = async () => {
         try {
-            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'testuser1';
+            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
             setDebugUserId(userId); // debug
             const response = await fetch(`${API_URL}/api/user/quiz-answers/${userId}`);
             setDebugStatus(response.status);
