@@ -127,6 +127,7 @@ function App() {
   const [isLoadingUserData, setIsLoadingUserData] = useState(true); // Новый флаг загрузки пользователя
   const [weekData, setWeekData] = useState(null);
   const [showQuiz, setShowQuiz] = useState(false); // Новый стейт для показа квиза
+  const [weekDataError, setWeekDataError] = useState(null); // Стейт для ошибки загрузки программы
 
   // Получаем Telegram userId при инициализации
   useEffect(() => {
@@ -1644,20 +1645,25 @@ function App() {
           });
           return null;
         })(),
-        <TodayBlock 
-          day={todayDay} 
-          answers={answers}
-          programId={programId}
-          isPremium={isPremium}
-          activatePremium={activatePremium}
-          setIsPaymentShown={setIsPaymentShown}
-          userAvatar={userAvatar}
-          onProfileClick={() => setShowProfile(true)}
-          onBackToWeek={() => {
-            setShowTodayBlock(false);
-            setShowTestWeek(true);
-          }} 
-        />
+        <>
+          {weekDataError && (
+            <div style={{color:'red',textAlign:'center',marginTop:20}}>{weekDataError}</div>
+          )}
+          <TodayBlock 
+            day={todayDay} 
+            answers={answers}
+            programId={programId}
+            isPremium={isPremium}
+            activatePremium={activatePremium}
+            setIsPaymentShown={setIsPaymentShown}
+            userAvatar={userAvatar}
+            onProfileClick={() => setShowProfile(true)}
+            onBackToWeek={() => {
+              setShowTodayBlock(false);
+              setShowTestWeek(true);
+            }} 
+          />
+        </>
       ) : showQuiz ? (
         <StoryQuiz onFinish={handleQuizFinish} />
       ) : isLoadingUserData ? (
