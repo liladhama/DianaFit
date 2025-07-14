@@ -83,13 +83,26 @@ export async function readUserData(userId) {
 
 export async function writeUserData(userId, data) {
   // Сохраняем только userId, quiz, dailyProgress, programData, lastUpdate
-  const saveData = {
+  // Очищаем объект от undefined
+  function clean(obj) {
+    if (obj && typeof obj === 'object') {
+      for (const key in obj) {
+        if (obj[key] === undefined) {
+          delete obj[key];
+        } else if (typeof obj[key] === 'object') {
+          clean(obj[key]);
+        }
+      }
+    }
+    return obj;
+  }
+  const saveData = clean({
     userId: data.userId,
     quiz: data.quiz,
     dailyProgress: data.dailyProgress,
     programData: data.programData,
     lastUpdate: new Date().toISOString()
-  };
+  });
   if (firestoreAvailable) {
     try {
       await db.collection('Dianafit_users').doc(userId).set(saveData);
