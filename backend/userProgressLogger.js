@@ -79,8 +79,8 @@ class UserProgressLogger {
     }
 
     // Получить сводку прогресса за период (и анализ причин)
-    getProgressSummary({ from, to }) {
-        const log = this.loadLog();
+    async getProgressSummary({ from, to }) {
+        const log = await this.loadLog();
         if (!log.dailyProgress) return { total: 0, done: 0, failed: 0, reasons: {} };
         const fromDate = new Date(from);
         const toDate = new Date(to);
@@ -104,8 +104,8 @@ class UserProgressLogger {
     }
 
     // Анализ прогресса за неделю
-    analyzeWeeklyProgress() {
-        const log = this.loadLog();
+    async analyzeWeeklyProgress() {
+        const log = await this.loadLog();
         const now = new Date();
         const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
 
