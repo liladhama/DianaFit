@@ -24,7 +24,7 @@ try {
     console.log('[Firestore] Используется локальный файл ключа');
     serviceAccount = JSON.parse(fs.readFileSync(path.join(__dirname, 'dianafit-firebase-adminsdk-fbsvc-e8d8736690.json'), 'utf-8'));
   }
-  if (!admin.apps.length) {
+  if (!admin.getApps().length) {
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount)
     });
