@@ -189,19 +189,18 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
         <div style={{ minHeight: '60px' }} />
       </div>
 
-      {/* Изображение Дианы внизу на всю страницу с гарантированным отступом от кнопки */}
+      {/* Изображение Дианы ниже всего контента с гарантированным отступом */}
       <div style={{
-        position: 'fixed',
+        position: 'absolute',
         left: 0,
         width: '100vw',
-        height: '50vh',
+        height: '40vh',
         overflow: 'hidden',
         zIndex: 1,
         pointerEvents: 'none',
-        bottom: 0,
+        top: 'calc(100vh - 35vh)',
         display: 'flex',
-        alignItems: 'flex-end',
-        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 32px)'
+        alignItems: 'flex-end'
       }}>
         <img 
           src={dianaPayment} 
