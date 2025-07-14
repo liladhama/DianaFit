@@ -1490,7 +1490,7 @@ router.post('/user/weekly-program/:userId', async (req, res) => {
     
     // ИСПРАВЛЕНО: используем UserProgressLogger вместо старых функций
     const logger = new UserProgressLogger(userId);
-    const existingData = logger.loadLog();
+    const existingData = await logger.loadLog();
     
     // Фильтрация programData: удаляем profile и menu
     if (programData.profile) delete programData.profile;
@@ -1529,11 +1529,13 @@ router.get('/user/weekly-program/:userId', async (req, res) => {
     const userId = req.params.userId;
     // ИСПРАВЛЕНО: используем UserProgressLogger вместо старых функций
     const logger = new UserProgressLogger(userId);
-    const userData = logger.loadLog();
-    
+    const userData = await logger.loadLog();
+    console.log('[GET WEEKLY PROGRAM] userId:', userId);
+    console.log('[GET WEEKLY PROGRAM] userData:', JSON.stringify(userData, null, 2));
     // Ищем программу в programData или program (для обратной совместимости)
     const program = userData.programData || userData.program;
     if (!program) {
+      console.warn('[GET WEEKLY PROGRAM] Program not found for userId:', userId);
       return res.status(404).json({ error: 'Program not found' });
     }
     res.json(program);
