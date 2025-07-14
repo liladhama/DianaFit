@@ -46,10 +46,11 @@ function getLocalPath(userId) {
 export async function readUserData(userId) {
   if (firestoreAvailable) {
     try {
-      const doc = await db.collection('Dianafit').doc('users').collection('users').doc(userId).get();
+      const doc = await db.collection('Dianafit').collection('users').doc(userId).get();
+      console.log(`[Firestore][readUserData] Чтение документа: Dianafit/users/${userId}`);
       if (doc.exists) {
         const data = doc.data();
-        // Возвращаем только userId, quiz, dailyProgress, programData, lastUpdate
+        console.log(`[Firestore][readUserData] Документ найден:`, data);
         return {
           userId: data.userId,
           quiz: data.quiz,
@@ -58,7 +59,7 @@ export async function readUserData(userId) {
           lastUpdate: data.lastUpdate
         };
       }
-      console.error(`[Firestore][readUserData] Документ не найден: userId=${userId}`);
+      console.warn(`[Firestore][readUserData] Документ не найден: userId=${userId}`);
       return { userId };
     } catch (e) {
       console.error(`[Firestore][readUserData] Ошибка чтения:`, e);
@@ -91,8 +92,8 @@ export async function writeUserData(userId, data) {
   };
   if (firestoreAvailable) {
     try {
-      await db.collection('Dianafit').doc('users').collection('users').doc(userId).set(saveData);
-      console.log(`[Firestore][writeUserData] Данные успешно записаны: userId=${userId}`);
+      await db.collection('Dianafit').collection('users').doc(userId).set(saveData);
+      console.log(`[Firestore][writeUserData] Данные успешно записаны: Dianafit/users/${userId}`);
       return;
     } catch (e) {
       console.error(`[Firestore][writeUserData] Ошибка записи:`, e);
