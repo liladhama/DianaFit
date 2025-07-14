@@ -17,6 +17,7 @@ console.log('[Firestore] FIREBASE_SERVICE_ACCOUNT:', process.env.FIREBASE_SERVIC
 try {
   admin = await import('firebase-admin');
   let serviceAccount;
+  const adm = admin.default;
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
     console.log('[Firestore] Используется ключ из переменной окружения');
@@ -24,12 +25,12 @@ try {
     console.log('[Firestore] Используется локальный файл ключа');
     serviceAccount = JSON.parse(fs.readFileSync(path.join(__dirname, 'dianafit-firebase-adminsdk-fbsvc-e8d8736690.json'), 'utf-8'));
   }
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
+  if (!adm.apps.length) {
+    adm.initializeApp({
+      credential: adm.credential.cert(serviceAccount)
     });
   }
-  db = admin.firestore();
+  db = adm.firestore();
   firestoreAvailable = true;
   console.log('[Firestore] Firestore успешно инициализирован');
 } catch (e) {
