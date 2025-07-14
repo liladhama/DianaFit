@@ -9,64 +9,54 @@ class UserProgressLogger {
 
     // Логирование диалога с ИИ
     async logDialog(message, response, context) {
-        const log = this.loadLog();
-        
+        const log = await this.loadLog();
         if (!log.dialogHistory) {
             log.dialogHistory = [];
         }
-
         log.dialogHistory.push({
             timestamp: new Date().toISOString(),
             message,
             response,
             context
         });
-
         await this.saveLog(log);
     }
 
     // Логирование изменений в личном кабинете
     async logProfileChange(changes) {
-        const log = this.loadLog();
-        
+        const log = await this.loadLog();
         if (!log.profileChanges) {
             log.profileChanges = [];
         }
-
         log.profileChanges.push({
             timestamp: new Date().toISOString(),
             changes
         });
-
         await this.saveLog(log);
     }
 
     // Логирование выполнения плана
     async logPlanExecution(mealType, executed, reason) {
-        const log = this.loadLog();
-        
+        const log = await this.loadLog();
         if (!log.planExecution) {
             log.planExecution = [];
         }
-
         log.planExecution.push({
             timestamp: new Date().toISOString(),
             mealType,
             executed,
             reason
         });
-
         await this.saveLog(log);
     }
 
     // Сохранить прогресс (еда/тренировка/задачи) за конкретную дату
     async saveDayProgress({ date, ate, workout, tasks }) {
         // Загружаем весь существующий лог
-        const log = this.loadLog();
+        const log = await this.loadLog();
         if (!log.dailyProgress) {
             log.dailyProgress = {};
         }
-
         // Обновляем только нужный день
         log.dailyProgress[date] = {
             ate: ate === null ? null : !!ate,
@@ -74,14 +64,13 @@ class UserProgressLogger {
             tasks: Array.isArray(tasks) ? tasks : [],
             updatedAt: new Date().toISOString()
         };
-
         // Сохраняем весь лог, чтобы не потерять остальные поля
         await this.saveLog(log);
     }
 
     // Получить прогресс за конкретную дату
-    getDayProgress(date) {
-        const log = this.loadLog();
+    async getDayProgress(date) {
+        const log = await this.loadLog();
         if (log.dailyProgress && log.dailyProgress[date]) {
             return log.dailyProgress[date];
         }
