@@ -46,8 +46,8 @@ function getLocalPath(userId) {
 export async function readUserData(userId) {
   if (firestoreAvailable) {
     try {
-      const doc = await db.collection('Dianafit').collection('users').doc(userId).get();
-      console.log(`[Firestore][readUserData] Чтение документа: Dianafit/users/${userId}`);
+      const doc = await db.collection('Dianafit_users').doc(userId).get();
+      console.log(`[Firestore][readUserData] Чтение документа: Dianafit_users/${userId}`);
       if (doc.exists) {
         const data = doc.data();
         console.log(`[Firestore][readUserData] Документ найден:`, data);
@@ -92,8 +92,8 @@ export async function writeUserData(userId, data) {
   };
   if (firestoreAvailable) {
     try {
-      await db.collection('Dianafit').collection('users').doc(userId).set(saveData);
-      console.log(`[Firestore][writeUserData] Данные успешно записаны: Dianafit/users/${userId}`);
+      await db.collection('Dianafit_users').doc(userId).set(saveData);
+      console.log(`[Firestore][writeUserData] Данные успешно записаны: Dianafit_users/${userId}`);
       return;
     } catch (e) {
       console.error(`[Firestore][writeUserData] Ошибка записи:`, e);
