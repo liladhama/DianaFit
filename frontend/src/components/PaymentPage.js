@@ -60,7 +60,7 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
       }}>
         {/* Заголовок */}
         <div style={{
-          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           fontSize: 20,
           fontWeight: 800,
           color: '#181818',
@@ -72,7 +72,7 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
 
         {/* Описание */}
         <div style={{
-          fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+          fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
           fontSize: 14,
           color: '#666',
           marginBottom: 20,
@@ -91,7 +91,7 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
           textAlign: 'left'
         }}>
           <div style={{
-            fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             fontSize: 16,
             fontWeight: 700,
             color: '#181818',
@@ -105,7 +105,7 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
               display: 'flex',
               alignItems: 'center',
               gap: 12,
-              fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
               fontSize: 14,
               color: '#333'
             }}>
@@ -117,8 +117,8 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
               display: 'flex',
               alignItems: 'center',
               gap: 12,
-              fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              fontSize: 13,
+              fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              fontSize: 14,
               color: '#333'
             }}>
               <span style={{ color: '#4FC3F7', fontSize: 14 }}>✓</span>
@@ -129,8 +129,8 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
               display: 'flex',
               alignItems: 'center',
               gap: 12,
-              fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              fontSize: 13,
+              fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              fontSize: 14,
               color: '#333'
             }}>
               <span style={{ color: '#4FC3F7', fontSize: 14 }}>✓</span>
@@ -141,8 +141,8 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
               display: 'flex',
               alignItems: 'center',
               gap: 12,
-              fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
-              fontSize: 13,
+              fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              fontSize: 14,
               color: '#333'
             }}>
               <span style={{ color: '#4FC3F7', fontSize: 14 }}>✓</span>
@@ -176,7 +176,7 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
           }}
         >
           <div style={{
-            fontFamily: 'Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             fontSize: 16,
             fontWeight: 700,
             color: '#fff',
@@ -187,16 +187,19 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
         </button>
       </div>
 
-      {/* Изображение Дианы внизу на всю страницу */}
+      {/* Изображение Дианы внизу на всю страницу с гарантированным отступом от кнопки */}
       <div style={{
         position: 'fixed',
-        bottom: -50,
         left: 0,
         width: '100vw',
         height: '50vh',
         overflow: 'hidden',
         zIndex: 1,
-        pointerEvents: 'none'
+        pointerEvents: 'none',
+        // Всегда минимум 32px от кнопки
+        bottom: 0,
+        display: 'flex',
+        alignItems: 'flex-end'
       }}>
         <img 
           src={dianaPayment} 

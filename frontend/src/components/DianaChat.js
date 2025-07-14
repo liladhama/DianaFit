@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import dianaIcon from '../assets/icons/diana.png';
 import { API_URL } from '../config/api';
 
-const DianaChat = ({ onClose, isPremium = false }) => {
+const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment }) => {
   const [messages, setMessages] = useState([
     {
       id: 1,
@@ -16,6 +16,7 @@ const DianaChat = ({ onClose, isPremium = false }) => {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
 
   // Система лимитов только для премиум пользователей
   const getToday = () => new Date().toDateString();
@@ -49,9 +50,8 @@ const DianaChat = ({ onClose, isPremium = false }) => {
 
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
-    
     if (!isPremium) {
-      alert('Чат с ИИ-тренером доступен только для пользователей с премиум подпиской! 💎\n\nОформите подписку для получения персональных консультаций.');
+      setShowPremiumModal(true);
       return;
     }
 
@@ -271,35 +271,41 @@ const DianaChat = ({ onClose, isPremium = false }) => {
           background: '#fff'
         }}>
           <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
-            <textarea
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyPress={handleKeyPress}
-              placeholder={isPremium 
-                ? (canSendMessage 
-                    ? `Напишите ваш вопрос... (осталось ${maxDailyQuestions - dailyUsage.count} из ${maxDailyQuestions})`
-                    : 'Лимит вопросов на сегодня исчерпан')
-                : 'Только для премиум пользователей'
-              }
-              disabled={!canSendMessage || isLoading}
-              style={{
-                flex: 1,
-                minHeight: 44,
-                maxHeight: 100,
-                padding: '12px 16px',
-                border: '1px solid #e2e8f0',
-                borderRadius: 12,
-                fontSize: 14,
-                resize: 'none',
-                outline: 'none',
-                fontFamily: 'inherit',
-                backgroundColor: !canSendMessage ? '#f5f5f5' : '#fff'
-              }}
-              rows={1}
-            />
+             <textarea
+               value={isPremium ? inputText : ''}
+               onChange={isPremium ? (e) => setInputText(e.target.value) : undefined}
+               onKeyPress={isPremium ? handleKeyPress : undefined}
+               onFocus={() => {
+                 if (!isPremium) {
+                   setShowPremiumModal(true);
+                 }
+               }}
+               placeholder={isPremium 
+                 ? (canSendMessage 
+                     ? `Напишите ваш вопрос... (осталось ${maxDailyQuestions - dailyUsage.count} из ${maxDailyQuestions})`
+                     : 'Лимит вопросов на сегодня исчерпан')
+                 : 'Только для премиум пользователей'
+               }
+               disabled={isLoading}
+               style={{
+                 flex: 1,
+                 minHeight: 44,
+                 maxHeight: 100,
+                 padding: '12px 16px',
+                 border: '1px solid #e2e8f0',
+                 borderRadius: 12,
+                 fontSize: 14,
+                 resize: 'none',
+                 outline: 'none',
+                 fontFamily: 'inherit',
+                 backgroundColor: !canSendMessage ? '#f5f5f5' : '#fff',
+                 cursor: isPremium ? 'text' : 'pointer'
+               }}
+               rows={1}
+             />
             <button
               onClick={handleSendMessage}
-              disabled={!inputText.trim() || !canSendMessage || isLoading}
+              disabled={!inputText.trim() || isLoading}
               style={{
                 padding: '12px 16px',
                 borderRadius: 12,
@@ -320,8 +326,46 @@ const DianaChat = ({ onClose, isPremium = false }) => {
           </div>
         </div>
       </div>
+      {showPremiumModal && (
+        <PremiumModal
+          onClose={() => setShowPremiumModal(false)}
+          onBuy={() => {
+            setShowPremiumModal(false);
+            if (setShowPayment) setShowPayment(true);
+          }}
+        />
+      )}
     </div>
   );
 };
 
+// Модальное окно для премиум-уведомления
+// onBuy теперь должен быть handleUnlock из TestWeek
+const PremiumModal = ({ onClose, onBuy }) => (
+  <div style={{
+    position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh',
+    background: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit'
+  }}>
+    <div style={{ background: '#fff', borderRadius: 20, padding: 32, maxWidth: 370, boxShadow: '0 8px 32px rgba(102,126,234,0.18)', border: '2px solid #667eea', textAlign: 'center', position: 'relative' }}>
+      <div style={{fontSize: 34, marginBottom: 6}}>💎</div>
+      <h2 style={{marginBottom: 12, color: '#764ba2', fontWeight: 800, fontSize: 20}}>Премиум доступ к Диане</h2>
+      <div style={{fontSize: 15, marginBottom: 16, color: '#333'}}>
+        Оформи премиум и получи:<br/>
+        <span style={{display:'block',margin:'8px 0'}}>
+          💬 Персональные советы<br/>
+          ❓ 5 вопросов в день<br/>
+          🍏 Индивидуальные рекомендации
+        </span>
+      </div>
+      <div style={{fontSize:14, marginBottom:18, color:'#764ba2', fontWeight:500}}>
+        Разблокируй чат и начни свой путь к результату!
+      </div>
+      <div style={{display: 'flex', gap: 12, justifyContent: 'center'}}>
+        <button onClick={onClose} style={{padding: '9px 18px', borderRadius: 8, background: '#eee', border: 'none', fontWeight: 500, fontSize:14, color:'#333'}}>Закрыть</button>
+        <button onClick={onBuy} style={{padding: '9px 18px', borderRadius: 8, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: '#fff', border: 'none', fontWeight: 700, fontSize:15}}>Купить премиум</button>
+      </div>
+      <div style={{position:'absolute',top:10,right:16,fontSize:20,color:'#667eea',fontWeight:700,opacity:0.7}}>✨</div>
+    </div>
+  </div>
+);
 export default DianaChat;

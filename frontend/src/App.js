@@ -4,6 +4,7 @@ import StoryQuiz from './components/StoryQuiz';
 import ProfilePage from './components/ProfilePage';
 import DayBlock from './components/DayBlock';
 import TodayBlock from './components/TodayBlock';
+import PaymentPage from './components/PaymentPage';
 import TestWeek from './components/TestWeek';
 import VideoTest from './components/VideoTest';
 import AITestPage from './components/AITestPage';
@@ -115,6 +116,7 @@ function App() {
   const [showToday, setShowToday] = useState(false);
   const [showTestWeek, setShowTestWeek] = useState(false);
   const [showTodayBlock, setShowTodayBlock] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [showVideoTest, setShowVideoTest] = useState(false);
   const [showAITest, setShowAITest] = useState(false);
@@ -171,6 +173,16 @@ function App() {
             firstDay: weeklyProgram.days?.[0]?.date,
             lastDay: weeklyProgram.days?.[weeklyProgram.days?.length - 1]?.date
           });
+          
+          // Проверяем квиз перед показом TodayBlock
+          if (!quizData) {
+            console.log('❌ Нет квиза, показываем форму квиза (даже если есть программа)');
+            setShowQuiz(true);
+            setIsLoadingUserData(false);
+            setShowSplash(false);
+            return;
+          }
+          
           setWeekData(weeklyProgram);
           setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
           setShowTodayBlock(true);
@@ -184,6 +196,16 @@ function App() {
           if (regenRes.ok) {
             const newProgram = await regenRes.json();
             console.log('✅ Новая программа создана:', !!newProgram.days);
+            
+            // Проверяем квиз перед показом TodayBlock
+            if (!quizData) {
+              console.log('❌ Нет квиза, показываем форму квиза (даже после пересоздания программы)');
+              setShowQuiz(true);
+              setIsLoadingUserData(false);
+              setShowSplash(false);
+              return;
+            }
+            
             setWeekData(newProgram);
             setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
             setShowTodayBlock(true);
@@ -215,6 +237,16 @@ function App() {
               if (retryRes.ok) {
                 const programData = await retryRes.json();
                 console.log('✅ Программа создана и загружена:', !!programData.days);
+                
+                // Проверяем квиз перед показом TodayBlock
+                if (!quizData) {
+                  console.log('❌ Нет квиза, показываем форму квиза (даже после создания программы)');
+                  setShowQuiz(true);
+                  setIsLoadingUserData(false);
+                  setShowSplash(false);
+                  return;
+                }
+                
                 setWeekData(programData);
                 setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
                 setShowTodayBlock(true);
@@ -1629,6 +1661,11 @@ function App() {
             setShowTodayBlock(true);
           }}
         />
+      ) : showPayment ? (
+        <PaymentPage
+          onClose={() => setShowPayment(false)}
+          onPaymentSuccess={activatePremium}
+        />
       ) : showTodayBlock && todayDay ? (
         (() => {
           console.log('🎯 App.js РЕНДЕР: Передаем данные в TodayBlock:', {
@@ -1656,6 +1693,7 @@ function App() {
             isPremium={isPremium}
             activatePremium={activatePremium}
             setIsPaymentShown={setIsPaymentShown}
+            setShowPayment={setShowPayment}
             userAvatar={userAvatar}
             onProfileClick={() => setShowProfile(true)}
             onBackToWeek={() => {

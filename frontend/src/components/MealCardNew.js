@@ -335,14 +335,19 @@ const MealCard = ({
                 textAlign: 'right',
                 marginLeft: 8,
               }}>
-                {typeof ingredient.amount === 'number'
-                  ? (["г", "мл"].includes(ingredient.unit)
-                      ? Math.round(ingredient.amount / 5) * 5
-                      : (["щепотка", "ч.л.", "ст.л.", "кусочек", "ломтик", "стебель", "зубчик", "шт"].includes(ingredient.unit)
-                          ? (Math.round(ingredient.amount * 10) / 10).toString().replace(".0", "")
-                          : ingredient.amount)
-                    )
-                  : ingredient.amount} {ingredient.unit}
+                      {typeof ingredient.amount === 'number'
+                        ? (
+                            // Округляем все виды яиц до целого
+                            (ingredient.unit === 'шт' && /яйцо|egg/i.test(ingredient.name))
+                              ? Math.round(ingredient.amount)
+                              : (['г', 'мл'].includes(ingredient.unit)
+                                  ? Math.round(ingredient.amount / 5) * 5
+                                  : (['щепотка', 'ч.л.', 'ст.л.', 'кусочек', 'ломтик', 'стебель', 'зубчик', 'шт'].includes(ingredient.unit)
+                                      ? (Math.round(ingredient.amount * 10) / 10).toString().replace('.0', '')
+                                      : ingredient.amount)
+                                )
+                          )
+                        : ingredient.amount} {ingredient.unit}
               </span>
             </div>
           ))}
@@ -370,17 +375,19 @@ const MealCard = ({
           }}>
             📝 Рецепт приготовления:
           </div>
-          {Array.isArray(mealInfo.instructions) ? (
-            <ol style={{ fontSize: 13, color: '#334155', lineHeight: 1.5, paddingLeft: 18, margin: 0 }}>
-              {mealInfo.instructions.map((step, idx) => (
-                <li key={idx} style={{ marginBottom: 6 }}>{step}</li>
-              ))}
-            </ol>
-          ) : (
-            <div style={{ fontSize: 13, color: '#334155', whiteSpace: 'pre-line', lineHeight: 1.5 }}>
-              {mealInfo.instructions}
-            </div>
-          )}
+          <ol style={{ fontSize: 13, color: '#334155', lineHeight: 1.5, paddingLeft: 18, margin: 0 }}>
+            {(Array.isArray(mealInfo.instructions)
+              ? mealInfo.instructions
+              : (typeof mealInfo.instructions === 'string'
+                  ? mealInfo.instructions.split('\n').map(s => s.trim()).filter(Boolean)
+                  : [])
+              )
+              .map((step, idx) => {
+                // Убираем только номера в начале строки
+                const cleanStep = step.replace(/^\d+\.?\s*/, '');
+                return <li key={idx} style={{ marginBottom: 6 }}>{cleanStep}</li>;
+              })}
+          </ol>
         </div>
       )}
 

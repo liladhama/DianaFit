@@ -109,14 +109,7 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
     }}>
       {/* Иконка чата с Дианой в левом верхнем углу - всегда видна */}
       <button
-        onClick={() => {
-          if (!isPremium) {
-            alert('Чат с ИИ-тренером Дианой доступен только для пользователей с премиум подпиской! 💪\n\nОформите подписку, чтобы получить:\n• Персональные консультации с ИИ-тренером\n• 5 вопросов в день\n• Индивидуальные рекомендации по тренировкам и питанию');
-            setShowPayment(true);
-            return;
-          }
-          setShowDianaChat(true);
-        }}
+        onClick={() => setShowDianaChat(true)}
         style={{
           position: 'fixed',
           top: '20px',
@@ -348,7 +341,7 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
                         </div>
                         {dayData.planData.workout.exercises && dayData.planData.workout.exercises.map((ex, exIndex) => (
                           <div key={exIndex} style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>
-                            • {ex.name} — {ex.reps}
+                            - {ex.name} — {ex.reps}
                           </div>
                         ))}
                       </>
@@ -441,6 +434,8 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
           <DianaChat 
             onClose={() => setShowDianaChat(false)} 
             isPremium={isPremium}
+            activatePremium={activatePremium}
+            setShowPayment={setShowPayment}
           />
         </div>
       )}

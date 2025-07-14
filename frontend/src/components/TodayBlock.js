@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import WheelPicker from './WheelPicker';
+import PaymentPage from './PaymentPage';
 import VideoPlayer from './VideoPlayer';
 import DianaChat from './DianaChat';
 import ReasonModal from './ReasonModal';
@@ -85,7 +86,10 @@ const checkboxButtonStyle = (completed) => ({
   marginTop: 8
 });
 
-export default function TodayBlock({ day, answers, onBackToWeek, programId, isPremium, activatePremium, setIsPaymentShown, userAvatar, onProfileClick }) {
+export default function TodayBlock({ day, answers, onBackToWeek, programId, isPremium, activatePremium, setIsPaymentShown, setShowPayment, userAvatar, onProfileClick }) {
+  // PaymentPage рендерится только глобально через App.js
+  // ...existing code...
+  // ...existing code...
   // Логируем весь пропс day для анализа структуры
   console.log('🎯 TodayBlock получил day:', {
     dayExists: !!day,
@@ -131,6 +135,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   
   // Состояние для чата с Дианой
   const [showDianaChat, setShowDianaChat] = useState(false);
+  // Локальное состояние для страницы оплаты
+  // PaymentPage теперь рендерится глобально через App.js
   
 
   // Состояние для модала причин невыполнения
@@ -1835,6 +1841,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         <DianaChat
           onClose={() => setShowDianaChat(false)}
           isPremium={isPremium}
+          activatePremium={activatePremium}
+          setShowPayment={setShowPayment}
         />
       )}
       

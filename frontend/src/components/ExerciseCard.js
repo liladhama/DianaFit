@@ -59,7 +59,6 @@ const ExerciseCard = ({
                 alignItems: 'center',
                 gap: 4
               }}>
-                <span>�</span>
                 {exercise.reps} повторений
               </span>
             )}
