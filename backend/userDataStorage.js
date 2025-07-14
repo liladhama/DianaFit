@@ -12,12 +12,16 @@ const localDir = path.join(__dirname, 'backup_files', 'users');
 
 
 // Попытка инициализации Firestore (через переменную окружения или локальный файл)
+console.log('[Firestore] Попытка инициализации...');
+console.log('[Firestore] FIREBASE_SERVICE_ACCOUNT:', process.env.FIREBASE_SERVICE_ACCOUNT ? 'есть' : 'нет');
 try {
   admin = await import('firebase-admin');
   let serviceAccount;
   if (process.env.FIREBASE_SERVICE_ACCOUNT) {
     serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+    console.log('[Firestore] Используется ключ из переменной окружения');
   } else {
+    console.log('[Firestore] Используется локальный файл ключа');
     serviceAccount = JSON.parse(fs.readFileSync(path.join(__dirname, 'dianafit-firebase-adminsdk-fbsvc-e8d8736690.json'), 'utf-8'));
   }
   if (!admin.apps.length) {
@@ -27,8 +31,10 @@ try {
   }
   db = admin.firestore();
   firestoreAvailable = true;
+  console.log('[Firestore] Firestore успешно инициализирован');
 } catch (e) {
   firestoreAvailable = false;
+  console.error('[Firestore] Ошибка инициализации:', e);
 }
 
 function getLocalPath(userId) {
@@ -41,8 +47,10 @@ export async function readUserData(userId) {
     try {
       const doc = await db.collection('Dianafit').doc('users').collection('users').doc(userId).get();
       if (doc.exists) return doc.data();
+      console.error(`[Firestore][readUserData] Документ не найден: userId=${userId}`);
       return { userId };
     } catch (e) {
+      console.error(`[Firestore][readUserData] Ошибка чтения:`, e);
       // fallback на локальный файл
     }
   }
@@ -58,8 +66,10 @@ export async function writeUserData(userId, data) {
   if (firestoreAvailable) {
     try {
       await db.collection('Dianafit').doc('users').collection('users').doc(userId).set(data);
+      console.log(`[Firestore][writeUserData] Данные успешно записаны: userId=${userId}`);
       return;
     } catch (e) {
+      console.error(`[Firestore][writeUserData] Ошибка записи:`, e);
       // fallback на локальный файл
     }
   }
