@@ -144,38 +144,23 @@ router.post('/program', async (req, res) => {
       completedMealsArr: [null, null, null]
     };
   });
-  // Сохраняем только расписание тренировок и статусы выполнения
+  // Формируем недельную программу (7 дней)
   const programData = {
+    programId: `program_${userId}_${Date.now()}`,
     userId,
-    trainingType: location,
-    weeklySchedule: days.map(d => ({ date: d.date, workout: d.workout })),
-    weeklyPlan: days.map(d => ({ date: d.date, workout: d.workout, isWorkoutDay: !!d.workout })),
+    days,
+    type: 'weekly',
+    createdAt: new Date().toISOString()
   };
-  // Сохраняем в user-файл только programData
   let userData = {};
   if (fs.existsSync(userDataPath)) {
     userData = JSON.parse(fs.readFileSync(userDataPath, 'utf-8'));
   }
-  // Удаляем profile и menu на всех уровнях
-  if (userData.profile) delete userData.profile;
-  if (userData.menu) delete userData.menu;
-  if (userData.program && userData.program.profile) delete userData.program.profile;
-  if (userData.program && userData.program.days) {
-    userData.program.days.forEach(day => {
-      if (day.meals) {
-        day.meals.forEach(meal => {
-          if (meal.menu) delete meal.menu;
-        });
-      }
-    });
-  }
-  // Сохраняем только programData, но если были weekPlan/weeklyPlan/weeklySchedule — переносим их
-  if (userData.programData) {
-    if (userData.programData.weekPlan && !programData.weekPlan) programData.weekPlan = userData.programData.weekPlan;
-    if (userData.programData.weeklyPlan && !programData.weeklyPlan) programData.weeklyPlan = userData.programData.weeklyPlan;
-    if (userData.programData.weeklySchedule && !programData.weeklySchedule) programData.weeklySchedule = userData.programData.weeklySchedule;
-  }
+  // Сохраняем quiz, dailyProgress, статусы, только programData
+  userData.userId = userId;
+  if (quizData) userData.quiz = quizData;
   userData.programData = programData;
+  userData.lastUpdate = new Date().toISOString();
   fs.writeFileSync(userDataPath, JSON.stringify(userData, null, 2), 'utf-8');
   res.json({ success: true });
 });
@@ -213,16 +198,17 @@ router.get('/program/week-stats', (req, res) => {
 // PATCH /api/program/day-complete
 router.patch('/program/day-complete', (req, res) => {
   const { userId, date, completedWorkout, completedMeals, completedExercises, completedMealsArr } = req.body;
-  let userData = readUserData(userId);
-  if (!userData.programData || !userData.programData.weeklyPlan) return res.status(404).json({ error: 'program not found' });
-  const day = userData.programData.weeklyPlan.find(d => d.date === date);
-  if (!day) return res.status(404).json({ error: 'day not found' });
-  if (typeof completedWorkout !== 'undefined') day.completedWorkout = completedWorkout;
-  if (typeof completedMeals !== 'undefined') day.completedMeals = completedMeals;
-  if (Array.isArray(completedExercises)) day.completedExercises = completedExercises;
-  if (Array.isArray(completedMealsArr)) day.completedMealsArr = completedMealsArr;
-  writeUserData(userId, userData);
-  res.json({ success: true });
+  readUserData(userId).then(userData => {
+    if (!userData.programData || !userData.programData.days) return res.status(404).json({ error: 'program not found' });
+    const day = userData.programData.days.find(d => d.date === date);
+    if (!day) return res.status(404).json({ error: 'day not found' });
+    if (typeof completedWorkout !== 'undefined') day.completedWorkout = completedWorkout;
+    if (typeof completedMeals !== 'undefined') day.completedMeals = completedMeals;
+    if (Array.isArray(completedExercises)) day.completedExercises = completedExercises;
+    if (Array.isArray(completedMealsArr)) day.completedMealsArr = completedMealsArr;
+    writeUserData(userId, userData);
+    res.json({ success: true });
+  });
 });
 
 // Функция генерации персонального месячного расписания

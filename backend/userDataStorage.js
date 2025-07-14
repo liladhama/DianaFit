@@ -47,7 +47,17 @@ export async function readUserData(userId) {
   if (firestoreAvailable) {
     try {
       const doc = await db.collection('Dianafit').doc('users').collection('users').doc(userId).get();
-      if (doc.exists) return doc.data();
+      if (doc.exists) {
+        const data = doc.data();
+        // Возвращаем только userId, quiz, dailyProgress, programData, lastUpdate
+        return {
+          userId: data.userId,
+          quiz: data.quiz,
+          dailyProgress: data.dailyProgress,
+          programData: data.programData,
+          lastUpdate: data.lastUpdate
+        };
+      }
       console.error(`[Firestore][readUserData] Документ не найден: userId=${userId}`);
       return { userId };
     } catch (e) {
@@ -58,15 +68,30 @@ export async function readUserData(userId) {
   // fallback: локальный файл
   const file = getLocalPath(userId);
   if (fs.existsSync(file)) {
-    return JSON.parse(fs.readFileSync(file, 'utf-8'));
+    const data = JSON.parse(fs.readFileSync(file, 'utf-8'));
+    return {
+      userId: data.userId,
+      quiz: data.quiz,
+      dailyProgress: data.dailyProgress,
+      programData: data.programData,
+      lastUpdate: data.lastUpdate
+    };
   }
   return { userId };
 }
 
 export async function writeUserData(userId, data) {
+  // Сохраняем только userId, quiz, dailyProgress, programData, lastUpdate
+  const saveData = {
+    userId: data.userId,
+    quiz: data.quiz,
+    dailyProgress: data.dailyProgress,
+    programData: data.programData,
+    lastUpdate: new Date().toISOString()
+  };
   if (firestoreAvailable) {
     try {
-      await db.collection('Dianafit').doc('users').collection('users').doc(userId).set(data);
+      await db.collection('Dianafit').doc('users').collection('users').doc(userId).set(saveData);
       console.log(`[Firestore][writeUserData] Данные успешно записаны: userId=${userId}`);
       return;
     } catch (e) {
@@ -76,5 +101,5 @@ export async function writeUserData(userId, data) {
   }
   // fallback: локальный файл
   const file = getLocalPath(userId);
-  fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf-8');
+  fs.writeFileSync(file, JSON.stringify(saveData, null, 2), 'utf-8');
 }
