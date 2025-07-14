@@ -12,9 +12,10 @@ router.post('/', async (req, res) => {
     }
     try {
         const logger = new UserProgressLogger(userId);
-        console.log('[PROGRESS ROUTE] saveDayProgress userId:', userId, '| logPath:', logger.getUserLogPath());
-        console.log('[PROGRESS ROUTE] saveDayProgress tasks:', tasks);
+        console.log('[PROGRESS ROUTE] saveDayProgress userId:', userId);
+        console.log('[PROGRESS ROUTE] saveDayProgress data:', { date, ate, workout, tasks });
         await logger.saveDayProgress({ date, ate, workout, tasks });
+        console.log('[PROGRESS ROUTE] saveDayProgress completed successfully');
         res.json({ success: true });
     } catch (e) {
         console.error('[PROGRESS ROUTE] Ошибка сохранения прогресса:', e, '| userId:', userId);
@@ -23,15 +24,17 @@ router.post('/', async (req, res) => {
 });
 
 // Получить прогресс за день
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
     const { userId, date } = req.query;
+    console.log('[PROGRESS ROUTE] GET /api/progress query:', req.query);
     if (!userId || !date) {
         return res.status(400).json({ error: 'userId и date обязательны' });
     }
     try {
         const logger = new UserProgressLogger(userId);
-        console.log('[PROGRESS ROUTE] getDayProgress userId:', userId, '| logPath:', logger.getUserLogPath());
-        const progress = logger.getDayProgress(date);
+        console.log('[PROGRESS ROUTE] getDayProgress userId:', userId);
+        const progress = await logger.getDayProgress(date);
+        console.log('[PROGRESS ROUTE] getDayProgress result:', progress);
         res.json(progress);
     } catch (e) {
         console.error('[PROGRESS ROUTE] Ошибка получения прогресса:', e, '| userId:', userId);

@@ -44,45 +44,92 @@ function getLocalPath(userId) {
 }
 
 export async function readUserData(userId) {
+  console.log(`[Firestore][readUserData] Попытка чтения данных для userId: ${userId}`);
   if (firestoreAvailable) {
     try {
+      console.log(`[Firestore][readUserData] Firestore доступен, читаем из коллекции: Dianafit_users/${userId}`);
       const doc = await db.collection('Dianafit_users').doc(userId).get();
-      console.log(`[Firestore][readUserData] Чтение документа: Dianafit_users/${userId}`);
       if (doc.exists) {
         const data = doc.data();
-        console.log(`[Firestore][readUserData] Документ найден:`, data);
+        console.log(`[Firestore][readUserData] ✅ Документ найден в Firestore:`, {
+          userId: data.userId,
+          hasQuiz: !!data.quiz,
+          hasDailyProgress: !!data.dailyProgress,
+          hasProgramData: !!data.programData,
+          hasDialogHistory: !!data.dialogHistory,
+          hasProfileChanges: !!data.profileChanges,
+          hasPlanExecution: !!data.planExecution,
+          lastUpdate: data.lastUpdate
+        });
         return {
           userId: data.userId,
           quiz: data.quiz,
           dailyProgress: data.dailyProgress,
           programData: data.programData,
+          dialogHistory: data.dialogHistory,
+          profileChanges: data.profileChanges,
+          planExecution: data.planExecution,
           lastUpdate: data.lastUpdate
         };
       }
-      console.warn(`[Firestore][readUserData] Документ не найден: userId=${userId}`);
+      console.warn(`[Firestore][readUserData] ⚠️ Документ не найден в Firestore: userId=${userId}, создаем новый`);
       return { userId };
     } catch (e) {
-      console.error(`[Firestore][readUserData] Ошибка чтения:`, e);
+      console.error(`[Firestore][readUserData] ❌ Ошибка чтения из Firestore:`, e);
+      console.log(`[Firestore][readUserData] Переходим к локальному файлу как fallback`);
       // fallback на локальный файл
     }
+  } else {
+    console.log(`[Firestore][readUserData] Firestore недоступен, используем локальный файл`);
   }
   // fallback: локальный файл
+  console.log(`[LocalFile][readUserData] Используем локальный файл для userId: ${userId}`);
   const file = getLocalPath(userId);
   if (fs.existsSync(file)) {
-    const data = JSON.parse(fs.readFileSync(file, 'utf-8'));
-    return {
-      userId: data.userId,
-      quiz: data.quiz,
-      dailyProgress: data.dailyProgress,
-      programData: data.programData,
-      lastUpdate: data.lastUpdate
-    };
+    try {
+      const data = JSON.parse(fs.readFileSync(file, 'utf-8'));
+      console.log(`[LocalFile][readUserData] ✅ Локальный файл найден:`, {
+        userId: data.userId,
+        hasQuiz: !!data.quiz,
+        hasDailyProgress: !!data.dailyProgress,
+        hasProgramData: !!data.programData,
+        hasDialogHistory: !!data.dialogHistory,
+        hasProfileChanges: !!data.profileChanges,
+        hasPlanExecution: !!data.planExecution,
+        lastUpdate: data.lastUpdate
+      });
+      return {
+        userId: data.userId,
+        quiz: data.quiz,
+        dailyProgress: data.dailyProgress,
+        programData: data.programData,
+        dialogHistory: data.dialogHistory,
+        profileChanges: data.profileChanges,
+        planExecution: data.planExecution,
+        lastUpdate: data.lastUpdate
+      };
+    } catch (e) {
+      console.error(`[LocalFile][readUserData] ❌ Ошибка чтения локального файла:`, e);
+      return { userId };
+    }
   }
+  console.log(`[LocalFile][readUserData] Локальный файл не найден, создаем новый профиль для userId: ${userId}`);
   return { userId };
 }
 
 export async function writeUserData(userId, data) {
-  // Сохраняем только userId, quiz, dailyProgress, programData, lastUpdate
+  console.log(`[writeUserData] Начинаем сохранение данных для userId: ${userId}`);
+  console.log(`[writeUserData] Данные для сохранения:`, {
+    userId: data.userId,
+    hasQuiz: !!data.quiz,
+    hasDailyProgress: !!data.dailyProgress,
+    hasProgramData: !!data.programData,
+    hasDialogHistory: !!data.dialogHistory,
+    hasProfileChanges: !!data.profileChanges,
+    hasPlanExecution: !!data.planExecution
+  });
+  
+  // Сохраняем полную структуру данных пользователя
   // Очищаем объект от undefined
   function clean(obj) {
     if (obj && typeof obj === 'object') {
@@ -96,24 +143,52 @@ export async function writeUserData(userId, data) {
     }
     return obj;
   }
+  
   const saveData = clean({
     userId: data.userId,
     quiz: data.quiz,
     dailyProgress: data.dailyProgress,
     programData: data.programData,
+    dialogHistory: data.dialogHistory,
+    profileChanges: data.profileChanges,
+    planExecution: data.planExecution,
     lastUpdate: new Date().toISOString()
   });
+  
+  console.log(`[writeUserData] Очищенные данные для сохранения:`, {
+    userId: saveData.userId,
+    hasQuiz: !!saveData.quiz,
+    hasDailyProgress: !!saveData.dailyProgress,
+    hasProgramData: !!saveData.programData,
+    hasDialogHistory: !!saveData.dialogHistory,
+    hasProfileChanges: !!saveData.profileChanges,
+    hasPlanExecution: !!saveData.planExecution,
+    lastUpdate: saveData.lastUpdate
+  });
+  
   if (firestoreAvailable) {
     try {
+      console.log(`[Firestore][writeUserData] Firestore доступен, сохраняем в коллекцию: Dianafit_users/${userId}`);
       await db.collection('Dianafit_users').doc(userId).set(saveData);
-      console.log(`[Firestore][writeUserData] Данные успешно записаны: Dianafit_users/${userId}`);
+      console.log(`[Firestore][writeUserData] ✅ Данные успешно сохранены в Firestore: Dianafit_users/${userId}`);
       return;
     } catch (e) {
-      console.error(`[Firestore][writeUserData] Ошибка записи:`, e);
+      console.error(`[Firestore][writeUserData] ❌ Ошибка записи в Firestore:`, e);
+      console.log(`[Firestore][writeUserData] Переходим к локальному файлу как fallback`);
       // fallback на локальный файл
     }
+  } else {
+    console.log(`[writeUserData] Firestore недоступен, используем локальный файл`);
   }
+  
   // fallback: локальный файл
+  console.log(`[LocalFile][writeUserData] Сохраняем в локальный файл для userId: ${userId}`);
   const file = getLocalPath(userId);
-  fs.writeFileSync(file, JSON.stringify(saveData, null, 2), 'utf-8');
+  try {
+    fs.writeFileSync(file, JSON.stringify(saveData, null, 2), 'utf-8');
+    console.log(`[LocalFile][writeUserData] ✅ Данные успешно сохранены в локальный файл: ${file}`);
+  } catch (e) {
+    console.error(`[LocalFile][writeUserData] ❌ Ошибка записи в локальный файл:`, e);
+    throw e;
+  }
 }
