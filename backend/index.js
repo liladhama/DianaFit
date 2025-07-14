@@ -59,11 +59,11 @@ app.post('/api/calculate-plan', async (req, res) => {
     return res.status(400).json({ error: 'userId (Telegram) is required' });
   }
   
+  let saveResult = null;
   try {
     // ИСПРАВЛЕНО: используем UserProgressLogger вместо старых функций
     const logger = new UserProgressLogger(userId);
-    const existingData = logger.loadLog();
-    
+    const existingData = await logger.loadLog();
     // Сохраняем ответы квиза и связанные данные
     const updatedData = {
       ...existingData, // Сохраняем все существующие данные
@@ -73,11 +73,17 @@ app.post('/api/calculate-plan', async (req, res) => {
       weeklySchedule: answers.weeklySchedule,
       weeklyPlan: answers.weeklyPlan
     };
-    
-    await logger.saveLog(updatedData);
-    console.log('[CALCULATE-PLAN] Сохранены данные квиза для пользователя:', userId);
+    try {
+      await logger.saveLog(updatedData);
+      saveResult = { success: true };
+      console.log('[CALCULATE-PLAN] Сохранены данные квиза для пользователя:', userId);
+    } catch (saveErr) {
+      saveResult = { success: false, error: saveErr.message };
+      console.error('Ошибка сохранения квиза:', saveErr);
+    }
   } catch (e) {
     console.error('Ошибка сохранения квиза:', e);
+    saveResult = { success: false, error: e.message };
   }
   try {
     // 1. Расчет КБЖУ пользователя
@@ -114,7 +120,8 @@ app.post('/api/calculate-plan', async (req, res) => {
       plan: {
         weeks: [{ week: 1, days }],
         macros
-      }
+      },
+      saveResult
     });
   } catch (e) {
     res.status(500).json({ error: 'Ошибка генерации плана', details: e.message });
