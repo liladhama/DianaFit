@@ -194,11 +194,11 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
         position: 'absolute',
         left: 0,
         width: '100vw',
-        height: '40vh',
+        height: '55vh',
         overflow: 'hidden',
         zIndex: 1,
         pointerEvents: 'none',
-        top: 'calc(100vh - 35vh)',
+        top: 'calc(100vh - 45vh)',
         display: 'flex',
         alignItems: 'flex-end'
       }}>
