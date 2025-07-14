@@ -12,6 +12,8 @@ import UserProgressLogger from './userProgressLogger.js';
 import recipeRouter from './routes/recipeRoutes.js';
 import progressRouter from './routes/progressRoutes.js';
 import mealPlanCalculator from './utils/mealPlanCalculator.js';
+// Импортируем функции для работы с данными пользователя из Firestore
+import { readUserData, writeUserData } from './userDataStorage.js';
 
 dotenv.config();
 
@@ -1417,7 +1419,7 @@ app.get('/api/user/nutrition/:userId', async (req, res) => {
 app.get('/api/user/quiz-answers/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        const userData = readUserData(userId);
+        const userData = await readUserData(userId);
         if (!userData.quiz) {
             return res.status(404).json({ error: 'Quiz data not found' });
         }
@@ -1433,9 +1435,9 @@ app.post('/api/user/quiz-answers/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
         const quizData = req.body;
-        let userData = readUserData(userId);
+        let userData = await readUserData(userId);
         userData.quiz = quizData;
-        writeUserData(userId, userData);
+        await writeUserData(userId, userData);
         res.json({ success: true });
     } catch (error) {
         console.error('Error saving user quiz answers:', error);
@@ -1443,18 +1445,3 @@ app.post('/api/user/quiz-answers/:userId', async (req, res) => {
     }
 });
 
-// --- Универсальный путь к файлу пользователя ---
-function getUserDataPath(userId) {
-  return path.join(__dirname, 'backup_files', 'users', `${userId}.json`);
-}
-function readUserData(userId) {
-  const file = getUserDataPath(userId);
-  if (fs.existsSync(file)) {
-    return JSON.parse(fs.readFileSync(file, 'utf-8'));
-  }
-  return { userId };
-}
-function writeUserData(userId, data) {
-  const file = getUserDataPath(userId);
-  fs.writeFileSync(file, JSON.stringify(data, null, 2), 'utf-8');
-}

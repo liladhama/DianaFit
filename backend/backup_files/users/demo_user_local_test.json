@@ -14,6 +14,69 @@
     "diet_flags": "fish",
     "userId": "demo_user_local_test"
   },
+  "dailyProgress": {
+    "2025-07-14": {
+      "ate": false,
+      "workout": false,
+      "tasks": [
+        {
+          "name": "Динамическая планка",
+          "type": "workout",
+          "done": null
+        },
+        {
+          "name": "Скручивания лёжа",
+          "type": "workout",
+          "done": true
+        },
+        {
+          "name": "Прыгающий джек",
+          "type": "workout",
+          "done": true
+        },
+        {
+          "name": "Приседания широкой постановкой",
+          "type": "workout",
+          "done": true
+        },
+        {
+          "name": "Завтрак",
+          "type": "meal",
+          "done": null
+        },
+        {
+          "name": "Перекус",
+          "type": "meal",
+          "done": null
+        },
+        {
+          "name": "Обед",
+          "type": "meal",
+          "done": null
+        },
+        {
+          "name": "Полдник",
+          "type": "meal",
+          "done": null
+        },
+        {
+          "name": "Ужин",
+          "type": "meal",
+          "done": null
+        },
+        {
+          "name": "Шаги",
+          "type": "steps",
+          "done": true,
+          "walking_minutes": 90,
+          "steps_estimated": 10440,
+          "goal": 10000,
+          "status": "complete"
+        }
+      ],
+      "updatedAt": "2025-07-14T12:17:34.526Z"
+    }
+  },
   "programData": {
     "programId": "program_demo_user_local_test_1752481602989",
     "userId": "demo_user_local_test",
@@ -2242,5 +2305,5 @@
     "type": "monthly",
     "createdAt": "2025-07-14T08:26:42.989Z"
   },
-  "lastUpdate": "2025-07-14T08:26:42.998Z"
+  "lastUpdate": "2025-07-14T12:17:34.530Z"
 }
