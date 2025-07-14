@@ -185,6 +185,8 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
             Оплатить 999 ₽
           </div>
         </button>
+        {/* Безопасный отступ под кнопкой для любых устройств */}
+        <div style={{ minHeight: '60px' }} />
       </div>
 
       {/* Изображение Дианы внизу на всю страницу с гарантированным отступом от кнопки */}
@@ -196,10 +198,10 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
         overflow: 'hidden',
         zIndex: 1,
         pointerEvents: 'none',
-        // Всегда минимум 32px от кнопки
         bottom: 0,
         display: 'flex',
-        alignItems: 'flex-end'
+        alignItems: 'flex-end',
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 32px)'
       }}>
         <img 
           src={dianaPayment} 
