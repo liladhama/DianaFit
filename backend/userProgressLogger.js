@@ -1,27 +1,10 @@
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+import { readUserData, writeUserData } from './userDataStorage.js';
+
 
 class UserProgressLogger {
     constructor(userId) {
         this.userId = userId;
-        this.logPath = path.join(process.cwd(), 'backup_files', 'users');
-        console.log('[DIAGNOSTIC] process.cwd():', process.cwd());
-        console.log('[DIAGNOSTIC] logPath:', this.logPath);
-        this.ensureLogDirectory();
-    }
-
-    ensureLogDirectory() {
-        if (!fs.existsSync(this.logPath)) {
-            fs.mkdirSync(this.logPath, { recursive: true });
-        }
-    }
-
-    getUserLogPath() {
-        // Универсальный файл пользователя
-        return path.join(this.logPath, `${this.userId}.json`);
     }
 
     // Логирование диалога с ИИ
@@ -211,26 +194,11 @@ class UserProgressLogger {
     }
 
     // Загрузка лога с дополнительными проверками
-    loadLog() {
-        const logPath = this.getUserLogPath();
-        let existing = {};
-        if (fs.existsSync(logPath)) {
-            try {
-                const content = fs.readFileSync(logPath, 'utf8');
-                if (content && content.trim() !== '') {
-                    existing = JSON.parse(content);
-                }
-            } catch (e) {
-                console.error('Ошибка загрузки лога:', e);
-            }
-        }
-        
-        // ИСПРАВЛЕНО: не перезаписываем файл, если он существует и содержит данные
+    async loadLog() {
+        let existing = await readUserData(this.userId);
         if (!existing.dailyProgress) {
             existing.dailyProgress = {};
         }
-        
-        // Инициализируем поля только если их нет
         if (!('workouts' in existing)) existing.workouts = 0;
         if (!('nutrition' in existing)) existing.nutrition = 0;
         if (!('details' in existing)) {
@@ -241,51 +209,18 @@ class UserProgressLogger {
                 improvements: { weekOverWeek: 0, trend: 'up' }
             };
         }
-        
         return existing;
     }
 
     // Сохранение лога с атомарной записью
     async saveLog(log) {
-        const logPath = this.getUserLogPath();
-        const tmpPath = logPath + '.tmp';
-        const backupPath = logPath + '.bak';
-
-        // КРИТИЧЕСКОЕ ИСПРАВЛЕНИЕ: загружаем существующий файл и сохраняем все поля
-        let existing = {};
-        if (fs.existsSync(logPath)) {
-            try {
-                const content = fs.readFileSync(logPath, 'utf8');
-                if (content && content.trim() !== '') {
-                    existing = JSON.parse(content);
-                }
-            } catch (e) {
-                console.error('Ошибка загрузки существующего файла:', e);
-                // Делаем резервную копию битого файла
-                try {
-                    fs.copyFileSync(logPath, backupPath);
-                } catch (copyErr) {
-                    console.error('Ошибка резервного копирования битого файла:', copyErr);
-                }
-            }
-        }
-
-        // Объединяем данные - сохраняем ВСЕ поля из существующего файла
+        let existing = await readUserData(this.userId);
         const finalLog = {
-            ...existing,  // Сохраняем все существующие поля (quiz, program, programData, etc.)
-            ...log,       // Обновляем только переданные поля
+            ...existing,
+            ...log,
             lastUpdate: new Date().toISOString()
         };
-
-        const jsonData = JSON.stringify(finalLog, null, 2);
-        // Атомарная запись: сначала во временный файл, затем rename
-        try {
-            await fs.promises.writeFile(tmpPath, jsonData, 'utf8');
-            fs.renameSync(tmpPath, logPath);
-        } catch (err) {
-            console.error('Ошибка атомарной записи лога:', err);
-            // В случае ошибки — не трогаем основной файл
-        }
+        await writeUserData(this.userId, finalLog);
     }
 }
 
