@@ -18,6 +18,23 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
   const messagesEndRef = useRef(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
 
+  // Инициализация Telegram WebApp
+  useEffect(() => {
+    console.log('🔍 Initializing Telegram WebApp...');
+    
+    if (window.Telegram?.WebApp) {
+      console.log('📱 Telegram WebApp found, initializing...');
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+      
+      console.log('🔍 Telegram WebApp initData:', window.Telegram.WebApp.initData);
+      console.log('🔍 Telegram WebApp initDataUnsafe:', window.Telegram.WebApp.initDataUnsafe);
+      console.log('🔍 Telegram WebApp user:', window.Telegram.WebApp.initDataUnsafe?.user);
+    } else {
+      console.log('❌ Telegram WebApp not found');
+    }
+  }, []);
+
   // Система лимитов только для премиум пользователей
   const getToday = () => new Date().toDateString();
   const getTodayUsage = () => {
@@ -76,9 +93,13 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
 
     try {
       // Получаем userId из Telegram WebApp
-      const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
+      const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+      const userId = tgUser?.id || tgUser?.id?.toString() || 'demo_user_local_test';
+      
       console.log('🔍 DianaChat userId:', userId);
-      console.log('🔍 Telegram WebApp data:', window.Telegram?.WebApp?.initDataUnsafe);
+      console.log('🔍 Telegram WebApp available:', !!window.Telegram?.WebApp);
+      console.log('🔍 Telegram user data:', tgUser);
+      console.log('🔍 Full initDataUnsafe:', window.Telegram?.WebApp?.initDataUnsafe);
       
       const response = await fetch(`${API_URL}/api/chat-diana`, {
         method: 'POST',

@@ -271,6 +271,8 @@ app.post('/api/chat-diana', async (req, res) => {
   try {
     console.log(`\n===== ЗАПРОС ЧАТА С ДИАНОЙ =====`);
     console.log(`Пользователь: ${userId}`);
+    console.log(`Тип userId: ${typeof userId}`);
+    console.log(`userId === 'demo_user_local_test': ${userId === 'demo_user_local_test'}`);
     console.log(`Сообщение: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`);
     console.log(`Время запроса: ${new Date().toISOString()}`);
     
@@ -282,7 +284,8 @@ app.post('/api/chat-diana', async (req, res) => {
       quizGoal: userData.quiz?.goal,
       quizCalories: userData.quiz?.calories || 'не указано',
       hasChatHistory: !!userData.chatHistory,
-      chatHistoryLength: userData.chatHistory?.length || 0
+      chatHistoryLength: userData.chatHistory?.length || 0,
+      source: userId === 'demo_user_local_test' ? 'ЛОКАЛЬНЫЙ ФАЙЛ' : 'FIRESTORE'
     });
     
     if (!userData.chatHistory) {
