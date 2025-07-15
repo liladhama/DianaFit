@@ -104,9 +104,18 @@
           "name": "Ужин",
           "type": "meal",
           "done": null
+        },
+        {
+          "name": "Шаги",
+          "type": "steps",
+          "done": true,
+          "walking_minutes": 90,
+          "steps_estimated": 10440,
+          "goal": 10000,
+          "status": "complete"
         }
       ],
-      "updatedAt": "2025-07-15T08:46:28.947Z"
+      "updatedAt": "2025-07-15T08:47:35.872Z"
     }
   },
   "programData": {
@@ -2337,17 +2346,5 @@
     "type": "monthly",
     "createdAt": "2025-07-14T08:26:42.989Z"
   },
-  "chatHistory": [
-    {
-      "role": "user",
-      "content": "Привет",
-      "timestamp": "2025-07-15T08:46:36.608Z"
-    },
-    {
-      "role": "assistant",
-      "content": "Привет, мчмчсмчсм! Как дела с тренировками? У тебя цель набрать мышечную массу. Твоя норма калорий в день — 1890 ккал. Попробую подготовить для тебя план питания, чтобы ты мог набрать массу.",
-      "timestamp": "2025-07-15T08:46:36.608Z"
-    }
-  ],
-  "lastUpdate": "2025-07-15T08:46:36.609Z"
+  "lastUpdate": "2025-07-15T08:47:35.873Z"
 }

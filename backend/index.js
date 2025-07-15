@@ -276,6 +276,15 @@ app.post('/api/chat-diana', async (req, res) => {
     
     // Получаем историю пользователя из Firestore
     let userData = await readUserData(userId);
+    console.log(`🔍 Данные пользователя для ${userId}:`, {
+      hasQuiz: !!userData.quiz,
+      quizName: userData.quiz?.name,
+      quizGoal: userData.quiz?.goal,
+      quizCalories: userData.quiz?.calories || 'не указано',
+      hasChatHistory: !!userData.chatHistory,
+      chatHistoryLength: userData.chatHistory?.length || 0
+    });
+    
     if (!userData.chatHistory) {
       userData.chatHistory = [];
     }
