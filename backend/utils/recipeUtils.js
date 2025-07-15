@@ -87,6 +87,24 @@ function normalizeIngredientUnits(ingredient) {
     let unit = ingredient.unit;
     let amount = Number(ingredient.amount);
     
+    // Округляем яйца до целого (любая форма слова, unit 'шт')
+    if (unit === 'шт' && /(яйцо|яйца|яиц|яйц|egg)/i.test(name)) {
+        return { ...ingredient, amount: Math.round(amount), unit };
+    }
+    // Овощи, фрукты, зелень: если unit 'шт', переводим в граммы и округляем
+    // Лаваш: минимум 1 шт
+    if (ingredient.unit === 'шт' && /лаваш/i.test(ingredient.name)) {
+        if (ingredient.amount < 1) ingredient.amount = 1;
+    }
+    if (unit === 'шт' && GRAM_INGREDIENTS.some(key => name.includes(key))) {
+        const typicalWeight = TYPICAL_WEIGHTS[name] || TYPICAL_WEIGHTS[GRAM_INGREDIENTS.find(key => name.includes(key))] || 50;
+        const grams = Math.round(amount * typicalWeight);
+        return { ...ingredient, amount: grams, unit: 'г' };
+    }
+    // Овощи, фрукты, зелень: если unit 'г', всегда округлять до целого
+    if (unit === 'г' && GRAM_INGREDIENTS.some(key => name.includes(key))) {
+        return { ...ingredient, amount: Math.round(amount), unit };
+    }
     // Отладочный лог для хлеба
     if (name.includes('хлеб')) {
         console.log('🍞 Хлеб найден:', { name, unit, amount });

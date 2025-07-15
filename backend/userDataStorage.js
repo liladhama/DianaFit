@@ -125,6 +125,7 @@ export async function writeUserData(userId, data) {
     hasDailyProgress: !!data.dailyProgress,
     hasProgramData: !!data.programData,
     hasDialogHistory: !!data.dialogHistory,
+    hasChatHistory: !!data.chatHistory,
     hasProfileChanges: !!data.profileChanges,
     hasPlanExecution: !!data.planExecution
   });
@@ -150,6 +151,7 @@ export async function writeUserData(userId, data) {
     dailyProgress: data.dailyProgress,
     programData: data.programData,
     dialogHistory: data.dialogHistory,
+    chatHistory: data.chatHistory,
     profileChanges: data.profileChanges,
     planExecution: data.planExecution,
     lastUpdate: new Date().toISOString()
@@ -161,6 +163,7 @@ export async function writeUserData(userId, data) {
     hasDailyProgress: !!saveData.dailyProgress,
     hasProgramData: !!saveData.programData,
     hasDialogHistory: !!saveData.dialogHistory,
+    hasChatHistory: !!saveData.chatHistory,
     hasProfileChanges: !!saveData.profileChanges,
     hasPlanExecution: !!saveData.planExecution,
     lastUpdate: saveData.lastUpdate

@@ -75,6 +75,9 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
     setDailyUsage(prev => ({ ...prev, count: prev.count + 1 }));
 
     try {
+      // Получаем userId из Telegram WebApp
+      const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
+      
       const response = await fetch(`${API_URL}/api/chat-diana`, {
         method: 'POST',
         headers: {
@@ -82,6 +85,7 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
         },
         body: JSON.stringify({
           message: inputText,
+          userId: userId,
           conversation: messages
         })
       });

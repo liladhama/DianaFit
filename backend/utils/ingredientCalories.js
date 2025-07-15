@@ -6,7 +6,7 @@ export const ingredientCalories = {
   "миндаль":              { calories: 579,  protein: 21.2, fat: 49.9, carbs: 21.6 },
   "мед":                  { calories: 304,  protein: 0.3,  fat: 0,    carbs: 82.4 },
   "сироп агавы":          { calories: 310,  protein: 0,    fat: 0,    carbs: 76.0 },
-  "яйца":                 { calories: 155,  protein: 13.0, fat: 11.0, carbs: 1.1,  weightPerUnit: 50 },
+  "яйцо":                 { calories: 155,  protein: 13.0, fat: 11.0, carbs: 1.1,  weightPerUnit: 50 },
   "яйцо пашот":           { calories: 155,  protein: 13.0, fat: 11.0, carbs: 1.1,  weightPerUnit: 50 },
   "молоко 1%":            { calories: 42,   protein: 3.4,  fat: 1.0,  carbs: 5.0 },
   "творог 2%":            { calories: 85,   protein: 11.1, fat: 2.0,  carbs: 3.6 },

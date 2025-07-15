@@ -36,7 +36,7 @@ export const nutritionData = {
     "Сыр твердый":         { calories: 356, protein: 25.0, fat: 27.0, carbs: 1.3 },
     "Моцарелла":           { calories: 280, protein: 28.0, fat: 17.0, carbs: 3.1 },
 
-    // Яйца
+    // Яйцо
     "Яйцо":                { calories: 155, protein: 12.6, fat: 10.6, carbs: 1.1 }, // на 100 г
     "Яйцо (1 шт)":         { calories: 78,  protein: 6.3,  fat: 5.3,  carbs: 0.6 },
 
@@ -98,7 +98,7 @@ export function convertToGrams(amount, unit, productName) {
         "Картофель": 150, // 1 шт = 150г
         "Лук репчатый": 130, // 1 шт = 130г
         "Яйцо": 50, // 1 шт = 50г
-        "Яйца": 50, // 1 шт = 50г
+        "Яйцо": 50, // 1 шт = 50г
         "Банан": 120, // 1 шт = 120г
         "Яблоки": 180, // 1 шт = 180г
         "Апельсины": 200, // 1 шт = 200г

@@ -74,7 +74,39 @@
           "status": "complete"
         }
       ],
-      "updatedAt": "2025-07-14T12:17:34.526Z"
+      "updatedAt": "2025-07-14T13:12:24.832Z"
+    },
+    "2025-07-15": {
+      "ate": false,
+      "workout": false,
+      "tasks": [
+        {
+          "name": "Завтрак",
+          "type": "meal",
+          "done": null
+        },
+        {
+          "name": "Перекус",
+          "type": "meal",
+          "done": null
+        },
+        {
+          "name": "Обед",
+          "type": "meal",
+          "done": null
+        },
+        {
+          "name": "Полдник",
+          "type": "meal",
+          "done": null
+        },
+        {
+          "name": "Ужин",
+          "type": "meal",
+          "done": null
+        }
+      ],
+      "updatedAt": "2025-07-15T08:46:28.947Z"
     }
   },
   "programData": {
@@ -2305,5 +2337,17 @@
     "type": "monthly",
     "createdAt": "2025-07-14T08:26:42.989Z"
   },
-  "lastUpdate": "2025-07-14T12:17:34.530Z"
+  "chatHistory": [
+    {
+      "role": "user",
+      "content": "Привет",
+      "timestamp": "2025-07-15T08:46:36.608Z"
+    },
+    {
+      "role": "assistant",
+      "content": "Привет, мчмчсмчсм! Как дела с тренировками? У тебя цель набрать мышечную массу. Твоя норма калорий в день — 1890 ккал. Попробую подготовить для тебя план питания, чтобы ты мог набрать массу.",
+      "timestamp": "2025-07-15T08:46:36.608Z"
+    }
+  ],
+  "lastUpdate": "2025-07-15T08:46:36.609Z"
 }

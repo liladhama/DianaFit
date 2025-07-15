@@ -263,16 +263,31 @@ app.post('/ask', async (req, res) => {
 
 // Новый роут для чата с Дианой
 app.post('/api/chat-diana', async (req, res) => {
-  const { message, context, userSettings, userHistory } = req.body;
-  // Поддерживаем как context, так и conversation для совместимости
-  const chatContext = context || (conversation ? JSON.stringify(conversation.slice(-5)) : 'Начало разговора');
+  const { message, context, userSettings, userHistory, conversation, userId } = req.body;
+  
   if (!message) return res.status(400).json({ error: 'No message provided' });
+  if (!userId) return res.status(400).json({ error: 'userId is required' });
 
   try {
     console.log(`\n===== ЗАПРОС ЧАТА С ДИАНОЙ =====`);
+    console.log(`Пользователь: ${userId}`);
     console.log(`Сообщение: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`);
-    console.log(`Контекст: ${chatContext.substring(0, 50)}${chatContext.length > 50 ? '...' : ''}`);
     console.log(`Время запроса: ${new Date().toISOString()}`);
+    
+    // Получаем историю пользователя из Firestore
+    let userData = await readUserData(userId);
+    if (!userData.chatHistory) {
+      userData.chatHistory = [];
+    }
+    
+    // Берём последние 10 сообщений для контекста
+    const recentChatHistory = userData.chatHistory.slice(-10);
+    console.log(`Загружена история чата: ${recentChatHistory.length} сообщений`);
+    
+    // Формируем контекст из истории чата
+    const chatContext = recentChatHistory.length > 0 
+      ? recentChatHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n')
+      : 'Начало разговора';
     
     // Находим релевантные знания из векторной базы
     const userEmbedding = Array(1536).fill(0); // TODO: получить реальный embedding от сообщения
@@ -296,68 +311,99 @@ app.post('/api/chat-diana', async (req, res) => {
       console.log('⚠️ Продолжаем без базы знаний');
     }
     
-    const systemPrompt = `Ты — персональный ИИ-тренер Диана, эксперт по похудению и здоровому образу жизни.
+    const systemPrompt = `Ты — Диана, персональный фитнес-тренер. Ты РУССКАЯ девушка, говоришь на чистом русском языке.
 
-ВАЖНО: Отвечай ВСЕГДА в стиле и манере Дианы:
-- Используй её характерные фразы: "грубо говоря", "в принципе", "условно говоря", "смотри"  
-- Будь дружелюбной, понимающей и поддерживающей
-- Объясняй просто и доступно, без сложных терминов
-- Всегда объясняй ПОЧЕМУ что-то работает или не работает
-- Подчеркивай важность здоровых привычек и терпения
-- Предупреждай об опасности экстремальных диет и срывов
-- Говори о важности адекватного дефицита калорий (не более 10-15%)
-- Упоминай, что ниже 1400 калорий опускаться нельзя
+СТРОЖАЙШИЕ ПРАВИЛА:
+1. Говори ТОЛЬКО на правильном русском языке, без ошибок
+2. НИКОГДА не пиши [имя], [цель] или шаблоны в квадратных скобках
+3. На приветствие отвечай максимум 2 предложения
+4. НЕ предлагай планы питания на приветствие
+5. Используй ТОЛЬКО данные о калориях из анализа пользователя
 
-КЛЮЧЕВЫЕ ПРИНЦИПЫ БЖУ И ПОХУДЕНИЯ ПО ДИАНЕ:
-- Базальный метаболизм зависит от возраста, пола, роста и веса
-- Дефицит 10-15% (а не 20%) для устойчивого результата
-- Белки: 1.2-1.5 г на кг веса для строительства мышц
-- Жиры: важны для гормонов, кожи, волос — не снижать ниже нормы
-- Углеводы: минимум 120 г в день для энергии и наполнения мышц
-- Коридор ±50 ккал от целевой калорийности считается нормой
-- Поддержание БЖУ важнее для качества тела, дефицит калорий для снижения веса
+ПРАВИЛЬНЫЙ РУССКИЙ ЯЗЫК:
+- "Как дела?" (а не "Как делаешь?")
+- "Хочешь набрать мышечную массу?" (а не "Набрать мышечную массу?")
+- "Твой вес 106 кг" (а не "Теперь повесите вес")
+- Говори грамотно, как образованная русская девушка
 
-ПРАВИЛА ПО РЕЦЕПТАМ И ПИТАНИЮ:
-- Когда рекомендуешь блюда, ВСЕГДА предлагай МАКСИМАЛЬНО РАЗНООБРАЗНЫЕ варианты, опираясь на свои знания о кухнях всего мира
-- НИКОГДА не рекомендуй одинаковые источники белка в один день (например, если на завтрак был творог, предлагай на обед мясо или рыбу)
-- ОБЯЗАТЕЛЬНО предлагай разные способы приготовления одного и того же продукта (например, для курицы: запеченная, на гриле, тушеная, в соусе и т.д.)
-- Предлагай разные источники белка, углеводов и жиров, используя широкие знания о мировой кулинарии
-- Если пользователь спрашивает о рационе на день, составь план с разнообразными блюдами из разных кулинарных традиций
-- Если видишь, что пользователь повторяет одинаковые блюда, предложи интересные альтернативы с сохранением БЖУ
-- Для разнообразия используй не только знания из базы Дианы, но и свои знания о рецептах и блюдах из всего мира
+СТИЛЬ:
+- Коротко и по делу
+- Фразы: "смотри", "в принципе", "грубо говоря"
+- Дружелюбно, естественно
+- Спрашивай о делах, самочувствии, тренировках
 
-ПРИМЕРЫ ИСТОЧНИКОВ БЕЛКА, КОТОРЫЕ НУЖНО ЧЕРЕДОВАТЬ:
-1. Мясо: говядина, телятина, курица, индейка, кролик, утка, баранина (для не-вегетарианцев)
-2. Рыба: треска, лосось, тунец, форель, скумбрия, сибас, дорадо, минтай
-3. Морепродукты: креветки, мидии, кальмары, осьминог, гребешки
-4. Молочные продукты: творог, сыр, кефир, йогурт, ряженка, скир
-5. Яйца: куриные, перепелиные, яичные белки
-6. Растительные: тофу, темпе, сейтан, нут, чечевица, фасоль, киноа, грибы
+КАЛОРИИ:
+- Используй ТОЛЬКО цифры из анализа пользователя
+- НЕ выдумывай свои цифры калорий
 
-БАЗА ЗНАНИЙ ДИАНЫ (используй этот стиль и информацию):
-${dianaKnowledge.substring(0, 2000)}...
+КОГДА ПОЛЬЗОВАТЕЛЬ СПРАШИВАЕТ О ПИТАНИИ:
+- Сначала узнай его цели, вес, рост, активность
+- Потом предлагай варианты питания с разнообразными блюдами
+- Объясняй ПОЧЕМУ это работает
+- Используй знания из базы данных Дианы и свои знания о рецептах
 
-Ты помогаешь пользователям с вопросами о питании, тренировках, мотивации и здоровом образе жизни. При составлении рационов и рецептов ОБЯЗАТЕЛЬНО используй как знания Дианы для принципов БЖУ, так и свои знания о разнообразных блюдах мировой кухни.
+БАЗА ЗНАНИЙ ДИАНЫ:
+${dianaKnowledge.substring(0, 1500)}...
+
+Отвечай естественно, как живой человек. Если не знаешь точного ответа - честно скажи об этом. Помогай с мотивацией и поддержкой.`;
     
-Твой стиль общения:
-- Дружелюбный и поддерживающий
-- Профессиональный, но не формальный
-- Мотивирующий и позитивный
-- Конкретный и практичный
-    
-Используй знания из базы данных для ответов о принципах питания, а свои знания о мировой кухне для рецептов. Отвечай на русском языке.`;
+    // Анализируем данные пользователя для персонального ответа
+    const userAnalysis = analyzeUserData(userData);
+    console.log(`👤 Анализ пользователя:`, userAnalysis);
     
     const userPrompt = `Вопрос пользователя: ${message}
+
+ВАЖНАЯ ИНФОРМАЦИЯ О ПОЛЬЗОВАТЕЛЕ:
+${userAnalysis}
 
 Контекст разговора: ${chatContext}
 
 Релевантные знания из базы:
-${relevantChunks.map(c => c.text).join('\n---\n')}`;
+${relevantChunks.map(c => c.text).join('\n---\n')}
+
+ИНСТРУКЦИЯ:
+- Говори на чистом русском языке, как образованная русская девушка
+- Используй ТОЛЬКО реальные данные пользователя из анализа
+- НА ПРИВЕТСТВИЕ: "Привет, [имя]! Как дела с [тренировками/целью]?"
+- ЗАПРЕЩЕНЫ квадратные скобки в финальном ответе
+- Максимум 2 предложения на приветствие
+
+ПРИМЕРЫ ПРАВИЛЬНОЙ РЕЧИ:
+- "Привет, мчмчсмчсм! Как дела с тренировками?"
+- "Как успехи с набором мышечной массы?"
+- "Твоя норма 1890 ккал в день"
+- "Смотри, у тебя цель набрать массу"`;
 
     const aiResponse = await callMistralAI([
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ]);
+    
+    // Сохраняем сообщение пользователя и ответ Дианы в историю
+    const timestamp = new Date().toISOString();
+    userData.chatHistory.push({
+      role: 'user',
+      content: message,
+      timestamp: timestamp
+    });
+    userData.chatHistory.push({
+      role: 'assistant',
+      content: aiResponse,
+      timestamp: timestamp
+    });
+    
+    // Ограничиваем историю чата 50 сообщениями (25 пар)
+    if (userData.chatHistory.length > 50) {
+      userData.chatHistory = userData.chatHistory.slice(-50);
+    }
+    
+    // Сохраняем обновленную историю в Firestore
+    console.log(`💾 Сохраняем историю чата для пользователя ${userId}...`);
+    console.log(`💾 Размер chatHistory перед сохранением: ${userData.chatHistory.length} сообщений`);
+    console.log(`💾 Последние 2 сообщения:`, userData.chatHistory.slice(-2));
+    
+    await writeUserData(userId, userData);
+    console.log(`✅ История чата сохранена для пользователя ${userId}`);
     
     res.json({ response: aiResponse });
   } catch (e) {
@@ -377,6 +423,33 @@ ${relevantChunks.map(c => c.text).join('\n---\n')}`;
     try {
       const fallbackResponse = await getFallbackResponse(message, errorType);
       console.log('Используем резервный ответ из-за ошибки API');
+      
+      // Сохраняем сообщение пользователя и резервный ответ в историю
+      const timestamp = new Date().toISOString();
+      userData.chatHistory.push({
+        role: 'user',
+        content: message,
+        timestamp: timestamp
+      });
+      userData.chatHistory.push({
+        role: 'assistant',
+        content: fallbackResponse,
+        timestamp: timestamp
+      });
+      
+      // Ограничиваем историю чата 50 сообщениями (25 пар)
+      if (userData.chatHistory.length > 50) {
+        userData.chatHistory = userData.chatHistory.slice(-50);
+      }
+      
+      // Сохраняем обновленную историю в Firestore
+      console.log(`💾 Сохраняем историю чата (fallback) для пользователя ${userId}...`);
+      console.log(`💾 Размер chatHistory перед сохранением: ${userData.chatHistory.length} сообщений`);
+      console.log(`💾 Последние 2 сообщения:`, userData.chatHistory.slice(-2));
+      
+      await writeUserData(userId, userData);
+      console.log(`✅ История чата (fallback) сохранена для пользователя ${userId}`);
+      
       res.json({ response: fallbackResponse });
     } catch (fallbackError) {
       console.error('Ошибка при получении резервного ответа:', fallbackError);
@@ -830,7 +903,7 @@ function ensureDietDiversity(mealPlan) {
             meal.meal.ingredients.forEach(ingredient => {
               // Проверяем, является ли ингредиент источником белка
               const proteinKeywords = ['курица', 'индейка', 'говядина', 'телятина', 'мясо', 'творог', 'рыба', 
-                                       'треска', 'лосось', 'креветки', 'яйцо', 'яйца', 'тунец', 'форель'];
+                                       'треска', 'лосось', 'креветки', 'яйцо', 'яйцо', 'тунец', 'форель'];
               
               for (const keyword of proteinKeywords) {
                 if (ingredient.name.toLowerCase().includes(keyword)) {
@@ -1444,4 +1517,97 @@ app.post('/api/user/quiz-answers/:userId', async (req, res) => {
         res.status(500).json({ error: 'Internal server error' });
     }
 });
+
+// Функция для расчета базального метаболизма (BMR)
+function calculateBMR(quiz) {
+  const { weight_kg, height_cm, age, sex } = quiz;
+  
+  if (!weight_kg || !height_cm || !age) {
+    return 0;
+  }
+  
+  // Формула Миффлина-Сан Жеора
+  let bmr;
+  if (sex === 'male') {
+    bmr = 10 * weight_kg + 6.25 * height_cm - 5 * age + 5;
+  } else {
+    bmr = 10 * weight_kg + 6.25 * height_cm - 5 * age - 161;
+  }
+  
+  return Math.round(bmr);
+}
+
+// Функция для анализа данных пользователя
+function analyzeUserData(userData) {
+  let analysis = [];
+  
+  // Анализ квиза
+  if (userData.quiz) {
+    const quiz = userData.quiz;
+    analysis.push(`👤 ИМЯ ПОЛЬЗОВАТЕЛЯ: ${quiz.name || 'Имя не указано'} (ОБЯЗАТЕЛЬНО ИСПОЛЬЗУЙ В ОТВЕТЕ)`);
+    analysis.push(`⚖️ Пол: ${quiz.sex === 'male' ? 'мужской' : 'женский'}, возраст: ${quiz.age || 'не указан'}`);
+    analysis.push(`📏 Рост: ${quiz.height_cm || 'не указан'} см, вес: ${quiz.weight_kg || 'не указан'} кг`);
+    
+    if (quiz.goal) {
+      const goals = {
+        1: 'похудеть',
+        2: 'поддерживать вес',
+        3: 'набрать мышечную массу'
+      };
+      analysis.push(`🎯 Цель: ${goals[quiz.goal] || 'не указана'}`);
+    }
+    
+    analysis.push(`🏃 Активность: ${quiz.activity_coef || 'не указана'}, тренировки: ${quiz.workouts_per_week || 0} раз в неделю`);
+    analysis.push(`🏋️ Уровень: ${quiz.training_level || 'не указан'}, место: ${quiz.gym_or_home === 'home' ? 'дома' : 'зал'}`);
+    
+    // Расчет калорий на основе данных квиза
+    if (quiz.weight_kg && quiz.height_cm && quiz.age) {
+      const bmr = calculateBMR(quiz);
+      const dailyCalories = Math.round(bmr * (quiz.activity_coef || 1.2));
+      const targetCalories = Math.round(dailyCalories * 0.85); // дефицит 15%
+      analysis.push(`🔥 Базовая норма калорий: ${dailyCalories} ккал`);
+      analysis.push(`🎯 Целевые калории (с дефицитом): ${targetCalories} ккал - ЭТО НОРМА В ПРИЛОЖЕНИИ`);
+    }
+    
+    if (quiz.diet_flags) {
+      analysis.push(`🍽️ Диета: ${quiz.diet_flags}`);
+    }
+  } else {
+    analysis.push(`❌ Квиз не пройден - данные о пользователе отсутствуют`);
+  }
+  
+  // Анализ прогресса
+  if (userData.dailyProgress) {
+    const progressDays = Object.keys(userData.dailyProgress);
+    const recentDays = progressDays.slice(-7); // последние 7 дней
+    
+    if (recentDays.length > 0) {
+      analysis.push(`📊 Активность за последние ${recentDays.length} дней:`);
+      
+      let workoutCount = 0;
+      let mealCount = 0;
+      
+      recentDays.forEach(day => {
+        const dayData = userData.dailyProgress[day];
+        if (dayData.tasks) {
+          workoutCount += dayData.tasks.filter(t => t.type === 'workout' && t.done).length;
+          mealCount += dayData.tasks.filter(t => t.type === 'meal' && t.done).length;
+        }
+      });
+      
+      analysis.push(`💪 Выполнено тренировок: ${workoutCount}`);
+      analysis.push(`🍽️ Выполнено приемов пищи: ${mealCount}`);
+    }
+  }
+  
+  // Анализ истории чата
+  if (userData.chatHistory && userData.chatHistory.length > 0) {
+    const lastMessages = userData.chatHistory.slice(-4);
+    analysis.push(`💬 Последние темы разговора: ${lastMessages.filter(m => m.role === 'user').map(m => m.content.substring(0, 30)).join(', ')}`);
+  } else {
+    analysis.push(`💬 Первое общение с Дианой`);
+  }
+  
+  return analysis.join('\n');
+}
 

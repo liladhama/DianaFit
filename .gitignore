@@ -19,5 +19,6 @@ logs
 npm-debug.log*
 
 # OS
+.mistral.key
 Thumbs.db
 backend/dianafit-firebase-adminsdk-fbsvc-7953c18efc.json
