@@ -1,4 +1,7 @@
 import dotenv from 'dotenv';
+import express from 'express';
+import path from 'path';
+import fs from 'fs';
 import fetch from 'node-fetch';
 import programApi from './programApi.js';
 import cors from 'cors';
@@ -1306,4 +1309,10 @@ app.get('/api/premium-status/:userId', async (req, res) => {
     console.error('❌ Ошибка проверки премиум-статуса:', error);
     res.status(500).json({ error: 'Failed to check premium status' });
   }
+});
+
+// Запуск сервера
+app.listen(PORT, () => {
+  console.log(`🚀 Сервер запущен на порту ${PORT}`);
+  console.log(`📊 Backend работает на http://localhost:${PORT}`);
 });

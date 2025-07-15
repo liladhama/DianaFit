@@ -50,7 +50,7 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
   };
 
   const [dailyUsage, setDailyUsage] = useState(getTodayUsage());
-  const maxDailyQuestions = 5; // 5 запросов для премиум пользователей
+  const maxDailyQuestions = 10; // 10 запросов для премиум пользователей
   const canSendMessage = isPremium && dailyUsage.count < maxDailyQuestions;
 
   useEffect(() => {

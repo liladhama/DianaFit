@@ -23,7 +23,7 @@ try {
     console.log('[Firestore] Используется ключ из переменной окружения');
   } else {
     console.log('[Firestore] Используется локальный файл ключа');
-    serviceAccount = JSON.parse(fs.readFileSync(path.join(__dirname, 'dianafit-firebase-adminsdk-fbsvc-e8d8736690.json'), 'utf-8'));
+    serviceAccount = JSON.parse(fs.readFileSync(path.join(__dirname, 'dianafit-firebase-adminsdk-fbsvc-7953c18efc.json'), 'utf-8'));
   }
   if (!adm.apps.length) {
     adm.initializeApp({
