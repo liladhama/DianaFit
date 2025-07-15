@@ -357,8 +357,8 @@ app.post('/api/chat-diana', async (req, res) => {
 
 НИКОГДА НЕ ВЫДУМЫВАЙ данные о том, что пользователь якобы делал тренировки или что-то ел.
 
-БАЗА ЗНАНИЙ ДИАНЫ:
-${dianaKnowledge}
+БАЗА ЗНАНИЙ ДИАНЫ (краткая версия):
+${dianaKnowledge.substring(0, 1000)}...
 
 Используй знания из базы для ответов на вопросы о фитнесе и питании.
 
@@ -368,13 +368,27 @@ ${dianaKnowledge}
     const userAnalysis = analyzeUserData(userData);
     console.log(`👤 Анализ пользователя:`, userAnalysis);
     
+    // Сокращаем историю чата если она слишком длинная
+    let shortenedChatContext = chatContext;
+    if (chatContext.length > 1000) {
+      shortenedChatContext = chatContext.substring(chatContext.length - 1000);
+      console.log(`⚠️ История чата сокращена с ${chatContext.length} до ${shortenedChatContext.length} символов`);
+    }
+    
+    // Сокращаем анализ пользователя если он слишком длинный
+    let shortenedUserAnalysis = userAnalysis;
+    if (userAnalysis.length > 1500) {
+      shortenedUserAnalysis = userAnalysis.substring(0, 1500) + '...';
+      console.log(`⚠️ Анализ пользователя сокращен с ${userAnalysis.length} до ${shortenedUserAnalysis.length} символов`);
+    }
+    
     const userPrompt = `Пользователь: ${message}
 
 Данные о пользователе:
-${userAnalysis}
+${shortenedUserAnalysis}
 
 История разговора:
-${chatContext}
+${shortenedChatContext}
 
 ВАЖНО: 
 - Ты русская девушка, говори правильно по-русски
@@ -397,8 +411,21 @@ ${chatContext}
 
 Отвечай кратко, естественно и БЕЗ ПОВТОРОВ, как живая русская девушка.`;
 
+    // Проверяем размер промпта
+    const totalPromptLength = systemPrompt.length + userPrompt.length;
+    console.log(`📏 Размер промпта: ${totalPromptLength} символов`);
+    
+    // Если промпт слишком большой, сокращаем базу знаний еще больше
+    let finalSystemPrompt = systemPrompt;
+    if (totalPromptLength > 25000) {
+      console.log(`⚠️ Промпт слишком большой (${totalPromptLength} символов), сокращаем базу знаний`);
+      const shortenedKnowledge = dianaKnowledge.substring(0, 800);
+      finalSystemPrompt = systemPrompt.replace(dianaKnowledge.substring(0, 2000), shortenedKnowledge);
+      console.log(`📏 Новый размер промпта: ${finalSystemPrompt.length + userPrompt.length} символов`);
+    }
+
     const aiResponse = await callMistralAI([
-      { role: 'system', content: systemPrompt },
+      { role: 'system', content: finalSystemPrompt },
       { role: 'user', content: userPrompt }
     ]);
     
