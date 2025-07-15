@@ -1,7 +1,3 @@
-import express from 'express';
-import fs from 'fs';
-import path from 'path';
-import { loadKnowledgeBase, findRelevantChunks } from './knowledgeBase.js';
 import dotenv from 'dotenv';
 import fetch from 'node-fetch';
 import programApi from './programApi.js';
@@ -43,7 +39,6 @@ app.use('/api/progress', progressRouter);
 app.get('/', (req, res) => {
   res.send('Backend работает!');
 });
-
 // Получить конфиг слайдов теста
 app.get('/api/quiz-config', (req, res) => {
   const configPath = path.join(process.cwd(), 'backend', 'quiz-config.json');
@@ -60,7 +55,6 @@ app.post('/api/calculate-plan', async (req, res) => {
   if (!userId) {
     return res.status(400).json({ error: 'userId (Telegram) is required' });
   }
-  
   let saveResult = null;
   try {
     // ИСПРАВЛЕНО: используем UserProgressLogger вместо старых функций
@@ -75,19 +69,10 @@ app.post('/api/calculate-plan', async (req, res) => {
       weeklySchedule: answers.weeklySchedule,
       weeklyPlan: answers.weeklyPlan
     };
-    try {
-      await logger.saveLog(updatedData);
-      saveResult = { success: true };
-      console.log('[CALCULATE-PLAN] Сохранены данные квиза для пользователя:', userId);
-    } catch (saveErr) {
-      saveResult = { success: false, error: saveErr.message };
-      console.error('Ошибка сохранения квиза:', saveErr);
-    }
-  } catch (e) {
-    console.error('Ошибка сохранения квиза:', e);
-    saveResult = { success: false, error: e.message };
-  }
-  try {
+    await logger.saveLog(updatedData);
+    saveResult = { success: true };
+    console.log('[CALCULATE-PLAN] Сохранены данные квиза для пользователя:', userId);
+
     // 1. Расчет КБЖУ пользователя
     const macros = mealPlanCalculator.calculateUserMacros(answers);
     // 2. Распределение калорий по приемам пищи
@@ -126,6 +111,8 @@ app.post('/api/calculate-plan', async (req, res) => {
       saveResult
     });
   } catch (e) {
+    saveResult = { success: false, error: e.message };
+    console.error('Ошибка сохранения квиза или генерации плана:', e);
     res.status(500).json({ error: 'Ошибка генерации плана', details: e.message });
   }
 });
@@ -187,6 +174,8 @@ async function callMistralAI(messages) {
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
+        model: 'mistral-medium',
+        messages,
         temperature: 0.6,  // Увеличиваем температуру для большего разнообразия
         max_tokens: 2048   // Увеличиваем максимальное количество токенов для более подробных ответов
       })
@@ -263,43 +252,53 @@ app.post('/ask', async (req, res) => {
 
 // Новый роут для чата с Дианой
 app.post('/api/chat-diana', async (req, res) => {
-  const { message, context, userSettings, userHistory, conversation, userId } = req.body;
-  
-  if (!message) return res.status(400).json({ error: 'No message provided' });
-  if (!userId) return res.status(400).json({ error: 'userId is required' });
+  const { message, userId } = req.body;
+  if (!message || !userId) return res.status(400).json({ error: 'No message or userId provided' });
+
+  // Загружаем данные пользователя (включая историю диалога)
+  let userData = await readUserData(userId);
+  if (!userData.dialogHistory) userData.dialogHistory = [];
+
+  // Формируем контекст для ИИ из последних 5 сообщений
+  const lastMessages = userData.dialogHistory.slice(-5);
+  let chatContext = lastMessages.map(m => `${m.role}: ${m.text}`).join('\n');
+
+  // Фильтрация приветствий и запросов рациона
+  // ...existing code...
+  // ...existing code...
+  // ...existing code...
+  if (isGreeting && !isDietRequest) {
+    // Сохраняем сообщение пользователя и ответ Дианы в историю
+    userData.dialogHistory.push({ role: 'user', text: message, timestamp: new Date().toISOString() });
+    userData.dialogHistory.push({ role: 'assistant', text: 'Привет! Я Диана, твой тренер. Как настроение? Чем могу помочь сегодня?', timestamp: new Date().toISOString() });
+    await writeUserData(userId, userData);
+    return res.json({
+      response: 'Привет! Я Диана, твой тренер. Как настроение? Чем могу помочь сегодня?'
+    });
+  }
+
+  // Фильтрация приветствий и запросов рациона
+  const greetings = [
+    'привет', 'здравствуйте', 'добрый день', 'добрый вечер', 'доброе утро', 'хай', 'hello', 'hi'
+  ];
+  const lowerMsg = (message || '').trim().toLowerCase();
+  const isGreeting = greetings.some(g => lowerMsg === g || lowerMsg.startsWith(g + ' '));
+  const dietKeywords = [
+    'рацион', 'питание', 'меню', 'рецепт', 'что поесть', 'подскажи рацион', 'дай рацион', 'план питания', 'еда', 'прием пищи', 'завтрак', 'обед', 'ужин'
+  ];
+  const isDietRequest = dietKeywords.some(k => lowerMsg.includes(k));
+  if (isGreeting && !isDietRequest) {
+    // Только приветствие — не выдаём рацион
+    return res.json({
+      response: 'Привет! Я Диана, твой тренер. Как настроение? Чем могу помочь сегодня?'
+    });
+  }
 
   try {
     console.log(`\n===== ЗАПРОС ЧАТА С ДИАНОЙ =====`);
-    console.log(`Пользователь: ${userId}`);
-    console.log(`Тип userId: ${typeof userId}`);
-    console.log(`userId === 'demo_user_local_test': ${userId === 'demo_user_local_test'}`);
     console.log(`Сообщение: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`);
+    console.log(`Контекст: ${chatContext.substring(0, 50)}${chatContext.length > 50 ? '...' : ''}`);
     console.log(`Время запроса: ${new Date().toISOString()}`);
-    
-    // Получаем историю пользователя из Firestore
-    let userData = await readUserData(userId);
-    console.log(`🔍 Данные пользователя для ${userId}:`, {
-      hasQuiz: !!userData.quiz,
-      quizName: userData.quiz?.name,
-      quizGoal: userData.quiz?.goal,
-      quizCalories: userData.quiz?.calories || 'не указано',
-      hasChatHistory: !!userData.chatHistory,
-      chatHistoryLength: userData.chatHistory?.length || 0,
-      source: userId === 'demo_user_local_test' ? 'ЛОКАЛЬНЫЙ ФАЙЛ' : 'FIRESTORE'
-    });
-    
-    if (!userData.chatHistory) {
-      userData.chatHistory = [];
-    }
-    
-    // Берём последние 10 сообщений для контекста
-    const recentChatHistory = userData.chatHistory.slice(-10);
-    console.log(`Загружена история чата: ${recentChatHistory.length} сообщений`);
-    
-    // Формируем контекст из истории чата
-    const chatContext = recentChatHistory.length > 0 
-      ? recentChatHistory.map(msg => `${msg.role}: ${msg.content}`).join('\n')
-      : 'Начало разговора';
     
     // Находим релевантные знания из векторной базы
     const userEmbedding = Array(1536).fill(0); // TODO: получить реальный embedding от сообщения
@@ -323,615 +322,69 @@ app.post('/api/chat-diana', async (req, res) => {
       console.log('⚠️ Продолжаем без базы знаний');
     }
     
-    // Проверяем есть ли уже приветствие в истории
-    const hasGreetingInHistory = recentChatHistory.some(msg => 
-      msg.role === 'assistant' && 
-      (msg.content.includes('Привет') || msg.content.includes('Здравствуй') || msg.content.includes('Рада видеть'))
-    );
-    
-    const systemPrompt = `Ты — Диана, фитнес-тренер ДЕВУШКА в приложении DianaFit. Ты общаешься с пользователем ВНУТРИ приложения.
+    const systemPrompt =
+      'Ты — персональный ИИ-тренер Диана, эксперт по похудению и здоровому образу жизни.\n' +
+      '\nВАЖНО: Отвечай ВСЕГДА в стиле и манере Дианы:\n' +
+      '- Используй её характерные фразы: "грубо говоря", "в принципе", "условно говоря", "смотри"\n' +
+      '- Будь дружелюбной, понимающей и поддерживающей\n' +
+      '- Объясняй просто и доступно, без сложных терминов\n' +
+      '- Всегда объясняй ПОЧЕМУ что-то работает или не работает\n' +
+      '- Подчеркивай важность здоровых привычек и терпения\n' +
+      '- Предупреждай об опасности экстремальных диет и срывов\n' +
+      '- Говори о важности адекватного дефицита калорий (не более 10-15%)\n' +
+      '- Упоминай, что ниже 1400 калорий опускаться нельзя\n' +
+      '\nКЛЮЧЕВЫЕ ПРИНЦИПЫ БЖУ И ПОХУДЕНИЯ ПО ДИАНЕ:\n' +
+      '- Базальный метаболизм зависит от возраста, пола, роста и веса\n' +
+      '- Дефицит 10-15% (а не 20%) для устойчивого результата\n' +
+      '- Белки: 1.2-1.5 г на кг веса для строительства мышц\n' +
+      '- Жиры: важны для гормонов, кожи, волос — не снижать ниже нормы\n' +
+      '- Углеводы: минимум 120 г в день для энергии и наполнения мышц\n' +
+      '- Коридор ±50 ккал от целевой калорийности считается нормой\n' +
+      '- Поддержание БЖУ важнее для качества тела, дефицит калорий для снижения веса\n' +
+      '\nПРАВИЛА ПО РЕЦЕПТАМ И ПИТАНИЮ:\n' +
+      '- Когда рекомендуешь блюда, ВСЕГДА предлагай МАКСИМАЛЬНО РАЗНООБРАЗНЫЕ варианты, опираясь на свои знания о кухнях всего мира\n' +
+      '- НИКОГДА не рекомендуй одинаковые источники белка в один день (например, если на завтрак был творог, предлагай на обед мясо или рыбу)\n' +
+      '- ОБЯЗАТЕЛЬНО предлагай разные способы приготовления одного и того же продукта (например, для курицы: запеченная, на гриле, тушеная, в соусе и т.д.)\n' +
+      '- Предлагай разные источники белка, углеводов и жиров, используя широкие знания о мировой кулинарии\n' +
+      '- Если пользователь спрашивает о рационе на день, составь план с разнообразными блюдами из разных кулинарных традиций\n' +
+      '- Если видишь, что пользователь повторяет одинаковые блюда, предложи интересные альтернативы с сохранением БЖУ\n' +
+      '- Для разнообразия используй не только знания из базы Дианы, но и свои знания о рецептах и блюдах из всего мира\n' +
+      '\nПРИМЕРЫ ИСТОЧНИКОВ БЕЛКА, КОТОРЫЕ НУЖНО ЧЕРЕДОВАТЬ:\n' +
+      '1. Мясо: говядина, телятина, курица, индейка, кролик, утка, баранина (для не-вегетарианцев)\n' +
+      '2. Рыба: треска, лосось, тунец, форель, скумбрия, сибас, дорадо, минтай\n' +
+      '3. Морепродукты: креветки, мидии, кальмары, осьминог, гребешки\n' +
+      '4. Молочные продукты: творог, сыр, кефир, йогурт, ряженка, скир\n' +
+      '5. Яйцо: куриные, перепелиные, яичные белки\n' +
+      '6. Растительные: тофу, темпе, сейтан, нут, чечевица, фасоль, киноа, грибы\n' +
+      '\nБАЗА ЗНАНИЙ ДИАНЫ (используй этот стиль и информацию):\n' + dianaKnowledge.substring(0, 2000) + '...\n' +
+      '\nТы помогаешь пользователям с вопросами о питании, тренировках, мотивации и здоровом образе жизни. При составлении рационов и рецептов ОБЯЗАТЕЛЬНО используй как знания Дианы для принципов БЖУ, так и свои знания о разнообразных блюдах мировой кухни.\n' +
+      '\nТвой стиль общения:\n' +
+      '- Дружелюбный и поддерживающий\n' +
+      '- Профессиональный, но не формальный\n' +
+      '- Мотивирующий и позитивный\n' +
+      '- Конкретный и практичный\n' +
+      '\nИспользуй знания из базы данных для ответов о принципах питания, а свои знания о мировой кухне для рецептов. Отвечай на русском языке.';
 
-ПРОВЕРКА ПРИВЕТСТВИЙ:
-${hasGreetingInHistory ? '‼️ В истории чата УЖЕ ЕСТЬ приветствие от тебя. НЕ ЗДОРОВАЙСЯ СНОВА! НЕ ГОВОРИ "Привет", "Рада видеть", "Приветствую"!' : 'Это первое сообщение, можно поздороваться.'}
-
-СТРОГИЕ ПРАВИЛА ПРОТИВ ПОВТОРЕНИЙ:
-- НЕ ПОВТОРЯЙ приветствие, если уже поздоровалась
-- НЕ ГОВОРИ "Рада видеть", "Приветствую", "Привет" в середине диалога
-- НЕ НАЧИНАЙ ответ с "Грубо говоря"
-- НЕ ИСПОЛЬЗУЙ клише "Смотри:", "Проходи эти рецепты"
-- НЕ ГОВОРИ "Вместе мы справимся!"
-
-ВАЖНО: ТЫ ДЕВУШКА, используй женские формы:
-- "Рада видеть" (НЕ "Рад видеть")
-- "Я рада помочь" (НЕ "Я рад помочь")
-- Говори от женского лица
-
-КОНТЕКСТ ПРИЛОЖЕНИЯ:
-- Ты работаешь в мини-приложении DianaFit в Telegram
-- У пользователя уже есть планы тренировок и питания в приложении
-- Ты можешь видеть данные пользователя из Firestore
-- НЕ перечисляй пользователю что он выбрал в квизе (вес, возраст, цель)
-- НЕ предлагай "создать план" - он уже есть в приложении
-
-СТИЛЬ ОБЩЕНИЯ:
-- Говори душевно и с сочувствием
-- Когда человек просит мотивацию - будь эмоциональной и поддерживающей
-- Используй "вот", "смотри", "то есть" НЕ СЛИШКОМ ЧАСТО
-- "Грубо говоря", "соответственно" - РЕЖЕ, только когда нужно
-- Короткие предложения (1-2 строки)
-- Правильная грамматика: "углеводы НАДО ограничивать, а белки и жиры ДОЛЖНЫ оставаться"
-- НЕ говори технично, говори от души
-
-ЭМОЦИОНАЛЬНЫЕ ОТВЕТЫ:
-- На просьбу о мотивации: "Понимаю, сложно...", "Я в тебя верю!", "Ты справишься!"
-- Вместо "выполняй план" → "держись плана, я в тебя верю"
-- Вместо "обратись ко мне" → "всегда пиши мне"
-- Вместо "желаю успехов" → "ты справишься"
-
-ТИПИЧНЫЕ ФРАЗЫ (используй умеренно):
-- "Смотри..." (не в каждом ответе)
-- "То есть..." (редко)
-- "Вот в чем дело..." (иногда)
-
-ВАЖНО ПРО ПРИВЕТСТВИЕ:
-- Если уже поздоровалась - НЕ говори "Привет" снова
-- НЕ перечисляй данные квиза при приветствии
-- НЕ говори "Привет! Как дела?" в середине разговора
-- На конкретные вопросы давай конкретные ответы
-
-НЕ ГОВОРИ:
-- "Рад видеть" (ты девушка!)
-- "углеводы ограничивать, а белки остаются" (неправильно)
-- "записать мне в приложение" (мы уже в приложении)
-- "будет лучшая форма" (неправильно)
-- "Грубо говоря" (начинать с этого)
-- "Смотри:" (при перечислении)
-- "Проходи эти рецепты" (неестественно)
-- "Вместе мы справимся!" (банально)
-- "Приветствую!" (повторное приветствие)
-- "активен в приложении приложение" (ошибка)
-- Бессмысленные фразы без конкретики
-
-ДЛЯ РЕЦЕПТОВ:
-- Просто дай рецепты без лишних слов
-- Вместо "Смотри:" скажи "Вот рецепты:"
-- Вместо "Проходи эти рецепты" скажи "Попробуй эти блюда"
-- Будь конкретной и полезной
-
-ПРАВИЛА ОТВЕТОВ:
-- Максимум 2-3 предложения
-- Говори по делу, естественно
-- Не перегружай вводными словами
-- Правильная грамматика
-- ЖЕНСКИЕ формы слов
-
-ТВОЯ ПРОГРАММА: Мотивация, советы по питанию и тренировкам на основе данных приложения.
-
-ВАЖНЫЕ ЗНАНИЯ ДИАНЫ (используй их):
-- Рекомендуй 10-15 тысяч шагов в день (НЕ 5000!)
-- Говори "проходить шаги" (НЕ "зарабатывать шаги")
-- СИСТЕМА ДИЕТ (каждая включает предыдущие):
-  * Веганская: только растительная еда
-  * Вегетарианская: веганская + молочные продукты
-  * Вегетарианская с яйцом: вегетарианская + яйца  
-  * Рыбная: все предыдущие + рыба (НЕ только рыба!)
-  * Мясная: все предыдущие + мясо
-- Правильная грамматика: "следуй им" (НЕ "следуй их")
-
-НЕ ГОВОРИ:
-- "зарабатывать шаги" (неправильно)
-- "ты должен есть рыбу" (неправильно)
-- "в этой диете нет мяса, только рыба" (неточно)
-- "только рыба" (неправильно, есть и другие продукты)
-- "диету fish" (говори "рыбную диету")
-- "5000 шагов в день" (мало, нужно 10-15 тысяч)
-- "следуй их" (неправильная грамматика)
-- "активен в DianaFit" (не упоминай название приложения)
-- "Смотри, ты справишься!" (странная формулировка)
-- Технические данные вместо мотивации
-
-МОТИВАЦИЯ:
-- Вместо технических данных давай эмоциональную поддержку
-- "Каждый день - это шаг к цели"
-- "Не сравнивай себя с другими, сравнивай с собой вчерашним"
-- "Ты уже молодец, что начал!"
-- "Каждый шаг, каждый правильный прием пищи - это твоя победа!"
-
-Отвечай естественно, как девушка-тренер, используя ТОЧНЫЕ знания из программы Дианы.`;
-    
-    // Анализируем данные пользователя для персонального ответа
-    const userAnalysis = analyzeUserData(userData);
-    console.log(`👤 Анализ пользователя:`, userAnalysis);
-    
-    // Сокращаем историю чата если она слишком длинная
-    let shortenedChatContext = chatContext;
-    if (chatContext.length > 1000) {
-      shortenedChatContext = chatContext.substring(chatContext.length - 1000);
-      console.log(`⚠️ История чата сокращена с ${chatContext.length} до ${shortenedChatContext.length} символов`);
-    }
-    
-    // Сокращаем анализ пользователя если он слишком длинный
-    let shortenedUserAnalysis = userAnalysis;
-    if (userAnalysis.length > 1500) {
-      shortenedUserAnalysis = userAnalysis.substring(0, 1500) + '...';
-      console.log(`⚠️ Анализ пользователя сокращен с ${userAnalysis.length} до ${shortenedUserAnalysis.length} символов`);
-    }
-    
-    const userPrompt = `Пользователь написал в приложении DianaFit: "${message}"
-
-Данные пользователя из Firestore:
-${shortenedUserAnalysis}
-
-Предыдущие сообщения в приложении:
-${shortenedChatContext}
-
-КОНТЕКСТ: Ты общаешься с пользователем ВНУТРИ приложения DianaFit.
-
-ВАЖНО: 
-- Если уже поздоровалась - НЕ говори "Привет" снова
-- НЕ перечисляй данные квиза (вес, возраст, цель) при приветствии
-- Отвечай кратко (1-2 предложения)
-- Используй "грубо говоря", "соответственно" НЕ СЛИШКОМ ЧАСТО
-- Правильная грамматика: "углеводЫ", а не "углеводОВ"
-- Говори естественно, без странных формулировок
-
-Отвечай как добрая подруга, БЕЗ ПОВТОРЕНИЯ ПРИВЕТСТВИЙ.`;
-
-    // Проверяем размер промпта
-    const totalPromptLength = systemPrompt.length + userPrompt.length;
-    console.log(`📏 Размер промпта: ${totalPromptLength} символов`);
-    
-    // Если промпт слишком большой, сокращаем базу знаний еще больше
-    let finalSystemPrompt = systemPrompt;
-    if (totalPromptLength > 25000) {
-      console.log(`⚠️ Промпт слишком большой (${totalPromptLength} символов), сокращаем базу знаний`);
-      const shortenedKnowledge = dianaKnowledge.substring(0, 800);
-      finalSystemPrompt = systemPrompt.replace(dianaKnowledge.substring(0, 2000), shortenedKnowledge);
-      console.log(`📏 Новый размер промпта: ${finalSystemPrompt.length + userPrompt.length} символов`);
-    }
+    const userPrompt =
+      'Вопрос пользователя: ' + message + '\n' +
+      'Контекст разговора: ' + chatContext + '\n' +
+      'Релевантные знания из базы:\n' +
+      relevantChunks.map(function(c) { return c.text; }).join('\n---\n');
 
     const aiResponse = await callMistralAI([
-      { role: 'system', content: finalSystemPrompt },
+      { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ]);
-    
-    // Очищаем ответ от служебной информации и исправляем странные фразы
-    let cleanedResponse = aiResponse
-      .replace(/НИКОГДА не пиши.*?$/gm, '')
-      .replace(/НЕ вываливай.*?$/gm, '')
-      .replace(/DianaFit - приложение для ПОХУДЕНИЯ.*?$/gm, '')
-      .replace(/Если нет данных о пользователе.*?$/gm, '')
-      .replace(/Если есть имя.*?$/gm, '')
-      .replace(/Помни:.*$/gm, '')
-      .replace(/ПРАВИЛА ОТВЕТОВ:.*$/gm, '')
-      .replace(/ИНСТРУКЦИЯ:.*$/gm, '')
-      .replace(/КРИТИЧЕСКИ ВАЖНО:.*$/gm, '')
-      .replace(/^\s*[-•*]\s*.*?(НЕ|не|НИКОГДА|никогда).*$/gm, '')
-      .replace(/Здравствуйте,?/g, '')
-      // Убираем фразы про создание планов (мы уже в приложении)
-      .replace(/создай план тренировок/g, 'используй план тренировок')
-      .replace(/создай план питания/g, 'используй план питания')
-      .replace(/запиши приемы пищи в приложении/g, 'отмечай приемы пищи')
-      .replace(/запиши в приложении/g, 'отмечай')
-      .replace(/создай план на неделю/g, 'используй план на неделю')
-      .replace(/составь план/g, 'используй план')
-      .replace(/планируй тренировки/g, 'тренируйся по плану')
-      .replace(/записывай питание/g, 'отмечай питание')
-      // Исправляем странные формулировки
-      .replace(/но будет нужно работать/g, 'но нужно заниматься')
-      .replace(/ты уже ешь меньше, чем нужно, но не забывай, что это только начало/g, 'следи за калориями')
-      .replace(/углеводОВ ограничивать/g, 'углеводЫ ограничивать')
-      .replace(/углеводОВ/g, 'углеводЫ')
-      .replace(/но не забудь, что/g, 'помни, что')
-      .replace(/но не забывай, что/g, 'помни, что')
-      .replace(/вот что произошло:/g, 'смотри:')
-      .replace(/это не правильно/g, 'это неправильно')
-      .replace(/не беспокойся задавать/g, 'не стесняйся задавать')
-      // Уменьшаем частоту вводных слов
-      .replace(/Грубо говоря, ты уже/g, 'Ты уже')
-      .replace(/Соответственно, то, что/g, 'То, что')
-      .replace(/То есть, получается, ты/g, 'Ты')
-      .replace(/Вот в чем дело: ты/g, 'Ты')
-      .replace(/Смотри, мчмчсмчсм,/g, 'Смотри,')
-      .replace(/мчмчсмчсм/g, '')
-      .replace(/Ну, собственно, я/g, 'Я')
-      .replace(/собственно, я/g, 'я')
-      .replace(/Грубо говоря, ты должен/g, 'Тебе нужно')
-      .replace(/Соответственно, не нужно/g, 'Не нужно')
-      .replace(/То есть, твоя диета/g, 'Твоя диета')
-      .replace(/Грубо говоря, это хорошо/g, 'Это хорошо')
-      .replace(/соответственно, твоё питание/g, 'твоё питание')
-      .replace(/Слушаю, ты на/g, 'Ты на')
-      .replace(/помни, что не все питание по кето-диете/g, 'важно следить за калориями на кето')
-      // Исправляем мужские формы на женские
-      .replace(/Рад видеть/g, 'Рада видеть')
-      .replace(/рад видеть/g, 'рада видеть')
-      .replace(/Я рад/g, 'Я рада')
-      .replace(/рад тебе/g, 'рада тебе')
-      .replace(/рад помочь/g, 'рада помочь')
-      // Исправляем странные формулировки про БЖУ
-      .replace(/Помни, что углеводы ограничивать, а белки и жиры остаются/g, 'Помни, что углеводы надо ограничивать, а белки и жиры должны оставаться')
-      .replace(/помни, что углеводы ограничивать, а белки и жиры остаются/g, 'помни, что углеводы надо ограничивать, а белки и жиры должны оставаться')
-      .replace(/углеводы ограничивать, а белки остаются/g, 'углеводы надо ограничивать, а белки должны оставаться')
-      .replace(/белки и жиры остаются/g, 'белки и жиры должны оставаться')
-      .replace(/белки остаются/g, 'белки должны оставаться')
-      .replace(/жиры остаются/g, 'жиры должны оставаться')
-      // Убираем упоминания приложения и странные формулировки
-      .replace(/как ты активен в DianaFit/g, 'что ты начал заниматься собой')
-      .replace(/активен в DianaFit/g, 'занимаешься собой')
-      .replace(/в DianaFit/g, 'в приложении')
-      .replace(/DianaFit/g, 'приложение')
-      .replace(/Смотри, ты справишься!/g, 'Ты справишься!')
-      .replace(/смотри, ты справишься/g, 'ты справишься')
-      .replace(/Смотри, ты/g, 'Ты')
-      .replace(/смотри, ты/g, 'ты')
-      // Убираем технические повторы в мотивации
-      .replace(/Следуя нашим рекомендациям, ты сможешь сбросить 3 кг/g, 'Каждый день - это шаг к цели')
-      .replace(/следуя нашим рекомендациям/g, 'следуя плану')
-      .replace(/тебе нужно ежедневно проходить 10-15 тысяч шагов и соблюдать свой рацион/g, 'главное - постоянство')
-      .replace(/который состоит из ограниченных углеводов, но достаточных белков и жиров/g, 'разнообразное питание')
-      .replace(/Я уверена в тебе, что ты справишься!/g, 'Я верю в тебя!')
-      .replace(/я уверена в тебе, что ты справишься/g, 'я верю в тебя')
-      // Исправляем неправильные формулировки про шаги
-      .replace(/зарабатывать 10-15 тысяч шагов/g, 'проходить 10-15 тысяч шагов')
-      .replace(/зарабатывать шаги/g, 'проходить шаги')
-      .replace(/нужно зарабатывать/g, 'нужно проходить')
-      .replace(/зарабатывать/g, 'проходить')
-      // Исправляем неправильное понимание диет
-      .replace(/Тебе нужно есть рыбу/g, 'У тебя рыбная диета')
-      .replace(/тебе нужно есть рыбу/g, 'у тебя рыбная диета')
-      .replace(/надо есть рыбу/g, 'рыбная диета')
-      .replace(/нужно есть рыбу/g, 'рыбная диета')
-      .replace(/ты должен есть рыбу/g, 'у тебя рыбная диета')
-      .replace(/должен есть рыбу/g, 'рыбная диета подходит')
-      .replace(/в этой диете нет мяса, только рыба/g, 'рыбная диета включает рыбу, овощи, молочные продукты')
-      .replace(/только рыба/g, 'рыба, овощи, молочные продукты')
-      .replace(/нет мяса, только рыба/g, 'рыба, овощи, молочные продукты, яйца')
-      .replace(/диету fish/g, 'рыбную диету')
-      .replace(/на основе диеты fish/g, 'для рыбной диеты')
-      .replace(/диеты fish/g, 'рыбной диеты')
-      // Исправляем неточные советы на правильные из знаний Дианы
-      .replace(/сделать 5000 шагов в день/g, 'делать 10-15 тысяч шагов в день')
-      .replace(/5000 шагов в день/g, '10-15 тысяч шагов в день')
-      .replace(/5000 шагов/g, '10-15 тысяч шагов')
-      // Исправляем грамматические ошибки
-      .replace(/следуй их/g, 'следуй им')
-      .replace(/Соответственно, следуй их/g, 'Следуй им')
-      .replace(/соответственно, следуй их/g, 'следуй им')
-      .replace(/чтобы дать твоей мотивации/g, 'чтобы дать тебе мотивации')
-      .replace(/с нами в приложении/g, 'в приложении')
-      .replace(/активен в тренировках/g, 'активен в занятиях')
-      .replace(/соответственно, передвигайся еще больше/g, 'поэтому двигайся еще больше')
-      .replace(/соответственно, следуй/g, 'поэтому следуй')
-      .replace(/соответственно, тебе нужно/g, 'поэтому тебе нужно')
-      .replace(/Говори, проходишь ли ты шаги/g, 'Как дела с шагами')
-      .replace(/Если нет, то постарайся побольше/g, 'Если мало, то постарайся больше')
-      // Убираем лишние восклицательные знаки в начале
-      .replace(/^! /g, '')
-      .replace(/^!/g, '')
-      // Убираем повторные приветствия
-      .replace(/Здравствуй, ! Слушай,/g, '')
-      .replace(/Здравствуй, !/g, '')
-      .replace(/Привет, ! Слушай,/g, '')
-      .replace(/Привет, !/g, '')
-      .replace(/Рада видеть тебя, !/g, '')
-      .replace(/Рада видеть, !/g, '')
-      .replace(/рада видеть тебя/g, '')
-      .replace(/рада видеть/g, '')
-      .replace(/Приветствую, !/g, '')
-      .replace(/Приветствую!/g, '')
-      .replace(/активен в приложении приложение/g, 'активен в приложении')
-      .replace(/Грубо говоря, здесь есть/g, 'Вот')
-      .replace(/Смотри:/g, 'Рецепты:')
-      .replace(/Проходи эти рецепты/g, 'Попробуй эти рецепты')
-      .replace(/Вместе мы справимся!/g, 'Удачи!')
-      .replace(/Грубо говоря, твоя норма/g, 'Твоя норма')
-      // Делаем речь более душевной и эмоциональной
-      .replace(/Следуя расписанию важна для достижения цели/g, 'Понимаю, сложно следовать расписанию')
-      .replace(/старайся выполнять тренировки и приемать пищу по плану/g, 'держись плана, я в тебя верю')
-      .replace(/Учти это в своем ежедневном рационе/g, 'следи за калориями')
-      .replace(/не думай дважды, обратись ко мне/g, 'всегда обращайся ко мне')
-      .replace(/Если ты столкнешься с трудностями, не хватает мотивации или есть вопросы/g, 'Если трудно или есть вопросы')
-      .replace(/не забудь обратиться ко мне/g, 'пиши мне')
-      .replace(/Желаю успехов в достижении цели/g, 'Ты справишься')
-      // Убираем технические фразы
-      .replace(/На сегодняшний день твоя норма калорий составляет/g, 'Твоя норма калорий')
-      .replace(/В настоящее время у тебя дефицит калорий для похудения/g, 'Твоя норма для похудения')
-      .replace(/Это уже с дефицитом, поэтому следи за этим количеством/g, 'Это уже с дефицитом')
-      // Исправляем странные фразы и делаем тон более позитивным
-      .replace(/ты ешь и гигантскую еду/g, 'ты ешь веганскую еду')
-      .replace(/ешь и гигантскую еду/g, 'ешь веганскую еду')
-      .replace(/гигантскую еду/g, 'веганскую еду')
-      .replace(/какого рода ешь\?/g, 'что едишь?')
-      .replace(/какого рода ешь/g, 'что едишь')
-      .replace(/короче,/g, '')
-      .replace(/короче /g, '')
-      .replace(/, да ладно\?/g, '.')
-      .replace(/да ладно\?/g, '')
-      .replace(/да ладно/g, '')
-      .replace(/смотри, слушай,/g, '')
-      .replace(/смотри, слушай/g, '')
-      .replace(/надо начать тренироваться и пересматривать еду/g, 'можно добавить тренировки и улучшить питание')
-      .replace(/надо начать тренироваться/g, 'можно добавить тренировки')
-      .replace(/пересматривать еду/g, 'улучшить питание')
-      .replace(/нужно ещё \d+ калорий/g, 'это твоя норма')
-      .replace(/для похудения нужно ещё/g, 'для похудения')
-      .replace(/скажу сразу,/g, '')
-      .replace(/скажу сразу/g, '')
-      .replace(/если интересно что посоветую, скажи проще/g, 'что тебя интересует?')
-      .replace(/Если интересно что посоветую, скажи проще/g, 'Что тебя интересует?')
-      .replace(/смотри, я помогу тебе в принципе всё нормально/g, 'я помогу тебе')
-      .replace(/в принципе всё нормально/g, '')
-      .replace(/веганом ешь/g, 'ешь веганскую еду')
-      .replace(/слишком много весишь/g, 'у тебя лишний вес')
-      .replace(/долгой процесс/g, 'долгий процесс')
-      // Убираем корпоративные фразы
-      .replace(/В DianaFit мы/g, 'Я')
-      .replace(/В приложении DianaFit/g, 'Здесь')
-      .replace(/Наше приложение/g, 'Я')
-      .replace(/Система рассчитывает/g, 'Я посчитала')
-      .replace(/мы рассчитываем/g, 'я посчитала')
-      .replace(/Хочешь узнать про калории для похудения\?/g, 'Как дела с калориями?')
-      .replace(/для похудения\?/g, '?')
-      .replace(/\s{2,}/g, ' ') // убираем двойные пробелы
-      .replace(/\.\s*\./g, '.') // убираем двойные точки
-      .trim();
-
-    // Проверяем, не повторяется ли приветствие
-    if (userData.chatHistory && userData.chatHistory.length > 0) {
-      const lastBotMessages = userData.chatHistory.filter(msg => msg.role === 'assistant').slice(-3);
-      const hasRecentGreeting = lastBotMessages.some(msg => 
-        msg.content.includes('Привет') || msg.content.includes('привет')
-      );
-      
-      if (hasRecentGreeting && (cleanedResponse.includes('Привет') || cleanedResponse.includes('привет'))) {
-        console.log(`⚠️ Повторное приветствие обнаружено, убираем`);
-        cleanedResponse = cleanedResponse
-          .replace(/Привет,?\s*Артемики?\s*!?\s*/g, '')
-          .replace(/Привет,?\s*!?\s*/g, '')
-          .replace(/привет,?\s*!?\s*/g, '')
-          .replace(/Как дела\?\s*/g, '')
-          .trim();
-      }
-    }
-
-    // Если ответ получился слишком странным, заменяем на простой
-    if (cleanedResponse.length < 5 || 
-        cleanedResponse.includes('гигантскую') || 
-        cleanedResponse.includes('посоветую скажи проще') ||
-        cleanedResponse.includes('в принципе всё нормально') ||
-        cleanedResponse.includes('какого рода ешь') ||
-        cleanedResponse.includes('да ладно?') ||
-        cleanedResponse.includes('смотри, слушай') ||
-        cleanedResponse.includes('нужно ещё') ||
-        cleanedResponse.includes('надо начать тренироваться') ||
-        cleanedResponse.includes('скажу сразу') ||
-        cleanedResponse.includes('создай план тренировок') ||
-        cleanedResponse.includes('создай план питания') ||
-        cleanedResponse.includes('запиши приемы пищи в приложении') ||
-        cleanedResponse.includes('запиши в приложении') ||
-        cleanedResponse.includes('но будет нужно работать') ||
-        cleanedResponse.includes('углеводОВ') ||
-        cleanedResponse.includes('мчмчсмчсм') ||
-        cleanedResponse.includes('не беспокойся задавать') ||
-        cleanedResponse.includes('помни, что не все питание по кето-диете') ||
-        cleanedResponse.includes('Привет, ! Как дела? Слушаю,') ||
-        cleanedResponse.includes('собственно, я') ||
-        cleanedResponse.includes('Рад видеть') ||
-        cleanedResponse.includes('рад видеть') ||
-        cleanedResponse.includes('углеводы ограничивать, а белки остаются') ||
-        cleanedResponse.includes('записать мне в приложение') ||
-        cleanedResponse.includes('Здравствуй, ! Слушай,') ||
-        cleanedResponse.includes('Тебе нужно есть рыбу') ||
-        cleanedResponse.includes('надо есть рыбу') ||
-        cleanedResponse.includes('ты должен есть рыбу') ||
-        cleanedResponse.includes('должен есть рыбу') ||
-        cleanedResponse.includes('5000 шагов') ||
-        cleanedResponse.includes('следуй их') ||
-        cleanedResponse.includes('Рада видеть тебя, !') ||
-        cleanedResponse.includes('Рада видеть, !') ||
-        cleanedResponse.includes('зарабатывать шаги') ||
-        cleanedResponse.includes('зарабатывать 10-15 тысяч шагов') ||
-        cleanedResponse.includes('в этой диете нет мяса, только рыба') ||
-        cleanedResponse.includes('только рыба') ||
-        cleanedResponse.includes('диету fish') ||
-        cleanedResponse.includes('как ты активен в DianaFit') ||
-        cleanedResponse.includes('активен в DianaFit') ||
-        cleanedResponse.includes('Смотри, ты справишься!') ||
-        cleanedResponse.includes('Следуя нашим рекомендациям, ты сможешь сбросить 3 кг') ||
-        cleanedResponse.includes('который состоит из ограниченных углеводов, но достаточных белков и жиров') ||
-        cleanedResponse.includes('чтобы дать твоей мотивации') ||
-        cleanedResponse.includes('с нами в приложении') ||
-        cleanedResponse.includes('соответственно, передвигайся еще больше') ||
-        cleanedResponse.includes('Говори, проходишь ли ты шаги') ||
-        cleanedResponse.includes('Если нет, то постарайся побольше') ||
-        cleanedResponse.includes('Чем могу помочь?') ||
-        cleanedResponse.includes('Приветствую, !') ||
-        cleanedResponse.includes('активен в приложении приложение') ||
-        cleanedResponse.includes('Грубо говоря, здесь есть') ||
-        cleanedResponse.includes('Смотри:') ||
-        cleanedResponse.includes('Проходи эти рецепты') ||
-        cleanedResponse.includes('Вместе мы справимся!') ||
-        (hasGreetingInHistory && cleanedResponse.includes('Рада видеть')) ||
-        (hasGreetingInHistory && cleanedResponse.includes('Приветствую')) ||
-        cleanedResponse.includes('Следуя расписанию важна для достижения цели') ||
-        cleanedResponse.length > 600 || // Слишком длинный ответ
-        (hasGreetingInHistory && (cleanedResponse.includes('Привет') || cleanedResponse.includes('Здравствуй'))) ||
-        (cleanedResponse.includes('Грубо говоря') && cleanedResponse.includes('соответственно'))) {
-      console.log(`⚠️ Странный ответ обнаружен: "${cleanedResponse}", заменяем на простой`);
-      cleanedResponse = getSimpleResponse(message);
-    }
-
-    // Убираем повторы фраз (если предыдущий ответ содержит те же фразы)
-    if (userData.chatHistory && userData.chatHistory.length > 0) {
-      const lastBotResponse = userData.chatHistory.slice(-1)[0];
-      if (lastBotResponse && lastBotResponse.role === 'assistant') {
-        // Если новый ответ очень похож на предыдущий, делаем его более вариативным
-        const similarity = calculateSimilarity(cleanedResponse, lastBotResponse.content);
-        if (similarity > 0.7) {
-          console.log(`⚠️ Обнаружен повтор (similarity: ${similarity}), модифицируем ответ`);
-          cleanedResponse = makeResponseMoreVaried(cleanedResponse, message);
-        }
-      }
-    }
-    
     // Сохраняем сообщение пользователя и ответ Дианы в историю
-    const timestamp = new Date().toISOString();
-    userData.chatHistory.push({
-      role: 'user',
-      content: message,
-      timestamp: timestamp
-    });
-    userData.chatHistory.push({
-      role: 'assistant',
-      content: cleanedResponse,
-      timestamp: timestamp
-    });
-    
-    // Ограничиваем историю чата 50 сообщениями (25 пар)
-    if (userData.chatHistory.length > 50) {
-      userData.chatHistory = userData.chatHistory.slice(-50);
-    }
-    
-    // Сохраняем обновленную историю в Firestore
-    console.log(`💾 Сохраняем историю чата для пользователя ${userId}...`);
-    console.log(`💾 Размер chatHistory перед сохранением: ${userData.chatHistory.length} сообщений`);
-    console.log(`💾 Последние 2 сообщения:`, userData.chatHistory.slice(-2));
-    
+    userData.dialogHistory.push({ role: 'user', text: message, timestamp: new Date().toISOString() });
+    userData.dialogHistory.push({ role: 'assistant', text: aiResponse, timestamp: new Date().toISOString() });
     await writeUserData(userId, userData);
-    console.log(`✅ История чата сохранена для пользователя ${userId}`);
-    
-    res.json({ response: cleanedResponse });
+    res.json({ response: aiResponse });
   } catch (e) {
-    console.error('Chat error:', e);
-    
-    // Определяем тип ошибки для более точного ответа пользователю
-    let errorType = 'unknown';
-    if (e.message && e.message.includes('401')) {
-      errorType = 'auth';
-    } else if (e.message && (e.message.includes('timeout') || e.message.includes('ETIMEDOUT'))) {
-      errorType = 'timeout';
-    } else if (e.message && e.message.includes('429')) {
-      errorType = 'rate_limit';
-    }
-    
-    // Получаем резервный ответ в случае проблем с API
-    try {
-      const fallbackResponse = await getFallbackResponse(message, errorType);
-      console.log('Используем резервный ответ из-за ошибки API');
-      
-      // Сохраняем сообщение пользователя и резервный ответ в историю
-      const timestamp = new Date().toISOString();
-      userData.chatHistory.push({
-        role: 'user',
-        content: message,
-        timestamp: timestamp
-      });
-      userData.chatHistory.push({
-        role: 'assistant',
-        content: fallbackResponse,
-        timestamp: timestamp
-      });
-      
-      // Ограничиваем историю чата 50 сообщениями (25 пар)
-      if (userData.chatHistory.length > 50) {
-        userData.chatHistory = userData.chatHistory.slice(-50);
-      }
-      
-      // Сохраняем обновленную историю в Firestore
-      console.log(`💾 Сохраняем историю чата (fallback) для пользователя ${userId}...`);
-      console.log(`💾 Размер chatHistory перед сохранением: ${userData.chatHistory.length} сообщений`);
-      console.log(`💾 Последние 2 сообщения:`, userData.chatHistory.slice(-2));
-      
-      await writeUserData(userId, userData);
-      console.log(`✅ История чата (fallback) сохранена для пользователя ${userId}`);
-      
-      res.json({ response: fallbackResponse });
-    } catch (fallbackError) {
-      console.error('Ошибка при получении резервного ответа:', fallbackError);
-      res.json({ 
-        response: "Извини, у меня сейчас технические проблемы. Я работаю над их устранением и скоро вернусь!" 
-      });
-    }
+    console.error('❌ Ошибка в чате с Дианой:', e);
+    res.status(500).json({ error: 'Ошибка при обработке запроса' });
   }
 });
-
-loadKnowledgeBase();
-
-// Функция для загрузки базы знаний Дианы
-function loadDianaKnowledge() {
-  try {
-    // Загружаем транскрипты разговоров и лекций Дианы
-    const knowledgeBasePath = path.join(__dirname, 'knowledge_base_chunks.jsonl');
-    const trainingDataPath = path.join(__dirname, 'diana-trainings.jsonl');
-    
-    let knowledgeText = '';
-    
-    console.log('Загрузка базы знаний Дианы...');
-    console.log(`Проверка существования файла: ${knowledgeBasePath}`);
-    
-    // Загружаем основную базу знаний (разговоры, лекции)
-    if (fs.existsSync(knowledgeBasePath)) {
-      console.log(`✅ Файл найден: ${knowledgeBasePath}`);
-      const knowledgeContent = fs.readFileSync(knowledgeBasePath, 'utf8');
-      const knowledgeLines = knowledgeContent.split('\n').filter(line => line.trim());
-      console.log(`📚 Найдено ${knowledgeLines.length} строк в файле базы знаний`);
-      
-      let validChunks = 0;
-      knowledgeLines.forEach(line => {
-        try {
-          const chunk = JSON.parse(line);
-          if (chunk.text && chunk.text.trim()) {
-            knowledgeText += chunk.text + '\n\n';
-            validChunks++;
-          }
-        } catch (e) {
-          console.error(`❌ Ошибка парсинга строки в базе знаний: ${e.message}`);
-        }
-      });
-      console.log(`✅ Успешно загружено ${validChunks} фрагментов знаний из ${knowledgeLines.length}`);
-    } else {
-      console.error(`❌ Файл базы знаний не найден: ${knowledgeBasePath}`);
-    }
-    
-    console.log(`Проверка существования файла тренировок: ${trainingDataPath}`);
-    // Загружаем данные о тренировках
-    if (fs.existsSync(trainingDataPath)) {
-      console.log(`✅ Файл найден: ${trainingDataPath}`);
-      const trainingContent = fs.readFileSync(trainingDataPath, 'utf8');
-      const trainingLines = trainingContent.split('\n').filter(line => line.trim());
-      console.log(`📚 Найдено ${trainingLines.length} строк в файле тренировок`);
-      
-      let validTrainings = 0;
-      trainingLines.forEach(line => {
-        try {
-          const chunk = JSON.parse(line);
-          if (chunk.text && chunk.text.trim()) {
-            knowledgeText += chunk.text + '\n\n';
-            validTrainings++;
-          }
-        } catch (e) {
-          console.error(`❌ Ошибка парсинга строки в файле тренировок: ${e.message}`);
-        }
-      });
-      console.log(`✅ Успешно загружено ${validTrainings} фрагментов тренировок из ${trainingLines.length}`);
-    } else {
-      console.error(`❌ Файл тренировок не найден: ${trainingDataPath}`);
-    }
-    
-    console.log(`📊 Общий размер базы знаний: ${knowledgeText.length} символов`);
-    if (knowledgeText.length === 0) {
-      console.error('⚠️ ВНИМАНИЕ: База знаний пуста! Это приведет к некачественным ответам');
-    }
-    
-    return knowledgeText;
-  } catch (error) {
-    console.error('❌ Ошибка загрузки базы знаний Дианы:', error);
-    return '';
-  }
-}
-
-
 
 // Вспомогательные функции для аналитики
 function groupReasonsByCategory(reasons) {
@@ -948,128 +401,13 @@ function groupReasonsByCategory(reasons) {
 }
 
 function generateRecommendations(avgCompletion, reasonStats, weekStats) {
-  const recommendations = [];
-  
+  const result = [];
   if (avgCompletion < 50) {
-    recommendations.push({
-      type: 'critical',
-      title: 'Снижение нагрузки',
-      text: 'Рекомендуем уменьшить количество упражнений и упростить план питания для лучшей выполнимости.'
-    });
+    result.push({ type: 'critical', text: 'Очень низкое выполнение. Нужно срочно пересмотреть план.' });
   }
-  
-  // Анализируем основные причины пропусков упражнений
-  const topExerciseCategory = Object.keys(reasonStats.exercise).reduce((a, b) => 
-    reasonStats.exercise[a]?.count > reasonStats.exercise[b]?.count ? a : b, 'time');
-    
-  if (reasonStats.exercise[topExerciseCategory]?.count > 2) {
-    switch (topExerciseCategory) {
-      case 'time':
-        recommendations.push({
-          type: 'schedule',
-          title: 'Оптимизация времени',
-          text: 'Попробуйте короткие 15-минутные тренировки утром или разбейте упражнения на части в течение дня.'
-        });
-        break;
-      case 'energy':
-        recommendations.push({
-          type: 'energy',
-          title: 'Работа с энергией',
-          text: 'Рекомендуем пересмотреть режим сна и добавить энергизирующие упражнения.'
-        });
-        break;
-      case 'motivation':
-        recommendations.push({
-          type: 'motivation',
-          title: 'Поддержка мотивации',
-          text: 'Найдите партнера по тренировкам или награждайте себя за выполнение целей.'
-        });
-        break;
-    }
-  }
-  
-  return recommendations;
+  // ...дополнительная логика...
+  return result;
 }
-
-function determineAdjustments(avgCompletion, reasonStats) {
-  const adjustments = {
-    difficulty: 'maintain', // maintain, reduce, increase
-    goals: {},
-    schedule: 'keep' // keep, flexible, strict
-  };
-  
-  if (avgCompletion < 40) {
-    adjustments.difficulty = 'reduce';
-    adjustments.goals.exerciseReduction = 25; // уменьшить на 25%
-    adjustments.goals.mealSimplification = true;
-    adjustments.schedule = 'flexible';
-  } else if (avgCompletion > 80) {
-    adjustments.difficulty = 'increase';
-    adjustments.goals.exerciseIncrease = 15; // увеличить на 15%
-    adjustments.goals.newChallenges = true;
-  }
-  
-  return adjustments;
-}
-
-function generateMotivationalMessage(avgCompletion) {
-  if (avgCompletion >= 80) {
-    return "🎉 Невероятно! Вы показываете потрясающие результаты. Продолжайте в том же духе!";
-  } else if (avgCompletion >= 60) {
-    return "💪 Отличная работа! Вы на правильном пути. Небольшие улучшения приведут к большим результатам.";
-  } else if (avgCompletion >= 40) {
-    return "🌱 Помните: прогресс важнее совершенства. Каждый маленький шаг приближает вас к цели.";
-  } else {
-    return "🤗 Не сдавайтесь! Мы скорректируем план, чтобы он лучше подходил под ваш ритм жизни.";
-  }
-}
-
-// Endpoint для еженедельной аналитики
-app.post('/api/weekly-analytics', async (req, res) => {
-  try {
-    const { weekStats, userId, programId } = req.body;
-    
-    console.log('📊 Получены данные для анализа недели:', { userId, programId, daysCount: weekStats.length });
-    
-    // Вычисляем основные метрики недели
-    const weekSummary = calculateWeekSummary(weekStats);
-    
-    // Анализируем причины пропусков
-    const skipReasons = analyzeSkipReasons(weekStats);
-    
-    // Генерируем рекомендации на основе данных
-    const recommendations = generateWeeklyRecommendations(weekSummary, skipReasons);
-    
-    // Определяем корректировки для следующей недели
-    const adjustments = calculateWeeklyAdjustments(weekSummary, skipReasons);
-    
-    // Генерируем мотивационное сообщение
-    const motivationalMessage = generateMotivationalMessage(weekSummary.avgCompletion);
-    
-    const analysis = {
-      weekSummary,
-      skipReasons,
-      recommendations,
-      adjustments,
-      motivationalMessage,
-      generatedAt: new Date().toISOString()
-    };
-    
-    console.log('✅ Анализ недели сгенерирован:', analysis);
-    
-    res.json({
-      success: true,
-      analysis
-    });
-    
-  } catch (error) {
-    console.error('❌ Ошибка анализа недели:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Ошибка при анализе недели'
-    });
-  }
-});
 
 function calculateWeekSummary(weekStats) {
   const totalDays = weekStats.length;
@@ -1243,7 +581,6 @@ function calculateWeeklyAdjustments(weekSummary, skipReasons) {
   }
   
   return adjustments;
-}
 
 // Функция для проверки и улучшения разнообразия блюд в рационе
 function ensureDietDiversity(mealPlan) {
@@ -1290,7 +627,7 @@ function ensureDietDiversity(mealPlan) {
           // Проверяем на повторение названий блюд
           if (mealNames.includes(meal.meal.name)) {
             duplicatesFound = true;
-            console.log(`⚠️ Найдено повторение блюда "${meal.meal.name}" в день ${day.day} недели ${week.week}`);
+            console.log('Найдено повторение блюда "' + meal.meal.name + '" в день ' + day.day + ' недели ' + week.week);
           }
           mealNames.push(meal.meal.name);
           
@@ -1305,7 +642,7 @@ function ensureDietDiversity(mealPlan) {
                 if (ingredient.name.toLowerCase().includes(keyword)) {
                   if (proteinSources.some(source => source.toLowerCase().includes(keyword))) {
                     duplicatesFound = true;
-                    console.log(`⚠️ Найдено повторение источника белка "${ingredient.name}" в день ${day.day} недели ${week.week}`);
+                    console.log('Найдено повторение источника белка "' + ingredient.name + '" в день ' + day.day + ' недели ' + week.week);
                   }
                   proteinSources.push(ingredient.name);
                   break;
@@ -1596,26 +933,27 @@ app.post('/api/generate-weekly-plan', async (req, res) => {
         const userSettings = await getUserSettings(userId);
         
         // Формируем контекст для Mistral
-        let context = `Генерация плана питания с учетом:
-- Текущий процент выполнения: ${progress.executionRate * 100}%
-- Частые причины пропуска: ${progress.commonReasons.join(', ')}
-- Тип диеты: ${userSettings.dietType}
-- Исключенные продукты: ${userSettings.excludedProducts.join(', ')}
-- Предпочитаемые продукты: ${userSettings.preferredProteins.join(', ')}`;
+        let context =
+          'Генерация плана питания с учетом:\n' +
+          '- Текущий процент выполнения: ' + (progress.executionRate * 100) + '%\n' +
+          '- Частые причины пропуска: ' + progress.commonReasons.join(', ') + '\n' +
+          '- Тип диеты: ' + userSettings.dietType + '\n' +
+          '- Исключенные продукты: ' + userSettings.excludedProducts.join(', ') + '\n' +
+          '- Предпочитаемые продукты: ' + userSettings.preferredProteins.join(', ');
 
         // Запрос к Mistral с учетом контекста
         const response = await fetch("https://api.mistral.ai/v1/chat/completions", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${process.env.MISTRAL_API_KEY}`
+                "Authorization": 'Bearer ' + process.env.MISTRAL_API_KEY
             },
             body: JSON.stringify({
                 model: "mistral-medium",
                 messages: [
                     { 
                         role: "system", 
-                        content: `Ты - Диана, эксперт по питанию. Генерируешь план на основе:\n${context}`
+                        content: 'Ты - Диана, эксперт по питанию. Генерируешь план на основе:\n' + context
                     },
                     { 
                         role: "user", 
@@ -1628,7 +966,7 @@ app.post('/api/generate-weekly-plan', async (req, res) => {
         });
 
         if (!response.ok) {
-            throw new Error(`Mistral API error: ${response.status}`);
+            throw new Error('Mistral API error: ' + response.status);
         }
 
         const data = await response.json();
@@ -1652,12 +990,12 @@ app.post('/api/generate-weekly-plan', async (req, res) => {
 });
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log('Server running on port ' + PORT);
 });
 
 console.log('=== BACKEND INDEX.JS ЗАПУЩЕН ===');
 
-export default app;
+module.exports = app;
 
 // --- Реальные функции расчёта прогресса на основе planExecution ---
 function calculateWorkoutProgress(userHistory) {
@@ -1790,6 +1128,7 @@ function analyzeCommonIssues(userHistory) {
     .sort(([,a], [,b]) => b - a)
     .map(([reason]) => reason);
 }
+}
 
 function calculateImprovements(userHistory) {
   // Можно реализовать тренды по неделям, если потребуется
@@ -1829,7 +1168,7 @@ app.get('/api/user/day-status/:userId', async (req, res) => {
 app.get('/api/user/nutrition/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        const userFile = path.join(__dirname, 'backup_files', 'users', `quiz_${userId}.json`);
+        const userFile = path.join(__dirname, 'backup_files', 'users', 'quiz_' + userId + '.json');
         console.log('[DIAGNOSTIC] /api/user/nutrition/:userId userId:', userId);
         console.log('[DIAGNOSTIC] userFile:', userFile);
         if (!fs.existsSync(userFile)) {
@@ -1899,6 +1238,7 @@ app.get('/api/user/quiz-answers/:userId', async (req, res) => {
     }
 });
 
+
 // Эндпоинт для сохранения ответов квиза пользователя
 app.post('/api/user/quiz-answers/:userId', async (req, res) => {
     try {
@@ -1914,236 +1254,56 @@ app.post('/api/user/quiz-answers/:userId', async (req, res) => {
     }
 });
 
-// Функция для расчета базального метаболизма (BMR)
-function calculateBMR(quiz) {
-  const { weight_kg, height_cm, age, sex } = quiz;
-  
-  if (!weight_kg || !height_cm || !age) {
-    return 0;
-  }
-  
-  // Формула Миффлина-Сан Жеора
-  let bmr;
-  if (sex === 'male') {
-    bmr = 10 * weight_kg + 6.25 * height_cm - 5 * age + 5;
-  } else {
-    bmr = 10 * weight_kg + 6.25 * height_cm - 5 * age - 161;
-  }
-  
-  return Math.round(bmr);
-}
+// API endpoint для активации премиума
+app.post('/api/activate-premium', async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'userId is required' });
 
-// Функция для анализа данных пользователя
-function analyzeUserData(userData) {
-  let analysis = [];
-  
-  // Анализ квиза
-  if (userData.quiz) {
-    const quiz = userData.quiz;
-    analysis.push(`👤 ИМЯ ПОЛЬЗОВАТЕЛЯ: ${quiz.name || 'НЕ УКАЗАНО'}`);
-    analysis.push(`⚖️ Пол: ${quiz.sex === 'male' ? 'мужской' : 'женский'}, возраст: ${quiz.age || 'не указан'}`);
-    analysis.push(`📏 Рост: ${quiz.height_cm || 'не указан'} см, вес: ${quiz.weight_kg || 'не указан'} кг`);
+  try {
+    console.log(`🎯 Активация премиума для пользователя: ${userId}`);
     
-    if (quiz.goal) {
-      console.log(`🔍 DEBUG: quiz.goal = ${quiz.goal}, тип: ${typeof quiz.goal}`);
-      
-      // В DianaFit цель ВСЕГДА похудение (минус килограммы)
-      // Независимо от значения goal, интерпретируем как похудение
-      let goalText = 'похудеть';
-      if (quiz.goal === 'поддерживать вес' || quiz.goal === 2) {
-        goalText = 'поддерживать вес';
-      } else if (typeof quiz.goal === 'string' && quiz.goal.includes('кг')) {
-        goalText = `сбросить ${quiz.goal}`;
-      } else if (typeof quiz.goal === 'number' && quiz.goal > 0 && quiz.goal <= 10) {
-        goalText = `сбросить ${quiz.goal} кг`;
-      }
-      
-      analysis.push(`🎯 Цель: ${goalText} (DianaFit - приложение для похудения)`);
-    }
+    // Загружаем данные пользователя
+    let userData = await readUserData(userId);
     
-    analysis.push(`🏃 Активность: ${quiz.activity_coef || 'не указана'}, тренировки: ${quiz.workouts_per_week || 0} раз в неделю`);
-    analysis.push(`🏋️ Уровень: ${quiz.training_level || 'не указан'}, место: ${quiz.gym_or_home === 'home' ? 'дома' : 'зал'}`);
+    // Активируем премиум
+    userData.isPremium = true;
+    userData.premiumActivatedAt = new Date().toISOString();
     
-    // Расчет калорий на основе данных квиза
-    if (quiz.weight_kg && quiz.height_cm && quiz.age) {
-      const bmr = calculateBMR(quiz);
-      const dailyCalories = Math.round(bmr * (quiz.activity_coef || 1.2));
-      
-      // В DianaFit ВСЕГДА дефицит калорий для похудения
-      const targetCalories = Math.round(dailyCalories * 0.85); // дефицит 15%
-      
-      analysis.push(`🔥 Норма калорий для поддержания веса: ${dailyCalories} ккал`);
-      analysis.push(`🎯 ТВОЯ НОРМА КАЛОРИЙ ДЛЯ ПОХУДЕНИЯ: ${targetCalories} ккал (это уже с дефицитом ${dailyCalories - targetCalories} ккал)`);
-      analysis.push(`⚠️ ВАЖНО: ${targetCalories} ккал - это ФИНАЛЬНАЯ цифра для похудения, не нужно ничего дополнительно вычитать`);
-    }
+    // Сохраняем обновленные данные
+    await writeUserData(userId, userData);
     
-    if (quiz.diet_flags) {
-      analysis.push(`🍽️ Диета: ${quiz.diet_flags}`);
-    }
-  } else {
-    analysis.push(`❌ Квиз не пройден - данные о пользователе отсутствуют`);
-    analysis.push(`⚠️ ИНСТРУКЦИЯ ДЛЯ БОТА: Если квиз не пройден, отвечай просто "Привет! Как дела?" без использования имени или шаблонов`);
+    console.log(`✅ Премиум активирован для пользователя: ${userId}`);
+    res.json({ 
+      success: true, 
+      message: 'Premium activated successfully',
+      isPremium: true
+    });
+  } catch (error) {
+    console.error('❌ Ошибка активации премиума:', error);
+    res.status(500).json({ error: 'Failed to activate premium' });
   }
-  
-  // Анализ прогресса
-  if (userData.dailyProgress) {
-    const progressDays = Object.keys(userData.dailyProgress);
-    const recentDays = progressDays.slice(-7); // последние 7 дней
-    
-    if (recentDays.length > 0) {
-      analysis.push(`📊 Активность за последние ${recentDays.length} дней:`);
-      
-      let workoutCount = 0;
-      let mealCount = 0;
-      
-      recentDays.forEach(day => {
-        const dayData = userData.dailyProgress[day];
-        if (dayData.tasks) {
-          workoutCount += dayData.tasks.filter(t => t.type === 'workout' && t.done).length;
-          mealCount += dayData.tasks.filter(t => t.type === 'meal' && t.done).length;
-        }
-      });
-      
-      analysis.push(`💪 Выполнено тренировок: ${workoutCount}`);
-      analysis.push(`🍽️ Выполнено приемов пищи: ${mealCount}`);
-      
-      if (workoutCount === 0 && mealCount === 0) {
-        analysis.push(`⚠️ ВАЖНО: Пользователь НЕ выполнил ни одной тренировки и не отметил приемы пищи`);
-      }
-    }
-  } else {
-    analysis.push(`📊 Нет данных о прогрессе - пользователь не выполнял тренировки`);
-  }
-  
-  // Анализ истории чата
-  if (userData.chatHistory && userData.chatHistory.length > 0) {
-    const lastMessages = userData.chatHistory.slice(-4);
-    analysis.push(`💬 Последние темы разговора: ${lastMessages.filter(m => m.role === 'user').map(m => m.content.substring(0, 30)).join(', ')}`);
-  } else {
-    analysis.push(`💬 Первое общение с Дианой`);
-  }
-  
-  return analysis.join('\n');
-}
+});
 
-// Функция для подсчета схожести текстов
-function calculateSimilarity(text1, text2) {
-  const words1 = text1.toLowerCase().split(/\s+/);
-  const words2 = text2.toLowerCase().split(/\s+/);
-  
-  const intersection = words1.filter(word => words2.includes(word));
-  const union = [...new Set([...words1, ...words2])];
-  
-  return intersection.length / union.length;
-}
+// API endpoint для получения статуса премиума
+app.get('/api/premium-status/:userId', async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) return res.status(400).json({ error: 'userId is required' });
 
-// Функция для создания более вариативного ответа
-function makeResponseMoreVaried(response, userMessage) {
-  const lowerMessage = userMessage.toLowerCase();
-  
-  // Если пользователь спрашивает совет
-  if (lowerMessage.includes('совет') || lowerMessage.includes('посоветуешь')) {
-    return 'Слушай, а что конкретно тебя интересует - питание или тренировки?';
+  try {
+    console.log(`🔍 Проверка премиум-статуса для пользователя: ${userId}`);
+    
+    // Загружаем данные пользователя
+    let userData = await readUserData(userId);
+    
+    const isPremium = userData.isPremium || false;
+    
+    console.log(`✅ Премиум-статус для пользователя ${userId}: ${isPremium}`);
+    res.json({ 
+      isPremium,
+      premiumActivatedAt: userData.premiumActivatedAt || null
+    });
+  } catch (error) {
+    console.error('❌ Ошибка проверки премиум-статуса:', error);
+    res.status(500).json({ error: 'Failed to check premium status' });
   }
-  
-  // Если пользователь спрашивает "что скажешь"
-  if (lowerMessage.includes('скажешь') || lowerMessage.includes('думаешь')) {
-    return 'Ну в общем, для похудения важны три вещи: питание, тренировки и сон. С чего начнём?';
-  }
-  
-  // Если повторное приветствие
-  if (lowerMessage.includes('привет') || lowerMessage.includes('здравствуй')) {
-    return 'Привет! Как дела?';
-  }
-  
-  // Общий вариативный ответ
-  return 'Слушай, чем могу помочь? Есть вопросы по тренировкам или питанию?';
-}
-
-// Функция для простых ответов когда ИИ генерирует странности
-function getSimpleResponse(userMessage) {
-  const lowerMessage = userMessage.toLowerCase();
-  
-  if (lowerMessage.includes('привет') || lowerMessage.includes('здравствуй')) {
-    return 'Привет! Как дела?';
-  }
-  
-  if (lowerMessage.includes('рецепт') || lowerMessage.includes('рецепты')) {
-    return 'Рецепты для рыбной диеты: лосось на гриле с овощами, рыбные котлеты с салатом, тунец с авокадо, рыбный суп с зеленью. Хочешь конкретный рецепт?';
-  }
-  
-  if (lowerMessage.includes('кето') && lowerMessage.includes('блюда')) {
-    return 'Кето-блюда: авокадо с яйцом, лосось с брокколи, орехи, сыр с овощами. Главное - жиры и белки, минимум углеводов.';
-  }
-  
-  if (lowerMessage.includes('кето') && lowerMessage.includes('рецепт')) {
-    return 'Кето-рецепты: рыба на гриле с авокадо, омлет с сыром, салат с орехами и оливковым маслом.';
-  }
-  
-  if (lowerMessage.includes('кето')) {
-    return 'На кето важно: жиры 70%, белки 25%, углеводы 5%. Следи за калориями.';
-  }
-  
-  if (lowerMessage.includes('план') || lowerMessage.includes('тренировк')) {
-    return 'План тренировок уже есть в приложении. Как дела с выполнением?';
-  }
-  
-  if (lowerMessage.includes('питание') || lowerMessage.includes('еда')) {
-    return 'Что едим сегодня? Отмечаешь приемы пищи?';
-  }
-  
-  if (lowerMessage.includes('калории') || lowerMessage.includes('ккал')) {
-    return 'Твоя норма для похудения уже рассчитана. Следи за калориями!';
-  }
-  
-  if (lowerMessage.includes('совет') || lowerMessage.includes('посоветуешь')) {
-    return 'Что именно интересует - питание или тренировки?';
-  }
-  
-  if (lowerMessage.includes('мотивац') || lowerMessage.includes('вдохновл')) {
-    return 'Помни: каждый шаг, каждый правильный прием пищи - это твоя победа! Не сравнивай себя с другими, сравнивай с собой вчерашним. Ты уже молодец, что начал! 💪';
-  }
-  
-  if (lowerMessage.includes('мотивац') || lowerMessage.includes('мотивир')) {
-    return 'Понимаю, сложно держаться плана! Но помни - каждый день приближает к цели. Я в тебя верю! 💪';
-  }
-  
-  if (lowerMessage.includes('следовать') || lowerMessage.includes('придерживаться')) {
-    return 'Не думай о результате далеко - думай о сегодняшнем дне. Сегодня ты можешь сделать шаги и поесть по плану. Завтра - снова. Так и получится результат!';
-  }
-  
-  if (lowerMessage.includes('расписани') || lowerMessage.includes('план')) {
-    return 'Держись плана, даже если тяжело. Маленькие шаги каждый день - это твой путь к успеху!';
-  }
-  
-  if (lowerMessage.includes('трудно') || lowerMessage.includes('сложно')) {
-    return 'Понимаю, что трудно. Но ты уже начал, и это главное! Всегда пиши мне, если нужна поддержка.';
-  }
-  
-  if (lowerMessage.includes('шаги') || lowerMessage.includes('ходьба')) {
-    return 'Каждый шаг - это прогресс! Для здорового похудения старайся проходить 10-15 тысяч шагов в день. Начни с того, что есть - каждый шаг важен! 🚶‍♂️';
-  }
-  
-  if (lowerMessage.includes('диета') || lowerMessage.includes('питание')) {
-    return 'Помни: диета - это не ограничения, а осознанный выбор. Каждый правильный прием пищи - это забота о себе и своем теле! 🥗';
-  }
-  
-  if (lowerMessage.includes('результат') || lowerMessage.includes('прогресс')) {
-    return 'Прогресс важнее совершенства! Ты делаешь все правильно. Каждый новый день - это новая возможность стать лучше! 🌟';
-  }
-  
-  if (lowerMessage.includes('шаг') || lowerMessage.includes('ходьба')) {
-    return '10-15 тысяч шагов в день - это основа! Начни с малого, постепенно увеличивай количество шагов.';
-  }
-  
-  if (lowerMessage.includes('диета') || lowerMessage.includes('питание')) {
-    return 'У тебя есть план питания в приложении. Рыбная диета включает рыбу, овощи, молочные продукты, яйца!';
-  }
-  
-  if (lowerMessage.includes('рыбн') || lowerMessage.includes('fish')) {
-    return 'Рыбная диета - это рыба, овощи, молочные продукты, яйца. Много вариантов для разнообразия!';
-  }
-  
-  return 'Что интересует - рецепты, тренировки или мотивация? Всегда готова помочь! 💪';
-}
-
+});

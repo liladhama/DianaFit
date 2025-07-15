@@ -44,16 +44,16 @@ function getLocalPath(userId) {
 }
 
 export async function readUserData(userId) {
-  const userIdStr = String(userId); // Преобразуем в строку для Firestore
-  console.log(`[Firestore][readUserData] Попытка чтения данных для userId: ${userIdStr} (исходный: ${userId}, тип: ${typeof userId})`);
+  console.log(`[Firestore][readUserData] Попытка чтения данных для userId: ${userId}`);
   if (firestoreAvailable) {
     try {
-      console.log(`[Firestore][readUserData] Firestore доступен, читаем из коллекции: Dianafit_users/${userIdStr}`);
-      const doc = await db.collection('Dianafit_users').doc(userIdStr).get();
+      console.log(`[Firestore][readUserData] Firestore доступен, читаем из коллекции: Dianafit_users/${userId}`);
+      const doc = await db.collection('Dianafit_users').doc(userId).get();
       if (doc.exists) {
         const data = doc.data();
         console.log(`[Firestore][readUserData] ✅ Документ найден в Firestore:`, {
           userId: data.userId,
+          isPremium: data.isPremium || false,
           hasQuiz: !!data.quiz,
           hasDailyProgress: !!data.dailyProgress,
           hasProgramData: !!data.programData,
@@ -64,6 +64,7 @@ export async function readUserData(userId) {
         });
         return {
           userId: data.userId,
+          isPremium: data.isPremium || false,
           quiz: data.quiz,
           dailyProgress: data.dailyProgress,
           programData: data.programData,
@@ -73,8 +74,8 @@ export async function readUserData(userId) {
           lastUpdate: data.lastUpdate
         };
       }
-      console.warn(`[Firestore][readUserData] ⚠️ Документ не найден в Firestore: userId=${userIdStr}, создаем новый`);
-      return { userId: userIdStr };
+      console.warn(`[Firestore][readUserData] ⚠️ Документ не найден в Firestore: userId=${userId}, создаем новый`);
+      return { userId };
     } catch (e) {
       console.error(`[Firestore][readUserData] ❌ Ошибка чтения из Firestore:`, e);
       console.log(`[Firestore][readUserData] Переходим к локальному файлу как fallback`);
@@ -84,13 +85,14 @@ export async function readUserData(userId) {
     console.log(`[Firestore][readUserData] Firestore недоступен, используем локальный файл`);
   }
   // fallback: локальный файл
-  console.log(`[LocalFile][readUserData] Используем локальный файл для userId: ${userIdStr}`);
-  const file = getLocalPath(userIdStr);
+  console.log(`[LocalFile][readUserData] Используем локальный файл для userId: ${userId}`);
+  const file = getLocalPath(userId);
   if (fs.existsSync(file)) {
     try {
       const data = JSON.parse(fs.readFileSync(file, 'utf-8'));
       console.log(`[LocalFile][readUserData] ✅ Локальный файл найден:`, {
         userId: data.userId,
+        isPremium: data.isPremium || false,
         hasQuiz: !!data.quiz,
         hasDailyProgress: !!data.dailyProgress,
         hasProgramData: !!data.programData,
@@ -101,6 +103,7 @@ export async function readUserData(userId) {
       });
       return {
         userId: data.userId,
+        isPremium: data.isPremium || false,
         quiz: data.quiz,
         dailyProgress: data.dailyProgress,
         programData: data.programData,
@@ -114,20 +117,19 @@ export async function readUserData(userId) {
       return { userId };
     }
   }
-  console.log(`[LocalFile][readUserData] Локальный файл не найден, создаем новый профиль для userId: ${userIdStr}`);
-  return { userId: userIdStr };
+  console.log(`[LocalFile][readUserData] Локальный файл не найден, создаем новый профиль для userId: ${userId}`);
+  return { userId, isPremium: false };
 }
 
 export async function writeUserData(userId, data) {
-  const userIdStr = String(userId); // Преобразуем в строку для Firestore
-  console.log(`[writeUserData] Начинаем сохранение данных для userId: ${userIdStr} (исходный: ${userId}, тип: ${typeof userId})`);
+  console.log(`[writeUserData] Начинаем сохранение данных для userId: ${userId}`);
   console.log(`[writeUserData] Данные для сохранения:`, {
     userId: data.userId,
+    isPremium: data.isPremium || false,
     hasQuiz: !!data.quiz,
     hasDailyProgress: !!data.dailyProgress,
     hasProgramData: !!data.programData,
     hasDialogHistory: !!data.dialogHistory,
-    hasChatHistory: !!data.chatHistory,
     hasProfileChanges: !!data.profileChanges,
     hasPlanExecution: !!data.planExecution
   });
@@ -153,7 +155,6 @@ export async function writeUserData(userId, data) {
     dailyProgress: data.dailyProgress,
     programData: data.programData,
     dialogHistory: data.dialogHistory,
-    chatHistory: data.chatHistory,
     profileChanges: data.profileChanges,
     planExecution: data.planExecution,
     lastUpdate: new Date().toISOString()
@@ -165,7 +166,6 @@ export async function writeUserData(userId, data) {
     hasDailyProgress: !!saveData.dailyProgress,
     hasProgramData: !!saveData.programData,
     hasDialogHistory: !!saveData.dialogHistory,
-    hasChatHistory: !!saveData.chatHistory,
     hasProfileChanges: !!saveData.profileChanges,
     hasPlanExecution: !!saveData.planExecution,
     lastUpdate: saveData.lastUpdate
@@ -173,9 +173,9 @@ export async function writeUserData(userId, data) {
   
   if (firestoreAvailable) {
     try {
-      console.log(`[Firestore][writeUserData] Firestore доступен, сохраняем в коллекцию: Dianafit_users/${userIdStr}`);
-      await db.collection('Dianafit_users').doc(userIdStr).set(saveData);
-      console.log(`[Firestore][writeUserData] ✅ Данные успешно сохранены в Firestore: Dianafit_users/${userIdStr}`);
+      console.log(`[Firestore][writeUserData] Firestore доступен, сохраняем в коллекцию: Dianafit_users/${userId}`);
+      await db.collection('Dianafit_users').doc(userId).set(saveData);
+      console.log(`[Firestore][writeUserData] ✅ Данные успешно сохранены в Firestore: Dianafit_users/${userId}`);
       return;
     } catch (e) {
       console.error(`[Firestore][writeUserData] ❌ Ошибка записи в Firestore:`, e);
@@ -187,8 +187,8 @@ export async function writeUserData(userId, data) {
   }
   
   // fallback: локальный файл
-  console.log(`[LocalFile][writeUserData] Сохраняем в локальный файл для userId: ${userIdStr}`);
-  const file = getLocalPath(userIdStr);
+  console.log(`[LocalFile][writeUserData] Сохраняем в локальный файл для userId: ${userId}`);
+  const file = getLocalPath(userId);
   try {
     fs.writeFileSync(file, JSON.stringify(saveData, null, 2), 'utf-8');
     console.log(`[LocalFile][writeUserData] ✅ Данные успешно сохранены в локальный файл: ${file}`);
