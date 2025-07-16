@@ -18,6 +18,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
   const [nutritionInfo, setNutritionInfo] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showDianaNotification, setShowDianaNotification] = useState(false);
+  const [subscriptionInfo, setSubscriptionInfo] = useState(null);
 
   // Состояние для диеты и коэффициентов
   const [dietStats, setDietStats] = useState({
@@ -178,6 +179,26 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
       }
     };
     fetchQuizAnswers();
+  }, []);
+
+  // Загружаем данные о подписке из Firestore
+  useEffect(() => {
+    const fetchSubscriptionInfo = async () => {
+      try {
+        const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
+        const response = await fetch(`${API_URL}/api/user/subscription-info/${userId}`);
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Данные о подписке:', data);
+          setSubscriptionInfo(data);
+        } else {
+          console.log('Данные о подписке не найдены');
+        }
+      } catch (error) {
+        console.error('Ошибка загрузки данных о подписке:', error);
+      }
+    };
+    fetchSubscriptionInfo();
   }, []);
 
   // Функция для обновления quizAnswers после изменений в QuizSettings
@@ -551,6 +572,101 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                 }
               }}
             />
+            
+            {/* Блок информации о премиум-подписке в настройках */}
+            {subscriptionInfo && subscriptionInfo.isActive && (
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.15)',
+                borderRadius: 14,
+                padding: '16px 20px',
+                marginTop: 20,
+                border: '1px solid rgba(255, 255, 255, 0.25)',
+                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: 12
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    width: 36,
+                    height: 36,
+                    background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 18
+                  }}>
+                    💎
+                  </div>
+                  <div>
+                    <h4 style={{
+                      fontSize: 16,
+                      fontWeight: 700,
+                      color: '#222',
+                      margin: 0,
+                      fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
+                      letterSpacing: '0.3px'
+                    }}>
+                      Премиум подписка
+                    </h4>
+                    <p style={{
+                      fontSize: 12,
+                      color: '#22c55e',
+                      margin: '2px 0 0 0',
+                      fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
+                      fontWeight: 600
+                    }}>
+                      Активна
+                    </p>
+                  </div>
+                </div>
+                {subscriptionInfo.startDate && subscriptionInfo.endDate && (
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-end',
+                    gap: 2
+                  }}>
+                    <div style={{
+                      fontSize: 11,
+                      color: '#888',
+                      fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
+                      fontWeight: 500
+                    }}>
+                      с {new Date(subscriptionInfo.startDate).toLocaleDateString('ru-RU')}
+                    </div>
+                    <div style={{
+                      fontSize: 11,
+                      color: '#888',
+                      fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
+                      fontWeight: 500
+                    }}>
+                      до {new Date(subscriptionInfo.endDate).toLocaleDateString('ru-RU')}
+                    </div>
+                  </div>
+                )}
+                {(!subscriptionInfo.startDate || !subscriptionInfo.endDate) && subscriptionInfo.daysLeft && (
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-end',
+                    gap: 2
+                  }}>
+                    <div style={{
+                      fontSize: 11,
+                      color: '#888',
+                      fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
+                      fontWeight: 500
+                    }}>
+                      Осталось: {subscriptionInfo.daysLeft} дн.
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         ) : (
           <>
@@ -761,6 +877,33 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
               </div>
 
               {/* Улучшенная статистика питания */}
+              {/* Моя цель */}
+              <div style={{
+                width: '100%',
+                maxWidth: '100%',
+                background: 'rgba(255,255,255,0.10)',
+                borderRadius: 16,
+                padding: '16px 12px',
+                margin: '18px 0 18px 0',
+                display: 'flex',
+                alignItems: 'center',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.10)',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+                fontWeight: 700,
+                fontSize: 20,
+                color: '#3730a3',
+                letterSpacing: '0.02em',
+                justifyContent: 'center',
+                gap: 12,
+                boxSizing: 'border-box',
+                overflow: 'hidden'
+              }}>
+                <span style={{fontSize: 26, marginRight: 8}}>🎯</span>
+                <span style={{fontSize: 16, color: '#6366f1', textTransform: 'uppercase', letterSpacing: '1px', marginRight: 10, fontWeight: 800}}>Моя цель</span>
+                <span style={{fontSize: 20, color: '#1e293b', fontWeight: 800}}>
+                  -{quizAnswers.goal || 3} кг в месяц
+                </span>
+              </div>
               <div style={{ marginBottom: 24 }}>
                 <h3 style={{ 
                   fontSize: 18, 
@@ -796,17 +939,9 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                           border: '1px solid rgba(255, 255, 255, 0.2)',
                           boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
                           transition: 'all 0.3s ease',
-                          cursor: 'pointer'
-                        }}
-                        onMouseEnter={e => {
-                          e.target.style.transform = 'translateY(-2px)';
-                          e.target.style.boxShadow = '0 6px 18px rgba(0, 0, 0, 0.2)';
-                        }}
-                        onMouseLeave={e => {
-                          e.target.style.transform = 'translateY(0)';
-                          e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
-                        }}
-                        >
+                          userSelect: 'none',
+                          pointerEvents: 'none'
+                        }}>
                           <div style={{ fontSize: 20, marginBottom: 6 }}>{item.icon}</div>
                           <div style={{ 
                             fontSize: 18, 
@@ -831,6 +966,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                     </div>
                   );
                 })()}
+                
                 {nutritionInfo?.error && (
                   <div style={{
                     background: 'rgba(255, 0, 0, 0.1)',
@@ -869,98 +1005,26 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
         userAnswers={quizAnswers}
       />
 
-      {/* Улучшенная кнопка цели */}
-      <div style={{
-        animation: 'slideUp 0.8s ease-out 0.6s both',
-        zIndex: 10,
-        position: 'relative',
-        marginTop: 20 // Добавляем отступ сверху для смещения вниз
-      }}>
+        {/* Кнопка поддержки */}
         <button
           style={{
-            background: 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%)',
-            backdropFilter: 'blur(20px)',
-            border: '2px solid rgba(255, 255, 255, 0.3)',
-            borderRadius: 50,
-            padding: '16px 48px', // Уменьшаем вертикальный padding с 24px до 16px
+            margin: '24px auto 0 auto',
+            display: 'block',
+            background: 'linear-gradient(135deg, #e0e7ff 0%, #a5b4fc 100%)',
+            border: 'none',
+            borderRadius: 30,
+            padding: '14px 36px',
+            fontSize: 16,
+            fontWeight: 700,
+            color: '#3730a3',
+            boxShadow: '0 2px 8px rgba(99,102,241,0.10)',
             cursor: 'pointer',
-            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-            outline: 'none',
-            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255,255,255,0.8)',
-            minWidth: 320,
-            position: 'relative',
-            overflow: 'hidden'
+            transition: 'background 0.2s, color 0.2s',
           }}
-          onMouseEnter={(e) => {
-            e.target.style.transform = 'translateY(-8px) scale(1.02)';
-            e.target.style.boxShadow = '0 30px 60px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255,255,255,0.8)';
-            e.target.style.background = 'linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.9) 100%)';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = 'translateY(0) scale(1)';
-            e.target.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.15), inset 0 1px 0 rgba(255,255,255,0.8)';
-            e.target.style.background = 'linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%)';
-          }}
+          onClick={() => alert('В будущем здесь будет чат или ссылка на поддержку в Telegram!')}
         >
-          {/* Animated background effect */}
-          <div style={{
-            position: 'absolute',
-            top: 0,
-            left: '-100%',
-            width: '100%',
-            height: '100%',
-            background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)',
-            transition: 'left 0.6s ease'
-          }} />
-          
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: 16,
-            position: 'relative',
-            zIndex: 1
-          }}>
-            <div style={{
-              width: 36, // Уменьшаем с 48px до 36px
-              height: 36, // Уменьшаем с 48px до 36px
-              background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-              borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 20, // Уменьшаем с 24px до 20px
-              boxShadow: '0 8px 25px rgba(102, 126, 234, 0.4)'
-            }}>
-              🎯
-            </div>
-            <div style={{ textAlign: 'left' }}>
-              <div style={{
-                fontSize: 12, // Уменьшаем с 14px до 12px
-                color: 'rgba(102, 126, 234, 0.8)',
-                fontWeight: 600,
-                textTransform: 'uppercase',
-                letterSpacing: '1px',
-                marginBottom: 2 // Уменьшаем с 4px до 2px
-              }}>
-                Моя цель
-              </div>
-              <div style={{
-                fontSize: 20, // Уменьшаем с 24px до 20px
-                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                backgroundClip: 'text',
-                fontWeight: 800,
-                letterSpacing: '0.02em',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-                color: '#222'
-              }}>
-                -{quizAnswers.goal || 3} кг
-              </div>
-            </div>
-          </div>
+          🛟 Обратиться в поддержку
         </button>
       </div>
-    </div>
   );
 }

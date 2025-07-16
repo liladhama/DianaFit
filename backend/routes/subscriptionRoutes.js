@@ -4,6 +4,29 @@ import subscriptionManager from '../utils/subscriptionManager.js';
 
 const router = express.Router();
 
+// Получение информации о подписке для профиля
+router.get('/info/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    const subscriptionStatus = await subscriptionManager.getSubscriptionStatus(userId);
+    
+    res.json({
+      isActive: subscriptionStatus.isPremium,
+      startDate: subscriptionStatus.startDate,
+      endDate: subscriptionStatus.endDate,
+      type: subscriptionStatus.type || 'premium'
+    });
+  } catch (error) {
+    console.error('Ошибка получения информации о подписке:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Получение текущего статуса подписки
 router.get('/status/:userId', async (req, res) => {
   try {

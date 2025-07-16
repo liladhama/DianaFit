@@ -1265,6 +1265,33 @@ app.get('/api/user/nutrition/:userId', async (req, res) => {
 });
 
 // Эндпоинт для получения ответов квиза пользователя
+app.get('/api/user/subscription-info/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
+    const subscriptionStatus = await subscriptionManager.default.getSubscriptionStatus(userId);
+    
+    // Получаем сырые данные пользователя для доступа к датам
+    const userData = await readUserData(userId);
+    const subscription = userData?.subscription || {};
+    
+    res.json({
+      isActive: subscriptionStatus.isPremium,
+      startDate: subscription.premiumActivatedAt,
+      endDate: subscription.premiumExpiresAt,
+      type: 'premium',
+      daysLeft: subscriptionStatus.daysLeft
+    });
+  } catch (error) {
+    console.error('Ошибка получения информации о подписке:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.get('/api/user/quiz-answers/:userId', async (req, res) => {
     try {
         const { userId } = req.params;

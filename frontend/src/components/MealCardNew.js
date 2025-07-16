@@ -92,7 +92,7 @@ const MealCard = ({
       border: '1px solid #f1f5f9',
       ...style
     }}>
-      {/* Заголовок приема пищи + AI + стрелки */}
+      {/* Заголовок приема пищи + стрелки */}
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
@@ -102,42 +102,35 @@ const MealCard = ({
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 8
+          gap: 4 // уменьшено расстояние между названием и эмодзи
         }}>
-          <span style={{ fontSize: 22, marginRight: 6 }}>
+          <span style={{ fontSize: 22, marginRight: 2 }}>
             {getMealIcon(meal.type)}
           </span>
           <h3 style={{ fontSize: 20, color: '#1e293b', margin: 0 }}>
             {meal.type}
           </h3>
-          {isAI && (
-            <span style={{
-              fontSize: 11,
-              color: '#a21caf',
-              background: '#f3e8ff',
-              borderRadius: 6,
-              padding: '2px 7px',
-              fontWeight: 700,
-              marginLeft: 8
-            }}>AI</span>
-          )}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, maxWidth: 180, marginLeft: -10 }}>
           {isAI && meal.options.length > 1 && (
             <>
               <button 
                 onClick={handlePrev} 
                 style={{ 
-                  fontSize: 22, 
+                  fontSize: 20, 
                   cursor: 'pointer', 
                   background: '#ede9fe', 
                   border: 'none', 
                   color: '#7c3aed', 
-                  padding: '4px 10px', 
-                  borderRadius: 10, 
+                  padding: '2px 8px', 
+                  borderRadius: 8, 
                   boxShadow: '0 2px 8px #a78bfa33',
                   transition: 'background 0.2s, color 0.2s',
-                  marginRight: 2
+                  marginRight: 1,
+                  maxHeight: 28,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
                 onMouseEnter={e => { e.target.style.background = '#c7d2fe'; e.target.style.color = '#4f46e5'; }}
                 onMouseLeave={e => { e.target.style.background = '#ede9fe'; e.target.style.color = '#7c3aed'; }}
@@ -145,28 +138,38 @@ const MealCard = ({
               <span style={{ 
                 fontSize: 15, 
                 color: '#4f46e5', 
-                minWidth: 34, 
+                minWidth: 30, 
                 textAlign: 'center', 
                 fontWeight: 700, 
                 letterSpacing: '0.5px',
                 background: '#f3f4f6',
-                borderRadius: 6,
-                padding: '2px 8px',
-                margin: '0 2px'
+                borderRadius: 8,
+                padding: '2px 6px',
+                margin: '0 1px',
+                maxHeight: 28,
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                whiteSpace: 'nowrap'
               }}>{selectedIdx + 1} / {meal.options.length}</span>
               <button 
                 onClick={handleNext} 
                 style={{ 
-                  fontSize: 22, 
+                  fontSize: 20, 
                   cursor: 'pointer', 
                   background: '#ede9fe', 
                   border: 'none', 
                   color: '#7c3aed', 
-                  padding: '4px 10px', 
-                  borderRadius: 10, 
+                  padding: '2px 8px', 
+                  borderRadius: 8, 
                   boxShadow: '0 2px 8px #a78bfa33',
                   transition: 'background 0.2s, color 0.2s',
-                  marginLeft: 2
+                  marginLeft: 1,
+                  maxHeight: 28,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
                 }}
                 onMouseEnter={e => { e.target.style.background = '#c7d2fe'; e.target.style.color = '#4f46e5'; }}
                 onMouseLeave={e => { e.target.style.background = '#ede9fe'; e.target.style.color = '#7c3aed'; }}

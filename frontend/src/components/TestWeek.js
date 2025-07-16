@@ -362,19 +362,38 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
                     🍽️ Питание
                   </div>
                   <div style={{ fontSize: 12, color: '#666' }}>
-                    {dayData.planData && dayData.planData.meals ? (
-                      dayData.planData.meals.map((meal, mealIndex) => {
-                        const mealInfo = meal.meal || { name: meal.menu || 'Не указано', ingredients: [] };
-                        const mealName = typeof mealInfo === 'string' ? mealInfo : mealInfo.name;
-                        return (
-                          <div key={mealIndex} style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>
-                            • {meal.type}: {mealName}
-                          </div>
-                        );
-                      })
-                    ) : (
-                      'Завтрак: Овсянка с ягодами • Обед: Курица с рисом • Ужин: Творог с зеленью'
-                    )}
+                    {(() => {
+                      // Примеры блюд для каждого типа
+                      const fallbackMeals = {
+                        'Завтрак': 'Овсянка с ягодами',
+                        'Перекус': 'Протеиновый коктейль',
+                        'Обед': 'Суп из чечевицы с овощами',
+                        'Полдник': 'Авокадо-тост с томатами',
+                        'Ужин': 'Лосось с лимоном и спаржей'
+                      };
+                      if (dayData.planData && dayData.planData.meals) {
+                        return dayData.planData.meals.map((meal, mealIndex) => {
+                          const mealInfo = meal.meal || { name: meal.menu || fallbackMeals[meal.type] || 'Блюдо' };
+                          const mealName = typeof mealInfo === 'string' ? mealInfo : mealInfo.name;
+                          // Если mealName пусто или "Не указано", подставляем пример
+                          const showName = (!mealName || mealName === 'Не указано') ? (fallbackMeals[meal.type] || 'Блюдо') : mealName;
+                          return (
+                            <div key={mealIndex} style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>
+                              • {meal.type}: {showName}
+                            </div>
+                          );
+                        });
+                      } else {
+                        // Если вообще нет массива, выводим все типы с примерами
+                        return [
+                          <div key="breakfast" style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>• Завтрак: Овсянка с ягодами</div>,
+                          <div key="snack" style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>• Перекус: Протеиновый коктейль</div>,
+                          <div key="lunch" style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>• Обед: Суп из чечевицы с овощами</div>,
+                          <div key="afternoon" style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>• Полдник: Авокадо-тост с томатами</div>,
+                          <div key="dinner" style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>• Ужин: Лосось с лимоном и спаржей</div>
+                        ];
+                      }
+                    })()}
                   </div>
                 </div>
               </div>
@@ -384,38 +403,40 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
       </div>
 
       {/* Кнопка разблокировки */}
-      <button
-        onClick={handleUnlock}
-        style={{
-          background: 'linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)',
-          borderRadius: 25,
-          padding: '18px 36px',
-          border: 'none',
-          cursor: 'pointer',
-          transition: 'all 0.2s',
-          outline: 'none',
-          boxShadow: '0px 4px 12px 0px rgba(255, 107, 53, 0.4)',
-          marginTop: 20
-        }}
-        onMouseEnter={(e) => {
-          e.target.style.transform = 'translateY(-2px)';
-          e.target.style.boxShadow = '0px 6px 16px 0px rgba(255, 107, 53, 0.5)';
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.transform = 'translateY(0px)';
-          e.target.style.boxShadow = '0px 4px 12px 0px rgba(255, 107, 53, 0.4)';
-        }}
-      >
-        <div style={{
-          fontFamily: 'Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
-          fontSize: 16,
-          fontWeight: 700,
-          color: '#fff',
-          letterSpacing: '0.5px'
-        }}>
-          РАЗБЛОКИРОВАТЬ ПОЛНЫЙ ДОСТУП
-        </div>
-      </button>
+      {!isPremium && (
+        <button
+          onClick={handleUnlock}
+          style={{
+            background: 'linear-gradient(135deg, #FF6B35 0%, #F7931E 100%)',
+            borderRadius: 25,
+            padding: '18px 36px',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'all 0.2s',
+            outline: 'none',
+            boxShadow: '0px 4px 12px 0px rgba(255, 107, 53, 0.4)',
+            marginTop: 20
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.transform = 'translateY(-2px)';
+            e.target.style.boxShadow = '0px 6px 16px 0px rgba(255, 107, 53, 0.5)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.transform = 'translateY(0px)';
+            e.target.style.boxShadow = '0px 4px 12px 0px rgba(255, 107, 53, 0.4)';
+          }}
+        >
+          <div style={{
+            fontFamily: 'Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+            fontSize: 16,
+            fontWeight: 700,
+            color: '#fff',
+            letterSpacing: '0.5px'
+          }}>
+            РАЗБЛОКИРОВАТЬ ПОЛНЫЙ ДОСТУП
+          </div>
+        </button>
+      )}
 
       {/* Чат с Дианой */}
       {showDianaChat && (
