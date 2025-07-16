@@ -30,11 +30,12 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
   return (
     <div style={{
       width: '100vw',
-      minHeight: '100vh',
+      height: '100vh',
+      overflow: 'hidden',
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      background: 'linear-gradient(180deg, rgba(120,180,255,0.98) 0%, rgba(150,200,255,0.97) 100%)', // чуть более яркий голубой
+      background: 'linear-gradient(180deg, rgba(120,180,255,0.98) 0%, rgba(150,200,255,0.97) 100%)',
       padding: '16px 16px 32px 16px',
       boxSizing: 'border-box',
       position: 'relative'
@@ -202,13 +203,17 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
         src={dianaPayment} 
         alt="Диана" 
         style={{
-          width: '100%',
-          maxWidth: 320,
-          height: 'auto',
+          width: '120%',
+          maxWidth: 480,
+          height: '60vh',
           objectFit: 'contain',
           objectPosition: 'center bottom',
-          marginTop: 8,
-          marginBottom: 0
+          marginTop: '-32px',
+          marginBottom: 0,
+          display: 'block',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          overflow: 'visible'
         }}
       />
     </div>
