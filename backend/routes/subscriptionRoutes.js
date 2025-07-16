@@ -1,6 +1,6 @@
 // Роуты для управления подпиской и лимитами
 import express from 'express';
-import * as subscriptionManager from '../utils/subscriptionManager.js';
+import subscriptionManager from '../utils/subscriptionManager.js';
 
 const router = express.Router();
 
