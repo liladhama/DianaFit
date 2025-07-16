@@ -10,7 +10,7 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
     const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
     try {
       // Запрос на backend для активации премиума
-      const res = await fetch(`https://dianafit.onrender.com/api/activate-premium`, {
+      const res = await fetch(`https://dianafit.onrender.com/api/subscription/activate-premium`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: tgUserId })

@@ -291,13 +291,27 @@ function App() {
   }, [weekData, showTodayBlock]);
 
   // Функция активации премиум доступа (для тестирования)
-  const activatePremium = () => {
+  const activatePremium = async () => {
+    const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
     console.log('🎯 App.js: activatePremium вызван');
-    setIsPremium(true);
-    setUnlocked(true);
-    localStorage.setItem('dianafit_premium', 'true');
-    console.log('🔥 App.js: Премиум доступ активирован! isPremium=true, unlocked=true');
-    console.log('🔥 App.js: Состояние сохранено в localStorage');
+    try {
+      const res = await fetch('https://dianafit.onrender.com/api/subscription/activate-premium', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: tgUserId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setIsPremium(true);
+        setUnlocked(true);
+        localStorage.setItem('dianafit_premium', 'true');
+        console.log('🔥 App.js: Премиум доступ активирован на сервере!');
+      } else {
+        console.error('❌ Ошибка активации премиум на сервере:', data);
+      }
+    } catch (err) {
+      console.error('❌ Ошибка запроса на сервер для активации премиум:', err);
+    }
   };
 
   // Проверяем статус подписки при входе в приложение

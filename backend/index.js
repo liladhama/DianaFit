@@ -49,7 +49,14 @@ app.use('/api/recipes', recipeRouter);
 app.use('/api/progress', progressRouter);
 app.use('/api/subscription', subscriptionRouter);
 
-console.log('🔗 Роутеры подключены');
+console.log('🔗 Подключаем роутер подписки...');
+app.use('/api/subscription', subscriptionRouter);
+console.log('✅ Роутер подписки подключён');
+console.log('🔗 Подключаем остальные роутеры...');
+app.use('/api', programApi);
+app.use('/api/recipes', recipeRouter);
+app.use('/api/progress', progressRouter);
+console.log('✅ Остальные роутеры подключены');
 
 app.get('/', (req, res) => {
   res.send('Backend работает!');

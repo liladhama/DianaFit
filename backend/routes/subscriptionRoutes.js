@@ -30,6 +30,12 @@ router.get('/status/:userId', async (req, res) => {
 
 // Активация премиум подписки
 router.post('/activate-premium', async (req, res) => {
+  console.log('[SUBSCRIPTION] POST /activate-premium входящий запрос:', {
+    method: req.method,
+    url: req.originalUrl,
+    headers: req.headers,
+    body: req.body
+  });
   try {
     const { userId } = req.body;
     

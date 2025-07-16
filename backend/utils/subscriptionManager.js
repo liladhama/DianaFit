@@ -41,23 +41,25 @@ export class SubscriptionManager {
 
   // Активация премиум подписки
   async activatePremium(userId) {
-    const userData = await readUserData(userId);
-    const subscription = userData.subscription || {};
-    
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + (this.PREMIUM_DURATION_DAYS * 24 * 60 * 60 * 1000));
-    
-    subscription.premiumActivatedAt = now.toISOString();
-    subscription.premiumExpiresAt = expiresAt.toISOString();
-    
-    await this.saveSubscriptionData(userId, subscription);
-    
-    return {
-      success: true,
-      activatedAt: subscription.premiumActivatedAt,
-      expiresAt: subscription.premiumExpiresAt,
-      daysLeft: this.PREMIUM_DURATION_DAYS
-    };
+    try {
+      const userData = await readUserData(userId);
+      const subscription = userData.subscription || {};
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + (this.PREMIUM_DURATION_DAYS * 24 * 60 * 60 * 1000));
+      subscription.premiumActivatedAt = now.toISOString();
+      subscription.premiumExpiresAt = expiresAt.toISOString();
+      await this.saveSubscriptionData(userId, subscription);
+      return {
+        success: true,
+        activatedAt: subscription.premiumActivatedAt,
+        expiresAt: subscription.premiumExpiresAt,
+        daysLeft: this.PREMIUM_DURATION_DAYS
+      };
+    } catch (e) {
+      console.error(`[activatePremium] Ошибка активации премиума для userId=${userId}:`, e);
+      if (e && e.stack) console.error(e.stack);
+      throw e;
+    }
   }
 
   // Проверка лимита запросов к Диане
