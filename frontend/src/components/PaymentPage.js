@@ -197,31 +197,20 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
         <div style={{ minHeight: '60px' }} />
       </div>
 
-      {/* Изображение Дианы ниже всего контента с гарантированным отступом */}
-      <div style={{
-        position: 'absolute',
-        left: 0,
-        width: '100vw',
-        height: '55vh',
-        overflow: 'hidden',
-        zIndex: 1,
-        pointerEvents: 'none',
-        top: 'calc(100vh - 45vh)',
-        display: 'flex',
-        alignItems: 'flex-end'
-      }}>
-        <img 
-          src={dianaPayment} 
-          alt="Диана" 
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'contain',
-            objectPosition: 'center bottom',
-            opacity: 1
-          }}
-        />
-      </div>
+      {/* Диана всегда ниже кнопки */}
+      <img 
+        src={dianaPayment} 
+        alt="Диана" 
+        style={{
+          width: '100%',
+          maxWidth: 320,
+          height: 'auto',
+          objectFit: 'contain',
+          objectPosition: 'center bottom',
+          marginTop: 8,
+          marginBottom: 0
+        }}
+      />
     </div>
   );
 }
