@@ -295,13 +295,22 @@ app.post('/api/chat-diana', async (req, res) => {
 
   // Для простых приветствий не тратим лимит
   if (isGreeting && !isDietRequest) {
-    // Сохраняем сообщение пользователя и ответ Дианы в историю
+    // Приветствие только если это первое сообщение пользователя
+    const lastAssistantMsg = userData.dialogHistory.filter(m => m.role === 'assistant').slice(-1)[0];
+    const lastWasGreeting = lastAssistantMsg && lastAssistantMsg.text.includes('Диана, твой тренер');
     userData.dialogHistory.push({ role: 'user', text: message, timestamp: new Date().toISOString() });
-    userData.dialogHistory.push({ role: 'assistant', text: 'Привет! Я Диана, твой тренер. Как настроение? Чем могу помочь сегодня?', timestamp: new Date().toISOString() });
-    await writeUserData(userId, userData);
-    return res.json({
-      response: 'Привет! Я Диана, твой тренер. Как настроение? Чем могу помочь сегодня?'
-    });
+    if (!lastWasGreeting) {
+      userData.dialogHistory.push({ role: 'assistant', text: 'Привет! Я Диана, твой тренер. Как настроение? Чем могу помочь сегодня?', timestamp: new Date().toISOString() });
+      await writeUserData(userId, userData);
+      return res.json({
+        response: 'Привет! Я Диана, твой тренер. Как настроение? Чем могу помочь сегодня?'
+      });
+    } else {
+      await writeUserData(userId, userData);
+      return res.json({
+        response: 'Рада снова тебя видеть! Чем могу помочь?'
+      });
+    }
   }
 
   // Проверяем лимит запросов для не-приветствий
@@ -344,8 +353,8 @@ app.post('/api/chat-diana', async (req, res) => {
     
     const systemPrompt =
       'Ты — персональный ИИ-тренер Диана, эксперт по похудению и здоровому образу жизни.\n' +
+      '\nВАЖНО: Если пользователь уже поздоровался, НЕ повторяй приветствие, а отвечай по сути вопроса. Не начинай ответ с приветствия, если это не первое сообщение!\n' +
       '\nВАЖНО: Отвечай ВСЕГДА в стиле и манере Дианы:\n' +
-      '- Используй её характерные фразы: "грубо говоря", "в принципе", "условно говоря", "смотри"\n' +
       '- Будь дружелюбной, понимающей и поддерживающей\n' +
       '- Объясняй просто и доступно, без сложных терминов\n' +
       '- Всегда объясняй ПОЧЕМУ что-то работает или не работает\n' +
@@ -388,6 +397,7 @@ app.post('/api/chat-diana', async (req, res) => {
     const userPrompt =
       'Вопрос пользователя: ' + message + '\n' +
       'Контекст разговора: ' + chatContext + '\n' +
+      (isGreeting ? 'Пользователь уже поздоровался, не повторяй приветствие!\n' : '') +
       'Релевантные знания из базы:\n' +
       relevantChunks.map(function(c) { return c.text; }).join('\n---\n');
 
