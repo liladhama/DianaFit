@@ -203,17 +203,18 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
         src={dianaPayment} 
         alt="Диана" 
         style={{
-          width: '120%',
-          maxWidth: 480,
-          height: '60vh',
+        width: '100%',
+        maxWidth: 340,
+        height: '48vh',
           objectFit: 'contain',
           objectPosition: 'center bottom',
-          marginTop: '-32px',
-          marginBottom: 0,
-          display: 'block',
-          marginLeft: 'auto',
-          marginRight: 'auto',
-          overflow: 'visible'
+        marginTop: '-56px',
+        marginBottom: 0,
+        display: 'block',
+        marginLeft: '16px',
+        overflow: 'visible',
+        left: 'unset',
+        transform: 'none'
         }}
       />
     </div>
