@@ -300,23 +300,29 @@ function App() {
     console.log('🔥 App.js: Состояние сохранено в localStorage');
   };
 
-  // Очищаем премиум статус при каждой загрузке - всегда начинаем с базовой версии
+  // Проверяем статус подписки при входе в приложение
   React.useEffect(() => {
-    localStorage.removeItem('dianafit_premium');
-    console.log('🔄 Приложение запущено в базовом режиме');
-    
-    // Добавим проверку всех данных в localStorage
-    console.log('📦 Содержимое localStorage:', Object.keys(localStorage));
-    const programKeys = Object.keys(localStorage).filter(key => key.startsWith('program_'));
-    console.log('🗂️ Программы в localStorage:', programKeys);
-    
-    // Проверим состояние переменных
-    console.log('📊 Начальное состояние App:', {
-      showSplash,
-      showTodayBlock,
-      answers,
-      programId
-    });
+    const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
+    async function checkPremium() {
+      try {
+        const res = await fetch(`https://dianafit.onrender.com/api/diana-limits/${tgUserId}`);
+        const data = await res.json();
+        if (data.isPremium) {
+          setIsPremium(true);
+          setUnlocked(true);
+          localStorage.setItem('dianafit_premium', 'true');
+          console.log('� Премиум активен, все функции открыты!');
+        } else {
+          setIsPremium(false);
+          setUnlocked(false);
+          localStorage.removeItem('dianafit_premium');
+          console.log('� Премиум неактивен, базовые функции.');
+        }
+      } catch (e) {
+        console.error('Ошибка проверки премиума:', e);
+      }
+    }
+    checkPremium();
   }, []);
 
   // Функция для получения аватарки пользователя

@@ -3,19 +3,27 @@ import dianaPayment from '../assets/payment/diana-payment.png';
 
 export default function PaymentPage({ onClose, onPaymentSuccess }) {
   
-  function handlePayment() {
+  async function handlePayment() {
     // Имитируем успешную оплату для тестирования
     console.log('🎯 Тестовая оплата - активируем премиум доступ');
-    
-    // Показываем сообщение об успешной активации
-    alert('🎉 ТЕСТОВАЯ АКТИВАЦИЯ ПРЕМИУМА!\n\n✅ Премиум доступ активирован\n✅ Чат с ИИ-тренером открыт\n✅ 5 вопросов в день доступно\n\nТеперь вы можете пользоваться всеми функциями!');
-    
-    // Активируем премиум функции
-    if (onPaymentSuccess) {
-      console.log('🔥 Вызываем onPaymentSuccess для активации премиума');
-      onPaymentSuccess();
-    } else {
-      console.error('❌ onPaymentSuccess не передан в PaymentPage');
+    // Получаем Telegram userId
+    const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
+    try {
+      // Запрос на backend для активации премиума
+      const res = await fetch(`https://dianafit.onrender.com/api/activate-premium`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: tgUserId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert('🎉 Премиум доступ активирован на месяц! Все функции открыты.');
+        if (onPaymentSuccess) onPaymentSuccess();
+      } else {
+        alert('❌ Ошибка активации премиума: ' + (data.message || 'Неизвестная ошибка'));
+      }
+    } catch (e) {
+      alert('❌ Ошибка соединения с сервером: ' + e.message);
     }
   }
 
