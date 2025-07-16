@@ -1,3 +1,5 @@
+import subscriptionRouter from './routes/subscriptionRoutes.js';
+import * as subscriptionManager from './utils/subscriptionManager.js';
 import dotenv from 'dotenv';
 import express from 'express';
 import path from 'path';
@@ -13,12 +15,19 @@ import progressRouter from './routes/progressRoutes.js';
 import mealPlanCalculator from './utils/mealPlanCalculator.js';
 // Импортируем функции для работы с данными пользователя из Firestore
 import { readUserData, writeUserData } from './userDataStorage.js';
+// Импортируем систему управления подпиской
 
 dotenv.config();
+
+console.log('🚀 Старт приложения...');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+console.log('📦 Express создан, PORT:', PORT);
+console.log('🔍 subscriptionManager:', subscriptionManager);
+console.log('🔍 subscriptionManager.default:', subscriptionManager.default);
 
 // Разрешить CORS для всех источников (для локальной отладки и Telegram)
 app.use(cors({
@@ -38,6 +47,9 @@ app.use(express.json());
 app.use('/api', programApi);
 app.use('/api/recipes', recipeRouter);
 app.use('/api/progress', progressRouter);
+app.use('/api/subscription', subscriptionRouter);
+
+console.log('🔗 Роутеры подключены');
 
 app.get('/', (req, res) => {
   res.send('Backend работает!');
@@ -258,27 +270,6 @@ app.post('/api/chat-diana', async (req, res) => {
   const { message, userId } = req.body;
   if (!message || !userId) return res.status(400).json({ error: 'No message or userId provided' });
 
-  // Загружаем данные пользователя (включая историю диалога)
-  let userData = await readUserData(userId);
-  if (!userData.dialogHistory) userData.dialogHistory = [];
-
-  // Формируем контекст для ИИ из последних 5 сообщений
-  const lastMessages = userData.dialogHistory.slice(-5);
-  let chatContext = lastMessages.map(m => `${m.role}: ${m.text}`).join('\n');
-
-  // Фильтрация приветствий и запросов рациона
-  // ...existing code...
-  // ...existing code...
-  // ...existing code...
-  if (isGreeting && !isDietRequest) {
-    // Сохраняем сообщение пользователя и ответ Дианы в историю
-    userData.dialogHistory.push({ role: 'user', text: message, timestamp: new Date().toISOString() });
-    userData.dialogHistory.push({ role: 'assistant', text: 'Привет! Я Диана, твой тренер. Как настроение? Чем могу помочь сегодня?', timestamp: new Date().toISOString() });
-    await writeUserData(userId, userData);
-    return res.json({
-      response: 'Привет! Я Диана, твой тренер. Как настроение? Чем могу помочь сегодня?'
-    });
-  }
 
   // Фильтрация приветствий и запросов рациона
   const greetings = [
@@ -290,10 +281,36 @@ app.post('/api/chat-diana', async (req, res) => {
     'рацион', 'питание', 'меню', 'рецепт', 'что поесть', 'подскажи рацион', 'дай рацион', 'план питания', 'еда', 'прием пищи', 'завтрак', 'обед', 'ужин'
   ];
   const isDietRequest = dietKeywords.some(k => lowerMsg.includes(k));
+
+  // Проверяем лимит запросов к Диане
+  const limitInfo = await subscriptionManager.default.checkDailyLimit(userId);
+
+  // Загружаем данные пользователя (включая историю диалога)
+  let userData = await readUserData(userId);
+  if (!userData.dialogHistory) userData.dialogHistory = [];
+
+  // Формируем контекст для ИИ из последних 5 сообщений
+  const lastMessages = userData.dialogHistory.slice(-5);
+  let chatContext = lastMessages.map(m => `${m.role}: ${m.text}`).join('\n');
+
+  // Для простых приветствий не тратим лимит
   if (isGreeting && !isDietRequest) {
-    // Только приветствие — не выдаём рацион
+    // Сохраняем сообщение пользователя и ответ Дианы в историю
+    userData.dialogHistory.push({ role: 'user', text: message, timestamp: new Date().toISOString() });
+    userData.dialogHistory.push({ role: 'assistant', text: 'Привет! Я Диана, твой тренер. Как настроение? Чем могу помочь сегодня?', timestamp: new Date().toISOString() });
+    await writeUserData(userId, userData);
     return res.json({
       response: 'Привет! Я Диана, твой тренер. Как настроение? Чем могу помочь сегодня?'
+    });
+  }
+
+  // Проверяем лимит запросов для не-приветствий
+  if (!limitInfo.canMakeRequest) {
+    const limitMessage = subscriptionManager.default.formatLimitMessage(limitInfo);
+    return res.json({
+      response: `${limitMessage}`,
+      limitExceeded: true,
+      limitInfo: limitInfo
     });
   }
 
@@ -308,7 +325,7 @@ app.post('/api/chat-diana', async (req, res) => {
     let relevantChunks = [];
     
     try {
-      relevantChunks = findRelevantChunks(userEmbedding, 3);
+      // relevantChunks = findRelevantChunks(userEmbedding, 3); // Временно отключено
       console.log(`Найдено ${relevantChunks.length} релевантных фрагментов знаний`);
     } catch (error) {
       console.error('❌ Ошибка при поиске релевантных знаний:', error);
@@ -318,7 +335,7 @@ app.post('/api/chat-diana', async (req, res) => {
     // Загружаем базу знаний для чата
     let dianaKnowledge = '';
     try {
-      dianaKnowledge = loadDianaKnowledge();
+      // dianaKnowledge = loadDianaKnowledge(); // Временно отключено
       console.log(`Загружена база знаний Дианы: ${dianaKnowledge.length} символов`);
     } catch (error) {
       console.error('❌ Ошибка при загрузке базы знаний Дианы:', error);
@@ -378,11 +395,23 @@ app.post('/api/chat-diana', async (req, res) => {
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt }
     ]);
+    
+    // Увеличиваем счетчик запросов после успешного ответа
+    await subscriptionManager.default.incrementDailyRequests(userId);
+    
     // Сохраняем сообщение пользователя и ответ Дианы в историю
     userData.dialogHistory.push({ role: 'user', text: message, timestamp: new Date().toISOString() });
     userData.dialogHistory.push({ role: 'assistant', text: aiResponse, timestamp: new Date().toISOString() });
     await writeUserData(userId, userData);
-    res.json({ response: aiResponse });
+    
+    // Получаем обновленную информацию о лимитах
+    const updatedLimitInfo = await subscriptionManager.default.checkDailyLimit(userId);
+    
+    res.json({ 
+      response: aiResponse,
+      limitInfo: updatedLimitInfo,
+      limitMessage: subscriptionManager.default.formatLimitMessage(updatedLimitInfo)
+    });
   } catch (e) {
     console.error('❌ Ошибка в чате с Дианой:', e);
     res.status(500).json({ error: 'Ошибка при обработке запроса' });
@@ -584,6 +613,7 @@ function calculateWeeklyAdjustments(weekSummary, skipReasons) {
   }
   
   return adjustments;
+}
 
 // Функция для проверки и улучшения разнообразия блюд в рационе
 function ensureDietDiversity(mealPlan) {
@@ -992,14 +1022,6 @@ app.post('/api/generate-weekly-plan', async (req, res) => {
     }
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log('Server running on port ' + PORT);
-});
-
-console.log('=== BACKEND INDEX.JS ЗАПУЩЕН ===');
-
-module.exports = app;
-
 // --- Реальные функции расчёта прогресса на основе planExecution ---
 function calculateWorkoutProgress(userHistory) {
   // Считаем процент выполненных упражнений и активностей за последние 7 дней из dailyProgress
@@ -1130,7 +1152,6 @@ function analyzeCommonIssues(userHistory) {
   return Object.entries(reasonCounts)
     .sort(([,a], [,b]) => b - a)
     .map(([reason]) => reason);
-}
 }
 
 function calculateImprovements(userHistory) {
@@ -1287,32 +1308,52 @@ app.post('/api/activate-premium', async (req, res) => {
   }
 });
 
-// API endpoint для получения статуса премиума
-app.get('/api/premium-status/:userId', async (req, res) => {
-  const { userId } = req.params;
-  if (!userId) return res.status(400).json({ error: 'userId is required' });
+// API endpoint для активации тестовой премиум подписки
+app.post('/api/activate-test-premium', async (req, res) => {
+  const { userId } = req.body;
+  if (!userId) return res.status(400).json({ error: 'No userId provided' });
 
   try {
-    console.log(`🔍 Проверка премиум-статуса для пользователя: ${userId}`);
+    const activationResult = await subscriptionManager.default.activatePremium(userId);
     
-    // Загружаем данные пользователя
-    let userData = await readUserData(userId);
+    console.log(`[TEST-PREMIUM] Активирована тестовая премиум подписка для пользователя ${userId}`);
     
-    const isPremium = userData.isPremium || false;
-    
-    console.log(`✅ Премиум-статус для пользователя ${userId}: ${isPremium}`);
-    res.json({ 
-      isPremium,
-      premiumActivatedAt: userData.premiumActivatedAt || null
+    res.json({
+      success: true,
+      message: '🎉 Тестовая премиум подписка активирована на 30 дней!',
+      ...activationResult
     });
   } catch (error) {
-    console.error('❌ Ошибка проверки премиум-статуса:', error);
-    res.status(500).json({ error: 'Failed to check premium status' });
+    console.error('Ошибка активации тестовой премиум подписки:', error);
+    res.status(500).json({ error: 'Ошибка при активации премиум подписки' });
   }
 });
 
-// Запуск сервера
-app.listen(PORT, () => {
-  console.log(`🚀 Сервер запущен на порту ${PORT}`);
-  console.log(`📊 Backend работает на http://localhost:${PORT}`);
+// Роут для получения информации о лимитах
+app.get('/api/diana-limits/:userId', async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) return res.status(400).json({ error: 'No userId provided' });
+
+  try {
+    const limitInfo = await subscriptionManager.default.checkDailyLimit(userId);
+    const subscriptionStatus = await subscriptionManager.default.getSubscriptionStatus(userId);
+    
+    res.json({
+      ...limitInfo,
+      subscriptionStatus,
+      message: subscriptionManager.default.formatLimitMessage(limitInfo)
+    });
+  } catch (error) {
+    console.error('Ошибка получения лимитов Дианы:', error);
+    res.status(500).json({ error: 'Ошибка при получении лимитах' });
+  }
 });
+
+console.log('🎯 Все эндпоинты настроены, запуск сервера...');
+
+// Запуск сервера (перенесён в конец файла)
+app.listen(PORT, '0.0.0.0', () => {
+  console.log('✅ Server running on port ' + PORT);
+});
+
+console.log('=== BACKEND INDEX.JS ЗАПУЩЕН ===');
