@@ -1,3 +1,7 @@
+console.log('[dailyTelegramNotifier] Модуль загружен, старт инициализации...');
+try {
+console.log('[dailyTelegramNotifier] Модуль загружен, инициализация...');
+try {
 // Ежедневная рассылка персональных уведомлений в Telegram
 import cron from 'node-cron';
 import fetch from 'node-fetch';
@@ -68,6 +72,12 @@ cron.schedule('* * * * *', () => {
     console.error('Ошибка рассылки:', err);
   });
 });
+} catch (err) {
+  console.error('[dailyTelegramNotifier] Глобальная ошибка инициализации:', err);
+}
+} catch (err) {
+  console.error('[dailyTelegramNotifier] Глобальная ошибка инициализации:', err);
+}
 
 // Для ручного теста
 // sendDailyNotifications();
