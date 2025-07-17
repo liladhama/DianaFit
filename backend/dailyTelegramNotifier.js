@@ -33,16 +33,49 @@ async function getAllUserIds() {
   const userIds = [];
   snapshot.forEach(doc => {
     const data = doc.data();
-    // Если есть поле telegramChatId — используем его, иначе берём id документа
     const chatId = data.telegramChatId || doc.id;
-    if (chatId) {
-      userIds.push({
-        userId: doc.id,
-        chatId,
-        todayWorkout: data.todayWorkout || '',
-        calories: data.nutrition?.calories || 1800
-      });
+    if (!chatId) return;
+    // Получаем сегодняшнюю дату в формате YYYY-MM-DD
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    // Получаем индекс дня в programData.days
+    let dayIndex = null;
+    if (data.programData && Array.isArray(data.programData.days)) {
+      dayIndex = data.programData.days.findIndex(d => d.date === todayStr);
     }
+    const todayDay = dayIndex !== -1 && dayIndex !== null ? data.programData.days[dayIndex] : null;
+
+    // Получаем блюда и калории на сегодня
+    let meals = [];
+    let totalCalories = 0;
+    if (todayDay && Array.isArray(todayDay.meals)) {
+      meals = todayDay.meals.map(m => ({ type: m.type, calories: m.calories }));
+      totalCalories = todayDay.meals.reduce((sum, m) => sum + (m.calories || 0), 0);
+    }
+
+    // Получаем тренировку на сегодня
+    let workout = '';
+    if (todayDay && todayDay.workout && todayDay.isWorkoutDay) {
+      workout = todayDay.workout.title || 'Тренировка';
+    }
+
+    // Получаем статус выполнения из dailyProgress
+    let ate = false;
+    let progress = data.dailyProgress && data.dailyProgress[todayStr] ? data.dailyProgress[todayStr] : {};
+    if (progress.ate !== undefined) ate = progress.ate;
+
+    userIds.push({
+      userId: doc.id,
+      chatId,
+      todayWorkout: workout,
+      calories: totalCalories,
+      meals,
+      ate
+    });
   });
   return userIds;
 }
@@ -53,9 +86,30 @@ async function sendDailyNotifications() {
     console.log(`Найдено пользователей для рассылки: ${users.length}`);
     for (const user of users) {
       const tip = getRandomTip();
-      const workout = user.todayWorkout || 'Пройдите 10 000 шагов';
-      const calories = user.calories;
-      const message = `Доброе утро!\n\nСегодня: ${workout}\n\nВаша норма калорий: ${calories} ккал\n${tip}`;
+      let message = `Доброе утро!\n`;
+      // Тренировка
+      if (user.todayWorkout) {
+        message += `\nСегодня тренировка: ${user.todayWorkout}`;
+      } else {
+        message += `\nСегодня нет тренировки.`;
+      }
+      // Калории
+      message += `\n\nВаша норма калорий: ${user.calories > 0 ? user.calories : 'не указано'} ккал`;
+      // Блюда
+      if (user.meals && user.meals.length > 0) {
+        message += `\n\nПлан питания на сегодня:`;
+        user.meals.forEach(m => {
+          message += `\n- ${m.type}: ${m.calories} ккал`;
+        });
+      }
+      // Статус выполнения
+      if (user.ate === true) {
+        message += `\n\nВы уже отметили прием пищи сегодня!`;
+      } else if (user.ate === false) {
+        message += `\n\nНе забудьте отметить прием пищи!`;
+      }
+      // Совет
+      message += `\n\n${tip}`;
       try {
         const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
           method: 'POST',
