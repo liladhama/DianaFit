@@ -76,6 +76,28 @@ const QuizSettings = () => {
             { value: 4, text: '-4 кг за месяц' },
             { value: 5, text: '-5 кг за месяц' }
         ] },
+        // ...существующие вопросы...
+        { id: 'timezone', label: 'Часовой пояс для уведомлений', type: 'wheel', options: [
+            { value: 'Europe/Moscow', text: 'Москва (Europe/Moscow)' },
+            { value: 'Asia/Tbilisi', text: 'Тбилиси (Asia/Tbilisi)' },
+            { value: 'Europe/Kiev', text: 'Киев (Europe/Kiev)' },
+            { value: 'Europe/Minsk', text: 'Минск (Europe/Minsk)' },
+            { value: 'Asia/Almaty', text: 'Алматы (Asia/Almaty)' },
+            { value: 'Asia/Yekaterinburg', text: 'Екатеринбург (Asia/Yekaterinburg)' },
+            { value: 'Asia/Baku', text: 'Баку (Asia/Baku)' },
+            { value: 'Asia/Tashkent', text: 'Ташкент (Asia/Tashkent)' },
+            { value: 'Asia/Bishkek', text: 'Бишкек (Asia/Bishkek)' },
+            { value: 'Asia/Ashgabat', text: 'Ашхабад (Asia/Ashgabat)' },
+            { value: 'Asia/Yerevan', text: 'Ереван (Asia/Yerevan)' },
+            { value: 'Asia/Vladivostok', text: 'Владивосток (Asia/Vladivostok)' },
+            { value: 'Asia/Novosibirsk', text: 'Новосибирск (Asia/Novosibirsk)' },
+            { value: 'Asia/Sakhalin', text: 'Сахалин (Asia/Sakhalin)' },
+            { value: 'Asia/Krasnoyarsk', text: 'Красноярск (Asia/Krasnoyarsk)' },
+            { value: 'Asia/Irkutsk', text: 'Иркутск (Asia/Irkutsk)' },
+            { value: 'Asia/Magadan', text: 'Магадан (Asia/Magadan)' },
+            { value: 'Asia/Kamchatka', text: 'Камчатка (Asia/Kamchatka)' }
+        ] },
+        { id: 'notifyHour', label: 'Время рассылки (час)', type: 'wheel', options: Array.from({length: 7}, (_, i) => ({ value: 6 + i, text: `${6 + i}:00` })) },
     ];
 
     const handleAnswerSelect = (questionId, value) => {
@@ -86,9 +108,21 @@ const QuizSettings = () => {
         setSavingStates(prev => ({ ...prev, [questionId]: true }));
         try {
             const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'testuser1';
-            const dataToSave = { [questionId]: userAnswers[questionId] };
-            const response = await fetch(`${API_URL}/api/user/quiz-answers/${userId}`, {
-                method: 'PUT',
+            let dataToSave = { [questionId]: userAnswers[questionId] };
+            let apiUrl = `${API_URL}/api/user/quiz-answers/${userId}`;
+            let method = 'PUT';
+            // Для timezone и notifyHour используем отдельный API
+            if (questionId === 'timezone' || questionId === 'notifyHour') {
+                dataToSave = {
+                    userId,
+                    timezone: userAnswers.timezone || 'Europe/Moscow',
+                    notifyHour: Number(userAnswers.notifyHour) || 9
+                };
+                apiUrl = `${API_URL}/api/user/notification-settings`;
+                method = 'POST';
+            }
+            const response = await fetch(apiUrl, {
+                method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(dataToSave)
             });
@@ -97,7 +131,7 @@ const QuizSettings = () => {
                 setTimeout(() => {
                     setSavingStates(prev => ({ ...prev, [questionId]: false }));
                 }, 1500);
-                await fetchUserAnswers(); // <-- повторная загрузка актуальных данных
+                await fetchUserAnswers();
             }
         } catch (error) {
             setSavingStates(prev => ({ ...prev, [questionId]: 'error' }));

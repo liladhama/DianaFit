@@ -18,6 +18,7 @@ import { readUserData, writeUserData } from './userDataStorage.js';
 // Импортируем систему управления подпиской
 import './dailyTelegramNotifier.js';
 import caloriesApi from './caloriesApi.js';
+import notificationSettingsApi from './notificationSettingsApi.js';
 
 dotenv.config();
 
@@ -51,6 +52,7 @@ app.use('/api/recipes', recipeRouter);
 app.use('/api/progress', progressRouter);
 app.use('/api/subscription', subscriptionRouter);
 app.use(caloriesApi);
+app.use(notificationSettingsApi);
 
 console.log('🔗 Подключаем роутер подписки...');
 app.use('/api/subscription', subscriptionRouter);

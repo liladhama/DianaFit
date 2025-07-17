@@ -85,7 +85,8 @@ async function getAllUserIds() {
       calories: userCalories,
       meals,
       ate,
-      timezone: data.quiz?.timezone || 'Europe/Moscow'
+      timezone: data.quiz?.timezone || 'Europe/Moscow',
+      notifyHour: typeof data.quiz?.notifyHour === 'number' ? data.quiz.notifyHour : 9
     });
   });
   return userIds;
@@ -97,10 +98,11 @@ async function sendDailyNotifications() {
     console.log(`Найдено пользователей для рассылки: ${users.length}`);
     const now = new Date();
     for (const user of users) {
-      // Проверяем, что сейчас 9:00 утра по timezone пользователя
+      // Проверяем, что сейчас notifyHour:00 по timezone пользователя
       const tz = user.timezone || 'Europe/Moscow';
+      const hour = typeof user.notifyHour === 'number' ? user.notifyHour : 9;
       const nowTz = new Date(now.toLocaleString('en-US', { timeZone: tz }));
-      if (nowTz.getHours() !== 9 || nowTz.getMinutes() !== 0) continue;
+      if (nowTz.getHours() !== hour || nowTz.getMinutes() !== 0) continue;
       const tip = getRandomTip();
       let message = `Доброе утро!\n`;
       // Тренировка
