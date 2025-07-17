@@ -6,7 +6,8 @@ const router = express.Router();
 
 router.post('/api/user/calories', async (req, res) => {
   console.log('[CaloriesApi] POST /api/user/calories', req.body);
-  const { userId, caloriesNorm, timezone } = req.body;
+  let { userId, caloriesNorm, timezone } = req.body;
+  userId = String(userId);
   if (!userId || !caloriesNorm) {
     console.log('[CaloriesApi] Не хватает userId или caloriesNorm');
     return res.status(400).json({ error: 'userId и caloriesNorm обязательны' });

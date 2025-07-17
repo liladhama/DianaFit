@@ -5,7 +5,8 @@ import admin from 'firebase-admin';
 const router = express.Router();
 
 router.post('/api/user/notification-settings', async (req, res) => {
-  const { userId, timezone, notifyHour } = req.body;
+  let { userId, timezone, notifyHour } = req.body;
+  userId = String(userId);
   console.log('[NotificationSettingsApi] POST /api/user/notification-settings', req.body);
   if (!userId || !timezone || typeof notifyHour !== 'number') {
     console.log('[NotificationSettingsApi] Не хватает userId, timezone или notifyHour');
