@@ -121,11 +121,19 @@ async function sendDailyNotifications() {
       }
       // Калории
       message += `\n\nВаша индивидуальная норма калорий: ${user.calories > 0 ? user.calories : 'не указано'} ккал`;
-      // Блюда
-      if (user.meals && user.meals.length > 0) {
+      // Разбивка калорий по приемам пищи (25/10/35/10/20)
+      if (user.calories > 0) {
+        const portions = [
+          { type: 'Завтрак', percent: 0.25 },
+          { type: 'Перекус', percent: 0.10 },
+          { type: 'Обед', percent: 0.35 },
+          { type: 'Полдник', percent: 0.10 },
+          { type: 'Ужин', percent: 0.20 }
+        ];
         message += `\n\nПлан питания на сегодня:`;
-        user.meals.forEach(m => {
-          message += `\n- ${m.type}: ${m.calories} ккал`;
+        portions.forEach(p => {
+          const kcal = Math.round(user.calories * p.percent);
+          message += `\n- ${p.type}: ${kcal} ккал`;
         });
       }
       // Статус выполнения
@@ -134,6 +142,8 @@ async function sendDailyNotifications() {
       } else if (user.ate === false) {
         message += `\n\nНе забудьте отметить прием пищи!`;
       }
+      // Напоминание о шагах
+      message += `\n\nНе забудьте пройти сегодня 10 000 шагов!`;
       // Совет
       message += `\n\n${tip}`;
       try {
