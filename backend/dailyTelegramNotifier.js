@@ -170,12 +170,9 @@ async function sendDailyNotifications() {
     }
   }
 
-  // Запускать каждую минуту для теста
+  // Запускать каждую минуту (рабочий режим)
   cron.schedule('* * * * *', () => {
-    console.log('ТЕСТ: Запуск рассылки каждую минуту...');
-    sendDailyNotifications().then(() => {
-      console.log('Рассылка завершена!');
-    }).catch(err => {
+    sendDailyNotifications().catch(err => {
       console.error('Ошибка рассылки:', err);
     });
   });
