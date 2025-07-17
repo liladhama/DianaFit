@@ -56,20 +56,10 @@ async function getAllUserIds() {
     }
 
     // Получаем индивидуальную норму калорий
+    // Берём калории только из quiz.calories
     let userCalories = null;
-    // 1. Из quiz/answers
-    if (data.quiz && (data.quiz.calories || data.quiz.answers?.calories)) {
-      userCalories = data.quiz.calories || data.quiz.answers.calories;
-    }
-    // 2. Из programData.calories
-    else if (data.programData && data.programData.calories) {
-      userCalories = data.programData.calories;
-    }
-    // 3. Фоллбек: если есть meals, берем сумму, иначе дефолт
-    else if (meals.length > 0) {
-      userCalories = meals.reduce((sum, m) => sum + (m.calories || 0), 0);
-    } else {
-      userCalories = 1800;
+    if (data.quiz && typeof data.quiz.calories === 'number') {
+      userCalories = data.quiz.calories;
     }
 
     // Получаем тренировку на сегодня и упражнения
