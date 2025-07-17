@@ -3,11 +3,11 @@ try {
 console.log('[dailyTelegramNotifier] Модуль загружен, инициализация...');
 try {
 // Ежедневная рассылка персональных уведомлений в Telegram
-import cron from 'node-cron';
-import fetch from 'node-fetch';
-import { readUserData } from './userDataStorage.js';
-import admin from 'firebase-admin';
-import { getFirebaseConfig } from './firestore-config.js';
+const cron = require('node-cron');
+const fetch = require('node-fetch');
+const { readUserData } = require('./userDataStorage.js');
+const admin = require('firebase-admin');
+const { getFirebaseConfig } = require('./firestore-config.js');
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_API_URL = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
@@ -100,4 +100,4 @@ async function getAllUserIds() {
   return userIds;
 }
 
-export default sendDailyNotifications;
+module.exports = sendDailyNotifications;
