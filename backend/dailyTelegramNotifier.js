@@ -32,6 +32,7 @@ const db = admin.firestore();
 // Основная функция рассылки
 async function sendDailyNotifications() {
   const users = await getAllUserIds();
+  console.log(`Найдено пользователей для рассылки: ${users.length}`);
   for (const user of users) {
     const tip = getRandomTip();
     const workout = user.todayWorkout || 'Пройдите 10 000 шагов';
