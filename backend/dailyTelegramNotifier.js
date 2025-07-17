@@ -73,7 +73,7 @@ cron.schedule('* * * * *', () => {
 
 // Вспомогательная функция для получения всех userId
 async function getAllUserIds() {
-  const snapshot = await db.collection('Diana').doc('users').collection('list').get();
+  const snapshot = await db.collection('Dianafit_users').get();
   const userIds = [];
   snapshot.forEach(doc => {
     const data = doc.data();
