@@ -11,6 +11,7 @@ export class SubscriptionManager {
   // Проверка и получение статуса подписки пользователя
   async getSubscriptionStatus(userId) {
     const userData = await readUserData(userId);
+    userId = String(userId);
     const subscription = userData.subscription || {};
     
     // Проверяем, активна ли премиум подписка
@@ -43,6 +44,7 @@ export class SubscriptionManager {
   async activatePremium(userId) {
     try {
       const userData = await readUserData(userId);
+      userId = String(userId);
       const subscription = userData.subscription || {};
       const now = new Date();
       const expiresAt = new Date(now.getTime() + (this.PREMIUM_DURATION_DAYS * 24 * 60 * 60 * 1000));
@@ -127,6 +129,7 @@ export class SubscriptionManager {
 
   // Сохранение данных подписки
   async saveSubscriptionData(userId, subscription) {
+    userId = String(userId);
     const userData = await readUserData(userId);
     userData.subscription = subscription;
     await writeUserData(userId, userData);
