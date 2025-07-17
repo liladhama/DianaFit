@@ -37,15 +37,24 @@ async function sendDailyNotifications() {
     const workout = user.todayWorkout || 'Пройдите 10 000 шагов';
     const calories = user.calories;
     const message = `Доброе утро!\n\nСегодня: ${workout}\n\nВаша норма калорий: ${calories} ккал\n${tip}`;
-    await fetch(TELEGRAM_API_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        chat_id: user.chatId,
-        text: message
-      })
-    });
-    console.log(`Сообщение отправлено пользователю ${user.userId}: ${message}`);
+    try {
+      const response = await fetch(TELEGRAM_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: user.chatId,
+          text: message
+        })
+      });
+      const result = await response.json();
+      if (result.ok) {
+        console.log(`Успешно: сообщение отправлено пользователю ${user.userId} (chatId: ${user.chatId})`);
+      } else {
+        console.error(`Ошибка Telegram API для пользователя ${user.userId} (chatId: ${user.chatId}):`, result);
+      }
+    } catch (err) {
+      console.error(`Ошибка отправки сообщения пользователю ${user.userId} (chatId: ${user.chatId}):`, err);
+    }
   }
 }
 
