@@ -98,13 +98,14 @@ async function sendDailyNotifications() {
     console.log(`Найдено пользователей для рассылки: ${users.length}`);
     const now = new Date();
     for (const user of users) {
-      // Проверяем, что сейчас notifyHour:00 по timezone пользователя
       const tz = user.timezone || 'Europe/Moscow';
       const hour = typeof user.notifyHour === 'number' ? user.notifyHour : 9;
       const nowTz = new Date(now.toLocaleString('en-US', { timeZone: tz }));
-      if (nowTz.getHours() !== hour || nowTz.getMinutes() !== 0) continue;
+      console.log(`[ТЕСТ-РАССЫЛКА] userId: ${user.userId}, chatId: ${user.chatId}, timezone: ${tz}, notifyHour: ${hour}, nowTz: ${nowTz.toISOString()}, часы: ${nowTz.getHours()}, минуты: ${nowTz.getMinutes()}`);
+      // Тест: рассылка всегда, независимо от времени
       const tip = getRandomTip();
       let message = `Доброе утро!\n`;
+      // ...existing code...
       // Тренировка
       if (user.todayWorkout) {
         message += `\nСегодня тренировка: ${user.todayWorkout}`;
@@ -146,6 +147,7 @@ async function sendDailyNotifications() {
       // Совет
       message += `\n\n${tip}`;
       try {
+        console.log(`[Рассылка] Отправка сообщения пользователю ${user.userId} (chatId: ${user.chatId})`);
         const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -156,12 +158,12 @@ async function sendDailyNotifications() {
         });
         const result = await response.json();
         if (result.ok) {
-          console.log(`Успешно: сообщение отправлено пользователю ${user.userId} (chatId: ${user.chatId})`);
+          console.log(`[Рассылка] Успешно: сообщение отправлено пользователю ${user.userId} (chatId: ${user.chatId})`);
         } else {
-          console.error(`Ошибка Telegram API для пользователя ${user.userId} (chatId: ${user.chatId}):`, result);
+          console.error(`[Рассылка] Ошибка Telegram API для пользователя ${user.userId} (chatId: ${user.chatId}):`, result);
         }
       } catch (err) {
-        console.error(`Ошибка отправки сообщения пользователю ${user.userId} (chatId: ${user.chatId}):`, err);
+        console.error(`[Рассылка] Ошибка отправки сообщения пользователю ${user.userId} (chatId: ${user.chatId}):`, err);
       }
     }
   }
