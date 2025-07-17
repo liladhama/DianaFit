@@ -6,48 +6,47 @@ import { getFirebaseConfig } from './firestore-config.js';
 
 console.log('[dailyTelegramNotifier] Модуль загружен, старт инициализации...');
 
-try {
-  // Инициализация Firebase Admin SDK
-  if (!admin.apps.length) {
-    admin.initializeApp({
-      credential: admin.credential.cert(getFirebaseConfig()),
-    });
-  }
-  const db = admin.firestore();
+// Инициализация Firebase Admin SDK
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(getFirebaseConfig()),
+  });
+}
+const db = admin.firestore();
 
-  // Генерация уникального совета по питанию
-  const nutritionTips = [
-    'Добавьте больше овощей в рацион!',
-    'Пейте достаточно воды сегодня!',
-    'Старайтесь не пропускать завтрак!',
-    'Сделайте акцент на белках в каждом приеме пищи!',
-    'Ограничьте быстрые углеводы — больше клетчатки!'
-  ];
+// Генерация уникального совета по питанию
+const nutritionTips = [
+  'Добавьте больше овощей в рацион!',
+  'Пейте достаточно воды сегодня!',
+  'Старайтесь не пропускать завтрак!',
+  'Сделайте акцент на белках в каждом приеме пищи!',
+  'Ограничьте быстрые углеводы — больше клетчатки!'
+];
 
-  function getRandomTip() {
-    return nutritionTips[Math.floor(Math.random() * nutritionTips.length)];
-  }
+function getRandomTip() {
+  return nutritionTips[Math.floor(Math.random() * nutritionTips.length)];
+}
 
-  // Вспомогательная функция для получения всех userId
-  async function getAllUserIds() {
-    const snapshot = await db.collection('Dianafit_users').get();
-    const userIds = [];
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      if (data.telegramChatId) {
-        userIds.push({
-          userId: doc.id,
-          chatId: data.telegramChatId,
-          todayWorkout: data.todayWorkout || '',
-          calories: data.nutrition?.calories || 1800
-        });
-      }
-    });
-    return userIds;
-  }
+// Вспомогательная функция для получения всех userId
+async function getAllUserIds() {
+  const snapshot = await db.collection('Dianafit_users').get();
+  const userIds = [];
+  snapshot.forEach(doc => {
+    const data = doc.data();
+    if (data.telegramChatId) {
+      userIds.push({
+        userId: doc.id,
+        chatId: data.telegramChatId,
+        todayWorkout: data.todayWorkout || '',
+        calories: data.nutrition?.calories || 1800
+      });
+    }
+  });
+  return userIds;
+}
 
-  // Основная функция рассылки
-  async function sendDailyNotifications() {
+// Основная функция рассылки
+async function sendDailyNotifications() {
     const users = await getAllUserIds();
     console.log(`Найдено пользователей для рассылки: ${users.length}`);
     for (const user of users) {
@@ -87,9 +86,5 @@ try {
   });
 
   console.log('[dailyTelegramNotifier] Инициализация завершена успешно');
-
-} catch (err) {
-  console.error('[dailyTelegramNotifier] Глобальная ошибка инициализации:', err);
-}
 
 export default sendDailyNotifications;
