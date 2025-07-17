@@ -16,6 +16,7 @@ import mealPlanCalculator from './utils/mealPlanCalculator.js';
 // Импортируем функции для работы с данными пользователя из Firestore
 import { readUserData, writeUserData } from './userDataStorage.js';
 // Импортируем систему управления подпиской
+import './dailyTelegramNotifier.js';
 
 dotenv.config();
 
