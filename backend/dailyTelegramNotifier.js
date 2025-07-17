@@ -49,18 +49,37 @@ async function getAllUserIds() {
     }
     const todayDay = dayIndex !== -1 && dayIndex !== null ? data.programData.days[dayIndex] : null;
 
-    // Получаем блюда и калории на сегодня
+    // Получаем блюда на сегодня
     let meals = [];
-    let totalCalories = 0;
     if (todayDay && Array.isArray(todayDay.meals)) {
       meals = todayDay.meals.map(m => ({ type: m.type, calories: m.calories }));
-      totalCalories = todayDay.meals.reduce((sum, m) => sum + (m.calories || 0), 0);
     }
 
-    // Получаем тренировку на сегодня
+    // Получаем индивидуальную норму калорий
+    let userCalories = null;
+    // 1. Из quiz/answers
+    if (data.quiz && (data.quiz.calories || data.quiz.answers?.calories)) {
+      userCalories = data.quiz.calories || data.quiz.answers.calories;
+    }
+    // 2. Из programData.calories
+    else if (data.programData && data.programData.calories) {
+      userCalories = data.programData.calories;
+    }
+    // 3. Фоллбек: если есть meals, берем сумму, иначе дефолт
+    else if (meals.length > 0) {
+      userCalories = meals.reduce((sum, m) => sum + (m.calories || 0), 0);
+    } else {
+      userCalories = 1800;
+    }
+
+    // Получаем тренировку на сегодня и упражнения
     let workout = '';
+    let workoutExercises = [];
     if (todayDay && todayDay.workout && todayDay.isWorkoutDay) {
       workout = todayDay.workout.title || 'Тренировка';
+      if (Array.isArray(todayDay.workout.exercises)) {
+        workoutExercises = todayDay.workout.exercises.map(ex => ex.name).filter(Boolean);
+      }
     }
 
     // Получаем статус выполнения из dailyProgress
@@ -72,7 +91,8 @@ async function getAllUserIds() {
       userId: doc.id,
       chatId,
       todayWorkout: workout,
-      calories: totalCalories,
+      workoutExercises,
+      calories: userCalories,
       meals,
       ate
     });
@@ -90,11 +110,17 @@ async function sendDailyNotifications() {
       // Тренировка
       if (user.todayWorkout) {
         message += `\nСегодня тренировка: ${user.todayWorkout}`;
+        if (user.workoutExercises && user.workoutExercises.length > 0) {
+          message += `\nУпражнения:`;
+          user.workoutExercises.forEach((ex, idx) => {
+            message += `\n  ${idx + 1}. ${ex}`;
+          });
+        }
       } else {
         message += `\nСегодня нет тренировки.`;
       }
       // Калории
-      message += `\n\nВаша норма калорий: ${user.calories > 0 ? user.calories : 'не указано'} ккал`;
+      message += `\n\nВаша индивидуальная норма калорий: ${user.calories > 0 ? user.calories : 'не указано'} ккал`;
       // Блюда
       if (user.meals && user.meals.length > 0) {
         message += `\n\nПлан питания на сегодня:`;
