@@ -110,7 +110,8 @@ async function sendDailyNotifications() {
         message += `\nСегодня нет тренировки.`;
       }
       // Калории
-      message += `\n\nВаша индивидуальная норма калорий: ${user.calories > 0 ? user.calories : 'не указано'} ккал`;
+      const round10 = n => Math.round(n / 10) * 10;
+      message += `\n\nВаша индивидуальная норма калорий: ${user.calories > 0 ? round10(user.calories) : 'не указано'} ккал`;
       // Разбивка калорий по приемам пищи (25/10/35/10/20)
       if (user.calories > 0) {
         const portions = [
@@ -122,7 +123,7 @@ async function sendDailyNotifications() {
         ];
         message += `\n\nПлан питания на сегодня:`;
         portions.forEach(p => {
-          const kcal = Math.round(user.calories * p.percent);
+          const kcal = round10(user.calories * p.percent);
           message += `\n- ${p.type}: ${kcal} ккал`;
         });
       }
