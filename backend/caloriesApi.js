@@ -13,9 +13,19 @@ router.post('/api/user/calories', async (req, res) => {
   }
   try {
     const db = admin.firestore();
-    await db.collection('Dianafit_users').doc(userId).set({
-      quiz: { calories: caloriesNorm, timezone: timezone || 'Europe/Moscow' }
-    }, { merge: true });
+    const userRef = db.collection('Dianafit_users').doc(userId);
+    const userDoc = await userRef.get();
+    let quiz = {};
+    if (userDoc.exists && userDoc.data().quiz) {
+      quiz = userDoc.data().quiz;
+      console.log('[CaloriesApi] Текущий quiz:', quiz);
+    } else {
+      console.log('[CaloriesApi] Документ пользователя не найден или quiz отсутствует');
+    }
+    quiz.calories = caloriesNorm;
+    if (timezone) quiz.timezone = timezone;
+    console.log('[CaloriesApi] Обновленный quiz:', quiz);
+    await userRef.set({ quiz }, { merge: true });
     console.log('[CaloriesApi] Calories и timezone записаны для userId:', userId, 'calories:', caloriesNorm, 'timezone:', timezone);
     res.json({ success: true });
   } catch (e) {
