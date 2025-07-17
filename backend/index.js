@@ -17,6 +17,7 @@ import mealPlanCalculator from './utils/mealPlanCalculator.js';
 import { readUserData, writeUserData } from './userDataStorage.js';
 // Импортируем систему управления подпиской
 import './dailyTelegramNotifier.js';
+import caloriesApi from './caloriesApi.js';
 
 dotenv.config();
 
@@ -49,6 +50,7 @@ app.use('/api', programApi);
 app.use('/api/recipes', recipeRouter);
 app.use('/api/progress', progressRouter);
 app.use('/api/subscription', subscriptionRouter);
+app.use(caloriesApi);
 
 console.log('🔗 Подключаем роутер подписки...');
 app.use('/api/subscription', subscriptionRouter);

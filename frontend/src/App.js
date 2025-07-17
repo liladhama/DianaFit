@@ -640,6 +640,39 @@ function App() {
     } catch (error) {
       console.error('❌ Ошибка сохранения квиза:', error);
     }
+    // --- Отправка калоража на бэкенд сразу после прохождения квиза ---
+    try {
+      // Формула расчёта калоража как в ProfilePage.js
+      const weight = Number(quizAnswers.weight) || Number(quizAnswers.weight_kg) || 60;
+      const height = Number(quizAnswers.height) || Number(quizAnswers.height_cm) || 165;
+      const age = Number(quizAnswers.age) || 30;
+      const sex = (quizAnswers.gender || quizAnswers.sex || 'female').toLowerCase();
+      const activity = quizAnswers.activity_coef || 1.375;
+      let bmr;
+      if (sex === 'male') {
+        bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+      } else {
+        bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+      }
+      const goal = Number(quizAnswers.goal);
+      let deficit = 0;
+      let calories;
+      if ([3,4,5].includes(goal)) {
+        deficit = goal * 7700 / 30;
+        calories = Math.round(bmr * activity - deficit);
+      } else {
+        calories = Math.round(bmr * activity);
+      }
+      calories = Math.max(1400, calories);
+      await safeFetch(`${API_URL}/api/user/calories`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, caloriesNorm: calories })
+      });
+      console.log('✅ Калораж отправлен на бэкенд:', calories);
+    } catch (err) {
+      console.error('Ошибка отправки калоража на бэкенд:', err);
+    }
     setAnswers(quizAnswers);
     try {
       const demoProgramId = createProgram(quizAnswers);

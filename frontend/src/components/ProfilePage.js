@@ -3,6 +3,7 @@ import dietUtils from '../utils/dietUtils';
 import QuizSettings from './QuizSettings.js';
 import DianaNotification from './DianaNotification.js';
 import { API_URL } from '../config/api';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 // Используем функции из default export
 const getDietIcon = dietUtils.getDietIcon;
@@ -44,33 +45,35 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
     const age = Number(quiz.age) || 30;
     const sex = (quiz.gender || quiz.sex || 'female').toLowerCase();
     const activity = quiz.activity_coef || 1.375;
-    
+
     let bmr = calculateBMR(weight, height, age, sex);
-    
+
     // --- Расчёт дефицита по goal (3/4/5 кг в месяц) как на бэкенде ---
     const goal = Number(quiz.goal);
     let deficit = 0;
     let calories;
-    
+
     if ([3,4,5].includes(goal)) {
       deficit = goal * 7700 / 30;
       calories = Math.round(bmr * activity - deficit);
     } else {
       calories = Math.round(bmr * activity);
     }
-    
+
     // Минимум 1400 ккал для всех (по базе Дианы)
     calories = Math.max(1400, calories);
-    
+
+    // ...отправка калоража теперь происходит сразу после прохождения квиза (App.js)
+
     // Расчёт БЖУ как на бэкенде
     const protein = Math.round(weight * 1.8);
     const fat = Math.round(weight * 0.9);
     const carbs = Math.round((calories - (protein * 4 + fat * 9)) / 4);
-    
+
     console.log('[DEBUG КБЖУ]', {
       weight, height, age, sex, bmr, activity, deficit, calories, protein, fat, carbs
     });
-    
+
     return { calories, protein, fats: fat, carbs };
   }
 
@@ -98,7 +101,25 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
           // Если нет данных на бэкенде, используем локальный расчет
           if (answers && Object.keys(answers).length > 0) {
             const macros = calculateMacrosFromQuiz(answers);
-            setNutritionInfo(roundMacros(macros));
+            const rounded = roundMacros(macros);
+            setNutritionInfo(rounded);
+            // Сохраняем калораж в Firestore
+            try {
+              const db = getFirestore();
+              const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+              if (userId && rounded.calories) {
+                fetch(`${API_URL}/api/user/calories`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ userId, caloriesNorm: rounded.calories })
+                })
+                  .then(res => res.json())
+                  .then(data => console.log('Калораж отправлен на бэкенд:', data))
+                  .catch(err => console.error('Ошибка отправки калоража на бэкенд:', err));
+              }
+            } catch (err) {
+              console.error('Ошибка сохранения калоража в Firestore:', err);
+            }
           }
         }
       } catch (error) {
@@ -106,7 +127,23 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
         // Fallback к локальному расчету при ошибке
         if (answers && Object.keys(answers).length > 0) {
           const macros = calculateMacrosFromQuiz(answers);
-          setNutritionInfo(roundMacros(macros));
+          const rounded = roundMacros(macros);
+          setNutritionInfo(rounded);
+          // Сохраняем калораж в Firestore
+          try {
+            const db = getFirestore();
+            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+            if (userId && rounded.calories) {
+              await setDoc(doc(db, 'Dianafit_users', userId), {
+                quiz: {
+                  calories: rounded.calories
+                }
+              }, { merge: true });
+              console.log('Индивидуальный калораж сохранён в Firestore:', rounded.calories);
+            }
+          } catch (err) {
+            console.error('Ошибка сохранения калоража в Firestore:', err);
+          }
         }
       }
     };
@@ -1005,26 +1042,26 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
         userAnswers={quizAnswers}
       />
 
-        {/* Кнопка поддержки */}
-        <button
-          style={{
-            margin: '24px auto 0 auto',
-            display: 'block',
-            background: 'linear-gradient(135deg, #e0e7ff 0%, #a5b4fc 100%)',
-            border: 'none',
-            borderRadius: 30,
-            padding: '14px 36px',
-            fontSize: 16,
-            fontWeight: 700,
-            color: '#3730a3',
-            boxShadow: '0 2px 8px rgba(99,102,241,0.10)',
-            cursor: 'pointer',
-            transition: 'background 0.2s, color 0.2s',
-          }}
-          onClick={() => alert('В будущем здесь будет чат или ссылка на поддержку в Telegram!')}
-        >
-          🛟 Обратиться в поддержку
-        </button>
-      </div>
+      {/* Кнопка поддержки */}
+      <button
+        style={{
+          margin: '24px auto 0 auto',
+          display: 'block',
+          background: 'linear-gradient(135deg, #e0e7ff 0%, #a5b4fc 100%)',
+          border: 'none',
+          borderRadius: 30,
+          padding: '14px 36px',
+          fontSize: 16,
+          fontWeight: 700,
+          color: '#3730a3',
+          boxShadow: '0 2px 8px rgba(99,102,241,0.10)',
+          cursor: 'pointer',
+          transition: 'background 0.2s, color 0.2s',
+        }}
+        onClick={() => alert('В будущем здесь будет чат или ссылка на поддержку в Telegram!')}
+      >
+        🛟 Обратиться в поддержку
+      </button>
+    </div>
   );
 }
