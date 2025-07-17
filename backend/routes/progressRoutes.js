@@ -57,6 +57,24 @@ router.get('/summary', (req, res) => {
     }
 });
 
+// Получить недельную историю прогресса
+router.get('/weekly-history', async (req, res) => {
+    const { userId } = req.query;
+    console.log('[PROGRESS ROUTE] GET /api/progress/weekly-history query:', req.query);
+    if (!userId) {
+        return res.status(400).json({ error: 'userId обязателен' });
+    }
+    try {
+        const logger = new UserProgressLogger(userId);
+        const weeklyData = await logger.analyzeWeeklyProgressFromHistory();
+        console.log('[PROGRESS ROUTE] Недельная история получена:', weeklyData.summary);
+        res.json(weeklyData);
+    } catch (e) {
+        console.error('[PROGRESS ROUTE] Ошибка получения недельной истории:', e);
+        res.status(500).json({ error: 'Ошибка получения недельной истории прогресса' });
+    }
+});
+
 // Получить прогресс по userId (для ProfilePage.js)
 router.get('/:userId', (req, res) => {
     const { userId } = req.params;

@@ -113,20 +113,27 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   });
 
   // Состояние для сворачивания/разворачивания контейнеров
-  const [openContainers, setOpenContainers] = useState({
-    training: true,
-    nutrition: true,
+  const defaultState = {
+    training: false,
+    nutrition: false,
     steps: true,
     motivation: true
+  };
+  const [openContainers, setOpenContainers] = useState(() => {
+    // Пробуем восстановить из sessionStorage
+    const saved = window.sessionStorage.getItem('diana_today_open');
+    return saved ? JSON.parse(saved) : defaultState;
   });
 
   // Функция для переключения состояния контейнера
   const toggleContainer = (containerKey) => {
-    setOpenContainers(prev => ({
-      ...prev,
-      [containerKey]: !prev[containerKey]
-    }));
+    setOpenContainers(prev => {
+      const updated = { ...prev, [containerKey]: !prev[containerKey] };
+      window.sessionStorage.setItem('diana_today_open', JSON.stringify(updated));
+      return updated;
+    });
   };
+
 
   // Состояние для персонального плана
   const [personalPlan, setPersonalPlan] = useState(null);
@@ -501,6 +508,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   // Обработчик выбора состояния упражнения (выполнил/не выполнил)
   const handleExerciseComplete = async (idx, completed) => {
+    console.log(`[EXERCISE TRACKING] Упражнение ${idx}: ${completed ? 'выполнено' : 'не выполнено'}`);
+    
     // Если отмечаем как НЕ выполнено - показываем модал с причинами
     if (!completed) {
       setReasonModalData({
@@ -530,16 +539,23 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     
     if (answers?.userId) {
       try {
+        const tasksData = buildTasks();
+        console.log(`[EXERCISE TRACKING] Отправляем данные на сервер:`, {
+          userId: answers.userId,
+          date: currentDay.date,
+          tasks: tasksData
+        });
+        
         await fetch(`${API_URL}/api/progress`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userId: answers.userId,
             date: currentDay.date,
-            tasks: buildTasks()
+            tasks: tasksData
           })
         });
-        console.log('✅ Статус упражнения обновлен:', { idx, completed });
+        console.log('✅ Статус упражнения обновлен на сервере:', { idx, completed });
       } catch (error) {
         console.error('❌ Ошибка обновления статуса упражнения:', error);
       }
@@ -605,6 +621,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   // Обработчик выбора состояния приема пищи (съел/не съел)
   const handleMealComplete = async (idx, completed) => {
+    console.log(`[MEAL TRACKING] Прием пищи ${idx}: ${completed ? 'выполнен' : 'не выполнен'}`);
+    
     // Если отмечаем как НЕ съедено - показываем модал с причинами
     if (!completed) {
       setReasonModalData({
@@ -626,17 +644,30 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
     const updated = completedMeals.map((v, i) => i === idx ? completed : v);
     setCompletedMeals(updated);
+    
     // Явная отправка на backend с актуальным массивом
     if (answers?.userId) {
-      fetch(`${API_URL}/api/progress`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      try {
+        const tasksData = buildTasksWithMeals(updated);
+        console.log(`[MEAL TRACKING] Отправляем данные на сервер:`, {
           userId: answers.userId,
           date: currentDay.date,
-          tasks: buildTasksWithMeals(updated)
-        })
-      });
+          tasks: tasksData
+        });
+        
+        await fetch(`${API_URL}/api/progress`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId: answers.userId,
+            date: currentDay.date,
+            tasks: tasksData
+          })
+        });
+        console.log('✅ Статус приема пищи обновлен на сервере:', { idx, completed });
+      } catch (error) {
+        console.error('❌ Ошибка обновления статуса приема пищи:', error);
+      }
     }
   };
 
@@ -1331,6 +1362,46 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         </button>
       </div>
 
+      {/* Мотивация дня */}
+      <div style={{ 
+        padding: '0 20px', 
+        maxWidth: 480, 
+        margin: '0 auto', 
+        width: '100%',
+        boxSizing: 'border-box'
+      }}>
+        <div style={{
+          ...cardStyle,
+          background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)',
+          border: '1px solid #a5b4fc',
+          marginBottom: 16
+        }}>
+          <div 
+            style={{
+              ...headerStyle,
+              userSelect: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              marginBottom: 16
+            }}
+          >
+            <span>💬 Мотивация</span>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 24, marginBottom: 12 }}>💬</div>
+            <div style={{ 
+              fontSize: 16, 
+              fontStyle: 'italic', 
+              color: '#3730a3', 
+              lineHeight: 1.4,
+              fontWeight: 500
+            }}>
+              {todayQuote}
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div style={{ 
         flex: 1, 
         padding: '20px', 
@@ -1730,46 +1801,6 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
               </div>
             )}
 
-            {/* 6. Мотивация дня */}
-            <div style={{
-              ...cardStyle,
-              background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)',
-              border: '1px solid #a5b4fc',
-              marginBottom: 24
-            }}>
-              <div 
-                style={{
-                  ...headerStyle,
-                  cursor: 'pointer',
-                  userSelect: 'none',
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: openContainers.motivation ? 16 : 0
-                }}
-                onClick={() => toggleContainer('motivation')}
-              >
-                <span>💬 Мотивация</span>
-                <span style={{ fontSize: 20, lineHeight: 1.2, display: 'flex', alignItems: 'center' }}>
-                  {openContainers.motivation ? '▼' : '▶'}
-                </span>
-              </div>
-              
-              {openContainers.motivation && (
-                <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontSize: 24, marginBottom: 12 }}>💬</div>
-                  <div style={{ 
-                    fontSize: 16, 
-                    fontStyle: 'italic', 
-                    color: '#3730a3', 
-                    lineHeight: 1.4,
-                    fontWeight: 500
-                  }}>
-                    {todayQuote}
-                  </div>
-                </div>
-              )}
-            </div>
           </>
         )}
       </div>

@@ -153,15 +153,19 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
 
   // Получаем реальные данные о прогрессе
   const [progressData, setProgressData] = React.useState({
-    workouts: 0,
-    nutrition: 0,
-    details: {
-      meals: { breakfast: 0, lunch: 0, dinner: 0, snacks: 0 },
-      weeklyProgress: [],
-      commonIssues: [],
-      improvements: { weekOverWeek: 0, trend: 'up' }
-    }
+    mealsCompleted: 0,
+    workoutsCompleted: 0,
+    workoutsPlanned: 3,
+    stepsCompleted: 0,
+    details: {},
+    dailyProgress: {},
   });
+  // Вычисляем проценты для прогресс-баров на основе недельной истории
+  const nutritionPercent = progressData.summary?.mealsCompletion || 0;
+  const workoutsPercent = progressData.summary?.workoutsCompletion || 0;
+  const stepsPercent = progressData.stepsCompleted && !isNaN(progressData.stepsCompleted)
+    ? Math.min(Math.round((progressData.stepsCompleted / 70000) * 100), 100) // 70000 шагов за неделю максимум
+    : 0;
   
   // Мемоизация частиц фона для стабильной производительности
   const backgroundParticles = useMemo(() => {
@@ -174,26 +178,103 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
     }));
   }, []); // Пустой массив зависимостей - создаётся только один раз
 
-  // Загрузка данных прогресса из файла userid_progress.json
+  // Загрузка данных прогресса из недельной истории
   React.useEffect(() => {
     const fetchProgress = async () => {
       try {
         const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
-        const response = await fetch(`${API_URL}/api/user-progress/${userId}`);
-        if (!response.ok) throw new Error('Failed to fetch progress');
-        const data = await response.json();
         
-        console.log('Progress data from backend:', data);
-        // Используем данные прогресса напрямую с бэкенда (без пересчета на фронте)
-        setProgressData(data);
+        // Используем новый API для получения недельной истории
+        const response = await fetch(`${API_URL}/api/progress/weekly-history?userId=${userId}`);
+        if (!response.ok) throw new Error('Failed to fetch weekly progress');
+        const weeklyData = await response.json();
+        
+        console.log('Weekly progress data from backend:', weeklyData);
+        console.log('[DEBUG] Weekly summary:', weeklyData.summary);
+        
+        // Извлекаем статистику из недельной истории
+        const { summary } = weeklyData;
+        const mealsCompleted = summary.stats.completedMeals || 0;
+        const workoutsCompleted = summary.stats.completedWorkouts || 0;
+        const workoutsPlanned = 7; // Предполагаем максимум 7 тренировок в неделю
+        
+        // Подсчитываем шаги из задач
+        let stepsCompleted = 0;
+        if (weeklyData.weeklyHistory) {
+          weeklyData.weeklyHistory.forEach(day => {
+            if (Array.isArray(day.tasks)) {
+              day.tasks.forEach(task => {
+                if (task.type === 'steps' && task.done && task.steps_estimated) {
+                  stepsCompleted += Number(task.steps_estimated) || 0;
+                }
+              });
+            }
+          });
+        }
+        
+        setProgressData({
+          mealsCompleted,
+          workoutsCompleted,
+          workoutsPlanned,
+          stepsCompleted,
+          weeklyHistory: weeklyData.weeklyHistory || [],
+          summary: weeklyData.summary || {},
+          details: {
+            totalDays: summary.totalDays || 0,
+            mealsCompletion: summary.mealsCompletion || 0,
+            workoutsCompletion: summary.workoutsCompletion || 0,
+            overallCompletion: summary.overallCompletion || 0
+          }
+        });
+        
+        console.log('[DEBUG] Processed progress data:', {
+          mealsCompleted,
+          workoutsCompleted,
+          stepsCompleted,
+          summary: weeklyData.summary
+        });
+        
       } catch (error) {
-        console.error('Error fetching progress:', error);
-        // Можно добавить fallback/заглушку
+        console.error('Error fetching weekly progress:', error);
+        // Fallback к старому API если новый не работает
+        try {
+          const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
+          const response = await fetch(`${API_URL}/api/user-progress/${userId}`);
+          if (!response.ok) throw new Error('Failed to fetch progress');
+          const data = await response.json();
+          
+          // Старая логика как fallback
+          const dailyProgress = data.dailyProgress || {};
+          const today = new Date();
+          let mealsCompleted = 0;
+          let workoutsCompleted = 0;
+          let stepsCompleted = 0;
+          
+          for (let i = 0; i < 7; i++) {
+            const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+            const key = d.toISOString().slice(0, 10);
+            const day = dailyProgress[key];
+            if (day) {
+              if (day.ate) mealsCompleted++;
+              if (day.workout) workoutsCompleted++;
+              if (day.steps) stepsCompleted += Number(day.steps) || 0;
+            }
+          }
+          
+          setProgressData({
+            mealsCompleted,
+            workoutsCompleted,
+            workoutsPlanned: 3,
+            stepsCompleted,
+            dailyProgress,
+          });
+        } catch (fallbackError) {
+          console.error('Fallback also failed:', fallbackError);
+        }
       }
     };
 
     fetchProgress();
-    // Обновляем каждые 5 минут
     const interval = setInterval(fetchProgress, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
@@ -725,190 +806,55 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
             <div style={{ marginBottom: 24 }}>
               {/* Питание */}
               <div style={{ marginBottom: 20 }}>
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  marginBottom: 12, 
-                  alignItems: 'center' 
-                }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{
-                      width: 36,
-                      height: 36,
-                      background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 16
-                    }}>
-                      🍽️
-                    </div>
+                    <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🍽️</div>
                     <div>
-                      <h3 style={{ 
-                        fontSize: 16, 
-                        fontWeight: 700, 
-                        color: '#222',
-                        margin: 0,
-                        fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-                        letterSpacing: '0.3px',
-                        textShadow: 'none'
-                      }}>
-                        Питание
-                      </h3>
-                      <p style={{
-                        fontSize: 12,
-                        color: 'rgba(255,255,255,0.7)',
-                        fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-                        margin: 0
-                      }}>
-                        Приемы пищи в неделю
-                      </p>
+                      <h3 style={{ fontSize: 16, fontWeight: 700, color: '#222', margin: 0, fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", letterSpacing: '0.3px', textShadow: 'none' }}>Питание</h3>
+                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", margin: 0 }}>Приемы пищи в неделю</p>
                     </div>
                   </div>
-                  <div style={{
-                    background: progressData.nutrition >= 70 ? 
-                      'linear-gradient(135deg, #48bb78 0%, #38a169 100%)' : 
-                      'linear-gradient(135deg, #ed8936 0%, #dd6b20 100%)',
-                    color: '#fff',
-                    padding: '8px 14px',
-                    borderRadius: 14,
-                    fontSize: 14,
-                    fontWeight: 700,
-                    fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                    minWidth: 60,
-                    textAlign: 'center'
-                  }}>
-                    {progressData.nutrition}%
-                  </div>
+                  <div style={{ background: nutritionPercent >= 70 ? 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)' : 'linear-gradient(135deg, #ed8936 0%, #dd6b20 100%)', color: '#fff', padding: '8px 14px', borderRadius: 14, fontSize: 14, fontWeight: 700, fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", boxShadow: '0 4px 12px rgba(0,0,0,0.2)', minWidth: 60, textAlign: 'center' }}>{nutritionPercent}%</div>
                 </div>
-                <div style={{ 
-                  width: '100%', 
-                  height: 12, 
-                  background: 'rgba(255,255,255,0.2)', 
-                  borderRadius: 12, 
-                  overflow: 'hidden',
-                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)',
-                  border: '1px solid rgba(255,255,255,0.1)'
-                }}>
-                  <div
-                    style={{ 
-                      width: `${progressData.nutrition}%`,
-                      height: '100%',
-                      background: progressData.nutrition >= 70 ? 
-                        'linear-gradient(90deg, #48bb78 0%, #68d391 50%, #38a169 100%)' : 
-                        'linear-gradient(90deg, #ed8936 0%, #f6ad55 50%, #dd6b20 100%)',
-                      borderRadius: 12,
-                      transition: 'width 2s cubic-bezier(0.4, 0, 0.2, 1)',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                      position: 'relative'
-                    }}
-                  >
-                    <div style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
-                      animation: 'shimmer 2s infinite'
-                    }} />
+                <div style={{ width: '100%', height: 12, background: 'rgba(255,255,255,0.2)', borderRadius: 12, overflow: 'hidden', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div style={{ width: `${nutritionPercent}%`, height: '100%', background: nutritionPercent >= 70 ? 'linear-gradient(90deg, #48bb78 0%, #68d391 50%, #38a169 100%)' : 'linear-gradient(90deg, #ed8936 0%, #f6ad55 50%, #dd6b20 100%)', borderRadius: 12, transition: 'width 2s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 2px 8px rgba(0,0,0,0.3)', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)', animation: 'shimmer 2s infinite' }} />
                   </div>
                 </div>
               </div>
-
               {/* Тренировки */}
-              <div>
-                <div style={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  marginBottom: 12, 
-                  alignItems: 'center' 
-                }}>
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{
-                      width: 36,
-                      height: 36,
-                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: 16
-                    }}>
-                      💪
-                    </div>
+                    <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>💪</div>
                     <div>
-                      <h3 style={{ 
-                        fontSize: 16, 
-                        fontWeight: 700, 
-                        color: '#222',
-                        margin: 0,
-                        fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-                        letterSpacing: '0.3px',
-                        textShadow: 'none'
-                      }}>
-                        Тренировки
-                      </h3>
-                      <p style={{
-                        fontSize: 12,
-                        color: 'rgba(255,255,255,0.7)',
-                        fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-                        margin: 0
-                      }}>
-                        Задания в неделю
-                      </p>
+                      <h3 style={{ fontSize: 16, fontWeight: 700, color: '#222', margin: 0, fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", letterSpacing: '0.3px', textShadow: 'none' }}>Тренировки</h3>
+                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", margin: 0 }}>Задания в неделю</p>
                     </div>
                   </div>
-                  <div style={{
-                    background: progressData.workouts >= 70 ? 
-                      'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 
-                      'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-                    color: '#fff',
-                    padding: '8px 14px',
-                    borderRadius: 14,
-                    fontSize: 14,
-                    fontWeight: 700,
-                    fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                    minWidth: 60,
-                    textAlign: 'center'
-                  }}>
-                    {progressData.workouts}%
+                  <div style={{ background: workoutsPercent >= 70 ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: '#fff', padding: '8px 14px', borderRadius: 14, fontSize: 14, fontWeight: 700, fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", boxShadow: '0 4px 12px rgba(0,0,0,0.2)', minWidth: 60, textAlign: 'center' }}>{workoutsPercent}%</div>
+                </div>
+                <div style={{ width: '100%', height: 12, background: 'rgba(255,255,255,0.2)', borderRadius: 12, overflow: 'hidden', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div style={{ width: `${workoutsPercent}%`, height: '100%', background: workoutsPercent >= 70 ? 'linear-gradient(90deg, #667eea 0%, #9f7aea 50%, #764ba2 100%)' : 'linear-gradient(90deg, #f093fb 0%, #f687b3 50%, #f5576c 100%)', borderRadius: 12, transition: 'width 2s cubic-bezier(0.4, 0, 0.2, 1) 0.5s', boxShadow: '0 2px 8px rgba(0,0,0,0.3)', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)', animation: 'shimmer 2s infinite 0.5s' }} />
                   </div>
                 </div>
-                <div style={{ 
-                  width: '100%', 
-                  height: 12, 
-                  background: 'rgba(255,255,255,0.2)', 
-                  borderRadius: 12, 
-                  overflow: 'hidden',
-                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)',
-                  border: '1px solid rgba(255,255,255,0.1)'
-                }}>
-                  <div
-                    style={{ 
-                      width: `${progressData.workouts}%`,
-                      height: '100%',
-                      background: progressData.workouts >= 70 ? 
-                        'linear-gradient(90deg, #667eea 0%, #9f7aea 50%, #764ba2 100%)' : 
-                        'linear-gradient(90deg, #f093fb 0%, #f687b3 50%, #f5576c 100%)',
-                      borderRadius: 12,
-                      transition: 'width 2s cubic-bezier(0.4, 0, 0.2, 1) 0.5s',
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                      position: 'relative'
-                    }}
-                  >
-                    <div style={{
-                      position: 'absolute',
-                      top: 0,
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)',
-                      animation: 'shimmer 2s infinite 0.5s'
-                    }} />
+              </div>
+              {/* Шаги */}
+              <div style={{ marginBottom: 20 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #f6ad55 0%, #ed8936 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🚶‍♂️</div>
+                    <div>
+                      <h3 style={{ fontSize: 16, fontWeight: 700, color: '#222', margin: 0, fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", letterSpacing: '0.3px', textShadow: 'none' }}>Шаги</h3>
+                      <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", margin: 0 }}>Шаги за неделю</p>
+                    </div>
+                  </div>
+                  <div style={{ background: stepsPercent >= 70 ? 'linear-gradient(135deg, #f6ad55 0%, #ed8936 100%)' : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: '#fff', padding: '8px 14px', borderRadius: 14, fontSize: 14, fontWeight: 700, fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", boxShadow: '0 4px 12px rgba(0,0,0,0.2)', minWidth: 60, textAlign: 'center' }}>{stepsPercent}%</div>
+                </div>
+                <div style={{ width: '100%', height: 12, background: 'rgba(255,255,255,0.2)', borderRadius: 12, overflow: 'hidden', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div style={{ width: `${stepsPercent}%`, height: '100%', background: stepsPercent >= 70 ? 'linear-gradient(90deg, #f6ad55 0%, #ed8936 50%, #f6ad55 100%)' : 'linear-gradient(90deg, #f093fb 0%, #f687b3 50%, #f5576c 100%)', borderRadius: 12, transition: 'width 2s cubic-bezier(0.4, 0, 0.2, 1) 0.5s', boxShadow: '0 2px 8px rgba(0,0,0,0.3)', position: 'relative' }}>
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)', animation: 'shimmer 2s infinite 0.5s' }} />
                   </div>
                 </div>
               </div>

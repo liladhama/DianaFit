@@ -8,7 +8,7 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
       id: 1,
       from: 'diana',
       text: isPremium 
-        ? 'Привет! Я Диана, твой персональный фитнес-тренер! 💪\n\nУ тебя есть 10 вопросов в день. Я помогу тебе с вопросами о тренировках, питании и мотивации. Что тебя интересует?'
+        ? 'Привет! Я Диана, твой персональный фитнес-тренер! 💪\n\nУ тебя есть 10 вопросов в день. Я помогу тебе с вопросами о тренировках, питании, мотивации, режиме дня, рецептах и советах по похудению.\n\nМожешь спросить меня, например:\n• Как составить тренировку дома или в зале?\n• Как рассчитать калории?\n• Какие продукты лучше для похудения?\n• Как не потерять мотивацию?\n• Какой режим дня выбрать?\n\nЧто тебя интересует?'
         : 'Чат с ИИ-тренером доступен только для пользователей с премиум подпиской! Оформите подписку для получения персональных консультаций.',
       timestamp: new Date()
     }
@@ -201,7 +201,7 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
             </div>
             <div>
               <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>
-                Диана {isPremium ? '💎' : '🔒'}
+                <span style={{fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif'}}>Диана</span> {isPremium ? '💎' : '🔒'}
               </div>
               <div style={{ color: '#e0e6ff', fontSize: 12 }}>
                 {isPremium 
@@ -269,7 +269,9 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
                 fontSize: 14,
                 lineHeight: 1.4,
                 wordBreak: 'break-word',
-                whiteSpace: 'pre-wrap'
+                whiteSpace: 'pre-wrap',
+                fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif',
+                fontWeight: 700,
               }}>
                 {message.text}
               </div>
@@ -324,7 +326,8 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
                  fontSize: 14,
                  resize: 'none',
                  outline: 'none',
-                 fontFamily: 'inherit',
+                 fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif',
+                 fontWeight: 700,
                  backgroundColor: !canSendMessage ? '#f5f5f5' : '#fff',
                  cursor: isPremium ? 'text' : 'pointer'
                }}
