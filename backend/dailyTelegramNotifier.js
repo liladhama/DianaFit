@@ -33,10 +33,12 @@ async function getAllUserIds() {
   const userIds = [];
   snapshot.forEach(doc => {
     const data = doc.data();
-    if (data.telegramChatId) {
+    // Если есть поле telegramChatId — используем его, иначе берём id документа
+    const chatId = data.telegramChatId || doc.id;
+    if (chatId) {
       userIds.push({
         userId: doc.id,
-        chatId: data.telegramChatId,
+        chatId,
         todayWorkout: data.todayWorkout || '',
         calories: data.nutrition?.calories || 1800
       });
