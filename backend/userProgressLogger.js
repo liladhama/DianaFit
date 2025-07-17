@@ -280,11 +280,10 @@ class UserProgressLogger {
         programDays.forEach(day => {
             const dayDate = new Date(day.date);
             if (dayDate >= weekAgo && dayDate <= now && day.isWorkoutDay && day.workout && Array.isArray(day.workout.exercises)) {
+                // Суммируем все упражнения недели
                 totalExercisesWeek += day.workout.exercises.length;
                 if (Array.isArray(day.completedExercises)) {
-                    day.completedExercises.forEach((done, idx) => {
-                        if (done === true) completedExercisesWeek++;
-                    });
+                    completedExercisesWeek += day.completedExercises.filter(Boolean).length;
                 }
             }
         });
