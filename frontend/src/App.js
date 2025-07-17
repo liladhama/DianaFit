@@ -630,6 +630,8 @@ function App() {
     // Используем Telegram userId или demo userId для локального тестирования
     const userId = tgUserId || 'demo_user_local_test';
     quizAnswers.userId = userId;
+    // Определяем timezone пользователя
+    quizAnswers.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     console.log('💾 Сохраняем квиз для userId:', userId);
     try {
       await safeFetch(`${API_URL}/api/user/quiz-answers/${userId}`, {

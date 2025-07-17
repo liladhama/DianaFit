@@ -6,7 +6,7 @@ const router = express.Router();
 
 router.post('/api/user/calories', async (req, res) => {
   console.log('[CaloriesApi] POST /api/user/calories', req.body);
-  const { userId, caloriesNorm } = req.body;
+  const { userId, caloriesNorm, timezone } = req.body;
   if (!userId || !caloriesNorm) {
     console.log('[CaloriesApi] Не хватает userId или caloriesNorm');
     return res.status(400).json({ error: 'userId и caloriesNorm обязательны' });
@@ -14,9 +14,9 @@ router.post('/api/user/calories', async (req, res) => {
   try {
     const db = admin.firestore();
     await db.collection('Dianafit_users').doc(userId).set({
-      quiz: { calories: caloriesNorm }
+      quiz: { calories: caloriesNorm, timezone: timezone || 'Europe/Moscow' }
     }, { merge: true });
-    console.log('[CaloriesApi] Calories записан для userId:', userId, 'calories:', caloriesNorm);
+    console.log('[CaloriesApi] Calories и timezone записаны для userId:', userId, 'calories:', caloriesNorm, 'timezone:', timezone);
     res.json({ success: true });
   } catch (e) {
     console.error('Ошибка сохранения калоража:', e);
