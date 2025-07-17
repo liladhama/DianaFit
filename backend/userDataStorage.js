@@ -35,6 +35,7 @@ try {
 }
 
 export async function readUserData(userId) {
+  userId = String(userId);
   console.log(`[Firestore][readUserData] Попытка чтения данных для userId: ${userId}`);
   
   if (!firestoreAvailable) {
@@ -82,6 +83,7 @@ export async function readUserData(userId) {
 }
 
 export async function writeUserData(userId, data) {
+  userId = String(userId);
   console.log(`[Firestore][writeUserData] Начинаем сохранение данных для userId: ${userId}`);
   console.log(`[Firestore][writeUserData] Данные для сохранения:`, {
     userId: data.userId,
