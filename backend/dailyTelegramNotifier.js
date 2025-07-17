@@ -101,8 +101,10 @@ async function sendDailyNotifications() {
       const tz = user.timezone || 'Europe/Moscow';
       const hour = typeof user.notifyHour === 'number' ? user.notifyHour : 9;
       const nowTz = new Date(now.toLocaleString('en-US', { timeZone: tz }));
-      console.log(`[ТЕСТ-РАССЫЛКА] userId: ${user.userId}, chatId: ${user.chatId}, timezone: ${tz}, notifyHour: ${hour}, nowTz: ${nowTz.toISOString()}, часы: ${nowTz.getHours()}, минуты: ${nowTz.getMinutes()}`);
-      // Тест: рассылка всегда, независимо от времени
+      // Проверяем, что сейчас notifyHour:00 по timezone пользователя
+      if (nowTz.getHours() !== hour || nowTz.getMinutes() !== 0) {
+        continue;
+      }
       const tip = getRandomTip();
       let message = `Доброе утро!\n`;
       // ...existing code...
