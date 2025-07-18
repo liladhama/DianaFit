@@ -808,16 +808,16 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
               <div style={{ marginBottom: 20 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🍽️</div>
+                    <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #ffb347 0%, #ff7c2a 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🍽️</div>
                     <div>
                       <h3 style={{ fontSize: 16, fontWeight: 700, color: '#222', margin: 0, fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", letterSpacing: '0.3px', textShadow: 'none' }}>Питание</h3>
                       <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", margin: 0 }}>Приемы пищи в неделю</p>
                     </div>
                   </div>
-                  <div style={{ background: nutritionPercent >= 70 ? 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)' : 'linear-gradient(135deg, #ed8936 0%, #dd6b20 100%)', color: '#fff', padding: '8px 14px', borderRadius: 14, fontSize: 14, fontWeight: 700, fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", boxShadow: '0 4px 12px rgba(0,0,0,0.2)', minWidth: 60, textAlign: 'center' }}>{nutritionPercent}%</div>
+                  <div style={{ background: 'linear-gradient(135deg, #ffb347 0%, #ff7c2a 100%)', color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.18)', padding: '8px 14px', borderRadius: 14, fontSize: 14, fontWeight: 700, fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", boxShadow: '0 4px 12px rgba(0,0,0,0.13)', minWidth: 60, textAlign: 'center' }}>{nutritionPercent}%</div>
                 </div>
-                <div style={{ width: '100%', height: 12, background: 'rgba(255,255,255,0.2)', borderRadius: 12, overflow: 'hidden', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <div style={{ width: `${nutritionPercent}%`, height: '100%', background: nutritionPercent >= 70 ? 'linear-gradient(90deg, #48bb78 0%, #68d391 50%, #38a169 100%)' : 'linear-gradient(90deg, #ed8936 0%, #f6ad55 50%, #dd6b20 100%)', borderRadius: 12, transition: 'width 2s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 2px 8px rgba(0,0,0,0.3)', position: 'relative' }}>
+                <div style={{ width: '100%', height: 12, background: 'rgba(255,255,255,0.2)', borderRadius: 12, overflow: 'hidden', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.13)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div style={{ width: `${nutritionPercent}%`, height: '100%', background: 'linear-gradient(90deg, #ffb347 0%, #ff7c2a 100%)', borderRadius: 12, transition: 'width 2s cubic-bezier(0.4, 0, 0.2, 1)', boxShadow: '0 2px 8px rgba(0,0,0,0.13)', position: 'relative' }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)', animation: 'shimmer 2s infinite' }} />
                   </div>
                 </div>
@@ -826,16 +826,16 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
               <div style={{ marginBottom: 20 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>💪</div>
+                    <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #6dd5fa 0%, #2980b9 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>💪</div>
                     <div>
                       <h3 style={{ fontSize: 16, fontWeight: 700, color: '#222', margin: 0, fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", letterSpacing: '0.3px', textShadow: 'none' }}>Тренировки</h3>
                       <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", margin: 0 }}>Задания в неделю</p>
                     </div>
                   </div>
-                  <div style={{ background: workoutsPercent >= 70 ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: '#fff', padding: '8px 14px', borderRadius: 14, fontSize: 14, fontWeight: 700, fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", boxShadow: '0 4px 12px rgba(0,0,0,0.2)', minWidth: 60, textAlign: 'center' }}>{workoutsPercent}%</div>
+                  <div style={{ background: 'linear-gradient(135deg, #6dd5fa 0%, #2980b9 100%)', color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.18)', padding: '8px 14px', borderRadius: 14, fontSize: 14, fontWeight: 700, fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", boxShadow: '0 4px 12px rgba(0,0,0,0.13)', minWidth: 60, textAlign: 'center' }}>{workoutsPercent}%</div>
                 </div>
-                <div style={{ width: '100%', height: 12, background: 'rgba(255,255,255,0.2)', borderRadius: 12, overflow: 'hidden', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <div style={{ width: `${workoutsPercent}%`, height: '100%', background: workoutsPercent >= 70 ? 'linear-gradient(90deg, #667eea 0%, #9f7aea 50%, #764ba2 100%)' : 'linear-gradient(90deg, #f093fb 0%, #f687b3 50%, #f5576c 100%)', borderRadius: 12, transition: 'width 2s cubic-bezier(0.4, 0, 0.2, 1) 0.5s', boxShadow: '0 2px 8px rgba(0,0,0,0.3)', position: 'relative' }}>
+                <div style={{ width: '100%', height: 12, background: 'rgba(255,255,255,0.2)', borderRadius: 12, overflow: 'hidden', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.13)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div style={{ width: `${workoutsPercent}%`, height: '100%', background: 'linear-gradient(90deg, #6dd5fa 0%, #2980b9 100%)', borderRadius: 12, transition: 'width 2s cubic-bezier(0.4, 0, 0.2, 1) 0.5s', boxShadow: '0 2px 8px rgba(0,0,0,0.13)', position: 'relative' }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)', animation: 'shimmer 2s infinite 0.5s' }} />
                   </div>
                 </div>
@@ -844,16 +844,16 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
               <div style={{ marginBottom: 20 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12, alignItems: 'center' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #f6ad55 0%, #ed8936 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🚶‍♂️</div>
+                    <div style={{ width: 36, height: 36, background: 'linear-gradient(135deg, #a8ff78 0%, #22c55e 100%)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>🚶‍♂️</div>
                     <div>
                       <h3 style={{ fontSize: 16, fontWeight: 700, color: '#222', margin: 0, fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", letterSpacing: '0.3px', textShadow: 'none' }}>Шаги</h3>
                       <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.7)', fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", margin: 0 }}>Шаги за неделю</p>
                     </div>
                   </div>
-                  <div style={{ background: stepsPercent >= 70 ? 'linear-gradient(135deg, #f6ad55 0%, #ed8936 100%)' : 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)', color: '#fff', padding: '8px 14px', borderRadius: 14, fontSize: 14, fontWeight: 700, fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", boxShadow: '0 4px 12px rgba(0,0,0,0.2)', minWidth: 60, textAlign: 'center' }}>{stepsPercent}%</div>
+                  <div style={{ background: 'linear-gradient(135deg, #a8ff78 0%, #22c55e 100%)', color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.18)', padding: '8px 14px', borderRadius: 14, fontSize: 14, fontWeight: 700, fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif", boxShadow: '0 4px 12px rgba(0,0,0,0.13)', minWidth: 60, textAlign: 'center' }}>{stepsPercent}%</div>
                 </div>
-                <div style={{ width: '100%', height: 12, background: 'rgba(255,255,255,0.2)', borderRadius: 12, overflow: 'hidden', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                  <div style={{ width: `${stepsPercent}%`, height: '100%', background: stepsPercent >= 70 ? 'linear-gradient(90deg, #f6ad55 0%, #ed8936 50%, #f6ad55 100%)' : 'linear-gradient(90deg, #f093fb 0%, #f687b3 50%, #f5576c 100%)', borderRadius: 12, transition: 'width 2s cubic-bezier(0.4, 0, 0.2, 1) 0.5s', boxShadow: '0 2px 8px rgba(0,0,0,0.3)', position: 'relative' }}>
+                <div style={{ width: '100%', height: 12, background: 'rgba(255,255,255,0.2)', borderRadius: 12, overflow: 'hidden', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.13)', border: '1px solid rgba(255,255,255,0.1)' }}>
+                  <div style={{ width: `${stepsPercent}%`, height: '100%', background: 'linear-gradient(90deg, #a8ff78 0%, #22c55e 100%)', borderRadius: 12, transition: 'width 2s cubic-bezier(0.4, 0, 0.2, 1) 0.5s', boxShadow: '0 2px 8px rgba(0,0,0,0.13)', position: 'relative' }}>
                     <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%)', animation: 'shimmer 2s infinite 0.5s' }} />
                   </div>
                 </div>

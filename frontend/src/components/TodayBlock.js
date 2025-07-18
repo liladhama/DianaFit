@@ -1,4 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
+import Confetti from 'react-confetti';
 import WheelPicker from './WheelPicker';
 import PaymentPage from './PaymentPage';
 import VideoPlayer from './VideoPlayer';
@@ -11,28 +13,45 @@ import { getWorkoutLocation, getDayId, getExerciseEnglishName, getVideoPathForEx
 import chatDianaIcon from '../assets/icons/chat-diana-icon.png';
 import { API_URL } from '../config/api';
 import { generateMealsForDay } from '../utils/generateMealsForDay';
-
-// Для WheelPicker (добавляем определение переменных)
+// --- Массивы для WheelPicker шагов ---
 const stepMinutesArr = [20, 30, 40, 50, 60, 70, 80, 90];
-const stepLabels = stepMinutesArr.map(m => `${m} мин`);
+const stepLabels = [
+  '20 мин',
+  '30 мин',
+  '40 мин',
+  '50 мин',
+  '60 мин',
+  '70 мин',
+  '80 мин',
+  '90 мин'
+];
 
-// Добавляем CSS анимацию для спиннера
-const spinnerStyles = `
-  @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+// --- Константы для блока шагов ---
+const STEPS_OPTIONS = [
+  { minutes: 20, steps: 2300, label: "20 минут ≈ 2 300 шагов" },
+  { minutes: 30, steps: 3500, label: "30 минут ≈ 3 500 шагов" },
+  { minutes: 40, steps: 4600, label: "40 минут ≈ 4 600 шагов" },
+  { minutes: 50, steps: 5800, label: "50 минут ≈ 5 800 шагов" },
+  { minutes: 60, steps: 7000, label: "60 минут ≈ 7 000 шагов" },
+  { minutes: 70, steps: 8120, label: "70 минут ≈ 8 120 шагов" },
+  { minutes: 80, steps: 9280, label: "80 минут ≈ 9 280 шагов" },
+  { minutes: 90, steps: 10440, label: "90 минут ≈ 10 440 шагов ✅" }
+];
+const GOAL_STEPS = 10000;
+const GOAL_MINUTES = 90;
+
+
+// --- Функция для обработки выбора шагов ---
+function handleStepsSelection(minutes, setWalkingMinutes, setStepsStatus) {
+  const selectedOption = STEPS_OPTIONS.find(opt => opt.minutes === minutes);
+  if (selectedOption) {
+    setWalkingMinutes(minutes);
+    setStepsStatus(selectedOption.steps >= GOAL_STEPS);
   }
-`;
-
-// Вставляем стили в head, если их еще нет
-if (!document.querySelector('#spinner-styles')) {
-  const style = document.createElement('style');
-  style.id = 'spinner-styles';
-  style.textContent = spinnerStyles;
-  document.head.appendChild(style);
 }
 
-// Мотивационные цитаты от Дианы
+
+// --- Мотивационные цитаты от Дианы ---
 const motivationalQuotes = [
   "Не нужно быть идеальной. Нужно быть стабильной. — Диана",
   "Каждый день — это новая возможность стать лучше. — Диана",
@@ -46,11 +65,10 @@ const getCurrentDateString = () => {
   const now = new Date();
   const days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота'];
   const months = ['января', 'февраля', 'марта', 'апреля', 'мая', 'июня', 'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря'];
-  
   return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
 };
 
-// Стили компонентов
+// --- Стили компонентов ---
 const cardStyle = {
   background: '#fff',
   borderRadius: 16,
@@ -86,10 +104,94 @@ const checkboxButtonStyle = (completed) => ({
   marginTop: 8
 });
 
+
+// --- Стили для спиннера (минимальный пример) ---
+const spinnerStyles = `
+@keyframes spinner-rotate { 100% { transform: rotate(360deg); } }
+.diana-spinner { width: 32px; height: 32px; border: 4px solid #e0e7ff; border-top: 4px solid #3b82f6; border-radius: 50%; animation: spinner-rotate 1s linear infinite; margin: 0 auto; }
+`;
+if (typeof document !== 'undefined' && !document.querySelector('#spinner-styles')) {
+  const style = document.createElement('style');
+  style.id = 'spinner-styles';
+  style.textContent = spinnerStyles;
+  document.head.appendChild(style);
+}
+
+
+
+
 export default function TodayBlock({ day, answers, onBackToWeek, programId, isPremium, activatePremium, setIsPaymentShown, setShowPayment, userAvatar, onProfileClick }) {
-  // PaymentPage рендерится только глобально через App.js
-  // ...existing code...
-  // ...existing code...
+  // --- Проверяем, начинается ли программа сегодня или позже ---
+  const programStartsLater = answers && answers.start_date && new Date(answers.start_date) > new Date();
+  // --- Все useState в начале компонента ---
+  const [showCongrats, setShowCongrats] = useState(false);
+  const [personalPlan, setPersonalPlan] = useState(null);
+  const [showCongratsMeals, setShowCongratsMeals] = useState(false);
+  const [loadingPlan, setLoadingPlan] = useState(false);
+  const [planError, setPlanError] = useState(null);
+  const [showDianaChat, setShowDianaChat] = useState(false);
+  const [showReasonModal, setShowReasonModal] = useState(false);
+  const [reasonModalData, setReasonModalData] = useState({ type: '', index: -1, itemName: '' });
+  const [exerciseReasons, setExerciseReasons] = useState({});
+  const [mealReasons, setMealReasons] = useState({});
+  const [aiMeals, setAiMeals] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState(null);
+  const [selectedMealOptionIdx, setSelectedMealOptionIdx] = useState(() => Array.isArray(aiMeals) ? aiMeals.map(() => 0) : []);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [tasks, setTasks] = useState([]);
+  const [completedMeals, setCompletedMeals] = useState([]);
+  const [completedExercises, setCompletedExercises] = useState([]);
+  const [walkingMinutes, setWalkingMinutes] = useState(null);
+  const [stepsStatus, setStepsStatus] = useState(null);
+  const [stepsFixed, setStepsFixed] = useState(false);
+  const [openContainers, setOpenContainers] = useState(() => {
+    const saved = window.sessionStorage.getItem('diana_today_open');
+    const defaultState = { training: false, nutrition: false, steps: true, motivation: true };
+    return saved ? JSON.parse(saved) : defaultState;
+  });
+
+  // --- Теперь можно использовать хуки и переменные ниже ---
+
+  // Проверка: все упражнения выполнены
+  const currentDay = day || personalPlan || {
+    date: '2024-06-03',
+    title: 'Понедельник',
+    workout: { title: 'Домашняя тренировка №2', exercises: [ { name: 'Приседания', reps: 15 }, { name: 'Отжимания', reps: 10 } ] },
+    meals: [ 
+      { type: 'Завтрак', menu: 'Овсянка с ягодами', calories: 320 },
+      { type: 'Перекус', menu: 'Греческий йогурт с орехами', calories: 180 },
+      { type: 'Обед', menu: 'Курица с рисом и овощами', calories: 450 },
+      { type: 'Полдник', menu: 'Яблоко с арахисовой пастой', calories: 200 },
+      { type: 'Ужин', menu: 'Запеченная рыба с салатом', calories: 380 }
+    ],
+    completed: false,
+  };
+
+  useEffect(() => {
+    if (
+      currentDay?.workout?.exercises?.length > 0 &&
+      completedExercises.length === currentDay.workout.exercises.length &&
+      completedExercises.every(v => v === true)
+    ) {
+      setShowCongrats(true);
+      setTimeout(() => setShowCongrats(false), 4000);
+    }
+  }, [completedExercises, currentDay?.workout?.exercises?.length]);
+
+  // Проверка: все приемы пищи выполнены
+  useEffect(() => {
+    if (
+      currentDay?.meals?.length > 0 &&
+      completedMeals.length === currentDay.meals.length &&
+      completedMeals.every(v => v === true)
+    ) {
+      setShowCongratsMeals(true);
+      setTimeout(() => setShowCongratsMeals(false), 4000);
+    }
+  }, [completedMeals, currentDay?.meals?.length]);
+
   // Логируем весь пропс day для анализа структуры
   console.log('🎯 TodayBlock получил day:', {
     dayExists: !!day,
@@ -119,11 +221,6 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     steps: true,
     motivation: true
   };
-  const [openContainers, setOpenContainers] = useState(() => {
-    // Пробуем восстановить из sessionStorage
-    const saved = window.sessionStorage.getItem('diana_today_open');
-    return saved ? JSON.parse(saved) : defaultState;
-  });
 
   // Функция для переключения состояния контейнера
   const toggleContainer = (containerKey) => {
@@ -135,116 +232,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   };
 
 
-  // Состояние для персонального плана
-  const [personalPlan, setPersonalPlan] = useState(null);
-  const [loadingPlan, setLoadingPlan] = useState(false);
-  const [planError, setPlanError] = useState(null);
-  
-  // Состояние для чата с Дианой
-  const [showDianaChat, setShowDianaChat] = useState(false);
-  // Локальное состояние для страницы оплаты
-  // PaymentPage теперь рендерится глобально через App.js
-  
 
-  // Состояние для модала причин невыполнения
-  const [showReasonModal, setShowReasonModal] = useState(false);
-  const [reasonModalData, setReasonModalData] = useState({ type: '', index: -1, itemName: '' });
-
-  // Состояние для хранения причин невыполнения
-  const [exerciseReasons, setExerciseReasons] = useState({});
-  const [mealReasons, setMealReasons] = useState({});
-
-  // Состояние для AI-плана питания
-  const [aiMeals, setAiMeals] = useState(null);
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiError, setAiError] = useState(null);
-
-  // Индексы выбранных вариантов для каждого AI-приема пищи
-  const [selectedMealOptionIdx, setSelectedMealOptionIdx] = useState(() => Array.isArray(aiMeals) ? aiMeals.map(() => 0) : []);
-
-  // Флаг загрузки статусов с backend
-  const [isLoaded, setIsLoaded] = useState(false);
-  const [isInitialLoading, setIsInitialLoading] = useState(true); // Новый флаг для первоначальной загрузки
-  // Массив задач (только реальные статусы)
-  const [tasks, setTasks] = useState([]);
-
-  // --- СТАТУСЫ ПРИЕМОВ ПИЩИ ---
-  const [completedMeals, setCompletedMeals] = useState([]);
-
-  // Используем персональный план если он есть, иначе переданный день или мок
-  const currentDay = day || personalPlan || {
-    date: '2024-06-03',
-    title: 'Понедельник',
-    workout: { title: 'Домашняя тренировка №2', exercises: [ { name: 'Приседания', reps: 15 }, { name: 'Отжимания', reps: 10 } ] },
-    meals: [ 
-      { type: 'Завтрак', menu: 'Овсянка с ягодами', calories: 320 },
-      { type: 'Перекус', menu: 'Греческий йогурт с орехами', calories: 180 },
-      { type: 'Обед', menu: 'Курица с рисом и овощами', calories: 450 },
-      { type: 'Полдник', menu: 'Яблоко с арахисовой пастой', calories: 200 },
-      { type: 'Ужин', menu: 'Запеченная рыба с салатом', calories: 380 }
-    ],
-    completed: false,
-  };
-  
-  // Логируем данные для отладки
-  console.log('🏋️‍♀️ TodayBlock Debug:', {
-    personalPlan: !!personalPlan,
-    dayProp: !!day,
-    currentDayWorkout: currentDay.workout,
-    currentDayLocation: currentDay.workout?.location,
-    currentDayExercises: currentDay.workout?.exercises?.map(ex => ex.name)
-  });
-
-  // Проверяем, начинается ли программа сегодня или позже
-  const programStartsLater = answers && answers.start_date && new Date(answers.start_date) > new Date();
-  
-  // Инициализируем массивы статусов как пустые, заполнение происходит в useEffect
-  const [completedExercises, setCompletedExercises] = useState([]);
-  
-  // Состояние для шагов
-  // --- динамическое оформление блока шагов ---
-  let stepsBlockColor = '#ef4444'; // красный
-  let stepsBlockBg = 'linear-gradient(90deg, #fee2e2 0%, #fca5a5 100%)';
-  let stepsBlockBorder = '2px solid #ef4444';
-  let stepsBlockEmoji = '😕';
-  let stepsBlockStatus = 'Мало шагов';
-  let stepsBlockSteps = 0;
-
-  const [walkingMinutes, setWalkingMinutes] = useState(null); // null = не выбрано, число = выбранные минуты
-  const [stepsStatus, setStepsStatus] = useState(null); // null = не выбрано, true/false = выполнено/не выполнено
-  const [stepsFixed, setStepsFixed] = useState(false); // фиксировано ли значение шагов
-
-  // Константы для шагов
-  const STEPS_OPTIONS = [
-    { minutes: 20, steps: 2300, label: "20 минут ≈ 2 300 шагов" },
-    { minutes: 30, steps: 3500, label: "30 минут ≈ 3 500 шагов" },
-    { minutes: 40, steps: 4600, label: "40 минут ≈ 4 600 шагов" },
-    { minutes: 50, steps: 5800, label: "50 минут ≈ 5 800 шагов" },
-    { minutes: 60, steps: 7000, label: "60 минут ≈ 7 000 шагов" },
-    { minutes: 70, steps: 8120, label: "70 минут ≈ 8 120 шагов" },
-    { minutes: 80, steps: 9280, label: "80 минут ≈ 9 280 шагов" },
-    { minutes: 90, steps: 10440, label: "90 минут ≈ 10 440 шагов ✅" }
-  ];
-
-  const GOAL_STEPS = 10000;
-  const GOAL_MINUTES = 90;
-
-  // Функция для расчета прогресса шагов
-  const calculateStepsProgress = (minutes) => {
-    if (!minutes) return 0;
-    const selectedOption = STEPS_OPTIONS.find(opt => opt.minutes === minutes);
-    if (!selectedOption) return 0;
-    return Math.min((selectedOption.steps / GOAL_STEPS) * 100, 100);
-  };
-
-  // Функция для обработки выбора шагов
-  const handleStepsSelection = (minutes) => {
-    const selectedOption = STEPS_OPTIONS.find(opt => opt.minutes === minutes);
-    if (selectedOption) {
-      setWalkingMinutes(minutes);
-      setStepsStatus(selectedOption.steps >= GOAL_STEPS);
-    }
-  };
 
   // Синхронизация длины completedMeals с aiMeals (без сброса отмеченных значений)
   // --- Подгружаем сохранённые шаги из currentDay (если есть) ---
@@ -367,6 +355,12 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   // ...existing code...
   // вычисления оформления блока шагов (после STEPS_OPTIONS)
+  let stepsBlockColor = '#ef4444'; // красный
+  let stepsBlockBg = 'linear-gradient(90deg, #fee2e2 0%, #fca5a5 100%)';
+  let stepsBlockBorder = '2px solid #ef4444';
+  let stepsBlockEmoji = '😕';
+  let stepsBlockStatus = 'Мало шагов';
+  let stepsBlockSteps = 0;
   const selectedStepsOption = STEPS_OPTIONS.find(opt => opt.minutes === walkingMinutes);
   stepsBlockSteps = selectedStepsOption?.steps || 0;
   if (stepsBlockSteps >= GOAL_STEPS) {
@@ -1335,6 +1329,143 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         overflowX: 'hidden',
       }}
     >
+      {/* Фейерверк и поздравление при выполнении всех упражнений */}
+      {showCongrats && (
+        <>
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 2100,
+            pointerEvents: 'none',
+          }}>
+            <Confetti
+              width={window.innerWidth}
+              height={window.innerHeight}
+              numberOfPieces={350}
+              recycle={false}
+              key={showCongrats ? 'exercises-confetti' : 'none'}
+              style={{ zIndex: 2101, pointerEvents: 'none' }}
+            />
+          </div>
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 2200,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            pointerEvents: 'none',
+            background: 'rgba(255,255,255,0.0)',
+            transition: 'background 0.4s',
+          }}>
+            <div style={{
+              minWidth: 320,
+              maxWidth: '90vw',
+              background: 'rgba(255,255,255,0.97)',
+              borderRadius: 24,
+              boxShadow: '0 8px 32px rgba(34,197,94,0.18), 0 2px 8px rgba(0,0,0,0.08)',
+              padding: '36px 32px 28px 32px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              animation: 'congrats-pop 0.6s cubic-bezier(.68,-0.55,.27,1.55)',
+              fontSize: 26,
+              fontWeight: 700,
+              color: '#22c55e',
+              textAlign: 'center',
+              pointerEvents: 'auto',
+              border: '2px solid #bbf7d0',
+              textShadow: '0 2px 8px #fff',
+            }}>
+              <span style={{fontSize: 48, display: 'block', marginBottom: 8}}>🎉</span>
+              <span>Поздравляем!<br/>Все упражнения на сегодня выполнены!</span>
+            </div>
+            <style>{`
+              @keyframes congrats-pop {
+                0% { transform: scale(0.7) translateY(40px); opacity: 0; }
+                60% { transform: scale(1.08) translateY(-8px); opacity: 1; }
+                80% { transform: scale(0.97) translateY(0); }
+                100% { transform: scale(1) translateY(0); opacity: 1; }
+              }
+            `}</style>
+          </div>
+        </>
+      )}
+      {showCongratsMeals && (
+        <>
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 2100,
+            pointerEvents: 'none',
+          }}>
+            <Confetti
+              width={window.innerWidth}
+              height={window.innerHeight}
+              numberOfPieces={350}
+              recycle={false}
+              key={showCongratsMeals ? 'meals-confetti' : 'none'}
+              style={{ zIndex: 2101, pointerEvents: 'none' }}
+            />
+          </div>
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100vw',
+            height: '100vh',
+            zIndex: 2200,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            pointerEvents: 'none',
+            background: 'rgba(255,255,255,0.0)',
+            transition: 'background 0.4s',
+          }}>
+            <div style={{
+              minWidth: 320,
+              maxWidth: '90vw',
+              background: 'rgba(255,255,255,0.97)',
+              borderRadius: 24,
+              boxShadow: '0 8px 32px rgba(59,130,246,0.18), 0 2px 8px rgba(0,0,0,0.08)',
+              padding: '36px 32px 28px 32px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              animation: 'congrats-pop 0.6s cubic-bezier(.68,-0.55,.27,1.55)',
+              fontSize: 26,
+              fontWeight: 700,
+              color: '#3b82f6',
+              textAlign: 'center',
+              pointerEvents: 'auto',
+              border: '2px solid #bae6fd',
+              textShadow: '0 2px 8px #fff',
+            }}>
+              <span style={{fontSize: 48, display: 'block', marginBottom: 8}}>🍽️</span>
+              <span>Поздравляем!<br/>Все приемы пищи на сегодня выполнены!</span>
+            </div>
+            <style>{`
+              @keyframes congrats-pop {
+                0% { transform: scale(0.7) translateY(40px); opacity: 0; }
+                60% { transform: scale(1.08) translateY(-8px); opacity: 1; }
+                80% { transform: scale(0.97) translateY(0); }
+                100% { transform: scale(1) translateY(0); opacity: 1; }
+              }
+            `}</style>
+          </div>
+        </>
+      )}
       {profileButton}
       {dianaButton}
       {/* Кнопка К неделе по центру */}
@@ -1554,7 +1685,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                     <>
                       <WheelPicker
                         value={walkingMinutes ?? 30}
-                        onChange={handleStepsSelection}
+                        onChange={(minutes) => handleStepsSelection(minutes, setWalkingMinutes, setStepsStatus)}
                         min={20}
                         max={90}
                         years={stepMinutesArr}
