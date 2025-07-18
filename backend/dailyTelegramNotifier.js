@@ -82,47 +82,28 @@ async function getAllUserIds() {
       chatId,
       todayWorkout: workout,
       workoutExercises,
-      calories: userCalories,
-      meals,
-      ate,
-      timezone: data.quiz?.timezone || 'Europe/Moscow',
-      notifyHour: typeof data.quiz?.notifyHour === 'number' ? data.quiz.notifyHour : 9
+      calories: userCalories
     });
-  });
-  return userIds;
-}
-
-// Основная функция рассылки
-async function sendDailyNotifications() {
-    const users = await getAllUserIds();
-    console.log(`Найдено пользователей для рассылки: ${users.length}`);
-    const now = new Date();
-    for (const user of users) {
-      const tz = user.timezone || 'Europe/Moscow';
-      const hour = typeof user.notifyHour === 'number' ? user.notifyHour : 9;
-      const nowTz = new Date(now.toLocaleString('en-US', { timeZone: tz }));
-      // Проверяем, что сейчас notifyHour:00 по timezone пользователя
-      if (nowTz.getHours() !== hour || nowTz.getMinutes() !== 0) {
-        continue;
-      }
-      const tip = getRandomTip();
-      let message = `Доброе утро!\n`;
-      // ...existing code...
+      // Форматирование для Telegram Markdown
+      let message = `*Доброе утро!* ☀️\n\n`;
+      message += `---\n`;
       // Тренировка
       if (user.todayWorkout) {
-        message += `\nСегодня тренировка: ${user.todayWorkout}`;
+        message += `*### Тренировка:* _${user.todayWorkout}_\n`;
         if (user.workoutExercises && user.workoutExercises.length > 0) {
-          message += `\nУпражнения:`;
+          message += `\n*Упражнения:*`;
           user.workoutExercises.forEach((ex, idx) => {
-            message += `\n  ${idx + 1}. ${ex}`;
+            message += `\n${idx + 1}. _${ex}_`;
           });
         }
       } else {
-        message += `\nСегодня нет тренировки.`;
+        message += `Сегодня нет тренировки.`;
       }
+      message += `\n---`;
       // Калории
       const round10 = n => Math.round(n / 10) * 10;
-      message += `\n\nВаша индивидуальная норма калорий: ${user.calories > 0 ? round10(user.calories) : 'не указано'} ккал`;
+      message += `\n*### Калорийность:* _${user.calories > 0 ? round10(user.calories) : 'не указано'} ккал_`;
+      message += `\n---`;
       // Разбивка калорий по приемам пищи (25/10/35/10/20)
       if (user.calories > 0) {
         const portions = [
@@ -132,51 +113,95 @@ async function sendDailyNotifications() {
           { type: 'Полдник', percent: 0.10 },
           { type: 'Ужин', percent: 0.20 }
         ];
-        message += `\n\nПлан питания на сегодня:`;
+        message += `\n*### План питания на сегодня:*`;
         portions.forEach(p => {
           const kcal = round10(user.calories * p.percent);
-          message += `\n- ${p.type}: ${kcal} ккал`;
+          message += `\n- *${p.type}:* _${kcal} ккал_`;
         });
       }
-      // Статус выполнения
+      message += `\n---`;
+      // Статус выполнения и напоминания
+      let quote = '';
       if (user.ate === true) {
-        message += `\n\nВы уже отметили выполнение тренировок и прием пищи сегодня!`;
-      } else if (user.ate === false) {
-        message += `\n\nНе забудьте отметить выполнение тренировок и прием пищи!`;
+        quote += `> _Вы уже отметили выполнение тренировок и приём пищи!_ ✅`;
+      } else {
+        quote += `> _Не забудьте отметить выполнение тренировок и приём пищи!_ ✅`;
       }
-      // Напоминание о шагах
-      message += `\n\nПостарайтесь пройти сегодня 10 000 шагов!`;
-      // Совет
-      message += `\n\n${tip}`;
+      quote += `\n> _Постарайтесь пройти *10 000 шагов* сегодня!_ 🚶‍♀️🚶‍♂️`;
+      quote += `\n> _${tip}_ 🥦🥕`;
+    for (const user of users) {
+      const tz = user.timezone || 'Europe/Moscow';
+      const hour = typeof user.notifyHour === 'number' ? user.notifyHour : 9;
+      const nowTz = new Date(now.toLocaleString('en-US', { timeZone: tz }));
+      // Проверяем, что сейчас notifyHour:00 по timezone пользователя
+      // if (nowTz.getHours() !== hour || nowTz.getMinutes() !== 0) {
+      //   continue;
+      // }
+      const tip = getRandomTip();
+      // Форматирование для Telegram Markdown
+      let message = `*Доброе утро!* ☀️\n\n`;
+      message += `---\n`;
+      // Тренировка
+      if (user.todayWorkout) {
+        message += `*### Тренировка:* _${user.todayWorkout}_\n`;
+        if (user.workoutExercises && user.workoutExercises.length > 0) {
+          message += `\n*Упражнения:*`;
+          user.workoutExercises.forEach((ex, idx) => {
+            message += `\n${idx + 1}. _${ex}_`;
+          });
+        }
+      } else {
+        message += `Сегодня нет тренировки.`;
+      }
+      message += `\n---`;
+      // Калории
+      const round10 = n => Math.round(n / 10) * 10;
+      message += `\n*### Калорийность:* _${user.calories > 0 ? round10(user.calories) : 'не указано'} ккал_`;
+      message += `\n---`;
+      // Разбивка калорий по приемам пищи (25/10/35/10/20)
+      if (user.calories > 0) {
+        const portions = [
+          { type: 'Завтрак', percent: 0.25 },
+          { type: 'Перекус', percent: 0.10 },
+          { type: 'Обед', percent: 0.35 },
+          { type: 'Полдник', percent: 0.10 },
+          { type: 'Ужин', percent: 0.20 }
+        ];
+        message += `\n*### План питания на сегодня:*`;
+        portions.forEach(p => {
+          const kcal = round10(user.calories * p.percent);
+          message += `\n- *${p.type}:* _${kcal} ккал_`;
+        });
+      }
+      message += `\n---`;
+      // Статус выполнения и напоминания
+      let quote = '';
+      if (user.ate === true) {
+        quote += `> _Вы уже отметили выполнение тренировок и приём пищи!_ ✅`;
+      } else {
+        quote += `> _Не забудьте отметить выполнение тренировок и приём пищи!_ ✅`;
+      }
+      quote += `\n> _Постарайтесь пройти *10 000 шагов* сегодня!_ 🚶‍♀️🚶‍♂️`;
+      quote += `\n> _${tip}_ 🥦🥕`;
+      message += `\n${quote}`;
+
       try {
         console.log(`[Рассылка] Отправка сообщения пользователю ${user.userId} (chatId: ${user.chatId})`);
+        console.log('[Рассылка] Текст сообщения:', message);
         const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             chat_id: user.chatId,
-            text: message
+            text: message,
+            parse_mode: 'Markdown'
           })
         });
         const result = await response.json();
-        if (result.ok) {
-          console.log(`[Рассылка] Успешно: сообщение отправлено пользователю ${user.userId} (chatId: ${user.chatId})`);
-        } else {
+        console.log('[Рассылка] Ответ Telegram API:', result);
+        if (!result.ok) {
           console.error(`[Рассылка] Ошибка Telegram API для пользователя ${user.userId} (chatId: ${user.chatId}):`, result);
         }
       } catch (err) {
         console.error(`[Рассылка] Ошибка отправки сообщения пользователю ${user.userId} (chatId: ${user.chatId}):`, err);
-      }
-    }
-  }
-
-  // Запускать каждую минуту (рабочий режим)
-  cron.schedule('* * * * *', () => {
-    sendDailyNotifications().catch(err => {
-      console.error('Ошибка рассылки:', err);
-    });
-  });
-
-  console.log('[dailyTelegramNotifier] Инициализация завершена успешно');
-
-export default sendDailyNotifications;
+      
