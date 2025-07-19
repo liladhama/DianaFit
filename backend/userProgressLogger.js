@@ -56,22 +56,39 @@ class UserProgressLogger {
         if (!log.dailyProgress) {
             log.dailyProgress = {};
         }
-        
-        // Обновляем dailyProgress (как было)
+        // --- Сохраняем в dailyProgress (как было) ---
         log.dailyProgress[date] = {
             ate: ate === null ? null : !!ate,
             workout: workout === null ? null : !!workout,
             tasks: Array.isArray(tasks) ? tasks : [],
             updatedAt: new Date().toISOString()
         };
-        
-        // НОВОЕ: Синхронизируем с programData.days
+
+        // --- Новое: сохраняем в progressHistory для недельного анализа ---
+        if (!log.progressHistory) log.progressHistory = [];
+        log.progressHistory.push({
+            date,
+            timestamp: new Date().toISOString(),
+            ate: ate === null ? null : !!ate,
+            workout: workout === null ? null : !!workout,
+            tasks: Array.isArray(tasks) ? tasks.map(t => ({
+                name: t.name,
+                type: t.type,
+                done: t.done,
+                reason: t.reason || undefined
+            })) : [],
+            actionType: 'progress_update'
+        });
+        // Ограничиваем историю 90 днями (по timestamp)
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+        log.progressHistory = log.progressHistory.filter(entry => new Date(entry.timestamp) >= ninetyDaysAgo);
+
+        // --- Синхронизируем с programData.days (как было) ---
         if (log.programData && log.programData.days) {
             const dayToUpdate = log.programData.days.find(day => day.date === date);
             if (dayToUpdate) {
                 console.log(`[SYNC] Синхронизируем programData для дня ${date}`);
-                
-                // Обновляем completedMealsArr на основе tasks
                 if (Array.isArray(tasks)) {
                     const mealTasks = tasks.filter(task => task.type === 'meal');
                     if (mealTasks.length > 0) {
@@ -84,8 +101,6 @@ class UserProgressLogger {
                         dayToUpdate.completedMeals = mealTasks.some(task => task.done);
                         console.log(`[SYNC] Обновлены приемы пищи:`, dayToUpdate.completedMealsArr);
                     }
-                    
-                    // Обновляем completedExercises на основе tasks
                     const workoutTasks = tasks.filter(task => task.type === 'workout');
                     if (workoutTasks.length > 0) {
                         dayToUpdate.completedExercises = dayToUpdate.completedExercises || [];
@@ -97,8 +112,6 @@ class UserProgressLogger {
                         dayToUpdate.completedWorkout = workoutTasks.some(task => task.done);
                         console.log(`[SYNC] Обновлены упражнения:`, dayToUpdate.completedExercises);
                     }
-                    
-                    // Обновляем шаги
                     const stepsTask = tasks.find(task => task.type === 'steps');
                     if (stepsTask) {
                         dayToUpdate.dailySteps = stepsTask.steps_estimated || 0;
@@ -107,10 +120,9 @@ class UserProgressLogger {
                 }
             }
         }
-        
-        // Сохраняем весь лог
+        // --- Сохраняем весь лог ---
         await this.saveLog(log);
-        console.log(`[PROGRESS LOGGER] Сохранен прогресс за ${date} с синхронизацией programData`);
+        console.log(`[PROGRESS LOGGER] Сохранен прогресс за ${date} с синхронизацией programData и обновлением progressHistory`);
     }
 
     // Получить прогресс за конкретную дату
@@ -133,21 +145,28 @@ class UserProgressLogger {
         if ((!log.progressHistory || log.progressHistory.length === 0) && log.dailyProgress) {
             console.log('[MIGRATION] Мигрируем данные из dailyProgress в progressHistory');
             log.progressHistory = [];
-            
             Object.entries(log.dailyProgress).forEach(([date, dayData]) => {
                 const dayDate = new Date(date);
                 if (dayDate >= weekAgo) {
+                    // Копируем reason если есть
+                    const migratedTasks = Array.isArray(dayData.tasks)
+                        ? dayData.tasks.map(t => ({
+                            name: t.name,
+                            type: t.type,
+                            done: t.done,
+                            reason: t.reason || undefined
+                        }))
+                        : [];
                     log.progressHistory.push({
                         date,
                         timestamp: dayData.updatedAt || new Date(date + 'T12:00:00Z').toISOString(),
                         ate: dayData.ate,
                         workout: dayData.workout,
-                        tasks: dayData.tasks || [],
+                        tasks: migratedTasks,
                         actionType: 'migrated_data'
                     });
                 }
             });
-            
             // Сохраняем мигрированные данные
             await this.saveLog(log);
             console.log(`[MIGRATION] Мигрировано ${log.progressHistory.length} записей`);
@@ -197,27 +216,108 @@ class UserProgressLogger {
     // Анализ недельного прогресса на основе истории
     async analyzeWeeklyProgressFromHistory() {
         const log = await this.loadLog();
-        const now = new Date();
-        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        
+        // Определяем дату старта программы (createdAt или первая дата в programData.days)
+        let programStartDate = null;
+        if (log.createdAt) {
+            programStartDate = new Date(log.createdAt);
+        } else if (log.programData?.days?.length > 0) {
+            programStartDate = new Date(log.programData.days[0].date);
+        } else {
+            programStartDate = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000); // fallback
+        }
+        // Неделя — это всегда 7 дней с момента старта (без ограничения на текущую дату)
+        let weekStart = new Date(programStartDate);
+        let weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekStart.getDate() + 6);
+
         const dailyProgress = log.dailyProgress || {};
         const programDays = log.programData?.days || [];
-        
+
+        // Корректно вычисляем weekAgo для подсчёта питания и задач (теперь совпадает с weekStart)
+        const weekAgo = new Date(weekStart);
+
+        // --- Подсчет шагов за неделю и процент выполнения ---
+        // Суммируем все steps_estimated (шаги) за неделю
+        let weekSteps = 0;
+        Object.entries(dailyProgress).forEach(([date, dayData]) => {
+            const dayDate = new Date(date);
+            if (dayDate >= weekStart && dayDate <= weekEnd && Array.isArray(dayData.tasks)) {
+                dayData.tasks.forEach(task => {
+                    if (task.type === 'steps' && task.steps_estimated) {
+                        weekSteps += Number(task.steps_estimated) || 0;
+                    }
+                });
+            }
+        });
+        // 100% = 10 440 шагов * 7 дней = 73 080 шагов
+        const maxSteps = 10440 * 7;
+        const stepsCompletion = maxSteps > 0 ? Math.round((weekSteps / maxSteps) * 100) : 0;
+
+        // --- Подсчет питания и задач (оставляем как было) ---
         let totalMeals = 0;
         let completedMeals = 0;
         let mealDaysSet = new Set();
-        let totalWorkouts = 0;
-        let completedWorkouts = 0;
         let totalTasks = 0;
         let completedTasks = 0;
         let totalSteps = 0;
-        
-        console.log(`[ANALYZE] Анализируем период с ${weekAgo.toISOString().slice(0, 10)} по ${now.toISOString().slice(0, 10)}`);
-        
-        // Анализируем dailyProgress за последние 7 дней
+
+        // --- Подсчет упражнений для прогрессбара ---
+        let totalExercisesWeek = 0;
+        let completedExercisesWeek = 0;
+
+        // 100% — это сумма всех упражнений, предписанных в programData.days за неделю (между weekStart и weekEnd)
+        totalExercisesWeek = 0;
+        programDays.forEach(day => {
+            const dayDate = new Date(day.date);
+            if (dayDate >= weekStart && dayDate <= weekEnd && day.isWorkoutDay && day.workout && Array.isArray(day.workout.exercises)) {
+                totalExercisesWeek += day.workout.exercises.length;
+            }
+        });
+
+        // Сохраняем totalExercisesWeek в историю пользователя (progressHistory) для этой недели
+        if (!log.weeklyStats) log.weeklyStats = [];
+        // Определяем уникальный ключ недели (например, по дате начала недели)
+        const weekKey = weekStart.toISOString().slice(0, 10);
+        // Проверяем, есть ли уже запись за эту неделю
+        const existingWeek = log.weeklyStats.find(w => w.weekKey === weekKey);
+        if (!existingWeek) {
+            log.weeklyStats.push({
+                weekKey,
+                weekStart: weekStart.toISOString(),
+                weekEnd: weekEnd.toISOString(),
+                totalExercisesWeek
+            });
+            await this.saveLog(log);
+        } else if (existingWeek.totalExercisesWeek !== totalExercisesWeek) {
+            existingWeek.totalExercisesWeek = totalExercisesWeek;
+            existingWeek.weekEnd = weekEnd.toISOString();
+            await this.saveLog(log);
+        }
+
+        // completedExercisesWeek — считаем только те задачи workout, которые реально есть в programData.days за неделю
+        // Собираем даты тренировочных дней недели
+        const validWorkoutDays = new Set(
+            programDays
+                .filter(day => {
+                    const dayDate = new Date(day.date);
+                    return dayDate >= weekStart && dayDate <= weekEnd && day.isWorkoutDay && day.workout && Array.isArray(day.workout.exercises);
+                })
+                .map(day => day.date)
+        );
+        Object.entries(dailyProgress).forEach(([date, dayData]) => {
+            if (validWorkoutDays.has(date) && Array.isArray(dayData.tasks)) {
+                dayData.tasks.forEach(task => {
+                    if (task.type === 'workout' && task.done === true) completedExercisesWeek++;
+                });
+            }
+        });
+        // Отладочный вывод
+        console.log('[DEBUG WORKOUTS] weekStart:', weekStart.toISOString().slice(0,10), 'weekEnd:', weekEnd.toISOString().slice(0,10), 'totalExercisesWeek:', totalExercisesWeek, 'completedExercisesWeek:', completedExercisesWeek);
+
+        // --- Подсчет питания и задач (оставляем как было) ---
         Object.entries(dailyProgress).forEach(([date, dayData]) => {
             const dayDate = new Date(date);
-            if (dayDate >= weekAgo && dayDate <= now) {
+            if (dayDate >= weekStart && dayDate <= weekEnd) {
                 if (Array.isArray(dayData.tasks)) {
                     let hasMeal = false;
                     dayData.tasks.forEach(task => {
@@ -227,9 +327,6 @@ class UserProgressLogger {
                             totalMeals++;
                             if (task.done) completedMeals++;
                             hasMeal = true;
-                        } else if (task.type === 'workout') {
-                            totalWorkouts++;
-                            if (task.done) completedWorkouts++;
                         } else if (task.type === 'steps' && task.steps_estimated) {
                             totalSteps += Number(task.steps_estimated) || 0;
                         }
@@ -238,15 +335,13 @@ class UserProgressLogger {
                 }
             }
         });
-        
-        // Если данных в dailyProgress мало, берем из programData.days
+
+        // Если данных в dailyProgress мало, берем из programData.days (для питания)
         if (totalTasks < 5 && programDays.length > 0) {
-            console.log(`[ANALYZE] Данных в dailyProgress мало (${totalTasks}), используем programData.days`);
             programDays.forEach(day => {
                 const dayDate = new Date(day.date);
-                if (dayDate >= weekAgo && dayDate <= now) {
+                if (dayDate >= weekStart && dayDate <= weekEnd) {
                     let hasMeal = false;
-                    // Считаем приемы пищи
                     if (Array.isArray(day.completedMealsArr)) {
                         day.completedMealsArr.forEach(mealCompleted => {
                             totalMeals++;
@@ -255,62 +350,47 @@ class UserProgressLogger {
                         });
                     }
                     if (hasMeal) mealDaysSet.add(day.date);
-                    // Считаем упражнения
-                    if (Array.isArray(day.completedExercises)) {
-                        day.completedExercises.forEach(exerciseCompleted => {
-                            totalWorkouts++;
-                            if (exerciseCompleted === true) completedWorkouts++;
-                        });
-                    }
-                    // Считаем шаги
                     if (day.dailySteps) {
                         totalSteps += Number(day.dailySteps) || 0;
                     }
-                    totalTasks = totalMeals + totalWorkouts;
-                    completedTasks = completedMeals + completedWorkouts;
+                    totalTasks = totalMeals;
+                    completedTasks = completedMeals;
                 }
             });
         }
-        
+
         // Для питания: всегда 5 приемов пищи в день, 7 дней в неделе
         const maxMeals = 7 * 5;
-        // Для тренировок: считаем количество упражнений за неделю
-        let totalExercisesWeek = 0;
-        let completedExercisesWeek = 0;
-        programDays.forEach(day => {
-            const dayDate = new Date(day.date);
-            if (dayDate >= weekAgo && dayDate <= now && day.isWorkoutDay && day.workout && Array.isArray(day.workout.exercises)) {
-                // Суммируем все упражнения недели
-                totalExercisesWeek += day.workout.exercises.length;
-                if (Array.isArray(day.completedExercises)) {
-                    completedExercisesWeek += day.completedExercises.filter(Boolean).length;
-                }
-            }
-        });
+
+        // --- Итоговый summary ---
         const summary = {
             totalDays: 7,
             mealsCompletion: maxMeals > 0 ? Math.round((completedMeals / maxMeals) * 100) : 0,
             workoutsCompletion: totalExercisesWeek > 0 ? Math.round((completedExercisesWeek / totalExercisesWeek) * 100) : 0,
-            overallCompletion: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
+            stepsCompletion,
+            overallCompletion: (maxMeals + totalExercisesWeek + 630) > 0 ? Math.round(((completedMeals + completedExercisesWeek + weekSteps) / (maxMeals + totalExercisesWeek + 630)) * 100) : 0,
             stats: {
                 totalMeals,
                 completedMeals,
                 maxMeals,
                 totalExercisesWeek,
                 completedExercisesWeek,
-                totalWorkouts,
-                completedWorkouts,
+                weekSteps,
+                stepsCompletion,
                 totalTasks,
                 completedTasks,
                 totalSteps
             }
         };
-        
+
         console.log(`[ANALYZE] Результат анализа:`, summary);
-        
+
         return {
             weeklyHistory: Object.entries(dailyProgress)
-                .filter(([date]) => new Date(date) >= weekAgo)
+                .filter(([date]) => {
+                    const d = new Date(date);
+                    return d >= weekStart && d <= weekEnd;
+                })
                 .map(([date, data]) => ({ date, ...data })),
             summary
         };
