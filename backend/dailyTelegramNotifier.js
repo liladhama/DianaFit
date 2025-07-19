@@ -159,8 +159,8 @@ async function sendDailyNotifications() {
     }
   }
 }
-
 // Запуск по крону (каждую минуту для теста)
 cron.schedule('* * * * *', () => {
   sendDailyNotifications();
 });
+}
