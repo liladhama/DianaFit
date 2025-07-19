@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../styles/animations.css';
 import Confetti from 'react-confetti';
 import WheelPicker from './WheelPicker';
@@ -122,12 +122,20 @@ if (typeof document !== 'undefined' && !document.querySelector('#spinner-styles'
 
 
 export default function TodayBlock({ day, answers, onBackToWeek, programId, isPremium, activatePremium, setIsPaymentShown, setShowPayment, userAvatar, onProfileClick }) {
+  // --- Поздравление: хранить факт показа в localStorage по дате ---
+  // Для отслеживания перехода "не все выполнены" -> "все выполнены"
+  const prevAllDone = useRef(false);
   // --- Проверяем, начинается ли программа сегодня или позже ---
   const programStartsLater = answers && answers.start_date && new Date(answers.start_date) > new Date();
   // --- Все useState в начале компонента ---
+  // --- Поздравление: просто useState ---
   const [showCongrats, setShowCongrats] = useState(false);
+  const prevExercisesRef = useRef([]);
+  const prevMealsRef = useRef([]);
+  const congratsShownRef = useRef(false);
   const [personalPlan, setPersonalPlan] = useState(null);
   const [showCongratsMeals, setShowCongratsMeals] = useState(false);
+  const congratsMealsShownRef = useRef(false);
   const [loadingPlan, setLoadingPlan] = useState(false);
   const [planError, setPlanError] = useState(null);
   const [showDianaChat, setShowDianaChat] = useState(false);
@@ -170,50 +178,11 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     completed: false,
   };
 
-  useEffect(() => {
-    if (
-      currentDay?.workout?.exercises?.length > 0 &&
-      completedExercises.length === currentDay.workout.exercises.length &&
-      completedExercises.every(v => v === true)
-    ) {
-      setShowCongrats(true);
-      setTimeout(() => setShowCongrats(false), 4000);
-    }
-  }, [completedExercises, currentDay?.workout?.exercises?.length]);
 
   // Проверка: все приемы пищи выполнены
-  useEffect(() => {
-    if (
-      currentDay?.meals?.length > 0 &&
-      completedMeals.length === currentDay.meals.length &&
-      completedMeals.every(v => v === true)
-    ) {
-      setShowCongratsMeals(true);
-      setTimeout(() => setShowCongratsMeals(false), 4000);
-    }
-  }, [completedMeals, currentDay?.meals?.length]);
+  // (логика показа поздравления теперь только в handleMealStatusChange, как для упражнений)
 
-  // Логируем весь пропс day для анализа структуры
-  console.log('🎯 TodayBlock получил day:', {
-    dayExists: !!day,
-    dayIsNull: day === null,
-    dayIsUndefined: day === undefined,
-    dayType: typeof day,
-    dayKeys: day ? Object.keys(day) : [],
-    dayDate: day?.date,
-    dayTitle: day?.title,
-    isWorkoutDay: day?.isWorkoutDay,
-    hasWorkout: !!day?.workout,
-    workoutTitle: day?.workout?.title,
-    workoutLocation: day?.workout?.location,
-    workoutDuration: day?.workout?.duration,
-    hasExercises: !!day?.workout?.exercises,
-    exercisesLength: day?.workout?.exercises?.length || 0,
-    exercisesArray: day?.workout?.exercises,
-    hasCompletedExercises: !!day?.completedExercises,
-    completedExercisesLength: day?.completedExercises?.length || 0,
-    fullDay: day
-  });
+  // ...лог day убран для чистоты консоли...
 
   // Состояние для сворачивания/разворачивания контейнеров
   const defaultState = {
@@ -238,15 +207,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   // Синхронизация длины completedMeals с aiMeals (без сброса отмеченных значений)
   // --- Подгружаем сохранённые шаги из currentDay (если есть) ---
   useEffect(() => {
-    console.log('🚶 Отладка шагов в currentDay:', {
-      currentDay: currentDay,
-      dailySteps: currentDay?.dailySteps,
-      dailyStepsMinutes: currentDay?.dailyStepsMinutes,
-      walkingMinutes: currentDay?.walkingMinutes,
-      stepsCompleted: currentDay?.stepsCompleted,
-      allKeys: currentDay ? Object.keys(currentDay) : [],
-      hasStepsData: !!(currentDay?.dailySteps || currentDay?.dailyStepsMinutes || currentDay?.walkingMinutes)
-    });
+    // ...лог убран...
     
     if (currentDay && (currentDay.dailySteps || currentDay.dailyStepsMinutes || currentDay.walkingMinutes)) {
       // Если есть сохранённые шаги (в шагах или минутах)
@@ -261,7 +222,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         if (found) minutes = found.minutes;
       }
       if (minutes) {
-        console.log('🚶 Устанавливаем шаги из данных:', { minutes, stepsFixed: true });
+        // ...лог убран...
         setWalkingMinutes(minutes);
         setStepsFixed(true);
         setStepsStatus(STEPS_OPTIONS.find(opt => opt.minutes === minutes)?.steps >= GOAL_STEPS);
@@ -283,34 +244,23 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   // Обновляем состояние при изменении currentDay
   useEffect(() => {
-    console.log('🔄 useEffect [currentDay] вызван:', {
-      exercisesCount: currentDay.workout?.exercises?.length || 0,
-      mealsCount: currentDay.meals?.length || 0,
-      savedExercises: currentDay.completedExercises,
-      savedMeals: currentDay.completedMealsArr,
-      currentCompletedExercises: completedExercises,
-      currentCompletedMeals: completedMeals,
-      isLoaded: isLoaded,
-      dayProp: !!day,
-      personalPlan: !!personalPlan,
-      currentDaySource: day ? 'day prop' : personalPlan ? 'personalPlan' : 'mock'
-    });
+    // ...лог убран...
 
     // ИСПРАВЛЕНО: НЕ используем статусы из currentDay, только структуру
     // Статусы должны загружаться только с сервера через fetchDayStatus
     if (currentDay.workout?.exercises) {
       const newExerciseStates = currentDay.workout.exercises.map(() => null);
-      console.log('🏋️ Инициализируем упражнения:', newExerciseStates);
+      // ...лог убран...
       // Сравниваем массивы перед обновлением
       const isSame =
         completedExercises.length === newExerciseStates.length &&
         completedExercises.every((v, i) => v === newExerciseStates[i]);
       if (!isSame && !isLoaded) {
-        console.log('🔄 Обновляем completedExercises на null (не загружено)');
+        // ...лог убран...
         // Инициализируем null значениями только если данные еще не загружены
         setCompletedExercises(newExerciseStates);
       } else if (isLoaded) {
-        console.log('✅ Данные уже загружены с сервера, не обновляем');
+        // ...лог убран...
       }
     } else {
       if (completedExercises.length !== 0) {
@@ -320,17 +270,17 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
     if (currentDay.meals) {
       const newMealStates = currentDay.meals.map(() => null);
-      console.log('🍽️ Инициализируем питание:', newMealStates);
+      // ...лог убран...
       // Сравниваем массивы перед обновлением
       const isSame =
         completedMeals.length === newMealStates.length &&
         completedMeals.every((v, i) => v === newMealStates[i]);
       if (!isSame && !isLoaded) {
-        console.log('🔄 Обновляем completedMeals на null (не загружено)');
+        // ...лог убран...
         // Инициализируем null значениями только если данные еще не загружены
         setCompletedMeals(newMealStates);
       } else if (isLoaded) {
-        console.log('✅ Данные уже загружены с сервера, не обновляем');
+        // ...лог убран...
       }
     } else {
       if (completedMeals.length !== 0) {
@@ -381,21 +331,21 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   // --- Вынести функцию загрузки AI-питания наружу ---
   async function fetchAIMealPlan() {
     if (!answers) {
-      console.warn('AI meal plan: нет answers, запрос не отправляется');
+      // ...лог убран...
       return;
     }
     setAiLoading(true);
     setAiError(null);
     try {
-      console.log('AI meal plan: отправляем профиль:', answers);
+      // ...лог убран...
       const res = await fetch(`${API_URL}/api/ai-meal-plan`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ profile: answers })
       });
-      console.log('AI meal plan: статус ответа:', res.status);
+      // ...лог убран...
       const data = await res.json();
-      console.log('AI meal plan: ответ сервера:', data);
+      // ...лог убран...
       if (data.success && data.meals) {
         setAiMeals(data.meals);
       } else {
@@ -443,11 +393,11 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   // Обработчик выбора причины невыполнения
   const handleReasonSelected = async (reasonData) => {
-    console.log('📝 handleReasonSelected вызван:', { reasonData, reasonModalData });
+    // ...лог убран...
     const { type, index } = reasonModalData;
     
     if (type === 'workout') {
-      console.log('🏋️ Обрабатываем причину для упражнения:', { index, reasonData });
+      // ...лог убран...
       // Сохраняем причину невыполнения упражнения
       const newReasons = { ...exerciseReasons, [index]: reasonData };
       const updated = completedExercises.map((v, i) => i === index ? false : v);
@@ -470,7 +420,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         }
       }
     } else if (type === 'meal') {
-      console.log('🍽️ Обрабатываем причину для приема пищи:', { index, reasonData });
+      // ...лог убран...
       // Сохраняем причину невыполнения приема пищи
       const newReasons = { ...mealReasons, [index]: reasonData };
       setMealReasons(newReasons);
@@ -496,14 +446,14 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       }
     }
 
-    console.log('📊 Причина сохранена:', { type, index, reason: reasonData });
+    // ...лог убран...
     // Закрываем модал
     setShowReasonModal(false);
   };
 
   // Обработчик выбора состояния упражнения (выполнил/не выполнил)
   const handleExerciseComplete = async (idx, completed) => {
-    console.log(`[EXERCISE TRACKING] Упражнение ${idx}: ${completed ? 'выполнено' : 'не выполнено'}`);
+    // ...лог убран...
     
     // Если отмечаем как НЕ выполнено - показываем модал с причинами
     if (!completed) {
@@ -526,21 +476,31 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
     const updated = completedExercises.map((v, i) => i === idx ? completed : v);
     setCompletedExercises(updated);
-    
+
+    // Поздравление только если все упражнения выполнены (по updated) и ещё не показывалось
+    const date = currentDay?.date;
+    const workoutExercises = currentDay?.workout?.exercises || [];
+    const congratsKey = `congrats_shown_${date}`;
+    const congratsWasShown = localStorage.getItem(congratsKey) === '1';
+    if (
+      completed &&
+      !congratsWasShown &&
+      workoutExercises.length > 0 &&
+      updated.every(v => v === true)
+    ) {
+      setShowCongrats(true);
+      localStorage.setItem(congratsKey, '1');
+      setTimeout(() => setShowCongrats(false), 4000);
+    }
+
     // Добавляем тактильную обратную связь (вибрацию) при успешном выполнении
     if (completed && navigator.vibrate) {
       navigator.vibrate(100);
     }
-    
+
     if (answers?.userId) {
       try {
         const tasksData = buildTasks();
-        console.log(`[EXERCISE TRACKING] Отправляем данные на сервер:`, {
-          userId: answers.userId,
-          date: currentDay.date,
-          tasks: tasksData
-        });
-        
         await fetch(`${API_URL}/api/progress`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -550,7 +510,6 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
             tasks: tasksData
           })
         });
-        console.log('✅ Статус упражнения обновлен на сервере:', { idx, completed });
       } catch (error) {
         console.error('❌ Ошибка обновления статуса упражнения:', error);
       }
@@ -607,7 +566,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload)
         });
-        console.log('✅ Статус упражнения обновлен:', { idx, completed: willBeCompleted });
+        // ...лог убран...
       } catch (error) {
         console.error('❌ Ошибка обновления статуса упражнения:', error);
       }
@@ -616,7 +575,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   // Обработчик выбора состояния приема пищи (съел/не съел)
   const handleMealComplete = async (idx, completed) => {
-    console.log(`[MEAL TRACKING] Прием пищи ${idx}: ${completed ? 'выполнен' : 'не выполнен'}`);
+    // ...лог убран...
     
     // Если отмечаем как НЕ съедено - показываем модал с причинами
     if (!completed) {
@@ -644,11 +603,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     if (answers?.userId) {
       try {
         const tasksData = buildTasksWithMeals(updated);
-        console.log(`[MEAL TRACKING] Отправляем данные на сервер:`, {
-          userId: answers.userId,
-          date: currentDay.date,
-          tasks: tasksData
-        });
+        // ...лог убран...
         
         await fetch(`${API_URL}/api/progress`, {
           method: 'POST',
@@ -659,7 +614,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
             tasks: tasksData
           })
         });
-        console.log('✅ Статус приема пищи обновлен на сервере:', { idx, completed });
+        // ...лог убран...
       } catch (error) {
         console.error('❌ Ошибка обновления статуса приема пищи:', error);
       }
@@ -758,52 +713,38 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   // Отладочный useEffect для мониторинга изменений в массивах статусов
   useEffect(() => {
-    console.log('🔍 СОСТОЯНИЕ completedExercises изменилось:', {
-      length: completedExercises.length,
-      values: completedExercises,
-      types: completedExercises.map((val, i) => `[${i}]: ${val} (${typeof val})`),
-      isLoaded: isLoaded
-    });
+    // ...лог убран...
   }, [completedExercises]);
 
   useEffect(() => {
-    console.log('🔍 СОСТОЯНИЕ completedMeals изменилось:', {
-      length: completedMeals.length,
-      values: completedMeals,
-      types: completedMeals.map((val, i) => `[${i}]: ${val} (${typeof val})`),
-      isLoaded: isLoaded
-    });
+    // ...лог убран...
   }, [completedMeals]);
 
   // Отслеживание изменений шагов
   useEffect(() => {
-    console.log('🔍 СОСТОЯНИЕ шагов изменилось:', {
-      walkingMinutes,
-      stepsStatus,
-      isLoaded
-    });
+    // ...лог убран...
   }, [walkingMinutes, stepsStatus]);
 
   // Функция для загрузки статусов выполнения дня с backend
   const fetchDayStatus = async () => {
     if (!answers?.userId || !currentDay?.date) {
-      console.log('⚠️ Пропускаем загрузку статусов:', { userId: answers?.userId, date: currentDay?.date });
+      // ...лог убран...
       setIsInitialLoading(false); // Устанавливаем флаг даже если нет userId
       return;
     }
     
     try {
-      console.log('🔄 Загружаем статусы дня:', { userId: answers.userId, date: currentDay.date });
+      // ...лог убран...
       const res = await fetch(`${API_URL}/api/progress?userId=${answers.userId}&date=${currentDay.date}`);
       const data = await res.json();
       
-      console.log('📥 Получены данные с сервера:', data);
+      // ...лог убран...
       
       if (data && (Array.isArray(data.tasks) || data.completedMealsArr || data.completedExercises)) {
         // Если tasks есть — используем их для tasks-based UI
         if (Array.isArray(data.tasks)) {
           setTasks(data.tasks);
-          console.log('📝 Обрабатываем tasks:', data.tasks);
+          // ...лог убран...
           // Парсим задачи для восстановления статусов и причин
           const mealStates = [];
           const mealReasonsObj = {};
@@ -822,45 +763,45 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                 setWalkingMinutes(task.walking_minutes);
                 setStepsStatus(task.done);
                 setStepsFixed(true); // ВАЖНО: устанавливаем фиксацию, чтобы показывалась плашка, а не колесо
-                console.log('🚶 Восстановлены данные о шагах:', { minutes: task.walking_minutes, done: task.done, fixed: true });
+                // ...лог убран...
               }
             }
           });
           
-          console.log('🍽️ Восстановленные состояния питания:', mealStates);
-          console.log('🏋️ Восстановленные состояния упражнений:', exerciseStates);
+          // ...лог убран...
+          // ...лог убран...
           
           if (mealStates.length) {
             // Приводим все значения к null, true, false (false только если явно выбран "не съел")
             const finalMealStates = mealStates.map(v => v === true ? true : v === false ? false : null);
-            console.log('🍽️ Устанавливаем finalMealStates:', finalMealStates);
+            // ...лог убран...
             setCompletedMeals(finalMealStates);
           }
           if (Object.keys(mealReasonsObj).length) setMealReasons(mealReasonsObj);
           if (exerciseStates.length) {
-            console.log('🏋️ Устанавливаем exerciseStates:', exerciseStates);
+          // ...лог убран...
             setCompletedExercises(exerciseStates);
           }
           if (Object.keys(exerciseReasonsObj).length) setExerciseReasons(exerciseReasonsObj);
         }
         // Для обратной совместимости:
         if (data.completedMealsArr) {
-          console.log('🍽️ Устанавливаем completedMealsArr:', data.completedMealsArr);
+          // ...лог убран...
           const finalMealStates = data.completedMealsArr.map(v => v === true ? true : v === false ? false : null);
-          console.log('🍽️ Финальные состояния питания:', finalMealStates);
+          // ...лог убран...
           setCompletedMeals(finalMealStates);
         }
         if (data.completedExercises) {
-          console.log('🏋️ Устанавливаем completedExercises:', data.completedExercises);
+          // ...лог убран...
           setCompletedExercises(data.completedExercises);
         }
       } else {
-        console.log('📭 Нет данных с сервера, используем null значения');
+        // ...лог убран...
       }
       
       setIsInitialLoading(false); // Завершаем первоначальную загрузку
       setIsLoaded(true); // Помечаем, что данные загружены с сервера
-      console.log('✅ Статусы дня загружены успешно, isLoaded = true');
+      // ...лог убран...
       
     } catch (e) {
       console.error('❌ Ошибка загрузки статусов дня:', e);
@@ -881,7 +822,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   useEffect(() => {
     // Принудительно перезагружаем данные при первом запуске
     if (answers?.userId && currentDay?.date) {
-      console.log('🔄 ПРИНУДИТЕЛЬНАЯ перезагрузка данных при монтировании');
+      // ...лог убран...
       setIsInitialLoading(true);
       fetchDayStatus();
     }
@@ -892,12 +833,12 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
       if (answers && !answers.userId) {
         answers.userId = window.Telegram.WebApp.initDataUnsafe.user.id;
-        console.log('✅ Telegram userId установлен в answers:', answers.userId);
+        // ...лог убран...
       }
     } else {
       if (answers && !answers.userId) {
         answers.userId = 'demo_user_local_test';
-        console.log('✅ demo_user_local_test установлен в answers (локально):', answers.userId);
+        // ...лог убран...
       }
     }
   }, [answers]);
@@ -905,11 +846,10 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   // --- Новая функция для отправки статуса приема пищи на backend ---
   // Обработчик выбора состояния приема пищи (съел/не съел)
   const handleMealStatusChange = async (idx, completed) => {
-    console.log('🍽️ handleMealStatusChange вызван:', { idx, completed, type: typeof completed });
-    
+    // ...лог убран...
     // Если отмечаем как НЕ съедено - показываем модал с причинами
     if (!completed) {
-      console.log('❌ Показываем модал причины, так как completed =', completed);
+      // ...лог убран...
       const mealName = Array.isArray(aiMeals) && aiMeals[idx] 
         ? aiMeals[idx].type || aiMeals[idx].name 
         : `Прием пищи ${idx + 1}`;
@@ -924,7 +864,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
     // Если отмечаем как съедено - сразу обновляем
     if (completed) {
-      console.log('✅ Обновляем статус как съедено, так как completed =', completed);
+      // ...лог убран...
       // Убираем причину, если была
       const newReasons = { ...mealReasons };
       delete newReasons[idx];
@@ -933,7 +873,25 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
     const updated = completedMeals.map((v, i) => i === idx ? completed : v);
     setCompletedMeals(updated);
-    
+
+    // --- ПОЗДРАВЛЕНИЕ ЗА ПРИЕМЫ ПИЩИ ---
+    const date = currentDay?.date;
+    const mealsKey = `congrats_meals_shown_${date}`;
+    const allMealsDone = currentDay?.meals?.length > 0 &&
+      updated.length === currentDay.meals.length &&
+      updated.every(v => v === true);
+    const mealsCongratsWasShown = localStorage.getItem(mealsKey) === '1';
+    if (
+      completed &&
+      !mealsCongratsWasShown &&
+      currentDay?.meals?.length > 0 &&
+      allMealsDone
+    ) {
+      setShowCongratsMeals(true);
+      localStorage.setItem(mealsKey, '1');
+      setTimeout(() => setShowCongratsMeals(false), 4000);
+    }
+
     // Добавляем тактильную обратную связь (вибрацию) при успешном выполнении
     if (completed && navigator.vibrate) {
       navigator.vibrate(100);
@@ -951,31 +909,26 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
             tasks: buildTasks()
           })
         });
-        console.log('✅ Статус приема пищи отправлен на бэкенд:', { idx, completed });
+        // ...лог убран...
       } catch (error) {
         console.error('❌ Ошибка отправки статуса приема пищи на бэкенд:', error);
       }
     }
     
-    console.log('✅ Статус приема пищи обновлен:', { idx, completed, updatedArray: updated });
+    // ...лог убран...
   };
 
   // --- СИНХРОНИЗАЦИЯ ПРОГРЕССА (POST /api/progress) ---
   useEffect(() => {
     // Не отправляем данные, пока не завершена первоначальная загрузка
     if (isInitialLoading) {
-      console.log('⏳ Пропускаем синхронизацию - идет первоначальная загрузка');
+      // ...лог убран...
       return;
     }
     
     if (!answers?.userId || !currentDay?.date) return;
     
-    console.log('🔄 Синхронизируем прогресс с сервером:', {
-      completedMeals,
-      completedExercises,
-      userId: answers.userId,
-      date: currentDay.date
-    });
+    // ...лог убран...
     
     const payload = {
       userId: answers.userId,
@@ -990,10 +943,10 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     })
       .then(res => res.json())
       .then(data => {
-        console.log('✅ Прогресс синхронизирован с сервером:', data);
+        // ...лог убран...
       })
       .catch(e => {
-        console.error('❌ Ошибка синхронизации прогресса:', e);
+        // ...лог убран...
       });
   }, [completedExercises, completedMeals, walkingMinutes, stepsStatus, answers?.userId, currentDay?.date, isInitialLoading]);
 
@@ -1131,13 +1084,13 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     setLoadingPlan(true);
     setPlanError(null);
     try {
-      console.log('📅 Загружаем план на сегодня для программы:', programId);
+      // ...лог убран...
       
       // ИСПРАВЛЕНО: загружаем только с сервера, не используем localStorage
       const response = await fetch(`${API_URL}/api/program/today?programId=${programId}`);
       const data = await response.json();
       if (data.success) {
-        console.log('✅ План на сегодня загружен с сервера:', data.plan);
+        // ...лог убран...
         setPersonalPlan(data.plan);
       } else {
         console.error('❌ Ошибка загрузки плана:', data.error);
@@ -1162,7 +1115,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       }
     }
     keysToRemove.forEach(key => {
-      console.log('🗑️ Удаляем устаревшую программу из localStorage:', key);
+      // ...лог убран...
       localStorage.removeItem(key);
     });
     
@@ -1175,7 +1128,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       }
     }
     userKeysToRemove.forEach(key => {
-      console.log('🗑️ Удаляем устаревшие данные пользователя из localStorage:', key);
+      // ...лог убран...
       localStorage.removeItem(key);
     });
   }, []);
@@ -1340,7 +1293,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
             left: 0,
             width: '100vw',
             height: '100vh',
-            zIndex: 2100,
+            zIndex: 9999,
             pointerEvents: 'none',
           }}>
             <Confetti
@@ -1348,8 +1301,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
               height={window.innerHeight}
               numberOfPieces={350}
               recycle={false}
-              key={showCongrats ? 'exercises-confetti' : 'none'}
-              style={{ zIndex: 2101, pointerEvents: 'none' }}
+              gravity={0.25}
+              initialVelocityY={15}
             />
           </div>
           <div style={{
@@ -1358,45 +1311,19 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
             left: 0,
             width: '100vw',
             height: '100vh',
-            zIndex: 2200,
+            zIndex: 10000,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            pointerEvents: 'none',
-            background: 'rgba(255,255,255,0.0)',
-            transition: 'background 0.4s',
+            pointerEvents: 'auto',
+            background: 'rgba(255,255,255,0.85)',
+            flexDirection: 'column',
+            textAlign: 'center',
+            animation: 'congrats-pop 0.6s cubic-bezier(.68,-0.55,.27,1.55)',
           }}>
-            <div style={{
-              minWidth: 320,
-              maxWidth: '90vw',
-              background: 'rgba(255,255,255,0.97)',
-              borderRadius: 24,
-              boxShadow: '0 8px 32px rgba(34,197,94,0.18), 0 2px 8px rgba(0,0,0,0.08)',
-              padding: '36px 32px 28px 32px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              animation: 'congrats-pop 0.6s cubic-bezier(.68,-0.55,.27,1.55)',
-              fontSize: 26,
-              fontWeight: 700,
-              color: '#22c55e',
-              textAlign: 'center',
-              pointerEvents: 'auto',
-              border: '2px solid #bbf7d0',
-              textShadow: '0 2px 8px #fff',
-            }}>
-              <span style={{fontSize: 48, display: 'block', marginBottom: 8}}>🎉</span>
-              <span>Поздравляем!<br/>Все упражнения на сегодня выполнены!</span>
-            </div>
-            <style>{`
-              @keyframes congrats-pop {
-                0% { transform: scale(0.7) translateY(40px); opacity: 0; }
-                60% { transform: scale(1.08) translateY(-8px); opacity: 1; }
-                80% { transform: scale(0.97) translateY(0); }
-                100% { transform: scale(1) translateY(0); opacity: 1; }
-              }
-            `}</style>
+            <div style={{fontSize: 54, color: '#3b82f6', marginBottom: 16}}>🎉</div>
+            <div style={{fontSize: 32, color: '#222', fontWeight: 700}}>ПОЗДРАВЛЯЕМ!</div>
+            <div style={{fontSize: 20, color: '#222', marginTop: 12}}>Все упражнения на сегодня выполнены!</div>
           </div>
         </>
       )}
@@ -1776,7 +1703,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                         const dayId = ex.dayId || getDayId(currentDay.workout.title || currentDay.workout.name, location);
                         const exerciseName = getExerciseEnglishName(ex.name);
                         
-                        console.log('🎥 TodayBlock видео данные для упражнения:', {
+                        // ...лог убран...
+                        const exerciseCardProps = {
                           exerciseName: ex.name,
                           location,
                           dayId,
@@ -1784,7 +1712,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                           exerciseObject: ex,
                           workoutObject: currentDay.workout,
                           fullVideoPath: location && dayId && exerciseName ? `/videos/${location}/${dayId}/${exerciseName}.mp4` : null
-                        });
+                        };
                         
                         // Создаем видео компонент без постера, чтобы показывался первый кадр
                         const videoComponent = (location && dayId && (ex.videoName || exerciseName)) ? (
@@ -1830,7 +1758,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                             index={i}
                             isCompleted={(() => {
                               const value = completedExercises[i] ?? null; // Защита от undefined
-                              console.log(`🏋️ Передаем в ExerciseCard[${i}]: исходное=${completedExercises[i]}, обработанное=${value}, typeof=${typeof value}, completedExercises.length=${completedExercises.length}`);
+                              // ...лог убран...
                               return value;
                             })()}
                             onStatusChange={handleExerciseComplete}
@@ -1915,7 +1843,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                             index={idx}
                             isCompleted={(() => {
                               const value = completedMeals[idx] ?? null;
-                              console.log(`🍽️ Передаем в MealCard[${idx}]: исходное=${completedMeals[idx]}, обработанное=${value}, typeof=${typeof value}, completedMeals.length=${completedMeals.length}`);
+                              // ...лог убран...
                               return value;
                             })()}
                             onStatusChange={handleMealStatusChange}
