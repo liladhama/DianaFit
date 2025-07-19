@@ -204,7 +204,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
           weeklyData.weeklyHistory.forEach(day => {
             if (Array.isArray(day.tasks)) {
               day.tasks.forEach(task => {
-                if (task.type === 'steps' && task.done && task.steps_estimated) {
+                if (task.type === 'steps' && task.steps_estimated) {
                   stepsCompleted += Number(task.steps_estimated) || 0;
                 }
               });

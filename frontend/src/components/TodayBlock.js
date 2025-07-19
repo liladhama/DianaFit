@@ -1187,14 +1187,15 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     // Шаги
     if (walkingMinutes !== null) {
       const selectedOption = STEPS_OPTIONS.find(opt => opt.minutes === walkingMinutes);
+      const stepsValue = selectedOption ? selectedOption.steps : 0;
       tasks.push({
         name: 'Шаги',
         type: 'steps',
-        done: stepsStatus,
+        done: stepsStatus === true, // всегда true/false
         walking_minutes: walkingMinutes,
-        steps_estimated: selectedOption ? selectedOption.steps : 0,
+        steps_estimated: stepsValue,
         goal: GOAL_STEPS,
-        status: selectedOption && selectedOption.steps >= GOAL_STEPS ? 'complete' : 'partial'
+        status: stepsValue >= GOAL_STEPS ? 'complete' : 'partial'
       });
     }
     return tasks;
