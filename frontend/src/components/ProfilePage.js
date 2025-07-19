@@ -4,6 +4,7 @@ import QuizSettings from './QuizSettings.js';
 import DianaNotification from './DianaNotification.js';
 import { API_URL } from '../config/api';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import "../styles/animations.css";
 
 // Используем функции из default export
 const getDietIcon = dietUtils.getDietIcon;
@@ -459,7 +460,6 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
           position: 'relative'
         }}
       >
-import "../styles/animations.css";
         <div style={{
           width: '100%',
           height: '100%',

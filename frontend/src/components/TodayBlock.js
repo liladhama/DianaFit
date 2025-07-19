@@ -1377,24 +1377,23 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
       {/* Мотивация дня */}
       <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
+        padding: '20px',
+        maxWidth: 480,
+        margin: '0 auto',
         width: '100%',
-        margin: '0 auto 16px auto',
-        boxSizing: 'border-box',
+        boxSizing: 'border-box'
       }}>
         <div style={{
           background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)',
           border: '1px solid #a5b4fc',
           borderRadius: 16,
-          padding: '18px 24px 18px 24px',
+          padding: 20,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           width: '100%',
-          maxWidth: 388,
           boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
+          boxSizing: 'border-box'
         }}>
           <div style={{ fontSize: 28, marginBottom: 10, textAlign: 'center' }}>💬</div>
           <div style={{
@@ -1404,8 +1403,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
             lineHeight: 1.4,
             fontWeight: 500,
             textAlign: 'center',
-            width: '100%',
-            maxWidth: 348
+            width: '100%'
           }}>
             {todayQuote}
           </div>
