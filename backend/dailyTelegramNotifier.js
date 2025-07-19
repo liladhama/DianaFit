@@ -49,6 +49,27 @@ async function getAllUserIds() {
     }
     const todayDay = dayIndex !== -1 && dayIndex !== null ? data.programData.days[dayIndex] : null;
 
+    // Получаем индивидуальную норму калорий
+    let userCalories = null;
+    if (data.quiz && typeof data.quiz.calories === 'number') {
+      userCalories = data.quiz.calories;
+    }
+
+    // Получаем тренировку на сегодня и упражнения
+    let workout = '';
+    let workoutExercises = [];
+    if (todayDay && todayDay.workout && todayDay.isWorkoutDay) {
+      workout = todayDay.workout.title || 'Тренировка';
+      if (Array.isArray(todayDay.workout.exercises)) {
+        workoutExercises = todayDay.workout.exercises.map(ex => ex.name).filter(Boolean);
+      }
+    }
+
+    // Получаем статус выполнения из dailyProgress
+    let ate = false;
+    let progress = data.dailyProgress && data.dailyProgress[todayStr] ? data.dailyProgress[todayStr] : {};
+    if (progress.ate !== undefined) ate = progress.ate;
+
     userIds.push({
       userId: doc.id,
       chatId,
@@ -57,7 +78,8 @@ async function getAllUserIds() {
       calories: userCalories,
       ate
     });
-    return userIds;
+  });
+  return userIds;
 
 
 // Основная функция рассылки
