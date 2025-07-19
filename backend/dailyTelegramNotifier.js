@@ -102,8 +102,7 @@ async function sendDailyNotifications() {
       const tip = getRandomTip();
       const round10 = n => Math.round(n / 10) * 10;
       let message = '';
-      message += `*Доброе утро!* ☀️\n`;
-      message += `---\n`;
+      message += `*Доброе утро!* ☀️\n\n`;
       // Тренировка
       message += `*Тренировка:*`;
       if (user.todayWorkout) {
@@ -117,12 +116,12 @@ async function sendDailyNotifications() {
       } else {
         message += ` Сегодня нет тренировки.\n`;
       }
-      message += `\n---`;
+      message += `\n\n`;
       // Калории
-      message += `\n*Калорийность:* _${user.calories > 0 ? round10(user.calories) : 'не указано'} ккал_`;
-      message += `\n---`;
+      message += `*Калорийность:* _${user.calories > 0 ? round10(user.calories) : 'не указано'} ккал_`;
+      message += `\n\n`;
       // План питания
-      message += `\n*План питания на сегодня:*`;
+      message += `*План питания на сегодня:*`;
       if (user.calories > 0) {
         const portions = [
           { type: 'Завтрак', percent: 0.25 },
@@ -136,9 +135,9 @@ async function sendDailyNotifications() {
           message += `\n- *${p.type}:* _${kcal} ккал_`;
         });
       }
-      message += `\n---`;
+      message += `\n\n`;
       // Цитата-напоминание
-      message += `\n> _${user.ate === true ? 'Вы уже отметили выполнение тренировок и приём пищи!' : 'Не забудьте отметить выполнение тренировок и приём пищи!'}_ ✅`;
+      message += `> _${user.ate === true ? 'Вы уже отметили выполнение тренировок и приём пищи!' : 'Не забудьте отметить выполнение тренировок и приём пищи!'}_ ✅`;
       message += `\n> _Постарайтесь пройти *10 000 шагов* сегодня!_ 🚶‍♀️🚶‍♂️`;
       message += `\n> _${tip}_ 🥦🥕`;
       try {
