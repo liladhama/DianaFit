@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/animations.css';
 import Confetti from 'react-confetti';
+import CongratsModal from './CongratsModal';
 import WheelPicker from './WheelPicker';
 import PaymentPage from './PaymentPage';
 import VideoPlayer from './VideoPlayer';
@@ -122,6 +123,34 @@ if (typeof document !== 'undefined' && !document.querySelector('#spinner-styles'
 
 
 export default function TodayBlock({ day, answers, onBackToWeek, programId, isPremium, activatePremium, setIsPaymentShown, setShowPayment, userAvatar, onProfileClick }) {
+  // --- Поздравление: просто useState ---
+  const [showCongrats, setShowCongrats] = useState(false);
+  const [showCongratsMeals, setShowCongratsMeals] = useState(false);
+  const [showReasonModal, setShowReasonModal] = useState(false);
+  // --- Поздравление: просто useState ---
+
+  // Рефы для автоскролла к модалке и поздравлению
+  const reasonModalRef = useRef(null);
+  const congratsRef = useRef(null);
+  const congratsMealsRef = useRef(null);
+
+  // Автоскролл к модалке и поздравлению
+
+  useEffect(() => {
+    if (showCongrats && congratsRef.current) {
+      setTimeout(() => {
+        congratsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+    }
+  }, [showCongrats]);
+
+  useEffect(() => {
+    if (showCongratsMeals && congratsMealsRef.current) {
+      setTimeout(() => {
+        congratsMealsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 50);
+    }
+  }, [showCongratsMeals]);
   // --- Поздравление: хранить факт показа в localStorage по дате ---
   // Для отслеживания перехода "не все выполнены" -> "все выполнены"
   const prevAllDone = useRef(false);
@@ -129,17 +158,14 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   const programStartsLater = answers && answers.start_date && new Date(answers.start_date) > new Date();
   // --- Все useState в начале компонента ---
   // --- Поздравление: просто useState ---
-  const [showCongrats, setShowCongrats] = useState(false);
   const prevExercisesRef = useRef([]);
   const prevMealsRef = useRef([]);
   const congratsShownRef = useRef(false);
   const [personalPlan, setPersonalPlan] = useState(null);
-  const [showCongratsMeals, setShowCongratsMeals] = useState(false);
   const congratsMealsShownRef = useRef(false);
   const [loadingPlan, setLoadingPlan] = useState(false);
   const [planError, setPlanError] = useState(null);
   const [showDianaChat, setShowDianaChat] = useState(false);
-  const [showReasonModal, setShowReasonModal] = useState(false);
   const [reasonModalData, setReasonModalData] = useState({ type: '', index: -1, itemName: '' });
   const [exerciseReasons, setExerciseReasons] = useState({});
   const [mealReasons, setMealReasons] = useState({});
@@ -1285,116 +1311,22 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       }}
     >
       {/* Фейерверк и поздравление при выполнении всех упражнений */}
-      {showCongrats && (
-        <>
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            zIndex: 9999,
-            pointerEvents: 'none',
-          }}>
-            <Confetti
-              width={window.innerWidth}
-              height={window.innerHeight}
-              numberOfPieces={350}
-              recycle={false}
-              gravity={0.25}
-              initialVelocityY={15}
-            />
-          </div>
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            zIndex: 10000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            pointerEvents: 'auto',
-            background: 'rgba(255,255,255,0.85)',
-            flexDirection: 'column',
-            textAlign: 'center',
-            animation: 'congrats-pop 0.6s cubic-bezier(.68,-0.55,.27,1.55)',
-          }}>
-            <div style={{fontSize: 54, color: '#3b82f6', marginBottom: 16}}>🎉</div>
-            <div style={{fontSize: 32, color: '#222', fontWeight: 700}}>ПОЗДРАВЛЯЕМ!</div>
-            <div style={{fontSize: 20, color: '#222', marginTop: 12}}>Все упражнения на сегодня выполнены!</div>
-          </div>
-        </>
-      )}
-      {showCongratsMeals && (
-        <>
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            zIndex: 2100,
-            pointerEvents: 'none',
-          }}>
-            <Confetti
-              width={window.innerWidth}
-              height={window.innerHeight}
-              numberOfPieces={350}
-              recycle={false}
-              key={showCongratsMeals ? 'meals-confetti' : 'none'}
-              style={{ zIndex: 2101, pointerEvents: 'none' }}
-            />
-          </div>
-          <div style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100vw',
-            height: '100vh',
-            zIndex: 2200,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            pointerEvents: 'none',
-            background: 'rgba(255,255,255,0.0)',
-            transition: 'background 0.4s',
-          }}>
-            <div style={{
-              minWidth: 320,
-              maxWidth: '90vw',
-              background: 'rgba(255,255,255,0.97)',
-              borderRadius: 24,
-              boxShadow: '0 8px 32px rgba(59,130,246,0.18), 0 2px 8px rgba(0,0,0,0.08)',
-              padding: '36px 32px 28px 32px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              animation: 'congrats-pop 0.6s cubic-bezier(.68,-0.55,.27,1.55)',
-              fontSize: 26,
-              fontWeight: 700,
-              color: '#3b82f6',
-              textAlign: 'center',
-              pointerEvents: 'auto',
-              border: '2px solid #bae6fd',
-              textShadow: '0 2px 8px #fff',
-            }}>
-              <span style={{fontSize: 48, display: 'block', marginBottom: 8}}>🍽️</span>
-              <span>Поздравляем!<br/>Все приемы пищи на сегодня выполнены!</span>
-            </div>
-            <style>{`
-              @keyframes congrats-pop {
-                0% { transform: scale(0.7) translateY(40px); opacity: 0; }
-                60% { transform: scale(1.08) translateY(-8px); opacity: 1; }
-                80% { transform: scale(0.97) translateY(0); }
-                100% { transform: scale(1) translateY(0); opacity: 1; }
-              }
-            `}</style>
-          </div>
-        </>
-      )}
+      {/* Универсальный модал поздравления */}
+      <CongratsModal
+        isOpen={showCongrats}
+        onClose={() => setShowCongrats(false)}
+        icon="🎉"
+        title="ПОЗДРАВЛЯЕМ!"
+        message="Все упражнения на сегодня выполнены!"
+      />
+      <CongratsModal
+        isOpen={showCongratsMeals}
+        onClose={() => setShowCongratsMeals(false)}
+        icon="🎉"
+        title="Поздравляем!"
+        message="Все приемы пищи на сегодня выполнены!"
+      />
+      {/* Confetti теперь только в CongratsModal */}
       {profileButton}
       {dianaButton}
       {/* Кнопка К неделе по центру */}
@@ -1939,13 +1871,19 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       )}
       
       {/* Модал для выбора причины невыполнения */}
-      <ReasonModal
-        isVisible={showReasonModal}
-        onClose={() => setShowReasonModal(false)}
-        onReasonSelected={handleReasonSelected}
-        type={reasonModalData.type}
-        itemName={reasonModalData.itemName}
-      />
+      <div ref={reasonModalRef}>
+        <ReasonModal
+          isVisible={showReasonModal}
+          onClose={() => setShowReasonModal(false)}
+          onReasonSelected={handleReasonSelected}
+          type={reasonModalData.type}
+          itemName={reasonModalData.itemName}
+        />
+
+      </div>
     </div>
   );
 }
+
+// Автоскролл к модалке и поздравлению
+// (hooks должны быть до return!)

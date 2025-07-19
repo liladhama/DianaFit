@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import ReactDOM from 'react-dom';
 
+// Компонент модала для выбора причины невыполнения
 export default function ReasonModal({ isVisible, onClose, onReasonSelected, type, itemName }) {
   const [selectedReason, setSelectedReason] = useState('');
   const [customReason, setCustomReason] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
 
+  // Причины для тренировок
   const workoutReasons = [
     { id: 'time', text: '⏰ Не хватило времени', category: 'time' },
     { id: 'tired', text: '😴 Слишком устал(а)', category: 'energy' },
@@ -20,6 +22,33 @@ export default function ReasonModal({ isVisible, onClose, onReasonSelected, type
     { id: 'other', text: '📝 Другая причина...', category: 'other' }
   ];
 
+  // Причины для питания
+  const mealReasons = [
+    { id: 'not_hungry', text: '🚫 Не было голода', category: 'appetite' },
+    { id: 'no_products', text: '🛒 Не было продуктов', category: 'resources' },
+    { id: 'no_time', text: '⏰ Не было времени готовить', category: 'time' },
+    { id: 'expensive', text: '💰 Слишком дорого', category: 'budget' },
+    { id: 'dont_like', text: '😖 Не нравится вкус', category: 'preference' },
+    { id: 'ate_other', text: '🍕 Съел(а) что-то другое', category: 'choice' },
+    { id: 'restaurant', text: '🍽️ Ел(а) в ресторане', category: 'social' },
+    { id: 'work_lunch', text: '🏢 Рабочий обед', category: 'schedule' },
+    { id: 'celebration', text: '🎉 Праздник/мероприятие', category: 'social' },
+    { id: 'stress', text: '😰 Стресс/переживания', category: 'mental' },
+    { id: 'forgot', text: '🤦 Забыл(а) поесть', category: 'organization' },
+    { id: 'other', text: '📝 Другая причина...', category: 'other' }
+  ];
+
+  const reasons = type === 'workout' ? workoutReasons : mealReasons;
+
+  const handleReasonSelect = (reasonId) => {
+    setSelectedReason(reasonId);
+    if (reasonId === 'other') {
+      setShowCustomInput(true);
+    } else {
+      setShowCustomInput(false);
+      setCustomReason('');
+
+  // Причины для питания
   const mealReasons = [
     { id: 'not_hungry', text: '🚫 Не было голода', category: 'appetite' },
     { id: 'no_products', text: '🛒 Не было продуктов', category: 'resources' },
@@ -94,6 +123,7 @@ export default function ReasonModal({ isVisible, onClose, onReasonSelected, type
         overflowY: 'auto',
         boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
       }}>
+        {/* Заголовок */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -129,6 +159,7 @@ export default function ReasonModal({ isVisible, onClose, onReasonSelected, type
           </button>
         </div>
 
+        {/* Название элемента */}
         <div style={{
           backgroundColor: '#f8fafc',
           padding: 12,
@@ -144,6 +175,7 @@ export default function ReasonModal({ isVisible, onClose, onReasonSelected, type
           </div>
         </div>
 
+        {/* Список причин */}
         <div style={{ marginBottom: 20 }}>
           <div style={{
             fontSize: 14,
@@ -197,6 +229,7 @@ export default function ReasonModal({ isVisible, onClose, onReasonSelected, type
           </div>
         </div>
 
+        {/* Поле для ввода своей причины */}
         {showCustomInput && (
           <div style={{ marginBottom: 20 }}>
             <label style={{
@@ -227,6 +260,7 @@ export default function ReasonModal({ isVisible, onClose, onReasonSelected, type
           </div>
         )}
 
+        {/* Кнопки */}
         <div style={{
           display: 'flex',
           gap: 12,
