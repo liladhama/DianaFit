@@ -4,7 +4,6 @@ import { readUserData } from './userDataStorage.js';
 import admin from 'firebase-admin';
 import { getFirebaseConfig } from './firestore-config.js';
 
-console.log('[dailyTelegramNotifier] Модуль загружен, старт инициализации...');
 
 // Инициализация Firebase Admin SDK
 if (!admin.apps.length) {
@@ -95,7 +94,6 @@ async function getAllUserIds() {
 // Основная функция рассылки
 async function sendDailyNotifications() {
     const users = await getAllUserIds();
-    console.log(`Найдено пользователей для рассылки: ${users.length}`);
     const now = new Date();
     for (const user of users) {
       // Проверка времени: рассылка только в notifyHour:00 по часовому поясу пользователя
@@ -147,7 +145,6 @@ async function sendDailyNotifications() {
       message += `\n> _Постарайтесь пройти *10 000 шагов* сегодня!_ 🚶‍♀️🚶‍♂️`;
       message += `\n> _${tip}_ 🥦🥕`;
       try {
-        console.log(`[Рассылка] Отправка сообщения пользователю ${user.userId} (chatId: ${user.chatId})`);
         const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -158,9 +155,7 @@ async function sendDailyNotifications() {
           })
         });
         const result = await response.json();
-        if (result.ok) {
-          console.log(`[Рассылка] Успешно: сообщение отправлено пользователю ${user.userId} (chatId: ${user.chatId})`);
-        } else {
+        if (!result.ok) {
           console.error(`[Рассылка] Ошибка Telegram API для пользователя ${user.userId} (chatId: ${user.chatId}):`, result);
         }
       } catch (err) {
@@ -176,6 +171,5 @@ async function sendDailyNotifications() {
     });
   });
 
-  console.log('[dailyTelegramNotifier] Инициализация завершена успешно');
 
 export default sendDailyNotifications;

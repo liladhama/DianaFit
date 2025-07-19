@@ -88,7 +88,6 @@ class UserProgressLogger {
         if (log.programData && log.programData.days) {
             const dayToUpdate = log.programData.days.find(day => day.date === date);
             if (dayToUpdate) {
-                console.log(`[SYNC] Синхронизируем programData для дня ${date}`);
                 if (Array.isArray(tasks)) {
                     const mealTasks = tasks.filter(task => task.type === 'meal');
                     if (mealTasks.length > 0) {
@@ -99,7 +98,6 @@ class UserProgressLogger {
                             }
                         });
                         dayToUpdate.completedMeals = mealTasks.some(task => task.done);
-                        console.log(`[SYNC] Обновлены приемы пищи:`, dayToUpdate.completedMealsArr);
                     }
                     const workoutTasks = tasks.filter(task => task.type === 'workout');
                     if (workoutTasks.length > 0) {
@@ -110,19 +108,16 @@ class UserProgressLogger {
                             }
                         });
                         dayToUpdate.completedWorkout = workoutTasks.some(task => task.done);
-                        console.log(`[SYNC] Обновлены упражнения:`, dayToUpdate.completedExercises);
                     }
                     const stepsTask = tasks.find(task => task.type === 'steps');
                     if (stepsTask) {
                         dayToUpdate.dailySteps = stepsTask.steps_estimated || 0;
-                        console.log(`[SYNC] Обновлены шаги:`, dayToUpdate.dailySteps);
                     }
                 }
             }
         }
         // --- Сохраняем весь лог ---
         await this.saveLog(log);
-        console.log(`[PROGRESS LOGGER] Сохранен прогресс за ${date} с синхронизацией programData и обновлением progressHistory`);
     }
 
     // Получить прогресс за конкретную дату
@@ -143,7 +138,6 @@ class UserProgressLogger {
         
         // Миграция: если progressHistory пуста, но есть dailyProgress - мигрируем данные
         if ((!log.progressHistory || log.progressHistory.length === 0) && log.dailyProgress) {
-            console.log('[MIGRATION] Мигрируем данные из dailyProgress в progressHistory');
             log.progressHistory = [];
             Object.entries(log.dailyProgress).forEach(([date, dayData]) => {
                 const dayDate = new Date(date);
@@ -169,7 +163,6 @@ class UserProgressLogger {
             });
             // Сохраняем мигрированные данные
             await this.saveLog(log);
-            console.log(`[MIGRATION] Мигрировано ${log.progressHistory.length} записей`);
         }
         
         const weeklyHistory = [];
@@ -209,7 +202,6 @@ class UserProgressLogger {
         // Сортируем по дате
         weeklyHistory.sort((a, b) => new Date(a.date) - new Date(b.date));
         
-        console.log(`[PROGRESS LOGGER] Возвращаем недельную историю: ${weeklyHistory.length} дней`);
         return weeklyHistory;
     }
 

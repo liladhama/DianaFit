@@ -5,11 +5,9 @@ import admin from 'firebase-admin';
 const router = express.Router();
 
 router.post('/api/user/calories', async (req, res) => {
-  console.log('[CaloriesApi] POST /api/user/calories', req.body);
   let { userId, caloriesNorm, timezone } = req.body;
   userId = String(userId);
   if (!userId || !caloriesNorm) {
-    console.log('[CaloriesApi] Не хватает userId или caloriesNorm');
     return res.status(400).json({ error: 'userId и caloriesNorm обязательны' });
   }
   try {
@@ -19,15 +17,10 @@ router.post('/api/user/calories', async (req, res) => {
     let quiz = {};
     if (userDoc.exists && userDoc.data().quiz) {
       quiz = userDoc.data().quiz;
-      console.log('[CaloriesApi] Текущий quiz:', quiz);
-    } else {
-      console.log('[CaloriesApi] Документ пользователя не найден или quiz отсутствует');
     }
     quiz.calories = caloriesNorm;
     if (timezone) quiz.timezone = timezone;
-    console.log('[CaloriesApi] Обновленный quiz:', quiz);
     await userRef.set({ quiz }, { merge: true });
-    console.log('[CaloriesApi] Calories и timezone записаны для userId:', userId, 'calories:', caloriesNorm, 'timezone:', timezone);
     res.json({ success: true });
   } catch (e) {
     console.error('Ошибка сохранения калоража:', e);

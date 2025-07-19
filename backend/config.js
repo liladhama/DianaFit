@@ -46,10 +46,5 @@ const CONFIG = {
   }
 };
 
-console.log('🔧 Backend Configuration:');
-console.log('📍 Environment:', IS_LOCAL_ENVIRONMENT ? 'LOCAL' : 'PRODUCTION');
-console.log('💾 Storage:', CONFIG.STORAGE.USE_LOCAL_FILES ? 'LOCAL FILES' : 'FIRESTORE');
-console.log('🌐 API Base URL:', CONFIG.API.BASE_URL);
-console.log('📁 Local Storage Path:', CONFIG.LOCAL_STORAGE_PATHS.users);
 
 export default CONFIG;
