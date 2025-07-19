@@ -1707,6 +1707,7 @@ function App() {
           activatePremium={activatePremium}
           setIsPaymentShown={setIsPaymentShown}
           weekData={weekData}
+          answers={answers}
           onStartProgram={() => {
             setShowTestWeek(false);
             setShowToday(true);

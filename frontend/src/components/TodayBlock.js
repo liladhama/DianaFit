@@ -55,11 +55,31 @@ function handleStepsSelection(minutes, setWalkingMinutes, setStepsStatus) {
 
 // --- Мотивационные цитаты от Дианы ---
 const motivationalQuotes = [
-  "Не нужно быть идеальной. Нужно быть стабильной. — Диана",
+  "Не нужно быть идеальным. Нужно быть стабильным. — Диана",
   "Каждый день — это новая возможность стать лучше. — Диана",
-  "Твое тело может. Твой разум сомневается. Слушай тело. — Диана",
+  "Твоё тело может. Твой разум сомневается. Слушай тело. — Диана",
   "Прогресс важнее совершенства. — Диана",
-  "Твоя цель — не быть как все, а быть лучшей версией себя. — Диана"
+  "Твоя цель — не быть как все, а быть лучшей версией себя. — Диана",
+  "Ты уже на шаг ближе к своей цели. Продолжай в том же духе! — Диана",
+  "Маленькие победы складываются в большой результат. — Диана",
+  "Не сдавайся, даже если сложно. Ты сильнее, чем думаешь! — Диана",
+  "Каждый твой выбор — вклад в твоё здоровье. — Диана",
+  "Сегодня — лучший день, чтобы стать лучше, чем вчера. — Диана",
+  "Ты заслуживаешь заботы о себе. Начни с малого! — Диана",
+  "Пусть твой прогресс вдохновляет тебя двигаться дальше. — Диана",
+  "Ошибки — это опыт, а не повод останавливаться. — Диана",
+  "Сделай сегодня то, за что завтра скажешь себе спасибо. — Диана",
+  "Твоя энергия — твой главный ресурс. Береги и приумножай её! — Диана",
+  "Не сравнивай себя с другими. Сравнивай себя с собой вчерашним. — Диана",
+  "Ты способен на большее, чем думаешь. Просто начни! — Диана",
+  "Пусть забота о себе станет твоей привычкой. — Диана",
+  "Каждый день — это шанс стать лучше. Используй его! — Диана",
+  "Твои усилия важны. Даже если их не видно сразу. — Диана",
+  "Доверяй процессу. Результат обязательно придёт. — Диана",
+  "Ты — главный герой своей истории. Пиши её с любовью! — Диана",
+  "Сделай паузу, вдохни глубже и продолжай путь. — Диана",
+  "Твоя цель — не идеал, а стабильность и забота о себе. — Диана",
+  "Ты уже молодец, что выбрал путь перемен! — Диана"
 ];
 
 // Получаем текущую дату в формате "Вторник, 25 июня"
@@ -321,8 +341,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   const [aiAnalysis, setAiAnalysis] = useState('');
   const [loadingAI, setLoadingAI] = useState(false);
   
-  // Получаем случайную мотивационную цитату
-  const todayQuote = motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)];
+  // Получаем случайную мотивационную цитату только один раз при монтировании
+  const [todayQuote] = useState(() => motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
 
   // Проверка разрешений при загрузке компонента
   useEffect(() => {
@@ -1356,41 +1376,38 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       </div>
 
       {/* Мотивация дня */}
-      <div style={{ 
-        padding: '0 20px', 
-        maxWidth: 480, 
-        margin: '0 auto', 
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
         width: '100%',
-        boxSizing: 'border-box'
+        margin: '0 auto 16px auto',
+        boxSizing: 'border-box',
       }}>
         <div style={{
-          ...cardStyle,
           background: 'linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%)',
           border: '1px solid #a5b4fc',
-          marginBottom: 16
+          borderRadius: 16,
+          padding: '18px 24px 18px 24px',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          width: '100%',
+          maxWidth: 388,
+          boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
         }}>
-          <div 
-            style={{
-              ...headerStyle,
-              userSelect: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              marginBottom: 16
-            }}
-          >
-            <span>💬 Мотивация</span>
-          </div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 24, marginBottom: 12 }}>💬</div>
-            <div style={{ 
-              fontSize: 16, 
-              fontStyle: 'italic', 
-              color: '#3730a3', 
-              lineHeight: 1.4,
-              fontWeight: 500
-            }}>
-              {todayQuote}
-            </div>
+          <div style={{ fontSize: 28, marginBottom: 10, textAlign: 'center' }}>💬</div>
+          <div style={{
+            fontSize: 16,
+            fontStyle: 'italic',
+            color: '#3730a3',
+            lineHeight: 1.4,
+            fontWeight: 500,
+            textAlign: 'center',
+            width: '100%',
+            maxWidth: 348
+          }}>
+            {todayQuote}
           </div>
         </div>
       </div>

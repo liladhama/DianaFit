@@ -1,11 +1,73 @@
 import React, { useState } from 'react';
+import { recipeNames } from '../utils/recipeNames';
 import PaymentPage from './PaymentPage';
 import DianaChat from './DianaChat';
 import "../fonts/fonts.css";
 import "../styles/animations.css";
 import chatDianaIcon from '../assets/icons/chat-diana-icon.png';
 
-export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: propIsPremium, activatePremium, setIsPaymentShown, weekData }) {
+// Вспомогательная функция для случайного выбора N уникальных элементов из массива
+function getRandomUnique(arr, n) {
+  const result = [];
+  const used = new Set();
+  while (result.length < n && used.size < arr.length) {
+    const idx = Math.floor(Math.random() * arr.length);
+    if (!used.has(idx)) {
+      result.push(arr[idx]);
+      used.add(idx);
+    }
+  }
+  return result;
+}
+
+// Генерация уникальных названий блюд на неделю для каждого типа приема пищи с учетом типа диеты
+function generateWeeklyMeals(recipeNames, dietType = 'meat', daysCount = 7) {
+  const mealTypes = [
+    { type: 'Завтрак', key: 'breakfast' },
+    { type: 'Перекус', key: 'snack' },
+    { type: 'Обед', key: 'lunch' },
+    { type: 'Полдник', key: 'afternoon' },
+    { type: 'Ужин', key: 'dinner' }
+  ];
+  const weeklyMeals = Array.from({ length: daysCount }, () => ({}));
+  // Маппинг для поддержки разных вариантов dietType
+  const dietMap = {
+    'meat': 'meat',
+    'omnivore': 'meat',
+    'fish': 'fish',
+    'pescetarian': 'fish',
+    'vegetarian': 'vegetarian',
+    'vegetarian_egg': 'vegetarian',
+    'vegetarian_eggs': 'vegetarian',
+    'vegetarian_no_eggs': 'vegetarian',
+    'vegan': 'vegan'
+  };
+  const safeDiet = (dietType || 'meat').toLowerCase();
+  const dietKey = dietMap[safeDiet] || 'meat';
+  const dietRecipes = recipeNames[dietKey] || recipeNames['meat'];
+  mealTypes.forEach(({ type, key }) => {
+    let pool = dietRecipes[key] || [];
+    // Fallback: если для типа диеты нет блюд — используем мясную диету
+    if (!pool || pool.length === 0) {
+      pool = recipeNames['meat'][key] || [];
+    }
+    let meals = getRandomUnique(pool, daysCount);
+    if (meals.length < daysCount) {
+      const extra = [];
+      while (meals.length + extra.length < daysCount) {
+        const idx = Math.floor(Math.random() * pool.length);
+        extra.push(pool[idx]);
+      }
+      meals = meals.concat(extra);
+    }
+    for (let i = 0; i < daysCount; i++) {
+      weeklyMeals[i][type] = meals[i % meals.length] || (pool[0] || 'Блюдо');
+    }
+  });
+  return weeklyMeals;
+}
+
+export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: propIsPremium, activatePremium, setIsPaymentShown, weekData, answers }) {
   const [selectedDay, setSelectedDay] = useState(null);
   const [showPayment, setShowPayment] = useState(false);
   const [showDianaChat, setShowDianaChat] = useState(false);
@@ -337,17 +399,17 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#2563eb', marginBottom: 8 }}>
                     🏋️‍♀️ Тренировка
                   </div>
-                  <div style={{ fontSize: 12, color: '#666' }}>
+                  <div style={{ fontSize: 12, color: '#666', fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif' }}>
                     {dayData.planData && dayData.planData.workout ? (
                       <>
                         <div style={{ fontWeight: 600, marginBottom: 4 }}>
                           {dayData.planData.workout.title}
                         </div>
-                        {dayData.planData.workout.exercises && dayData.planData.workout.exercises.map((ex, exIndex) => (
-                          <div key={exIndex} style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>
-                            - {ex.name} — {ex.reps}
-                          </div>
-                        ))}
+                            {dayData.planData.workout.exercises && dayData.planData.workout.exercises.map((ex, exIndex) => (
+                              <div key={exIndex} style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>
+                                - {ex.name}
+                              </div>
+                            ))}
                       </>
                     ) : (
                       'Нет тренировки'
@@ -362,39 +424,37 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
                   borderRadius: 8,
                   border: '1px solid #e2e8f0'
                 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#059669', marginBottom: 8 }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: '#059669', marginBottom: 8, fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif' }}>
                     🍽️ Питание
                   </div>
-                  <div style={{ fontSize: 12, color: '#666' }}>
+                  <div style={{ fontSize: 12, color: '#666', fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif' }}>
                     {(() => {
-                      // Примеры блюд для каждого типа
-                      const fallbackMeals = {
-                        'Завтрак': 'Овсянка с ягодами',
-                        'Перекус': 'Протеиновый коктейль',
-                        'Обед': 'Суп из чечевицы с овощами',
-                        'Полдник': 'Авокадо-тост с томатами',
-                        'Ужин': 'Лосось с лимоном и спаржей'
-                      };
-                      if (dayData.planData && dayData.planData.meals) {
-                        return dayData.planData.meals.map((meal, mealIndex) => {
-                          const mealInfo = meal.meal || { name: meal.menu || fallbackMeals[meal.type] || 'Блюдо' };
-                          const mealName = typeof mealInfo === 'string' ? mealInfo : mealInfo.name;
-                          // Если mealName пусто или "Не указано", подставляем пример
-                          const showName = (!mealName || mealName === 'Не указано') ? (fallbackMeals[meal.type] || 'Блюдо') : mealName;
-                          return (
-                            <div key={mealIndex} style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>
-                              • {meal.type}: {showName}
-                            </div>
-                          );
-                        });
+                      // Генерируем блюда на неделю один раз (мемоизация по неделе)
+                      // Получаем тип диеты из answers (diet_flags или dietType)
+                      const dietType = answers?.diet_flags || answers?.dietType || 'meat';
+                      if (!window._weeklyMeals || window._weeklyMealsDiet !== dietType) {
+                        try {
+                          window._weeklyMeals = generateWeeklyMeals(recipeNames, dietType, 7);
+                          window._weeklyMealsDiet = dietType;
+                        } catch (e) {
+                          window._weeklyMeals = null;
+                        }
+                      }
+                      const weeklyMeals = window._weeklyMeals;
+                      if (weeklyMeals && weeklyMeals[index]) {
+                        return Object.entries(weeklyMeals[index]).map(([type, name]) => (
+                          <div key={type} style={{ fontSize: 11, color: '#888', marginBottom: 2, fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif' }}>
+                            • {type}: {name}
+                          </div>
+                        ));
                       } else {
-                        // Если вообще нет массива, выводим все типы с примерами
+                        // fallback на случай ошибки
                         return [
-                          <div key="breakfast" style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>• Завтрак: Овсянка с ягодами</div>,
-                          <div key="snack" style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>• Перекус: Протеиновый коктейль</div>,
-                          <div key="lunch" style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>• Обед: Суп из чечевицы с овощами</div>,
-                          <div key="afternoon" style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>• Полдник: Авокадо-тост с томатами</div>,
-                          <div key="dinner" style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>• Ужин: Лосось с лимоном и спаржей</div>
+                          <div key="breakfast" style={{ fontSize: 11, color: '#888', marginBottom: 2, fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif' }}>• Завтрак: Овсянка с ягодами</div>,
+                          <div key="snack" style={{ fontSize: 11, color: '#888', marginBottom: 2, fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif' }}>• Перекус: Протеиновый коктейль</div>,
+                          <div key="lunch" style={{ fontSize: 11, color: '#888', marginBottom: 2, fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif' }}>• Обед: Суп из чечевицы с овощами</div>,
+                          <div key="afternoon" style={{ fontSize: 11, color: '#888', marginBottom: 2, fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif' }}>• Полдник: Авокадо-тост с томатами</div>,
+                          <div key="dinner" style={{ fontSize: 11, color: '#888', marginBottom: 2, fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif' }}>• Ужин: Лосось с лимоном и спаржей</div>
                         ];
                       }
                     })()}
