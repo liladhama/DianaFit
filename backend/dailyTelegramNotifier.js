@@ -98,7 +98,13 @@ async function sendDailyNotifications() {
     console.log(`Найдено пользователей для рассылки: ${users.length}`);
     const now = new Date();
     for (const user of users) {
-      // Тестовая рассылка каждую минуту (убираем проверку времени)
+      // Проверка времени: рассылка только в notifyHour:00 по часовому поясу пользователя
+      const tz = user.timezone || 'Europe/Moscow';
+      const hour = typeof user.notifyHour === 'number' ? user.notifyHour : 9;
+      const nowTz = new Date(now.toLocaleString('en-US', { timeZone: tz }));
+      if (nowTz.getHours() !== hour || nowTz.getMinutes() !== 0) {
+        continue;
+      }
       const tip = getRandomTip();
       const round10 = n => Math.round(n / 10) * 10;
       let message = '';
