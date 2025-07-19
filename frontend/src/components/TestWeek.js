@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import PaymentPage from './PaymentPage';
 import DianaChat from './DianaChat';
 import "../fonts/fonts.css";
+import "../styles/animations.css";
 import chatDianaIcon from '../assets/icons/chat-diana-icon.png';
 
 export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: propIsPremium, activatePremium, setIsPaymentShown, weekData }) {
@@ -95,18 +96,21 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
   }
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      width: '100vw',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      background: 'linear-gradient(180deg, rgba(200,225,255,0.92) 0%, rgba(200,225,255,0.98) 100%)', // менее блеклый голубой
-      padding: '32px 16px 16px 16px',
-      boxSizing: 'border-box',
-      position: 'relative',
-      overflowX: 'hidden',
-    }}>
+    <div
+      className="slide-up-appear"
+      style={{
+        minHeight: '100vh',
+        width: '100vw',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        background: 'linear-gradient(180deg, rgba(200,225,255,0.92) 0%, rgba(200,225,255,0.98) 100%)', // менее блеклый голубой
+        padding: '32px 16px 16px 16px',
+        boxSizing: 'border-box',
+        position: 'relative',
+        overflowX: 'hidden',
+      }}
+    >
       {/* Иконка чата с Дианой в левом верхнем углу - всегда видна */}
       <button
         onClick={() => setShowDianaChat(true)}

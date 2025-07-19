@@ -1,4 +1,5 @@
 import React from 'react';
+import "../styles/animations.css";
 import dianaPayment from '../assets/payment/diana-payment.png';
 
 export default function PaymentPage({ onClose, onPaymentSuccess }) {
@@ -28,18 +29,21 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
   }
 
   return (
-    <div style={{
-      width: '100vw',
-      height: '100vh',
-      overflow: 'hidden',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      background: 'linear-gradient(180deg, rgba(120,180,255,0.98) 0%, rgba(150,200,255,0.97) 100%)',
-      padding: '16px 16px 32px 16px',
-      boxSizing: 'border-box',
-      position: 'relative'
-    }}>
+    <div
+      className="slide-up-appear"
+      style={{
+        width: '100vw',
+        height: '100vh',
+        overflow: 'hidden',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        background: 'linear-gradient(180deg, rgba(120,180,255,0.98) 0%, rgba(150,200,255,0.97) 100%)',
+        padding: '16px 16px 32px 16px',
+        boxSizing: 'border-box',
+        position: 'relative'
+      }}
+    >
       {/* Кнопка назад */}
       <button 
         onClick={onClose} 

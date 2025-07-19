@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import '../styles/animations.css';
 import Confetti from 'react-confetti';
 import WheelPicker from './WheelPicker';
 import PaymentPage from './PaymentPage';
@@ -1316,6 +1317,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   return (
     <div
+      className="slide-up-appear"
       style={{
         minHeight: '100vh',
         width: '100vw',

@@ -5,8 +5,10 @@ import CustomSlider from './CustomSlider';
 import IconSelector from './IconSelector';
 import HorizontalWeightSlider from './HorizontalWeightSlider';
 import GoalSlide from './GoalSlide'; // Импортируем новый компонент
+
 import "../fonts/fonts.css";
 import "./StoryQuiz.css";
+import "../styles/animations.css";
 
 function ProgressBar({ current, total }) {
   return (
@@ -947,7 +949,25 @@ export default function StoryQuiz({ onFinish }) {
   if (!quizConfig) return <div>Загрузка...</div>;
 
   return (
-    <div style={{ width: '100vw', minWidth: '100vw', maxWidth: '100vw', minHeight: '100dvh', height: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)', boxSizing: 'border-box', padding: '8px 16px 0 16px', margin: 0, overflowX: 'hidden', position: 'relative' }}>
+    <div
+      className="slide-up-appear"
+      style={{
+        width: '100vw',
+        minWidth: '100vw',
+        maxWidth: '100vw',
+        minHeight: '100dvh',
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        background: 'linear-gradient(180deg, #fff 0%, #e3f0ff 100%)',
+        boxSizing: 'border-box',
+        padding: '8px 16px 0 16px',
+        margin: 0,
+        overflowX: 'hidden',
+        position: 'relative',
+      }}
+    >
       {renderBackButton()}
       <ProgressBar current={step + 1} total={total} />
       {renderDots()}

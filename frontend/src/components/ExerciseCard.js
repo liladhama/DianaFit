@@ -12,6 +12,7 @@ const ExerciseCard = ({
   reason // <--- добавлено
 }) => {
   const handleStatusChange = (completed) => {
+    console.log(`[DEBUG][ExerciseCard] handleStatusChange вызван: index=${index}, completed=${completed}`);
     onStatusChange(index, completed);
   };
 

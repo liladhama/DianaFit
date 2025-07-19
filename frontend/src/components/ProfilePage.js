@@ -406,16 +406,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
           50% { transform: scale(1.05); }
         }
         
-        @keyframes slideUp {
-          from { 
-            opacity: 0; 
-            transform: translateY(30px); 
-          }
-          to { 
-            opacity: 1; 
-            transform: translateY(0); 
-          }
-        }
+        /* slideUp keyframes теперь в animations.css */
       `}</style>
 
       {/* Кнопка назад */}
@@ -454,18 +445,21 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
       </button>
 
       {/* Круглая фотография с элегантным обрамлением */}
-      <div style={{
-        width: 120,
-        height: 120,
-        borderRadius: '50%',
-        background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 100%)',
-        padding: 4,
-        marginBottom: 16,
-        marginTop: 16,
-        animation: 'slideUp 0.8s ease-out',
-        zIndex: 10,
-        position: 'relative'
-      }}>
+      <div
+        className="slide-up-appear"
+        style={{
+          width: 120,
+          height: 120,
+          borderRadius: '50%',
+          background: 'linear-gradient(135deg, rgba(255,255,255,0.4) 0%, rgba(255,255,255,0.1) 100%)',
+          padding: 4,
+          marginBottom: 16,
+          marginTop: 16,
+          zIndex: 10,
+          position: 'relative'
+        }}
+      >
+import "../styles/animations.css";
         <div style={{
           width: '100%',
           height: '100%',
