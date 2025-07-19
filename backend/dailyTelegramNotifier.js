@@ -105,7 +105,7 @@ async function sendDailyNotifications() {
       message += `*Доброе утро!* ☀️\n`;
       message += `---\n`;
       // Тренировка
-      message += `*### Тренировка:*`;
+      message += `*Тренировка:*`;
       if (user.todayWorkout) {
         message += ` _${user.todayWorkout}_\n`;
         if (user.workoutExercises && user.workoutExercises.length > 0) {
@@ -119,10 +119,10 @@ async function sendDailyNotifications() {
       }
       message += `\n---`;
       // Калории
-      message += `\n*### Калорийность:* _${user.calories > 0 ? round10(user.calories) : 'не указано'} ккал_`;
+      message += `\n*Калорийность:* _${user.calories > 0 ? round10(user.calories) : 'не указано'} ккал_`;
       message += `\n---`;
       // План питания
-      message += `\n*### План питания на сегодня:*`;
+      message += `\n*План питания на сегодня:*`;
       if (user.calories > 0) {
         const portions = [
           { type: 'Завтрак', percent: 0.25 },
