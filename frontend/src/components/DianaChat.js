@@ -3,6 +3,20 @@ import dianaIcon from '../assets/icons/diana.png';
 import { API_URL } from '../config/api';
 
 const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment }) => {
+  // Блокировка прокрутки body при открытии чата
+  useEffect(() => {
+    // Сохраняем текущую позицию скролла
+    const scrollY = window.scrollY;
+    const originalOverflow = document.body.style.overflow;
+    // Сброс скролла и блокировка прокрутки
+    window.scrollTo(0, 0);
+    document.body.style.overflow = 'hidden';
+    return () => {
+      // Восстанавливаем прокрутку и позицию
+      document.body.style.overflow = originalOverflow;
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
   const [messages, setMessages] = useState([
     {
       id: 1,
