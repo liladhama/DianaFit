@@ -1895,21 +1895,7 @@ function App() {
       ) : showQuiz ? (
         <StoryQuiz onFinish={handleQuizFinish} />
       ) : isLoadingUserData ? (
-        <div style={{
-          height: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'linear-gradient(180deg, rgba(200,225,255,0.92) 0%, rgba(200,225,255,0.98) 100%)'
-        }}>
-          <div style={{
-            fontSize: 18,
-            color: '#333',
-            textAlign: 'center'
-          }}>
-            Загрузка данных...
-          </div>
-        </div>
+        <SplashScreen />
       ) : (
         <StoryQuiz onFinish={handleQuizFinish} />
       )}
