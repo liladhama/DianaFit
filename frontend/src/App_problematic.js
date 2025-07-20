@@ -8,8 +8,8 @@ import PaymentPage from './components/PaymentPage';
 import TestWeek from './components/TestWeek';
 import VideoTest from './components/VideoTest';
 import AITestPage from './components/AITestPage';
-import { API_URL } from './config/api';
 import DianaNotification from './components/DianaNotification';
+import { API_URL } from './config/api';
 
 // 🚨 ГЛОБАЛЬНЫЙ ПЕРЕХВАТЧИК ВСЕХ FETCH-ЗАПРОСОВ ДЛЯ ОТЛАДКИ
 const originalFetch = window.fetch;
@@ -110,9 +110,15 @@ const checkBackendHealth = async () => {
 };
 
 function App() {
-  // --- Состояния ---
-  const [dianaNotification, setDianaNotification] = useState(null); // { type, text, aiAnalysis }
-  const [showDianaNotification, setShowDianaNotification] = useState(false);
+  // Обработчик перехода по кнопке 'Благодарю!'
+  useEffect(() => {
+    const handler = () => {
+      setShowDianaNotification(false);
+      setShowTodayBlock(true);
+    };
+    window.addEventListener('goToTodayBlock', handler);
+    return () => window.removeEventListener('goToTodayBlock', handler);
+  }, []);
   const [showSplash, setShowSplash] = useState(true);
   const [programId, setProgramId] = useState(null);
   const [answers, setAnswers] = useState(null);
@@ -128,124 +134,15 @@ function App() {
   const [todayDay, setTodayDay] = useState(null);
   const [isPremium, setIsPremium] = useState(false);
   const [isPaymentShown, setIsPaymentShown] = useState(false);
+  // --- Новый стейт для Telegram userId ---
   const [tgUserId, setTgUserId] = useState(null);
   const [isLoadingUserData, setIsLoadingUserData] = useState(true); // Новый флаг загрузки пользователя
   const [weekData, setWeekData] = useState(null);
   const [showQuiz, setShowQuiz] = useState(false); // Новый стейт для показа квиза
   const [weekDataError, setWeekDataError] = useState(null); // Стейт для ошибки загрузки программы
-
-  // --- Логика показа уведомлений Дианы по дням недели ---
-  useEffect(() => {
-    if (!weekData || !Array.isArray(weekData.days) || !todayDay || !tgUserId) return;
-    // Получаем первый день тренировок (начало цикла)
-    const firstDayStr = weekData.days[0]?.date;
-    if (!firstDayStr) return;
-    const todayStr = todayDay.date;
-    // Считаем номер дня с начала программы (0-based)
-    const dayDiff = Math.floor((new Date(todayStr) - new Date(firstDayStr)) / (1000*60*60*24));
-    const weekDay = (dayDiff % 7) + 1; // 1...7
-
-    // Проверяем, было ли уже показано уведомление сегодня (через Firestore)
-    console.log('🔔 Проверяем статус уведомления для:', { userId: tgUserId, date: todayStr, weekDay });
-    fetch(`${API_URL}/api/diana-notification-status?userId=${tgUserId}&date=${todayStr}&dayOfWeek=${weekDay}`)
-      .then(async res => {
-        const contentType = res.headers.get('content-type') || '';
-        if (!contentType.includes('application/json')) {
-          const text = await res.text();
-          console.error('Ожидался JSON, получен:', contentType, '\nПервые 500 символов ответа:', text.substring(0, 500));
-          return null;
-        }
-        return res.json();
-      })
-      .then(async (data) => {
-        console.log('🔔 Ответ от сервера о статусе уведомления:', data);
-        if (!data) return;
-        if (data && data.alreadyShown) {
-          console.log('🔔 Уведомление уже показано сегодня, пропускаем');
-          return; // Уже показано
-        }
-
-        // День 1 недели — мотивационное приветствие
-        if (weekDay === 1) {
-          console.log('🔔 Показываем приветствие для 1-го дня недели');
-          setDianaNotification({
-            type: 'greeting'
-          });
-          setShowDianaNotification(true);
-        }
-        // День 7 недели — анализ ИИ
-        else if (weekDay === 7) {
-          // Получаем анализ ИИ с бэкенда
-          try {
-            const aiRes = await fetch(`${API_URL}/api/openai-diana-analyze?userId=${tgUserId}`);
-            const aiContentType = aiRes.headers.get('content-type') || '';
-            let aiData = {};
-            if (aiContentType.includes('application/json')) {
-              aiData = await aiRes.json();
-            } else {
-              const aiText = await aiRes.text();
-              console.error('Ожидался JSON от openai-diana-analyze, получен:', aiContentType, '\nПервые 500 символов ответа:', aiText.substring(0, 500));
-              aiData = { analysis: 'Ошибка получения анализа ИИ.' };
-            }
-            setDianaNotification({
-              type: 'ai',
-              text: 'Анализ недели от Дианы:',
-              aiAnalysis: aiData?.analysis || 'Нет данных анализа.'
-            });
-            setShowDianaNotification(true);
-          } catch (err) {
-            setDianaNotification({
-              type: 'ai',
-              text: 'Анализ недели от Дианы:',
-              aiAnalysis: 'Ошибка получения анализа ИИ.'
-            });
-            setShowDianaNotification(true);
-          }
-        }
-        // Дни 2-6 — мотивация при пропусках
-        else if (weekDay >= 2 && weekDay <= 6) {
-          // Находим вчерашний день
-          const yesterday = weekData.days.find(d => d.date === new Date(new Date(todayStr).getTime() - 86400000).toISOString().slice(0,10));
-          if (yesterday && (!yesterday.completedWorkout || !yesterday.completedMeals)) {
-            setDianaNotification({
-              type: 'motivation',
-              text: 'Вчера были пропуски. Диана советует скорректировать план или попробовать другую диету. Не сдавайтесь!'
-            });
-            setShowDianaNotification(true);
-          }
-        }
-      })
-      .catch(err => {
-        console.error('Ошибка при получении статуса уведомления Дианы:', err);
-      });
-  }, [weekData, todayDay, tgUserId]);
-
-  // --- Сохраняем факт показа уведомления в Firestore ---
-  useEffect(() => {
-    if (showDianaNotification && dianaNotification && todayDay && tgUserId && weekData && Array.isArray(weekData.days)) {
-      const firstDayStr = weekData.days[0]?.date;
-      const todayStr = todayDay.date;
-      const dayDiff = Math.floor((new Date(todayStr) - new Date(firstDayStr)) / (1000*60*60*24));
-      const weekDay = (dayDiff % 7) + 1;
-      
-      console.log('🔔 Отмечаем уведомление как показанное:', { userId: tgUserId, date: todayDay.date, dayOfWeek: weekDay });
-      fetch(`${API_URL}/api/diana-notification-mark-shown`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: tgUserId, date: todayDay.date, dayOfWeek: weekDay })
-      })
-      .then(res => {
-        console.log('🔔 Результат отметки показа:', res.status);
-        return res.json();
-      })
-      .then(data => {
-        console.log('🔔 Ответ сервера на отметку показа:', data);
-      })
-      .catch(err => {
-        console.error('🔔 Ошибка при отметке показа:', err);
-      });
-    }
-  }, [showDianaNotification, dianaNotification, todayDay, tgUserId, weekData]);
+  const [showDianaNotification, setShowDianaNotification] = useState(false);
+  const [progressData, setProgressData] = useState({}); // для передачи в модалку
+  const [quizAnswers, setQuizAnswers] = useState({}); // для передачи в модалку
 
   // Получаем Telegram userId при инициализации
   useEffect(() => {
@@ -295,96 +192,24 @@ function App() {
             console.log('❌ Нет квиза, показываем форму квиза (даже если есть программа)');
             setShowQuiz(true);
             setIsLoadingUserData(false);
-            setShowSplash(false);
-            return;
-          }
-          
-          setWeekData(weeklyProgram);
-          setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
-          setShowTodayBlock(true);
-          setIsLoadingUserData(false);
-          setShowSplash(false);
-          return;
-        } else if (weeklyRes.status === 410) {
-          console.log('⏰ Программа устарела, пересоздаем...');
-          // Программа устарела — пересоздаём
-          const regenRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}/regenerate`, { method: 'POST' });
-          if (regenRes.ok) {
-            const newProgram = await regenRes.json();
-            console.log('✅ Новая программа создана:', !!newProgram.days);
-            
-            // Проверяем квиз перед показом TodayBlock
-            if (!quizData) {
-              console.log('❌ Нет квиза, показываем форму квиза (даже после пересоздания программы)');
-              setShowQuiz(true);
-              setIsLoadingUserData(false);
-              setShowSplash(false);
-              return;
-            }
-            
-            setWeekData(newProgram);
-            setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
-            setShowTodayBlock(true);
-            setIsLoadingUserData(false);
-            setShowSplash(false);
-            return;
-          }
-        } else if (weeklyRes.status === 404) {
-          if (!quizData) {
-            console.log('❌ Нет квиза, показываем форму квиза');
-            // Нет квиза — показываем форму квиза, не создаём программу!
-            setShowQuiz(true);
-            setIsLoadingUserData(false);
-            setShowSplash(false);
-            return;
-          }
-          console.log('🔄 Создаем новую программу на основе квиза');
-          // Есть квиз — создаём программу
-          const createRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ ...quizData, userId: tgUserId })
-          });
-          if (createRes.ok) {
-            // После создания ждем и пробуем получить программу с задержкой и retry
-            for (let i = 0; i < retries; i++) {
-              await new Promise(res => setTimeout(res, delay));
-              let retryRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}`);
-              if (retryRes.ok) {
-                const programData = await retryRes.json();
-                console.log('✅ Программа создана и загружена:', !!programData.days);
-                
-                // Проверяем квиз перед показом TodayBlock
-                if (!quizData) {
-                  console.log('❌ Нет квиза, показываем форму квиза (даже после создания программы)');
-                  setShowQuiz(true);
-                  setIsLoadingUserData(false);
-                  setShowSplash(false);
-                  return;
-                }
-                
-                setWeekData(programData);
-                setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
-                setShowTodayBlock(true);
-                setIsLoadingUserData(false);
-                setShowSplash(false);
-                return;
-              }
-            }
-          }
-        }
-        // Если не удалось получить/создать программу — fallback
-        console.log('❌ Не удалось загрузить weekData, fallback режим');
-        setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
-        setShowTodayBlock(false);
-        setIsLoadingUserData(false);
-        setShowSplash(false);
-      };
-      fetchWithRetry();
-    } else {
-      console.log('⏳ Условия не выполнены для загрузки данных:', { showSplash, tgUserId });
-    }
-  }, [showSplash, tgUserId]);
+
+
+// === Глобальные вычисления для показа уведомления Дианы ===
+const programWeekDay = (() => {
+  if (!weekData || !Array.isArray(weekData.days) || weekData.days.length === 0) return 1;
+  const today = new Date().toISOString().slice(0, 10);
+  const programStartDate = weekData.days[0].date;
+  const startDate = new Date(programStartDate);
+  const currentDate = new Date(today);
+  const diffTime = currentDate.getTime() - startDate.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const weekDay = (diffDays % 7) + 1;
+  return weekDay;
+})();
+
+
+// === Глобальные вычисления для показа уведомления Дианы ===
+// === Глобальные вычисления для показа уведомления Дианы ===
 
   // Обновляем todayDay при изменении weekData
   useEffect(() => {
@@ -395,6 +220,7 @@ function App() {
         todayStr,
         foundDay: !!foundDay,
         foundDayWorkout: foundDay?.workout?.title,
+        weekDataDaysLength: weekData.days.length,
         allDates: weekData.days.map(d => d.date)
       });
       setTodayDay(foundDay);
@@ -404,6 +230,213 @@ function App() {
       setTodayDay(null);
     }
   }, [weekData, showTodayBlock]);
+
+  // Автоматический показ уведомления Дианы в нужные дни
+  useEffect(() => {
+    console.log('🧪 ТЕСТ: useEffect для Diana уведомлений запущен', {
+      weekData: !!weekData,
+      weekDataDaysExists: !!weekData?.days,
+      weekDataDaysLength: weekData?.days?.length,
+      isWeekDataDaysArray: Array.isArray(weekData?.days),
+      tgUserId: !!tgUserId
+    });
+    
+    if (!weekData || !Array.isArray(weekData.days) || weekData.days.length === 0 || !tgUserId) {
+      console.log('🧪 ТЕСТ: Выходим из useEffect - не все данные готовы');
+      return;
+    }
+    
+    console.log('🧪 ТЕСТ: Все данные готовы, продолжаем...');
+    
+    // Функция для расчета дня недели программы (1-7)
+    const calculateProgramWeekDay = () => {
+      console.log('📅 calculateProgramWeekDay вызвана');
+      console.log('📅 weekData:', weekData);
+      console.log('📅 weekData.days:', weekData?.days);
+      
+      if (!weekData || !Array.isArray(weekData.days) || weekData.days.length === 0) return 1;
+      
+      const today = new Date().toISOString().slice(0, 10);
+      const programStartDate = weekData.days[0].date;
+      const startDate = new Date(programStartDate);
+      const currentDate = new Date(today);
+      
+      const diffTime = currentDate.getTime() - startDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      const dayOfWeek = (diffDays % 7) + 1;
+      console.log('📅 Расчет дня программы:', {today, programStartDate, diffDays, dayOfWeek});
+      
+      return dayOfWeek;
+      
+      /* ОРИГИНАЛЬНАЯ ЛОГИКА (временно отключена):
+      const today = new Date().toISOString().slice(0, 10);
+      const programStartDate = weekData.days[0].date;
+      const startDate = new Date(programStartDate);
+      const currentDate = new Date(today);
+      
+      const diffTime = currentDate.getTime() - startDate.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      return (diffDays % 7) + 1;
+      */
+    };
+
+    // Функция для проверки невыполненных заданий вчера
+    const checkUncompletedTasksYesterday = () => {
+      console.log('📊 checkUncompletedTasksYesterday вызвана');
+      
+      if (!weekData || !Array.isArray(weekData.days) || weekData.days.length === 0) {
+        console.log('📊 weekData недоступен, возвращаем false');
+        return false;
+      }
+      
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().slice(0, 10);
+      
+      /* ОРИГИНАЛЬНАЯ ЛОГИКА (временно отключена):
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().slice(0, 10);
+      
+      const yesterdayData = weekData.days.find(d => d.date === yesterdayStr);
+      if (!yesterdayData) return false;
+      
+      const hasUncompletedWorkout = yesterdayData.workout && 
+        Array.isArray(yesterdayData.completedExercises) &&
+        yesterdayData.completedExercises.some(completed => completed === false);
+      
+      const hasUncompletedMeals = Array.isArray(yesterdayData.completedMeals) &&
+        yesterdayData.completedMeals.some(completed => completed === false);
+      
+      return hasUncompletedWorkout || hasUncompletedMeals;
+      */
+    };
+
+    // Проверяем, нужно ли показать уведомление сегодня
+    const programWeekDay = calculateProgramWeekDay();
+    const hasUncompletedTasks = checkUncompletedTasksYesterday();
+    
+    // Проверяем на сервере, показывали ли уведомление сегодня
+    const checkAndShowDianaNotification = async () => {
+      const today = new Date().toISOString().slice(0, 10);
+      
+      console.log('📅 Входим в checkAndShowDianaNotification', {
+        programWeekDay,
+        hasUncompletedTasks,
+        today,
+        weekDataExists: !!weekData,
+        tgUserIdExists: !!tgUserId
+      });
+      
+      let shouldShowDiana = false;
+      if (programWeekDay === 1) {
+        // День 1 - всегда показываем напутствие
+        console.log('📅 Это 1-й день - должны показать напутствие!');
+        shouldShowDiana = true;
+      } else if (programWeekDay === 7) {
+        // День 7 - всегда показываем AI анализ недели
+        console.log('📅 Это 7-й день - должны показать AI анализ!');
+        shouldShowDiana = true;
+      } else if (programWeekDay >= 2 && programWeekDay <= 6 && hasUncompletedTasks) {
+        // Дни 2-6 - показываем только если есть невыполненные задания
+        console.log('📅 Это дни 2-6 с невыполненными заданиями!');
+        shouldShowDiana = true;
+      } else {
+        console.log('📅 Условия для показа не выполнены', {
+          programWeekDay,
+          isDays2to6: programWeekDay >= 2 && programWeekDay <= 6,
+          hasUncompletedTasks
+        });
+      }
+      
+      console.log('📅 shouldShowDiana =', shouldShowDiana);
+      
+      if (!shouldShowDiana) {
+        console.log('📅 НЕ показываем уведомление - условия не выполнены');
+        return;
+      }
+
+      // Проверяем, не показывалось ли уведомление для этого дня сегодня
+      try {
+        const response = await fetch(`${API_URL}/api/diana-notification-status?userId=${tgUserId}&dayOfWeek=${programWeekDay}`);
+        const data = await response.json();
+        
+        if (data.alreadyShown) {
+          console.log(`📅 Уведомление для дня ${programWeekDay} уже показывалось сегодня`);
+          return;
+        }
+        
+        console.log(`📅 Показываем уведомление для дня ${programWeekDay}`, {programWeekDay, hasUncompletedTasks, shouldShowDiana});
+        setShowDianaNotification(true);
+        
+        // Отмечаем как показанное
+        await fetch(`${API_URL}/api/diana-notification-mark-shown`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userId: tgUserId, dayOfWeek: programWeekDay })
+        });
+        
+      } catch (error) {
+        console.error('📅 Ошибка при проверке статуса уведомления:', error);
+        // В случае ошибки показываем уведомление (лучше показать лишний раз, чем не показать вообще)
+        console.log('📅 Показываем уведомление из-за ошибки проверки статуса');
+        setShowDianaNotification(true);
+      }
+
+      /* ОРИГИНАЛЬНАЯ ЛОГИКА (временно отключена):
+      try {
+        // Проверяем на сервере, показывали ли уведомление сегодня
+        const checkResponse = await fetch(`${API_URL}/api/diana-notification-status`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            userId: tgUserId, 
+            date: today,
+            dayOfWeek: programWeekDay 
+          })
+        });
+        
+        if (checkResponse.ok) {
+          const checkData = await checkResponse.json();
+          
+          console.log('🔔 Проверка показа Дианы на сервере:', {
+            programWeekDay,
+            hasUncompletedTasks,
+            shouldShowDiana,
+            alreadyShownToday: checkData.alreadyShown,
+            today
+          });
+
+          // Показываем уведомление, если нужно и еще не показывали сегодня
+          if (!checkData.alreadyShown) {
+            console.log('✅ Показываем уведомление Дианы');
+            setShowDianaNotification(true);
+            
+            // Отмечаем на сервере, что показали уведомление сегодня
+            await fetch(`${API_URL}/api/diana-notification-mark-shown`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ 
+                userId: tgUserId, 
+                date: today,
+                dayOfWeek: programWeekDay 
+              })
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Ошибка проверки статуса уведомления Дианы:', error);
+        // В случае ошибки показываем уведомление (лучше показать лишний раз, чем не показать вообще)
+        console.log('⚠️ Показываем уведомление Дианы из-за ошибки сервера');
+        setShowDianaNotification(true);
+      }
+      */
+    };
+
+    checkAndShowDianaNotification();
+  }, [weekData, tgUserId]);
 
   // Функция активации премиум доступа (для тестирования)
   const activatePremium = async () => {
@@ -536,7 +569,7 @@ function App() {
     return () => clearTimeout(timer);
   }, []);
 
-  // УДАЛЕН СТАРЫЙ useEffect - теперь используется только новая логика с Telegram userId и weekData
+
 
   // Функция для получения упражнений для дня с привязкой к видео
   function getExercisesForDay(location, workoutNumber, level) {
@@ -1630,25 +1663,6 @@ function App() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', width: '100vw', background: '#fff' }}>
-      {/* --- Фирменное уведомление Дианы --- */}
-      {showDianaNotification && (
-        <DianaNotification
-          isVisible={showDianaNotification}
-          userId={tgUserId}
-          dayOfWeek={(() => {
-            if (!todayDay || !weekData || !Array.isArray(weekData.days)) return null;
-            const firstDayStr = weekData.days[0]?.date;
-            const todayStr = todayDay.date;
-            const dayDiff = Math.floor((new Date(todayStr) - new Date(firstDayStr)) / (1000*60*60*24));
-            return (dayDiff % 7) + 1;
-          })()}
-          hasUncompletedTasks={dianaNotification && dianaNotification.type === 'motivation'}
-          onClose={() => {
-            setShowDianaNotification(false);
-            setShowTodayBlock(true);
-          }}
-        />
-      )}
       {showSplash ? (
         <SplashScreen />
       ) : showVideoTest ? (
@@ -1857,21 +1871,6 @@ function App() {
           onPaymentSuccess={activatePremium}
         />
       ) : showTodayBlock && todayDay ? (
-        (() => {
-          console.log('🎯 App.js РЕНДЕР: Передаем данные в TodayBlock:', {
-            todayDay: !!todayDay,
-            todayDayIsNull: todayDay === null,
-            todayDayType: typeof todayDay,
-            todayDayWorkout: todayDay?.workout?.title,
-            todayDayIsWorkoutDay: todayDay?.isWorkoutDay,
-            todayDayExercises: todayDay?.workout?.exercises?.length,
-            todayDayDate: todayDay?.date,
-            answers: !!answers,
-            programId,
-            fullTodayDay: todayDay
-          });
-          return null;
-        })(),
         <>
           {weekDataError && (
             <div style={{color:'red',textAlign:'center',marginTop:20}}>{weekDataError}</div>
@@ -1895,25 +1894,21 @@ function App() {
       ) : showQuiz ? (
         <StoryQuiz onFinish={handleQuizFinish} />
       ) : isLoadingUserData ? (
-        <div style={{
-          height: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'linear-gradient(180deg, rgba(200,225,255,0.92) 0%, rgba(200,225,255,0.98) 100%)'
-        }}>
-          <div style={{
-            fontSize: 18,
-            color: '#333',
-            textAlign: 'center'
-          }}>
-            Загрузка данных...
-          </div>
-        </div>
+        <SplashScreen />
       ) : (
         <StoryQuiz onFinish={handleQuizFinish} />
       )}
-    </div>
+
+
+    {/* DianaNotification — модалка рекомендаций Дианы */}
+    <DianaNotification
+      isVisible={showDianaNotification}
+      onClose={() => setShowDianaNotification(false)}
+      userId={tgUserId}
+      dayOfWeek={programWeekDay}
+      hasUncompletedTasks={hasUncompletedTasks}
+    />
+  </div>
   );
 }
 

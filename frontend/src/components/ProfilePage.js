@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import dietUtils from '../utils/dietUtils';
 import QuizSettings from './QuizSettings.js';
-import DianaNotification from './DianaNotification.js';
 import { API_URL } from '../config/api';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import "../styles/animations.css";
@@ -19,7 +18,6 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
   const [quizAnswers, setQuizAnswers] = useState(answers || {});
   const [nutritionInfo, setNutritionInfo] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
-  const [showDianaNotification, setShowDianaNotification] = useState(false);
   const [subscriptionInfo, setSubscriptionInfo] = useState(null);
 
   // Состояние для диеты и коэффициентов
@@ -334,6 +332,12 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
     }
   };
 
+  // Получаем totalDays из истории (или длину weeklyHistory)
+  // const totalDays = progressData.details?.totalDays || (progressData.weeklyHistory?.length ?? 0);
+  const totalDays = 7; // ТЕСТ: имитируем 7-й день для проверки модалки Дианы
+  const dayOfWeek = ((totalDays - 1) % 7) + 1;
+
+
   return (
     <div style={{
       width: '100%',
@@ -379,7 +383,8 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
               animationName: 'float',
               animationIterationCount: 'infinite',
               animationTimingFunction: 'linear',
-              willChange: 'transform'
+              willChange: 'transform',
+              transform: 'translateY(110vh)'
             }}
           />
         ))}
@@ -974,14 +979,6 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
         )}
       </div>
 
-      {/* Уведомления от Дианы */}
-      <DianaNotification 
-        isVisible={showDianaNotification}
-        onClose={() => setShowDianaNotification(false)}
-        progressData={progressData}
-        userAnswers={quizAnswers}
-      />
-
       {/* Кнопка поддержки */}
       <button
         style={{
@@ -1002,6 +999,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
       >
         🛟 Обратиться в поддержку
       </button>
+
     </div>
   );
 }
