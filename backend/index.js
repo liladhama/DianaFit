@@ -19,8 +19,14 @@ import { readUserData, writeUserData } from './userDataStorage.js';
 import './dailyTelegramNotifier.js';
 import caloriesApi from './caloriesApi.js';
 import notificationSettingsApi from './notificationSettingsApi.js';
+import OpenAI from 'openai';
 
 dotenv.config();
+
+// Инициализация OpenAI клиента
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 console.log('🚀 Старт приложения...');
 
@@ -34,16 +40,10 @@ console.log('🔍 subscriptionManager.default:', subscriptionManager.default);
 
 // Разрешить CORS для всех источников (для локальной отладки и Telegram)
 app.use(cors({
-  origin: [
-    'https://diana-fit.vercel.app',
-    'https://dianafit.fly.dev',
-    'http://localhost:3000',
-    'http://127.0.0.1:3000',
-    'http://localhost:3001',
-    'http://127.0.0.1:3001',
-    '*'
-  ],
-  credentials: true
+  origin: true, // Разрешить все origins
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
@@ -1715,6 +1715,100 @@ app.get('/api/admin/stats', async (req, res) => {
 });
 
 // === ЭНДПОИНТЫ ДЛЯ УВЕДОМЛЕНИЙ ДИАНЫ ===
+
+// Эндпоинт для AI анализа недели пользователя (для 7-го дня)
+app.post('/api/openai-diana-analyze', async (req, res) => {
+  try {
+    const { userId } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'Требуется параметр userId' });
+    }
+    
+    console.log(`🤖 Запрос AI анализа недели для пользователя ${userId}`);
+    
+    // Проверяем, не анализировали ли мы уже сегодня
+    const today = new Date().toISOString().split('T')[0];
+    const admin = await import('firebase-admin');
+    const db = admin.default.firestore();
+    const userRef = db.collection('Dianafit_users').doc(userId);
+    
+    const userDoc = await userRef.get();
+    if (userDoc.exists) {
+      const lastAnalysisDate = userDoc.data()?.lastWeeklyAnalysis;
+      if (lastAnalysisDate === today) {
+        console.log(`🤖 AI анализ уже выполнен сегодня (${today}), возвращаем 429`);
+        return res.status(429).json({ alreadyShown: true });
+      }
+    }
+    
+    // Загружаем данные пользователя для анализа
+    const userData = await readUserData(userId);
+    
+    if (!userData || !userData.dailyProgress || Object.keys(userData.dailyProgress).length === 0) {
+      console.log(`🤖 Недостаточно данных для анализа пользователя ${userId}. DailyProgress:`, userData?.dailyProgress ? Object.keys(userData.dailyProgress).length : 0);
+      return res.json({ 
+        message: 'Поздравляю с завершением недели! Пока мало данных для подробного анализа, но ты уже на правильном пути! 🎉' 
+      });
+    }
+    
+    // Формируем промпт для анализа
+    const dianaPrompt = `Ты — фитнес-тренер Диана из приложения для похудения. Проанализируй прошедшую неделю пользователя: тренировки, питание, шаги, причины пропусков. Делай анализ для себя, но пользователю выдай только выводы и рекомендации — кратко, без перечислений и подробной статистики.
+
+Обращайся к пользователю как "друг" или "подруга" в зависимости от пола из поля history.quiz.sex (если male — "друг", если female — "подруга"). Обращайся напрямую, избегай местоимений "вы", "мы", "пользователь". Говори от первого лица — как Диана. Не используй нейтральные и безличные фразы, не пиши от имени команды или приложения. Стиль — спокойный, живой, поддерживающий.
+
+Не пиши подробные отчёты. Не указывай конкретные даты, количество пропущенных приёмов пищи, шагов, тренировок и т.п. Просто делай вежливые, логичные выводы, например: «заметила, что не все тренировки удалось выполнить», «возможно, неделя была сложной», «можно немного снизить нагрузку». То же самое — по питанию и шагам. Только выводы и рекомендации, никаких чисел.
+
+Обязательно:
+- Напомни, что тренировки — это видеоуроки, которые сам выбирает (3–5 раз в неделю);
+- Питание — по рассчитанному калоражу, отмечается вручную;
+- Цель по шагам — 10 000 шагов в день (примерно 1,5 часа ходьбы);
+- Дай рекомендации по активности: прогулки, лестницы, больше движения в течение дня;
+- Если были сложности — предложи снизить количество тренировок;
+- В конце обязательно напомни, что сегодня последний день перед новой неделей, когда можно изменить настройки: количество тренировок и диету.
+
+Не допускай орфографических и смысловых ошибок. Не используй "с уважением", "до встречи", "спасибо за старания", "повери", "вы ощущаетесь" и т.п. Пиши цельно, без "продолжение следует".
+
+Твоя цель — помочь человеку подвести итоги недели, сделать выводы и адаптировать план на следующую неделю, чтобы продолжать путь без перегрузки и с максимальным комфортом.
+
+Данные пользователя за неделю:
+${JSON.stringify(userData, null, 2)}`;
+
+    // Вызов OpenAI API
+    const completion = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "system",
+          content: "Ты — персональный фитнес-тренер Диана. Анализируй данные пользователя за неделю и давай персональные рекомендации в дружелюбном тоне."
+        },
+        {
+          role: "user",
+          content: dianaPrompt
+        }
+      ],
+      max_tokens: 1000,
+      temperature: 0.7
+    });
+    
+    const analysisMessage = completion.choices[0].message.content;
+    
+    // Отмечаем, что анализ выполнен сегодня
+    await userRef.set({
+      lastWeeklyAnalysis: today
+    }, { merge: true });
+    
+    console.log(`🤖 AI анализ недели завершен для пользователя ${userId}`);
+    res.json({ message: analysisMessage });
+    
+  } catch (error) {
+    console.error('🤖 Ошибка AI анализа недели:', error);
+    res.status(500).json({ 
+      error: 'Ошибка анализа недели',
+      message: 'Поздравляю с завершением недели! К сожалению, не удалось получить подробный анализ, но ты точно большая молодец! 🎉'
+    });
+  }
+});
 
 // Проверка статуса уведомления (нужно ли показать)
 app.get('/api/diana-notification-status', async (req, res) => {

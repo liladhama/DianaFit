@@ -142,8 +142,8 @@ export async function writeUserData(userId, data) {
   try {
     const collection = getUsersCollection();
     console.log(`[Firestore][writeUserData] Сохраняем в коллекцию: ${collection}/${userId}`);
-    await db.collection(collection).doc(userId).set(saveData);
-    console.log(`[Firestore][writeUserData] ✅ Данные успешно сохранены в Firestore: ${collection}/${userId}`);
+    await db.collection(collection).doc(userId).set(saveData, { merge: true });
+    console.log(`[Firestore][writeUserData] ✅ Данные успешно сохранены в Firestore с merge: ${collection}/${userId}`);
   } catch (e) {
     console.error(`[Firestore][writeUserData] ❌ Ошибка записи в Firestore:`, e);
     if (e && e.stack) console.error(e.stack);
