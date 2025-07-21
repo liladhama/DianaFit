@@ -5,7 +5,7 @@ import QuizSettings from './QuizSettings.js';
 import { API_URL } from '../config/api';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import "../styles/animations.css";
-export default function ProfilePage({ onClose, unlocked, isPremium, activatePremium, answers, onEditQuiz, onRestart }) {
+export default function ProfilePage({ onClose, unlocked, isPremium, activatePremium, answers, onEditQuiz, onRestart, userAvatar }) {
   // --- СТЕЙТЫ ---
   const [nutritionInfo, setNutritionInfo] = useState(null);
   const [quizAnswers, setQuizAnswers] = useState({});
@@ -519,13 +519,18 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
           position: 'relative'
         }}>
           <img 
-            src={quizAnswers.photo_url} 
-            alt="profile" 
-            style={{ 
-              width: '100%', 
-              height: '100%', 
+            src={quizAnswers.photo_url || userAvatar}
+            alt="profile"
+            style={{
+              width: '100%',
+              height: '100%',
               objectFit: 'cover'
-            }} 
+            }}
+            onError={e => {
+              if (userAvatar && e.target.src !== userAvatar) {
+                e.target.src = userAvatar;
+              }
+            }}
           />
           {/* Статус онлайн */}
           <div style={{
