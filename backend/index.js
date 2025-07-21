@@ -1398,6 +1398,322 @@ app.get('/api/diana-limits/:userId', async (req, res) => {
   }
 });
 
+// Эндпоинт для админской панели - статистика по квизу
+app.get('/api/admin/stats', async (req, res) => {
+  try {
+    console.log('[ADMIN] Запрос статистики админ панели');
+    
+    // Импортируем необходимые модули для работы с Firestore
+    const { getUsersCollection } = await import('./firestore-config.js');
+    const admin = await import('firebase-admin');
+    const db = admin.default.firestore();
+    const usersCollection = getUsersCollection();
+    
+    // Получаем всех пользователей
+    const snapshot = await db.collection(usersCollection).get();
+    const allUsers = [];
+    
+    snapshot.forEach(doc => {
+      allUsers.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+    
+    console.log(`[ADMIN] Найдено пользователей: ${allUsers.length}`);
+    
+    // Базовая статистика
+    const totalUsers = allUsers.length;
+    
+    // Премиум пользователи - проверяем subscription.premiumExpiresAt
+    let premiumUsers = 0;
+    for (const user of allUsers) {
+      if (user.subscription && user.subscription.premiumExpiresAt) {
+        const expiresAt = new Date(user.subscription.premiumExpiresAt);
+        const now = new Date();
+        if (expiresAt > now) {
+          premiumUsers++;
+          console.log(`[ADMIN] Пользователь ${user.id} премиум до ${expiresAt.toISOString()}`);
+        }
+      }
+    }
+    
+    // Статистика по полу - данные берем из quiz.sex
+    const maleCount = allUsers.filter(user => user.quiz && user.quiz.sex === 'male').length;
+    const femaleCount = allUsers.filter(user => user.quiz && user.quiz.sex === 'female').length;
+    const unknownGenderCount = totalUsers - maleCount - femaleCount;
+    
+    // Статистика по возрасту (в процентах)
+    const ageGroups = {
+      '14-20': 0,
+      '21-30': 0,
+      '31-40': 0,
+      '41-50': 0,
+      '51-60': 0,
+      '61+': 0,
+      'неизвестно': 0
+    };
+    
+    allUsers.forEach(user => {
+      const age = user.quiz ? parseInt(user.quiz.age) : NaN;
+      if (isNaN(age)) {
+        ageGroups['неизвестно']++;
+      } else if (age >= 14 && age <= 20) {
+        ageGroups['14-20']++;
+      } else if (age >= 21 && age <= 30) {
+        ageGroups['21-30']++;
+      } else if (age >= 31 && age <= 40) {
+        ageGroups['31-40']++;
+      } else if (age >= 41 && age <= 50) {
+        ageGroups['41-50']++;
+      } else if (age >= 51 && age <= 60) {
+        ageGroups['51-60']++;
+      } else if (age >= 61) {
+        ageGroups['61+']++;
+      } else {
+        ageGroups['неизвестно']++;
+      }
+    });
+    
+    // Преобразуем в проценты
+    const ageGroupsPercent = {};
+    Object.keys(ageGroups).forEach(group => {
+      ageGroupsPercent[group] = totalUsers > 0 ? Math.round((ageGroups[group] / totalUsers) * 100) : 0;
+    });
+    
+    // Статистика по весу - данные берем из quiz.weight_kg
+    const highWeightCount = allUsers.filter(user => {
+      const weight = user.quiz ? parseInt(user.quiz.weight_kg) : NaN;
+      return !isNaN(weight) && weight >= 90; // считаем большим весом 90+ кг
+    }).length;
+    
+    // Статистика по количеству тренировок в неделю - данные из quiz
+    const workoutsPerWeekStats = {};
+    allUsers.forEach(user => {
+      const workouts = user.quiz ? user.quiz.workouts_per_week : null;
+      const workoutsKey = workouts ? `${workouts} тренировок` : 'неизвестно';
+      workoutsPerWeekStats[workoutsKey] = (workoutsPerWeekStats[workoutsKey] || 0) + 1;
+    });
+    
+    // Статистика по целям похудения - данные из quiz (исправленные значения)
+    const goalStats = {};
+    allUsers.forEach(user => {
+      const goal = user.quiz ? user.quiz.goal : null;
+      let goalText = 'неизвестно';
+      // Исправляем сопоставление целей согласно реальным данным
+      if (goal === 3) goalText = 'Похудеть на 3 кг в месяц';
+      else if (goal === 4) goalText = 'Похудеть на 4 кг в месяц';  
+      else if (goal === 5) goalText = 'Похудеть на 5 кг в месяц';
+      else if (goal === 1) goalText = 'Похудеть немного (1-5 кг)';
+      else if (goal === 2) goalText = 'Похудеть умеренно (5-15 кг)';
+      goalStats[goalText] = (goalStats[goalText] || 0) + 1;
+    });
+    
+    // Статистика по месту тренировок - данные из quiz
+    const gymOrHomeStats = {};
+    allUsers.forEach(user => {
+      const place = user.quiz ? user.quiz.gym_or_home : null;
+      const placeText = place === 'home' ? 'Дома' : 
+                       place === 'gym' ? 'В спортзале' : 
+                       'неизвестно';
+      gymOrHomeStats[placeText] = (gymOrHomeStats[placeText] || 0) + 1;
+    });
+    
+    // Статистика по уровню подготовки - данные из quiz
+    const trainingLevelStats = {};
+    allUsers.forEach(user => {
+      const level = user.quiz ? user.quiz.training_level : null;
+      const levelText = level === 'beginner' ? 'Новичок' : 
+                       level === 'intermediate' ? 'Средний' : 
+                       level === 'advanced' ? 'Продвинутый' : 
+                       'неизвестно';
+      trainingLevelStats[levelText] = (trainingLevelStats[levelText] || 0) + 1;
+    });
+    
+    // Статистика по типу питания - данные из quiz
+    const dietStats = {};
+    allUsers.forEach(user => {
+      const diet = user.quiz ? user.quiz.diet_flags : null;
+      const dietText = diet === 'vegetarian_eggs' ? 'Вегетарианство с яйцом' : 
+                      diet === 'vegetarian_no_eggs' ? 'Вегетарианство (без яиц)' : 
+                      diet === 'meat' ? 'Мясной' : 
+                      diet === 'fish' ? 'Рыбный' : 
+                      diet === 'vegan' ? 'Веганство' : 
+                      'неизвестно';
+      dietStats[dietText] = (dietStats[dietText] || 0) + 1;
+    });
+    
+    // Анализируем выполнение упражнений и питания на основе реальных данных
+    let exerciseCompletionSum = 0;
+    let nutritionCompletionSum = 0;
+    let stepsCompletionSum = 0;
+    let usersWithProgress = 0;
+    let usersWithExerciseData = 0;
+    let usersWithNutritionData = 0;
+    let usersWithStepsData = 0;
+    
+    console.log('[ADMIN] Анализируем прогресс пользователей...');
+    
+    for (const user of allUsers) {
+      let hasAnyProgress = false;
+      
+      // Анализируем данные из dailyProgress
+      if (user.dailyProgress && Object.keys(user.dailyProgress).length > 0) {
+        hasAnyProgress = true;
+        console.log(`[ADMIN] Пользователь ${user.id} имеет dailyProgress:`, Object.keys(user.dailyProgress).length, 'дней');
+        
+        let userExerciseTotal = 0;
+        let userExerciseCompleted = 0;
+        let userNutritionTotal = 0;
+        let userNutritionCompleted = 0;
+        let userStepsTotal = 0;
+        let userStepsCompleted = 0;
+        
+        Object.values(user.dailyProgress).forEach(dayData => {
+          if (dayData.tasks && Array.isArray(dayData.tasks)) {
+            dayData.tasks.forEach(task => {
+              if (task.type === 'workout') {
+                userExerciseTotal++;
+                if (task.done === true) userExerciseCompleted++;
+              } else if (task.type === 'meal') {
+                userNutritionTotal++;
+                if (task.done === true) userNutritionCompleted++;
+              } else if (task.type === 'steps') {
+                userStepsTotal++;
+                if (task.done === true || task.status === 'completed' || 
+                    (task.steps_estimated && task.goal && task.steps_estimated >= task.goal)) {
+                  userStepsCompleted++;
+                }
+              }
+            });
+          }
+        });
+        
+        if (userExerciseTotal > 0) {
+          usersWithExerciseData++;
+          const userExercisePercent = (userExerciseCompleted / userExerciseTotal) * 100;
+          exerciseCompletionSum += userExercisePercent;
+          console.log(`[ADMIN] Пользователь ${user.id} упражнения: ${userExerciseCompleted}/${userExerciseTotal} = ${userExercisePercent.toFixed(1)}%`);
+        }
+        
+        if (userNutritionTotal > 0) {
+          usersWithNutritionData++;
+          const userNutritionPercent = (userNutritionCompleted / userNutritionTotal) * 100;
+          nutritionCompletionSum += userNutritionPercent;
+          console.log(`[ADMIN] Пользователь ${user.id} питание: ${userNutritionCompleted}/${userNutritionTotal} = ${userNutritionPercent.toFixed(1)}%`);
+        }
+        
+        if (userStepsTotal > 0) {
+          usersWithStepsData++;
+          const userStepsPercent = (userStepsCompleted / userStepsTotal) * 100;
+          stepsCompletionSum += userStepsPercent;
+          console.log(`[ADMIN] Пользователь ${user.id} шаги: ${userStepsCompleted}/${userStepsTotal} = ${userStepsPercent.toFixed(1)}%`);
+        }
+      }
+      
+      // Анализируем данные из programData
+      if (user.programData && user.programData.days && Array.isArray(user.programData.days)) {
+        hasAnyProgress = true;
+        console.log(`[ADMIN] Пользователь ${user.id} имеет programData:`, user.programData.days.length, 'дней');
+        
+        let userExerciseTotal = 0;
+        let userExerciseCompleted = 0;
+        let userNutritionTotal = 0;
+        let userNutritionCompleted = 0;
+        let userStepsTotal = 0;
+        let userStepsCompleted = 0;
+        
+        user.programData.days.forEach(day => {
+          // Упражнения
+          if (day.completedExercises && Array.isArray(day.completedExercises)) {
+            day.completedExercises.forEach(completed => {
+              userExerciseTotal++;
+              if (completed === true) userExerciseCompleted++;
+            });
+          }
+          
+          // Питание
+          if (day.completedMealsArr && Array.isArray(day.completedMealsArr)) {
+            day.completedMealsArr.forEach(completed => {
+              userNutritionTotal++;
+              if (completed === true) userNutritionCompleted++;
+            });
+          }
+          
+          // Шаги
+          if (day.dailyStepsGoal && typeof day.dailySteps === 'number') {
+            userStepsTotal++;
+            if (day.dailySteps >= day.dailyStepsGoal) userStepsCompleted++;
+          }
+        });
+        
+        if (userExerciseTotal > 0 && usersWithExerciseData === 0) {
+          usersWithExerciseData++;
+          const userExercisePercent = (userExerciseCompleted / userExerciseTotal) * 100;
+          exerciseCompletionSum += userExercisePercent;
+          console.log(`[ADMIN] Пользователь ${user.id} упражнения (programData): ${userExerciseCompleted}/${userExerciseTotal} = ${userExercisePercent.toFixed(1)}%`);
+        }
+        
+        if (userNutritionTotal > 0 && usersWithNutritionData === 0) {
+          usersWithNutritionData++;
+          const userNutritionPercent = (userNutritionCompleted / userNutritionTotal) * 100;
+          nutritionCompletionSum += userNutritionPercent;
+          console.log(`[ADMIN] Пользователь ${user.id} питание (programData): ${userNutritionCompleted}/${userNutritionTotal} = ${userNutritionPercent.toFixed(1)}%`);
+        }
+        
+        if (userStepsTotal > 0 && usersWithStepsData === 0) {
+          usersWithStepsData++;
+          const userStepsPercent = (userStepsCompleted / userStepsTotal) * 100;
+          stepsCompletionSum += userStepsPercent;
+          console.log(`[ADMIN] Пользователь ${user.id} шаги (programData): ${userStepsCompleted}/${userStepsTotal} = ${userStepsPercent.toFixed(1)}%`);
+        }
+      }
+      
+      if (hasAnyProgress) {
+        usersWithProgress++;
+      }
+    }
+    
+    // Вычисляем средние проценты выполнения
+    const avgExerciseCompletion = usersWithExerciseData > 0 ? Math.round(exerciseCompletionSum / usersWithExerciseData) : 0;
+    const avgNutritionCompletion = usersWithNutritionData > 0 ? Math.round(nutritionCompletionSum / usersWithNutritionData) : 0;
+    const avgStepsCompletion = usersWithStepsData > 0 ? Math.round(stepsCompletionSum / usersWithStepsData) : 0;
+    
+    console.log(`[ADMIN] Итоговые средние проценты: упражнения ${avgExerciseCompletion}%, питание ${avgNutritionCompletion}%, шаги ${avgStepsCompletion}%`);
+    console.log(`[ADMIN] Пользователей с данными: всего с прогрессом ${usersWithProgress}, упражнения ${usersWithExerciseData}, питание ${usersWithNutritionData}, шаги ${usersWithStepsData}`);
+    
+    const stats = {
+      totalUsers,
+      premiumUsers,
+      maleCount,
+      femaleCount,
+      unknownGenderCount,
+      ageGroupsPercent,
+      highWeightCount,
+      workoutsPerWeekStats,
+      goalStats,
+      gymOrHomeStats,
+      trainingLevelStats,
+      dietStats,
+      avgExerciseCompletion,
+      avgNutritionCompletion,
+      avgStepsCompletion,
+      usersWithProgress,
+      timestamp: new Date().toISOString()
+    };
+    
+    console.log('[ADMIN] Статистика по квизу рассчитана:', stats);
+    res.json(stats);
+    
+  } catch (error) {
+    console.error('[ADMIN] Ошибка получения статистики:', error);
+    res.status(500).json({ 
+      error: 'Ошибка получения статистики', 
+      details: error.message 
+    });
+  }
+});
+
 console.log('🎯 Все эндпоинты настроены, запуск сервера...');
 
 // Запуск сервера (перенесён в конец файла)

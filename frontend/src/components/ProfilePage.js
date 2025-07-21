@@ -1,82 +1,43 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import AdminPanel from './AdminPanel';
 import dietUtils from '../utils/dietUtils';
 import QuizSettings from './QuizSettings.js';
 import { API_URL } from '../config/api';
 import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import "../styles/animations.css";
-
-// Используем функции из default export
-const getDietIcon = dietUtils.getDietIcon;
-const getDietName = dietUtils.getDietName;
-const getDietDisplayName = dietUtils.getDietDisplayName;
-
 export default function ProfilePage({ onClose, unlocked, isPremium, activatePremium, answers, onEditQuiz, onRestart }) {
-  // Получаем данные пользователя
-  const user = window.Telegram?.WebApp?.initDataUnsafe?.user || { first_name: 'Диана', last_name: '', photo_url: 'https://twa.netlify.app/ava.png' };
-  
-  // Состояние для ответов квиза и настроек
-  const [quizAnswers, setQuizAnswers] = useState(answers || {});
+  // --- СТЕЙТЫ ---
   const [nutritionInfo, setNutritionInfo] = useState(null);
-  const [showSettings, setShowSettings] = useState(false);
+  const [quizAnswers, setQuizAnswers] = useState({});
   const [subscriptionInfo, setSubscriptionInfo] = useState(null);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
 
-  // Состояние для диеты и коэффициентов
-  const [dietStats, setDietStats] = useState({
-    currentDiet: '',
-    macroRatios: {},
-    weeklyResults: []
-  });
+  // --- ФУНКЦИИ ДЛЯ КВИЗА И ДИЕТЫ ---
+  const getDietIcon = dietUtils.getDietIcon;
+  const getDietName = dietUtils.getDietName;
+  const getDietDisplayName = dietUtils.getDietDisplayName;
 
-  // --- Формула BMR как на бэкенде (Харрис-Бенедикта) ---
-  function calculateBMR(weight, height, age, sex = 'female') {
-    if (sex === 'male') {
-      return 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
-    } else {
-      return 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
-    }
-  }
-
-  // --- Функция расчёта КБЖУ на основе данных пользователя (как на бэкенде) ---
-  function calculateMacrosFromQuiz(quiz) {
-    // Поддержка weight и weight_kg
-    const weight = Number(quiz.weight) || Number(quiz.weight_kg) || 60;
-    const height = Number(quiz.height) || Number(quiz.height_cm) || 165;
-    const age = Number(quiz.age) || 30;
-    const sex = (quiz.gender || quiz.sex || 'female').toLowerCase();
-    const activity = quiz.activity_coef || 1.375;
-
-    let bmr = calculateBMR(weight, height, age, sex);
-
-    // --- Расчёт дефицита по goal (3/4/5 кг в месяц) как на бэкенде ---
-    const goal = Number(quiz.goal);
-    let deficit = 0;
-    let calories;
-
-    if ([3,4,5].includes(goal)) {
-      deficit = goal * 7700 / 30;
-      calories = Math.round(bmr * activity - deficit);
-    } else {
-      calories = Math.round(bmr * activity);
-    }
-
-    // Минимум 1400 ккал для всех (по базе Дианы)
-    calories = Math.max(1400, calories);
-
-    // ...отправка калоража теперь происходит сразу после прохождения квиза (App.js)
-
-    // Расчёт БЖУ как на бэкенде
-    const protein = Math.round(weight * 1.8);
-    const fat = Math.round(weight * 0.9);
-    const carbs = Math.round((calories - (protein * 4 + fat * 9)) / 4);
-
-    console.log('[DEBUG КБЖУ]', {
-      weight, height, age, sex, bmr, activity, deficit, calories, protein, fat, carbs
-    });
-
+  // --- ЛОКАЛЬНЫЕ ФУНКЦИИ ДЛЯ КБЖУ ---
+  function calculateMacrosFromQuiz(answers) {
+    // Примерная логика, замените на свою
+    const weight = Number(answers.weight) || 70;
+    const height = Number(answers.height) || 170;
+    const age = Number(answers.age) || 30;
+    const sex = answers.sex || 'female';
+    const activity = Number(answers.activity) || 1.2;
+    const deficit = Number(answers.deficit) || 400;
+    // Базовый метаболизм
+    let bmr = sex === 'male'
+      ? 88.36 + 13.4 * weight + 4.8 * height - 5.7 * age
+      : 447.6 + 9.2 * weight + 3.1 * height - 4.3 * age;
+    let calories = Math.round(bmr * activity - deficit);
+    let protein = Math.round(weight * 1.7);
+    let fat = Math.round(weight * 0.9);
+    let carbs = Math.round((calories - (protein * 4 + fat * 9)) / 4);
     return { calories, protein, fats: fat, carbs };
   }
 
-  // --- Функция округления КБЖУ ---
   function roundMacros(macros) {
     return {
       calories: Math.round(macros.calories / 10) * 10,
@@ -85,45 +46,24 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
       carbs: Math.round(macros.carbs / 5) * 5,
     };
   }
+  // --- Whitelisted Telegram IDs для админки ---
+  const ADMIN_IDS = ['61793069932', '7019111128', '780343561', 'demo_user_local_test'];
+  let tgUserId = String(window.Telegram?.WebApp?.initDataUnsafe?.user?.id || '');
+  if (!tgUserId) tgUserId = 'demo_user_local_test';
+  // Для отладки выводим текущий Telegram ID
+  // console.log('Ваш Telegram ID:', tgUserId); // убрано
 
-  // --- КБЖУ загружаем с бэкенда ---
-  useEffect(() => {
-    const fetchNutritionFromBackend = async () => {
-      try {
-        const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
-        const response = await fetch(`${API_URL}/api/user/nutrition/${userId}`);
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Nutrition data from backend:', data);
-          setNutritionInfo(data);
-        } else {
-          // Если нет данных на бэкенде, используем локальный расчет
-          if (answers && Object.keys(answers).length > 0) {
-            const macros = calculateMacrosFromQuiz(answers);
-            const rounded = roundMacros(macros);
-            setNutritionInfo(rounded);
-            // Сохраняем калораж в Firestore
-            try {
-              const db = getFirestore();
-              const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
-              if (userId && rounded.calories) {
-                fetch(`${API_URL}/api/user/calories`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ userId, caloriesNorm: rounded.calories })
-                })
-                  .then(res => res.json())
-                  .then(data => console.log('Калораж отправлен на бэкенд:', data))
-                  .catch(err => console.error('Ошибка отправки калоража на бэкенд:', err));
-              }
-            } catch (err) {
-              console.error('Ошибка сохранения калоража в Firestore:', err);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('Error fetching nutrition from backend:', error);
-        // Fallback к локальному расчету при ошибке
+  // ...existing code...
+  const fetchNutritionFromBackend = async () => {
+    try {
+      const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
+      const response = await fetch(`${API_URL}/api/user/nutrition/${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Nutrition data from backend:', data);
+        setNutritionInfo(data);
+      } else {
+        // Если нет данных на бэкенде, используем локальный расчет
         if (answers && Object.keys(answers).length > 0) {
           const macros = calculateMacrosFromQuiz(answers);
           const rounded = roundMacros(macros);
@@ -133,23 +73,49 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
             const db = getFirestore();
             const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
             if (userId && rounded.calories) {
-              await setDoc(doc(db, 'Dianafit_users', userId), {
-                quiz: {
-                  calories: rounded.calories
-                }
-              }, { merge: true });
-              console.log('Индивидуальный калораж сохранён в Firestore:', rounded.calories);
+              fetch(`${API_URL}/api/user/calories`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, caloriesNorm: rounded.calories })
+              })
+                .then(res => res.json())
+                .then(data => console.log('Калораж отправлен на бэкенд:', data))
+                .catch(err => console.error('Ошибка отправки калоража на бэкенд:', err));
             }
           } catch (err) {
             console.error('Ошибка сохранения калоража в Firestore:', err);
           }
         }
       }
-    };
+    } catch (error) {
+      console.error('Error fetching nutrition from backend:', error);
+      // Fallback к локальному расчету при ошибке
+      if (answers && Object.keys(answers).length > 0) {
+        const macros = calculateMacrosFromQuiz(answers);
+        const rounded = roundMacros(macros);
+        setNutritionInfo(rounded);
+        // Сохраняем калораж в Firestore
+        try {
+          const db = getFirestore();
+          const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+          if (userId && rounded.calories) {
+            await setDoc(doc(db, 'Dianafit_users', userId), {
+              quiz: {
+                calories: rounded.calories
+              }
+            }, { merge: true });
+            console.log('Индивидуальный калораж сохранён в Firestore:', rounded.calories);
+          }
+        } catch (err) {
+          console.error('Ошибка сохранения калоража в Firestore:', err);
+        }
+      }
+    }
+  };
 
+  useEffect(() => {
     fetchNutritionFromBackend();
   }, [answers]);
-
   // Получаем реальные данные о прогрессе
   const [progressData, setProgressData] = React.useState({
     mealsCompleted: 0,
@@ -339,18 +305,9 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
 
 
   // --- КНОПКА ДЛЯ АДМИН-ПАНЕЛИ ---
-  const adminIds = [
-    '123456789', // пример
-    '987654321', // пример
-    '61793069932',
-    '7019111128', // исправленный ID
-    '780343561',
-  ];
-  const userId = String(window.Telegram?.WebApp?.initDataUnsafe?.user?.id || '');
-  const isAdmin = adminIds.includes(userId);
-
-  // Для отладки выводим userId и isAdmin
-  console.log('userId:', userId, 'isAdmin:', isAdmin);
+  const isAdminLocal = ADMIN_IDS.includes(tgUserId);
+  // Для отладки выводим userId и isAdminLocal
+  console.log('userId:', tgUserId, 'isAdminLocal:', isAdminLocal);
 
   return (
     <div style={{
@@ -369,9 +326,9 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
       overflowX: 'hidden'
     }}>
       {/* КНОПКА АДМИН-ПАНЕЛИ - отдельно сверху */}
-      {isAdmin && (
+      {isAdminLocal && (
         <button
-          onClick={() => window.location.assign('/admin')}
+          onClick={() => setShowAdminPanel(true)}
           style={{
             position: 'absolute',
             top: 24,
@@ -389,6 +346,57 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
         >
           Админ-панель
         </button>
+      )}
+
+      {/* Модальное окно админ-панели */}
+      {isAdminLocal && showAdminPanel && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          width: '100vw',
+          height: '100vh',
+          background: 'rgba(0,0,0,0.18)',
+          zIndex: 2000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+          <div style={{
+            background: '#fff',
+            borderRadius: 24,
+            boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
+            padding: 32,
+            minWidth: 340,
+            maxWidth: 600,
+            width: '90vw',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            position: 'relative',
+          }}>
+            <AdminPanel />
+            <button
+              style={{
+                position: 'absolute',
+                top: 18,
+                right: 18,
+                background: 'linear-gradient(135deg, #f3f4f6 0%, #d1d5db 100%)',
+                border: 'none',
+                borderRadius: 16,
+                padding: '8px 22px',
+                fontSize: 15,
+                fontWeight: 600,
+                color: '#222',
+                boxShadow: '0 2px 8px rgba(99,102,241,0.07)',
+                cursor: 'pointer',
+                transition: 'background 0.2s, color 0.2s',
+              }}
+              onClick={() => setShowAdminPanel(false)}
+            >
+              Закрыть
+            </button>
+          </div>
+        </div>
       )}
 
       {/* Floating particles animation */}
@@ -511,7 +519,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
           position: 'relative'
         }}>
           <img 
-            src={user.photo_url} 
+            src={quizAnswers.photo_url} 
             alt="profile" 
             style={{ 
               width: '100%', 
@@ -560,7 +568,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
           letterSpacing: '0.5px',
           textShadow: 'none',
         }}>
-          {quizAnswers.name || user.first_name}
+          {quizAnswers.name || quizAnswers.first_name}
         </h1>
         {/* Возраст */}
         <p style={{
@@ -605,6 +613,10 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
         </div>
       </div>
 
+      {/* Для отладки: показываем текущий Telegram ID */}
+      <div style={{marginBottom: 12, color: '#888', fontSize: 15}}>
+        {/* Удалено: Telegram ID */}
+      </div>
       {/* Главная панель контента */}
       <div style={{
         width: '95%',
@@ -619,6 +631,33 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
         zIndex: 10,
         position: 'relative'
       }}>
+        {/* Кнопка админ-панели для whitelisted ID */}
+        {/* Синяя кнопка админ-панели удалена */}
+        {/* Рендерим компонент AdminPanel если showAdminPanel */}
+        {isAdminLocal && showAdminPanel && (
+          <div style={{ marginBottom: 24 }}>
+            <AdminPanel />
+            <button
+              style={{
+                margin: '18px 0 0 0',
+                display: 'block',
+                background: 'linear-gradient(135deg, #f3f4f6 0%, #d1d5db 100%)',
+                border: 'none',
+                borderRadius: 30,
+                padding: '10px 28px',
+                fontSize: 15,
+                fontWeight: 600,
+                color: '#222',
+                boxShadow: '0 2px 8px rgba(99,102,241,0.07)',
+                cursor: 'pointer',
+                transition: 'background 0.2s, color 0.2s',
+              }}
+              onClick={() => setShowAdminPanel(false)}
+            >
+              Закрыть админ-панель
+            </button>
+          </div>
+        )}
         {/* Элегантные вкладки */}
         <div style={{
           display: 'flex',
@@ -1039,4 +1078,5 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
 
     </div>
   );
+// конец компонента
 }
