@@ -81,12 +81,13 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
   const handleClose = async () => {
     if (userId && dayOfWeek) {
       try {
+        const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD формат
         await fetch(`${API_URL}/api/diana-notification-mark-shown`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId, dayOfWeek })
+          body: JSON.stringify({ userId, dayOfWeek, date: today })
         });
-        console.log(`📅 DianaNotification: отмечено как показано для дня ${dayOfWeek}`);
+        console.log(`📅 DianaNotification: отмечено как показано для дня ${dayOfWeek}, дата ${today}`);
       } catch (e) {
         console.error('Ошибка отметки показа уведомления:', e);
       }

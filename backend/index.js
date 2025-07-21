@@ -1731,8 +1731,14 @@ app.get('/api/diana-notification-status', async (req, res) => {
     const admin = await import('firebase-admin');
     const db = admin.default.firestore();
     
-    const userRef = db.collection('users').doc(userId);
+    const userRef = db.collection('Dianafit_users').doc(userId);
     const userDoc = await userRef.get();
+    console.log(`[DEBUG][NOTIF] Проверяем документ: Dianafit_users/${userId}`);
+    if (!userDoc.exists) {
+      console.log(`[DEBUG][NOTIF] Документ не найден: Dianafit_users/${userId}`);
+    } else {
+      console.log(`[DEBUG][NOTIF] Документ найден:`, userDoc.data());
+    }
     
     if (!userDoc.exists) {
       console.log(`🔔 Пользователь ${userId} не найден, показываем уведомление`);
@@ -1773,13 +1779,31 @@ app.post('/api/diana-notification-mark-shown', async (req, res) => {
     const admin = await import('firebase-admin');
     const db = admin.default.firestore();
     
-    const userRef = db.collection('users').doc(userId);
+    const userRef = db.collection('Dianafit_users').doc(userId);
+    console.log(`[DEBUG][NOTIF] Обновляем документ: Dianafit_users/${userId}`);
+    
+    // Лог до обновления
+    const beforeDoc = await userRef.get();
+    if (beforeDoc.exists) {
+      console.log(`[DEBUG][NOTIF] До обновления:`, beforeDoc.data());
+    } else {
+      console.log(`[DEBUG][NOTIF] До обновления: Документ не найден`);
+    }
+    
     const notificationField = `Daynotification${dayOfWeek}`;
     
     // Обновляем поле с датой последнего показа (создаем документ если его нет)
     await userRef.set({
       [notificationField]: date
     }, { merge: true });
+    
+    // Лог после обновления
+    const afterDoc = await userRef.get();
+    if (afterDoc.exists) {
+      console.log(`[DEBUG][NOTIF] После обновления:`, afterDoc.data());
+    } else {
+      console.log(`[DEBUG][NOTIF] После обновления: Документ не найден`);
+    }
     
     console.log(`🔔 Обновлено поле ${notificationField} = ${date} для пользователя ${userId}`);
     res.json({ success: true });
