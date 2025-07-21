@@ -369,14 +369,9 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
       overflowX: 'hidden'
     }}>
       {/* КНОПКА АДМИН-ПАНЕЛИ - отдельно сверху */}
-      <div style={{position:'absolute',top:60,right:24,zIndex:1000,color:'#888',fontSize:13}}>
-        Ваш ID: "{userId}"
-        <br/>
-        isAdmin: "{String(isAdmin)}"
-      </div>
       {isAdmin && (
         <button
-          onClick={() => window.location.href = '/admin'}
+          onClick={() => window.location.assign('/admin')}
           style={{
             position: 'absolute',
             top: 24,
