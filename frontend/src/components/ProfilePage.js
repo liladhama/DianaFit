@@ -338,6 +338,17 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
   const dayOfWeek = ((totalDays - 1) % 7) + 1;
 
 
+  // --- КНОПКА ДЛЯ АДМИН-ПАНЕЛИ ---
+  const adminIds = [
+    '123456789', // пример
+    '987654321', // пример
+    '61793069932',
+    '70199111128',
+    '780343561',
+  ];
+  const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+  const isAdmin = adminIds.includes(String(userId));
+
   return (
     <div style={{
       width: '100%',
@@ -345,7 +356,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'center',
-      background: 'linear-gradient(180deg, rgba(150,200,255,0.97) 0%, rgba(120,180,255,0.98) 100%)', // более яркий голубой
+      background: 'linear-gradient(180deg, rgba(150,200,255,0.97) 0%, rgba(120,180,255,0.98) 100%)',
       backgroundSize: '400% 400%',
       animation: 'gradientShift 8s ease infinite',
       position: 'relative',
@@ -354,6 +365,29 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
       fontFamily: '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       overflowX: 'hidden'
     }}>
+      {/* КНОПКА АДМИН-ПАНЕЛИ - отдельно сверху */}
+      {isAdmin && (
+        <button
+          onClick={() => window.location.href = '/admin'}
+          style={{
+            position: 'absolute',
+            top: 24,
+            right: 24,
+            background: 'linear-gradient(135deg, #ffe066 0%, #ffd700 100%)',
+            color: '#222',
+            fontWeight: 700,
+            borderRadius: 16,
+            padding: '12px 24px',
+            border: '1px solid #ffd700',
+            boxShadow: '0 2px 8px rgba(255, 215, 0, 0.15)',
+            cursor: 'pointer',
+            zIndex: 1000,
+          }}
+        >
+          Админ-панель
+        </button>
+      )}
+
       {/* Floating particles animation */}
       <div style={{
         position: 'absolute',
