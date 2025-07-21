@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { recipeNames } from '../utils/recipeNames';
 import PaymentPage from './PaymentPage';
-import DianaChat from './DianaChat';
+import DianaChatWrapper from './DianaChat';
 import "../fonts/fonts.css";
 import "../styles/animations.css";
 import chatDianaIcon from '../assets/icons/chat-diana-icon.png';
@@ -504,34 +504,12 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
 
       {/* Чат с Дианой */}
       {showDianaChat && (
-        window.innerWidth < 600 ? (
-          <DianaChat 
-            onClose={() => setShowDianaChat(false)} 
-            isPremium={isPremium}
-            activatePremium={activatePremium}
-            setShowPayment={setShowPayment}
-          />
-        ) : (
-          <div style={{
-            position: 'fixed',
-            bottom: 20,
-            right: 20,
-            width: 300,
-            maxWidth: '80%',
-            borderRadius: 16,
-            overflow: 'hidden',
-            boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
-            backgroundColor: '#fff',
-            zIndex: 1000
-          }}>
-            <DianaChat 
-              onClose={() => setShowDianaChat(false)} 
-              isPremium={isPremium}
-              activatePremium={activatePremium}
-              setShowPayment={setShowPayment}
-            />
-          </div>
-        )
+        <DianaChatWrapper
+          onClose={() => setShowDianaChat(false)}
+          isPremium={isPremium}
+          activatePremium={activatePremium}
+          setShowPayment={setShowPayment}
+        />
       )}
     </div>
   );

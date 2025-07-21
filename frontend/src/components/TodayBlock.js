@@ -6,7 +6,7 @@ import CongratsModal from './CongratsModal';
 import WheelPicker from './WheelPicker';
 import PaymentPage from './PaymentPage';
 import VideoPlayer from './VideoPlayer';
-import DianaChat from './DianaChat';
+import DianaChatWrapper from './DianaChat';
 import ReasonModal from './ReasonModal';
 import ExerciseCard from './ExerciseCard';
 import MealCard from './MealCardNew';
@@ -1878,34 +1878,12 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       
       {/* Диалог чата с Дианой */}
       {showDianaChat && (
-        window.innerWidth < 600 ? (
-          <DianaChat 
-            onClose={() => setShowDianaChat(false)} 
-            isPremium={isPremium}
-            activatePremium={activatePremium}
-            setShowPayment={setShowPayment}
-          />
-        ) : (
-          <div style={{
-            position: 'fixed',
-            bottom: 20,
-            right: 20,
-            width: 300,
-            maxWidth: '80%',
-            borderRadius: 16,
-            overflow: 'hidden',
-            boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
-            backgroundColor: '#fff',
-            zIndex: 1000
-          }}>
-            <DianaChat 
-              onClose={() => setShowDianaChat(false)} 
-              isPremium={isPremium}
-              activatePremium={activatePremium}
-              setShowPayment={setShowPayment}
-            />
-          </div>
-        )
+        <DianaChatWrapper
+          onClose={() => setShowDianaChat(false)}
+          isPremium={isPremium}
+          activatePremium={activatePremium}
+          setShowPayment={setShowPayment}
+        />
       )}
       
       {/* Модал для выбора причины невыполнения */}
