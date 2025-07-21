@@ -346,8 +346,11 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
     '70199111128',
     '780343561',
   ];
-  const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
-  const isAdmin = adminIds.includes(String(userId));
+  const userId = String(window.Telegram?.WebApp?.initDataUnsafe?.user?.id || '');
+  const isAdmin = adminIds.includes(userId);
+
+  // Для отладки выводим userId и isAdmin
+  console.log('userId:', userId, 'isAdmin:', isAdmin);
 
   return (
     <div style={{
@@ -366,6 +369,11 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
       overflowX: 'hidden'
     }}>
       {/* КНОПКА АДМИН-ПАНЕЛИ - отдельно сверху */}
+      <div style={{position:'absolute',top:60,right:24,zIndex:1000,color:'#888',fontSize:13}}>
+        Ваш ID: "{userId}"
+        <br/>
+        isAdmin: "{String(isAdmin)}"
+      </div>
       {isAdmin && (
         <button
           onClick={() => window.location.href = '/admin'}
