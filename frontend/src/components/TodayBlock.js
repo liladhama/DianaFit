@@ -1316,40 +1316,42 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   );
 
   return (
-    <div
-      className="slide-up-appear"
-      style={{
-        minHeight: '100vh',
-        width: '100vw',
-        background: 'linear-gradient(180deg, #E3F3FF 0%, #E6F2FF 100%)',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '0',
-        boxSizing: 'border-box',
-        position: 'relative',
-        overflowX: 'hidden',
-      }}
-    >
-      {/* Фейерверк и поздравление при выполнении всех упражнений */}
-      {/* Универсальный модал поздравления */}
-      <CongratsModal
-        isOpen={showCongrats}
-        onClose={() => setShowCongrats(false)}
-        icon="🎉"
-        title="ПОЗДРАВЛЯЕМ!"
-        message="Все упражнения на сегодня выполнены!"
-      />
-      <CongratsModal
-        isOpen={showCongratsMeals}
-        onClose={() => setShowCongratsMeals(false)}
-        icon="🎉"
-        title="Поздравляем!"
-        message="Все приемы пищи на сегодня выполнены!"
-      />
-      {/* Confetti теперь только в CongratsModal */}
-      {profileButton}
-      {dianaButton}
+    <>
+      <div
+        className="slide-up-appear"
+        style={{
+          minHeight: '100vh',
+          width: '100vw',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          background: 'linear-gradient(180deg, rgba(200,225,255,0.92) 0%, rgba(200,225,255,0.98) 100%)',
+          padding: '32px 16px 16px 16px',
+          boxSizing: 'border-box',
+          position: 'relative',
+          overflowX: 'hidden',
+        }}
+      >
+        {/* Весь контент страницы */}
+        {/* Фейерверк и поздравление при выполнении всех упражнений */}
+        {/* Универсальный модал поздравления */}
+        <CongratsModal
+          isOpen={showCongrats}
+          onClose={() => setShowCongrats(false)}
+          icon="🎉"
+          title="ПОЗДРАВЛЯЕМ!"
+          message="Все упражнения на сегодня выполнены!"
+        />
+        <CongratsModal
+          isOpen={showCongratsMeals}
+          onClose={() => setShowCongratsMeals(false)}
+          icon="🎉"
+          title="Поздравляем!"
+          message="Все приемы пищи на сегодня выполнены!"
+        />
+        {/* Confetti теперь только в CongratsModal */}
+        {profileButton}
+        {dianaButton}
       {/* Кнопка К неделе по центру */}
       <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '32px 0 16px 0' }}>
         <button
@@ -1876,16 +1878,6 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         />
       </button>
       
-      {/* Диалог чата с Дианой */}
-      {showDianaChat && (
-        <DianaChatWrapper
-          onClose={() => setShowDianaChat(false)}
-          isPremium={isPremium}
-          activatePremium={activatePremium}
-          setShowPayment={setShowPayment}
-        />
-      )}
-      
       {/* Модал для выбора причины невыполнения */}
       <div ref={reasonModalRef}>
         <ReasonModal
@@ -1895,11 +1887,18 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           type={reasonModalData.type}
           itemName={reasonModalData.itemName}
         />
-
+        </div>
       </div>
-    </div>
+
+      {/* Диалог чата с Дианой - вынесен за пределы анимированного контейнера */}
+      {showDianaChat && (
+        <DianaChatWrapper
+          onClose={() => setShowDianaChat(false)}
+          isPremium={isPremium}
+          activatePremium={activatePremium}
+          setShowPayment={setShowPayment}
+        />
+      )}
+    </>
   );
 }
-
-// Автоскролл к модалке и поздравлению
-// (hooks должны быть до return!)

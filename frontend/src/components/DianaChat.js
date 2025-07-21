@@ -8,12 +8,19 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
     // Сохраняем текущую позицию скролла
     const scrollY = window.scrollY;
     const originalOverflow = document.body.style.overflow;
+    const originalPosition = document.body.style.position;
     // Сброс скролла и блокировка прокрутки
     window.scrollTo(0, 0);
     document.body.style.overflow = 'hidden';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.top = `-${scrollY}px`;
     return () => {
       // Восстанавливаем прокрутку и позицию
       document.body.style.overflow = originalOverflow;
+      document.body.style.position = originalPosition;
+      document.body.style.width = '';
+      document.body.style.top = '';
       window.scrollTo(0, scrollY);
     };
   }, []);
@@ -158,19 +165,33 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
     }
   };
 
+  // Создаем стиль для overlay с максимальной точностью позиционирования
+  const overlayStyle = {
+    position: 'fixed',
+    top: '0px',
+    left: '0px',
+    right: '0px',
+    bottom: '0px',
+    width: '100vw',
+    height: '100vh',
+    minHeight: '100vh',
+    maxHeight: '100vh',
+    background: 'rgba(0, 0, 0, 0.5)',
+    zIndex: 999999,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: '0px',
+    padding: '0px',
+    boxSizing: 'border-box',
+    transform: 'translateZ(0)', // Принудительно создаем новый слой
+    WebkitTransform: 'translateZ(0)',
+    backfaceVisibility: 'hidden',
+    WebkitBackfaceVisibility: 'hidden'
+  };
+
   return (
-    <div style={{
-      position: 'fixed',
-      top: 0,
-      left: 0,
-      width: '100vw',
-      height: '100vh',
-      background: 'rgba(0, 0, 0, 0.5)',
-      zIndex: 1000,
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center'
-    }}>
+    <div style={overlayStyle}>
       <div style={{
         width: '90%',
         maxWidth: 480,
