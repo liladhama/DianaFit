@@ -504,25 +504,34 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
 
       {/* Чат с Дианой */}
       {showDianaChat && (
-        <div style={{
-          position: 'fixed',
-          bottom: 20,
-          right: 20,
-          width: 300,
-          maxWidth: '80%',
-          borderRadius: 16,
-          overflow: 'hidden',
-          boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
-          backgroundColor: '#fff',
-          zIndex: 1000
-        }}>
+        window.innerWidth < 600 ? (
           <DianaChat 
             onClose={() => setShowDianaChat(false)} 
             isPremium={isPremium}
             activatePremium={activatePremium}
             setShowPayment={setShowPayment}
           />
-        </div>
+        ) : (
+          <div style={{
+            position: 'fixed',
+            bottom: 20,
+            right: 20,
+            width: 300,
+            maxWidth: '80%',
+            borderRadius: 16,
+            overflow: 'hidden',
+            boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+            backgroundColor: '#fff',
+            zIndex: 1000
+          }}>
+            <DianaChat 
+              onClose={() => setShowDianaChat(false)} 
+              isPremium={isPremium}
+              activatePremium={activatePremium}
+              setShowPayment={setShowPayment}
+            />
+          </div>
+        )
       )}
     </div>
   );
