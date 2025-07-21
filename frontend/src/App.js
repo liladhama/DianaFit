@@ -206,12 +206,42 @@ function App() {
         else if (weekDay >= 2 && weekDay <= 6) {
           // Находим вчерашний день
           const yesterday = weekData.days.find(d => d.date === new Date(new Date(todayStr).getTime() - 86400000).toISOString().slice(0,10));
-          if (yesterday && (!yesterday.completedWorkout || !yesterday.completedMeals)) {
-            setDianaNotification({
-              type: 'motivation',
-              text: 'Вчера были пропуски. Диана советует скорректировать план или попробовать другую диету. Не сдавайтесь!'
-            });
-            setShowDianaNotification(true);
+          if (yesterday) {
+            const workoutFailed = yesterday.completedWorkout === false;
+            const mealsFailed = yesterday.completedMeals === false;
+            const workoutIgnored = yesterday.completedWorkout === null;
+            const mealsIgnored = yesterday.completedMeals === null;
+            
+            // Если есть хоть одно false значение - рекомендации по корректировке
+            if (workoutFailed || mealsFailed) {
+              let advice = [];
+              if (workoutFailed) advice.push('рекомендуется снизить количество тренировок в неделю');
+              if (mealsFailed) advice.push('стоит пересмотреть план питания');
+              
+              setDianaNotification({
+                type: 'adjustment',
+                text: `Вчера были трудности с выполнением заданий. ${advice.join(' и ')}. Давайте адаптируем план под ваши возможности!`
+              });
+              setShowDianaNotification(true);
+            }
+            // Если только null значения - мотивирующие сообщения
+            else if (workoutIgnored || mealsIgnored) {
+              const motivationMessages = [
+                `Помните о своей цели! Каждый день приближает вас к результату. Даже небольшой прогресс лучше, чем никакого.`,
+                `Ваше тело ждет заботы! Попробуйте начать с малого - это поможет войти в ритм.`,
+                `Не забывайте о себе! Регулярность - ключ к достижению цели, которую вы выбрали.`,
+                `Диана верит в вас! Попробуйте отметить хотя бы один пункт сегодня - это станет началом позитивных изменений.`,
+                `Ваша цель стоит усилий! Начните день с заботы о себе - отметьте выполненные задания.`
+              ];
+              
+              const randomMessage = motivationMessages[Math.floor(Math.random() * motivationMessages.length)];
+              
+              setDianaNotification({
+                type: 'motivation',
+                text: randomMessage
+              });
+              setShowDianaNotification(true);
+            }
           }
         }
       })
