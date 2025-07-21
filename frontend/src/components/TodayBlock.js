@@ -1878,12 +1878,34 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       
       {/* Диалог чата с Дианой */}
       {showDianaChat && (
-        <DianaChat
-          onClose={() => setShowDianaChat(false)}
-          isPremium={isPremium}
-          activatePremium={activatePremium}
-          setShowPayment={setShowPayment}
-        />
+        window.innerWidth < 600 ? (
+          <DianaChat 
+            onClose={() => setShowDianaChat(false)} 
+            isPremium={isPremium}
+            activatePremium={activatePremium}
+            setShowPayment={setShowPayment}
+          />
+        ) : (
+          <div style={{
+            position: 'fixed',
+            bottom: 20,
+            right: 20,
+            width: 300,
+            maxWidth: '80%',
+            borderRadius: 16,
+            overflow: 'hidden',
+            boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+            backgroundColor: '#fff',
+            zIndex: 1000
+          }}>
+            <DianaChat 
+              onClose={() => setShowDianaChat(false)} 
+              isPremium={isPremium}
+              activatePremium={activatePremium}
+              setShowPayment={setShowPayment}
+            />
+          </div>
+        )
       )}
       
       {/* Модал для выбора причины невыполнения */}
