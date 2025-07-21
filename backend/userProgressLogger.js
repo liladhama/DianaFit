@@ -89,26 +89,32 @@ class UserProgressLogger {
             const dayToUpdate = log.programData.days.find(day => day.date === date);
             if (dayToUpdate) {
                 if (Array.isArray(tasks)) {
+                    // --- Питание ---
                     const mealTasks = tasks.filter(task => task.type === 'meal');
                     if (mealTasks.length > 0) {
                         dayToUpdate.completedMealsArr = dayToUpdate.completedMealsArr || [];
-                        mealTasks.forEach((task, index) => {
-                            if (index < dayToUpdate.completedMealsArr.length) {
-                                dayToUpdate.completedMealsArr[index] = task.done;
+                        mealTasks.forEach((task) => {
+                            // Поиск по имени/типу, как с упражнениями
+                            const idx = dayToUpdate.completedMealsArr.findIndex((v, i) => dayToUpdate.meals && dayToUpdate.meals[i]?.name === task.name);
+                            if (idx !== -1) {
+                                dayToUpdate.completedMealsArr[idx] = task.done;
                             }
                         });
                         dayToUpdate.completedMeals = mealTasks.some(task => task.done);
                     }
+                    // --- Упражнения ---
                     const workoutTasks = tasks.filter(task => task.type === 'workout');
                     if (workoutTasks.length > 0) {
                         dayToUpdate.completedExercises = dayToUpdate.completedExercises || [];
-                        workoutTasks.forEach((task, index) => {
-                            if (index < dayToUpdate.completedExercises.length) {
-                                dayToUpdate.completedExercises[index] = task.done;
+                        workoutTasks.forEach((task) => {
+                            const idx = dayToUpdate.completedExercises.findIndex((v, i) => dayToUpdate.workout && dayToUpdate.workout.exercises && dayToUpdate.workout.exercises[i]?.name === task.name);
+                            if (idx !== -1) {
+                                dayToUpdate.completedExercises[idx] = task.done;
                             }
                         });
                         dayToUpdate.completedWorkout = workoutTasks.some(task => task.done);
                     }
+                    // --- Шаги ---
                     const stepsTask = tasks.find(task => task.type === 'steps');
                     if (stepsTask) {
                         dayToUpdate.dailySteps = stepsTask.steps_estimated || 0;
