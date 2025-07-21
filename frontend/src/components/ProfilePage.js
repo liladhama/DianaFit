@@ -343,7 +343,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
     '123456789', // пример
     '987654321', // пример
     '61793069932',
-    '70199111128',
+    '7019111128', // исправленный ID
     '780343561',
   ];
   const userId = String(window.Telegram?.WebApp?.initDataUnsafe?.user?.id || '');
