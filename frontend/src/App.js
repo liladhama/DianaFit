@@ -1870,6 +1870,7 @@ function App() {
           isPremium={isPremium}
           activatePremium={activatePremium}
           answers={answers}
+          userAvatar={userAvatar}
           onEditQuiz={() => { setShowProfile(false); setShowToday(false); setShowTestWeek(false); setShowTodayBlock(false); }}
           onRestart={() => { 
             setAnswers(null); 
