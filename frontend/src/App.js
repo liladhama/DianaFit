@@ -160,7 +160,7 @@ function App() {
       .then(async (data) => {
         console.log('🔔 Ответ от сервера о статусе уведомления:', data);
         if (!data) return;
-        if (data && data.alreadyShown) {
+        if (data && !data.shouldShow) {
           console.log('🔔 Уведомление уже показано сегодня, пропускаем');
           return; // Уже показано
         }
@@ -168,9 +168,11 @@ function App() {
         // День 1 недели — мотивационное приветствие
         if (weekDay === 1) {
           console.log('🔔 Показываем приветствие для 1-го дня недели');
-          setDianaNotification({
+          const notification = {
             type: 'greeting'
-          });
+          };
+          console.log('🔔 Устанавливаем уведомление:', notification);
+          setDianaNotification(notification);
           setShowDianaNotification(true);
         }
         // День 7 недели — анализ ИИ
@@ -211,20 +213,39 @@ function App() {
             const mealsFailed = yesterday.completedMeals === false;
             const workoutIgnored = yesterday.completedWorkout === null;
             const mealsIgnored = yesterday.completedMeals === null;
-            
+            // Явная проверка: если оба поля null, всегда мотивировать
+            if (workoutIgnored && mealsIgnored) {
+              const motivationMessages = [
+                `Помните о своей цели! Каждый день приближает вас к результату. Даже небольшой прогресс лучше, чем никакого.`,
+                `Ваше тело ждет заботы! Попробуйте начать с малого - это поможет войти в ритм.`,
+                `Не забывайте о себе! Регулярность - ключ к достижению цели, которую вы выбрали.`,
+                `Диана верит в вас! Попробуйте отметить хотя бы один пункт сегодня - это станет началом позитивных изменений.`,
+                `Ваша цель стоит усилий! Начните день с заботы о себе - отметьте выполненные задания.`
+              ];
+              const randomMessage = motivationMessages[Math.floor(Math.random() * motivationMessages.length)];
+              const notification = {
+                type: 'motivation',
+                text: randomMessage
+              };
+              console.log('🔔 Устанавливаем мотивационное уведомление (оба null):', notification);
+              setDianaNotification(notification);
+              setShowDianaNotification(true);
+            }
             // Если есть хоть одно false значение - рекомендации по корректировке
-            if (workoutFailed || mealsFailed) {
+            else if (workoutFailed || mealsFailed) {
               let advice = [];
               if (workoutFailed) advice.push('рекомендуется снизить количество тренировок в неделю');
               if (mealsFailed) advice.push('стоит пересмотреть план питания');
               
-              setDianaNotification({
+              const notification = {
                 type: 'adjustment',
                 text: `Вчера были трудности с выполнением заданий. ${advice.join(' и ')}. Давайте адаптируем план под ваши возможности!`
-              });
+              };
+              console.log('🔔 Устанавливаем уведомление корректировки:', notification);
+              setDianaNotification(notification);
               setShowDianaNotification(true);
             }
-            // Если только null значения - мотивирующие сообщения
+            // Если только один из них null (а второй true), тоже мотивировать
             else if (workoutIgnored || mealsIgnored) {
               const motivationMessages = [
                 `Помните о своей цели! Каждый день приближает вас к результату. Даже небольшой прогресс лучше, чем никакого.`,
@@ -1672,6 +1693,9 @@ function App() {
             const dayDiff = Math.floor((new Date(todayStr) - new Date(firstDayStr)) / (1000*60*60*24));
             return (dayDiff % 7) + 1;
           })()}
+          customMessage={dianaNotification?.text}
+          aiAnalysis={dianaNotification?.aiAnalysis}
+          notificationType={dianaNotification?.type}
           hasUncompletedTasks={dianaNotification && dianaNotification.type === 'motivation'}
           onClose={() => {
             setShowDianaNotification(false);

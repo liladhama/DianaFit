@@ -44,261 +44,205 @@ export default function AdminPanel() {
   if (!stats) return null;
 
   return (
-    <div style={{padding:32}}>
-      <h2>Админ-панель блогера</h2>
-      
+    <div style={{padding:'10px 0 24px 0', maxWidth:480, margin:'0 auto', fontFamily:'system-ui, -apple-system, sans-serif'}}>
+      <h2 style={{fontSize:22, textAlign:'center', marginBottom:18, color:'#6366f1', letterSpacing:1}}>Админ-панель блогера</h2>
       {/* Основная статистика */}
-      <table style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-        background: 'rgba(255,255,255,0.95)',
-        borderRadius: 16,
-        boxShadow: '0 4px 16px rgba(0,0,0,0.07)',
-        marginTop: 24,
-        fontSize: 17,
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        overflow: 'hidden'
-      }}>
-        <thead>
-          <tr style={{background:'#f3f4f6'}}>
-            <th style={{padding:'14px 18px', textAlign:'left', color:'#6366f1', fontWeight:700}}>Основная статистика</th>
-            <th style={{padding:'14px 18px', textAlign:'right', color:'#222', fontWeight:700}}>Значение</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>Всего пользователей</td>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{stats.totalUsers}</td>
-          </tr>
-          <tr>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>Премиум пользователей</td>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{stats.premiumUsers}</td>
-          </tr>
-          <tr>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>Мужчин</td>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{stats.maleCount}</td>
-          </tr>
-          <tr>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>Женщин</td>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{stats.femaleCount}</td>
-          </tr>
-          <tr>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>Пол не указан</td>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{stats.unknownGenderCount}</td>
-          </tr>
-          <tr>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>С большим весом (90+ кг)</td>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{stats.highWeightCount}</td>
-          </tr>
-          <tr>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>Пользователи с прогрессом</td>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{stats.usersWithProgress}</td>
-          </tr>
-        </tbody>
-      </table>
-
-      {/* Возрастные группы */}
-      <table style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-        background: 'rgba(255,255,255,0.95)',
-        borderRadius: 16,
-        boxShadow: '0 4px 16px rgba(0,0,0,0.07)',
-        marginTop: 24,
-        fontSize: 17,
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        overflow: 'hidden'
-      }}>
-        <thead>
-          <tr style={{background:'#f3f4f6'}}>
-            <th style={{padding:'14px 18px', textAlign:'left', color:'#6366f1', fontWeight:700}}>Возрастные группы</th>
-            <th style={{padding:'14px 18px', textAlign:'right', color:'#222', fontWeight:700}}>%</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(stats.ageGroupsPercent || {}).map(([ageGroup, percent]) => (
-            <tr key={ageGroup}>
-              <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>{ageGroup}</td>
-              <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{percent}%</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* Цели похудения */}
-      <table style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-        background: 'rgba(255,255,255,0.95)',
-        borderRadius: 16,
-        boxShadow: '0 4px 16px rgba(0,0,0,0.07)',
-        marginTop: 24,
-        fontSize: 17,
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        overflow: 'hidden'
-      }}>
-        <thead>
-          <tr style={{background:'#f3f4f6'}}>
-            <th style={{padding:'14px 18px', textAlign:'left', color:'#6366f1', fontWeight:700}}>Цели похудения</th>
-            <th style={{padding:'14px 18px', textAlign:'right', color:'#222', fontWeight:700}}>Кол-во</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(stats.goalStats || {}).map(([goal, count]) => (
-            <tr key={goal}>
-              <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>{goal}</td>
-              <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{count}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* Тренировки в неделю */}
-      <table style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-        background: 'rgba(255,255,255,0.95)',
-        borderRadius: 16,
-        boxShadow: '0 4px 16px rgba(0,0,0,0.07)',
-        marginTop: 24,
-        fontSize: 17,
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        overflow: 'hidden'
-      }}>
-        <thead>
-          <tr style={{background:'#f3f4f6'}}>
-            <th style={{padding:'14px 18px', textAlign:'left', color:'#6366f1', fontWeight:700}}>Тренировок в неделю</th>
-            <th style={{padding:'14px 18px', textAlign:'right', color:'#222', fontWeight:700}}>Кол-во</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(stats.workoutsPerWeekStats || {}).map(([workouts, count]) => (
-            <tr key={workouts}>
-              <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>{workouts}</td>
-              <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{count}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-
-      {/* Выполнение заданий */}
-      <table style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-        background: 'rgba(255,255,255,0.95)',
-        borderRadius: 16,
-        boxShadow: '0 4px 16px rgba(0,0,0,0.07)',
-        marginTop: 24,
-        fontSize: 17,
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        overflow: 'hidden'
-      }}>
-        <thead>
-          <tr style={{background:'#f3f4f6'}}>
-            <th style={{padding:'14px 18px', textAlign:'left', color:'#6366f1', fontWeight:700}}>Среднее выполнение</th>
-            <th style={{padding:'14px 18px', textAlign:'right', color:'#222', fontWeight:700}}>%</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>Выполнение упражнений</td>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{stats.avgExerciseCompletion}%</td>
-          </tr>
-          <tr>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>Следование рекомендациям по питанию</td>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{stats.avgNutritionCompletion}%</td>
-          </tr>
-          <tr>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>Достижение 10000 шагов</td>
-            <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{stats.avgStepsCompletion}%</td>
-          </tr>
-        </tbody>
-      </table>
-
-      {/* Дополнительная статистика */}
-      <div style={{display: 'flex', gap: 24, marginTop: 24}}>
-        {/* Место тренировок */}
-        <table style={{
-          flex: 1,
-          borderCollapse: 'collapse',
-          background: 'rgba(255,255,255,0.95)',
-          borderRadius: 16,
-          boxShadow: '0 4px 16px rgba(0,0,0,0.07)',
-          fontSize: 16,
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-          overflow: 'hidden'
-        }}>
-          <thead>
-            <tr style={{background:'#f3f4f6'}}>
-              <th style={{padding:'12px 14px', textAlign:'left', color:'#6366f1', fontWeight:700}}>Место тренировок</th>
-              <th style={{padding:'12px 14px', textAlign:'right', color:'#222', fontWeight:700}}>Кол-во</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(stats.gymOrHomeStats || {}).map(([place, count]) => (
-              <tr key={place}>
-                <td style={{padding:'10px 14px', borderBottom:'1px solid #e5e7eb', fontSize: 15}}>{place}</td>
-                <td style={{padding:'10px 14px', borderBottom:'1px solid #e5e7eb', textAlign:'right', fontSize: 15}}>{count}</td>
+      <div style={{overflowX:'auto', marginBottom:18}}>
+        <div style={{background:'linear-gradient(90deg,#e0e7ff 0%,#fff 100%)', borderRadius:16, boxShadow:'0 4px 16px rgba(99,102,241,0.08)', padding:'10px 0 2px 0'}}>
+          <table style={{minWidth:320, width:'100%', borderCollapse:'collapse', background:'transparent', fontSize:15}}>
+            <thead>
+              <tr style={{background:'#f3f4f6'}}>
+                <th style={{padding:'14px 18px', textAlign:'left', color:'#6366f1', fontWeight:700, fontSize:16}}>Основная статистика</th>
+                <th style={{padding:'14px 18px', textAlign:'right', color:'#222', fontWeight:700, fontSize:16}}>Значение</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {/* Уровень подготовки */}
-        <table style={{
-          flex: 1,
-          borderCollapse: 'collapse',
-          background: 'rgba(255,255,255,0.95)',
-          borderRadius: 16,
-          boxShadow: '0 4px 16px rgba(0,0,0,0.07)',
-          fontSize: 16,
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-          overflow: 'hidden'
-        }}>
-          <thead>
-            <tr style={{background:'#f3f4f6'}}>
-              <th style={{padding:'12px 14px', textAlign:'left', color:'#6366f1', fontWeight:700}}>Уровень подготовки</th>
-              <th style={{padding:'12px 14px', textAlign:'right', color:'#222', fontWeight:700}}>Кол-во</th>
-            </tr>
-          </thead>
-          <tbody>
-            {Object.entries(stats.trainingLevelStats || {}).map(([level, count]) => (
-              <tr key={level}>
-                <td style={{padding:'10px 14px', borderBottom:'1px solid #e5e7eb', fontSize: 15}}>{level}</td>
-                <td style={{padding:'10px 14px', borderBottom:'1px solid #e5e7eb', textAlign:'right', fontSize: 15}}>{count}</td>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>Всего пользователей</td>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right', fontWeight:600}}>{stats.totalUsers}</td>
               </tr>
-            ))}
-          </tbody>
-        </table>
+              <tr>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>Премиум пользователей</td>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{stats.premiumUsers}</td>
+              </tr>
+              <tr>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>Мужчин</td>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{stats.maleCount}</td>
+              </tr>
+              <tr>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>Женщин</td>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{stats.femaleCount}</td>
+              </tr>
+              <tr>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>Пол не указан</td>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{stats.unknownGenderCount}</td>
+              </tr>
+              <tr>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>С большим весом (90+ кг)</td>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{stats.highWeightCount}</td>
+              </tr>
+              <tr>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>Пользователи с прогрессом</td>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{stats.usersWithProgress}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-
+      {/* Возрастные группы */}
+      <div style={{overflowX:'auto', marginBottom:18}}>
+        <div style={{background:'linear-gradient(90deg,#fdf6e3 0%,#fff 100%)', borderRadius:16, boxShadow:'0 4px 16px rgba(253,246,227,0.08)', padding:'10px 0 2px 0'}}>
+          <table style={{minWidth:320, width:'100%', borderCollapse:'collapse', background:'transparent', fontSize:15}}>
+            <thead>
+              <tr style={{background:'#f3f4f6'}}>
+                <th style={{padding:'14px 18px', textAlign:'left', color:'#eab308', fontWeight:700, fontSize:16}}>Возрастные группы</th>
+                <th style={{padding:'14px 18px', textAlign:'right', color:'#222', fontWeight:700, fontSize:16}}>%</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(stats.ageGroupsPercent || {}).map(([ageGroup, percent]) => (
+                <tr key={ageGroup}>
+                  <td style={{padding:'12px 18px', borderBottom:'1px solid #f3e8ff'}}>{ageGroup}</td>
+                  <td style={{padding:'12px 18px', borderBottom:'1px solid #f3e8ff', textAlign:'right', fontWeight:600}}>{percent}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {/* Цели похудения */}
+      <div style={{overflowX:'auto', marginBottom:18}}>
+        <div style={{background:'linear-gradient(90deg,#d1fae5 0%,#fff 100%)', borderRadius:16, boxShadow:'0 4px 16px rgba(16,185,129,0.08)', padding:'10px 0 2px 0'}}>
+          <table style={{minWidth:320, width:'100%', borderCollapse:'collapse', background:'transparent', fontSize:15}}>
+            <thead>
+              <tr style={{background:'#f3f4f6'}}>
+                <th style={{padding:'14px 18px', textAlign:'left', color:'#10b981', fontWeight:700, fontSize:16}}>Цели похудения</th>
+                <th style={{padding:'14px 18px', textAlign:'right', color:'#222', fontWeight:700, fontSize:16}}>Кол-во</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(stats.goalStats || {}).map(([goal, count]) => (
+                <tr key={goal}>
+                  <td style={{padding:'12px 18px', borderBottom:'1px solid #d1fae5'}}>{goal}</td>
+                  <td style={{padding:'12px 18px', borderBottom:'1px solid #d1fae5', textAlign:'right', fontWeight:600}}>{count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {/* Тренировки в неделю */}
+      <div style={{overflowX:'auto', marginBottom:18}}>
+        <div style={{background:'linear-gradient(90deg,#f3f4f6 0%,#fff 100%)', borderRadius:16, boxShadow:'0 4px 16px rgba(99,102,241,0.08)', padding:'10px 0 2px 0'}}>
+          <table style={{minWidth:320, width:'100%', borderCollapse:'collapse', background:'transparent', fontSize:15}}>
+            <thead>
+              <tr style={{background:'#f3f4f6'}}>
+                <th style={{padding:'14px 18px', textAlign:'left', color:'#6366f1', fontWeight:700, fontSize:16}}>Тренировок в неделю</th>
+                <th style={{padding:'14px 18px', textAlign:'right', color:'#222', fontWeight:700, fontSize:16}}>Кол-во</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(stats.workoutsPerWeekStats || {}).map(([workouts, count]) => (
+                <tr key={workouts}>
+                  <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>{workouts}</td>
+                  <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right', fontWeight:600}}>{count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {/* Выполнение заданий */}
+      <div style={{overflowX:'auto', marginBottom:18}}>
+        <div style={{background:'linear-gradient(90deg,#fef3c7 0%,#fff 100%)', borderRadius:16, boxShadow:'0 4px 16px rgba(253,224,71,0.08)', padding:'10px 0 2px 0'}}>
+          <table style={{minWidth:320, width:'100%', borderCollapse:'collapse', background:'transparent', fontSize:15}}>
+            <thead>
+              <tr style={{background:'#f3f4f6'}}>
+                <th style={{padding:'14px 18px', textAlign:'left', color:'#f59e42', fontWeight:700, fontSize:16}}>Среднее выполнение</th>
+                <th style={{padding:'14px 18px', textAlign:'right', color:'#222', fontWeight:700, fontSize:16}}>%</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #fde68a'}}>Выполнение упражнений</td>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #fde68a', textAlign:'right', fontWeight:600}}>{stats.avgExerciseCompletion}%</td>
+              </tr>
+              <tr>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #fde68a'}}>Следование рекомендациям по питанию</td>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #fde68a', textAlign:'right', fontWeight:600}}>{stats.avgNutritionCompletion}%</td>
+              </tr>
+              <tr>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #fde68a'}}>Достижение 10000 шагов</td>
+                <td style={{padding:'12px 18px', borderBottom:'1px solid #fde68a', textAlign:'right', fontWeight:600}}>{stats.avgStepsCompletion}%</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {/* Дополнительная статистика */}
+      <div style={{display:'flex', flexDirection:'column', gap:14, marginTop:10}}>
+        <div style={{overflowX:'auto', marginBottom:8}}>
+          <div style={{background:'linear-gradient(90deg,#e0e7ff 0%,#fff 100%)', borderRadius:16, boxShadow:'0 4px 16px rgba(99,102,241,0.08)', padding:'10px 0 2px 0'}}>
+            <table style={{minWidth:220, width:'100%', borderCollapse:'collapse', background:'transparent', fontSize:14}}>
+              <thead>
+                <tr style={{background:'#f3f4f6'}}>
+                  <th style={{padding:'12px 14px', textAlign:'left', color:'#6366f1', fontWeight:700}}>Место тренировок</th>
+                  <th style={{padding:'12px 14px', textAlign:'right', color:'#222', fontWeight:700}}>Кол-во</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(stats.gymOrHomeStats || {}).map(([place, count]) => (
+                  <tr key={place}>
+                    <td style={{padding:'10px 14px', borderBottom:'1px solid #e5e7eb', fontSize:15}}>{place}</td>
+                    <td style={{padding:'10px 14px', borderBottom:'1px solid #e5e7eb', textAlign:'right', fontSize:15, fontWeight:600}}>{count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div style={{overflowX:'auto', marginBottom:8}}>
+          <div style={{background:'linear-gradient(90deg,#fdf6e3 0%,#fff 100%)', borderRadius:16, boxShadow:'0 4px 16px rgba(253,246,227,0.08)', padding:'10px 0 2px 0'}}>
+            <table style={{minWidth:220, width:'100%', borderCollapse:'collapse', background:'transparent', fontSize:14}}>
+              <thead>
+                <tr style={{background:'#f3f4f6'}}>
+                  <th style={{padding:'12px 14px', textAlign:'left', color:'#eab308', fontWeight:700}}>Уровень подготовки</th>
+                  <th style={{padding:'12px 14px', textAlign:'right', color:'#222', fontWeight:700}}>Кол-во</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(stats.trainingLevelStats || {}).map(([level, count]) => (
+                  <tr key={level}>
+                    <td style={{padding:'10px 14px', borderBottom:'1px solid #f3e8ff', fontSize:15}}>{level}</td>
+                    <td style={{padding:'10px 14px', borderBottom:'1px solid #f3e8ff', textAlign:'right', fontSize:15, fontWeight:600}}>{count}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
       {/* Тип питания */}
-      <table style={{
-        width: '100%',
-        borderCollapse: 'collapse',
-        background: 'rgba(255,255,255,0.95)',
-        borderRadius: 16,
-        boxShadow: '0 4px 16px rgba(0,0,0,0.07)',
-        marginTop: 24,
-        fontSize: 17,
-        fontFamily: 'system-ui, -apple-system, sans-serif',
-        overflow: 'hidden'
-      }}>
-        <thead>
-          <tr style={{background:'#f3f4f6'}}>
-            <th style={{padding:'14px 18px', textAlign:'left', color:'#6366f1', fontWeight:700}}>Тип питания</th>
-            <th style={{padding:'14px 18px', textAlign:'right', color:'#222', fontWeight:700}}>Кол-во</th>
-          </tr>
-        </thead>
-        <tbody>
-          {Object.entries(stats.dietStats || {}).map(([diet, count]) => (
-            <tr key={diet}>
-              <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb'}}>{diet}</td>
-              <td style={{padding:'12px 18px', borderBottom:'1px solid #e5e7eb', textAlign:'right'}}>{count}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div style={{overflowX:'auto', marginBottom:18}}>
+        <div style={{background:'linear-gradient(90deg,#dbeafe 0%,#fff 100%)', borderRadius:16, boxShadow:'0 4px 16px rgba(59,130,246,0.08)', padding:'10px 0 2px 0'}}>
+          <table style={{minWidth:220, width:'100%', borderCollapse:'collapse', background:'transparent', fontSize:14}}>
+            <thead>
+              <tr style={{background:'#f3f4f6'}}>
+                <th style={{padding:'14px 18px', textAlign:'left', color:'#3b82f6', fontWeight:700}}>Тип питания</th>
+                <th style={{padding:'14px 18px', textAlign:'right', color:'#222', fontWeight:700}}>Кол-во</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(stats.dietStats || {}).map(([diet, count]) => (
+                <tr key={diet}>
+                  <td style={{padding:'12px 18px', borderBottom:'1px solid #dbeafe'}}>{diet}</td>
+                  <td style={{padding:'12px 18px', borderBottom:'1px solid #dbeafe', textAlign:'right', fontWeight:600}}>{count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 }

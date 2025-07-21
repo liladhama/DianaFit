@@ -1714,6 +1714,82 @@ app.get('/api/admin/stats', async (req, res) => {
   }
 });
 
+// === ЭНДПОИНТЫ ДЛЯ УВЕДОМЛЕНИЙ ДИАНЫ ===
+
+// Проверка статуса уведомления (нужно ли показать)
+app.get('/api/diana-notification-status', async (req, res) => {
+  try {
+    const { userId, date, dayOfWeek } = req.query;
+    
+    if (!userId || !date || !dayOfWeek) {
+      return res.status(400).json({ error: 'Требуются параметры userId, date, dayOfWeek' });
+    }
+    
+    console.log(`🔔 Проверка статуса уведомления для пользователя ${userId}, день ${dayOfWeek}, дата ${date}`);
+    
+    // Импортируем Firebase Admin
+    const admin = await import('firebase-admin');
+    const db = admin.default.firestore();
+    
+    const userRef = db.collection('users').doc(userId);
+    const userDoc = await userRef.get();
+    
+    if (!userDoc.exists) {
+      console.log(`🔔 Пользователь ${userId} не найден, показываем уведомление`);
+      return res.json({ shouldShow: true });
+    }
+    
+    const userData = userDoc.data();
+    const notificationField = `Daynotification${dayOfWeek}`;
+    const lastShownDate = userData[notificationField];
+    
+    // Если уведомление уже показывалось сегодня, не показывать снова
+    if (lastShownDate === date) {
+      console.log(`🔔 Уведомление ${notificationField} уже показано ${date}, пропускаем`);
+      return res.json({ shouldShow: false });
+    }
+    
+    console.log(`🔔 Уведомление ${notificationField} можно показать (последний показ: ${lastShownDate})`);
+    res.json({ shouldShow: true });
+    
+  } catch (error) {
+    console.error('🔔 Ошибка проверки статуса уведомления:', error);
+    res.status(500).json({ error: 'Ошибка проверки статуса уведомления' });
+  }
+});
+
+// Отметка, что уведомление показано
+app.post('/api/diana-notification-mark-shown', async (req, res) => {
+  try {
+    const { userId, date, dayOfWeek } = req.body;
+    
+    if (!userId || !date || !dayOfWeek) {
+      return res.status(400).json({ error: 'Требуются параметры userId, date, dayOfWeek' });
+    }
+    
+    console.log(`🔔 Отмечаем уведомление как показанное для пользователя ${userId}, день ${dayOfWeek}, дата ${date}`);
+    
+    // Импортируем Firebase Admin
+    const admin = await import('firebase-admin');
+    const db = admin.default.firestore();
+    
+    const userRef = db.collection('users').doc(userId);
+    const notificationField = `Daynotification${dayOfWeek}`;
+    
+    // Обновляем поле с датой последнего показа (создаем документ если его нет)
+    await userRef.set({
+      [notificationField]: date
+    }, { merge: true });
+    
+    console.log(`🔔 Обновлено поле ${notificationField} = ${date} для пользователя ${userId}`);
+    res.json({ success: true });
+    
+  } catch (error) {
+    console.error('🔔 Ошибка отметки показа уведомления:', error);
+    res.status(500).json({ error: 'Ошибка отметки показа уведомления' });
+  }
+});
+
 console.log('🎯 Все эндпоинты настроены, запуск сервера...');
 
 // Запуск сервера (перенесён в конец файла)

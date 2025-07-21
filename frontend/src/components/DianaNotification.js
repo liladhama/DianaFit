@@ -73,7 +73,7 @@ async function fetchOpenAIDianaAnalysis(userId) {
 }
 
 
-const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessage, hasUncompletedTasks }) => {
+const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessage, aiAnalysis, notificationType, hasUncompletedTasks }) => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -127,14 +127,59 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
   useEffect(() => {
     if (!isVisible) return;
     
-    // Если передано кастомное сообщение - используем его
+    // Приоритет 1: Если передан кастомный текст - используем его
     if (customMessage) {
       setMessage(customMessage);
       setLoading(false);
       return;
     }
 
-    // Получаем простое сообщение для дней 1-6
+    // Приоритет 2: Если передан AI анализ - используем его  
+    if (aiAnalysis) {
+      setMessage(aiAnalysis);
+      setLoading(false);
+      return;
+    }
+
+    // Приоритет 3: Определяем тип уведомления и показываем соответствующее сообщение
+    if (notificationType === 'greeting') {
+      // День 1 - случайное напутствие на новую неделю
+      const idx = Math.floor(Math.random() * greetingMessages.length);
+      setMessage(greetingMessages[idx]);
+      setLoading(false);
+      return;
+    }
+
+    if (notificationType === 'motivation') {
+      // Мотивирующие сообщения для null значений
+      const motivationMessages = [
+        "Помните о своей цели! Каждый день приближает вас к результату. Даже небольшой прогресс лучше, чем никакого.",
+        "Ваше тело ждет заботы! Попробуйте начать с малого - это поможет войти в ритм.",
+        "Не забывайте о себе! Регулярность - ключ к достижению цели, которую вы выбрали.",
+        "Диана верит в вас! Попробуйте отметить хотя бы один пункт сегодня - это станет началом позитивных изменений.",
+        "Ваша цель стоит усилий! Начните день с заботы о себе - отметьте выполненные задания."
+      ];
+      const idx = Math.floor(Math.random() * motivationMessages.length);
+      setMessage(motivationMessages[idx]);
+      setLoading(false);
+      return;
+    }
+
+    if (notificationType === 'adjustment') {
+      // Рекомендации по корректировке (уже передан customMessage)
+      setMessage(customMessage || "Давайте адаптируем план под ваши возможности!");
+      setLoading(false);
+      return;
+    }
+
+    if (notificationType === 'ai') {
+      // AI анализ для 7-го дня (уже передан aiAnalysis)
+      setMessage(aiAnalysis || "Поздравляю с завершением недели! Ты большая молодец! 🎉");
+      setLoading(false);
+      return;
+    }
+
+    // Получаем простое сообщение для дней 1-6 (fallback)
     const simpleMsg = getSimpleMessage(dayOfWeek, hasUncompletedTasks);
     if (simpleMsg) {
       setMessage(simpleMsg);
@@ -142,7 +187,7 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
       return;
     }
 
-    // День 7 - вызов AI для анализа недели
+    // День 7 - вызов AI для анализа недели (fallback если нет aiAnalysis)
     if (dayOfWeek === 7 && userId) {
       setMessage('');
       setLoading(true);
@@ -167,7 +212,7 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
         })
         .finally(() => setLoading(false));
     }
-  }, [isVisible, userId, dayOfWeek, customMessage, hasUncompletedTasks]);
+  }, [isVisible, userId, dayOfWeek, customMessage, aiAnalysis, notificationType, hasUncompletedTasks]);
 
   // Слушаем событие от TypewriterPagedText для перехода в TodayBlock
   useEffect(() => {
@@ -178,6 +223,13 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
   }, [isVisible]);
 
   if (!isVisible) return null;
+  
+  // Не показываем уведомление, если нет сообщения и не идет загрузка
+  if (!loading && !message) {
+    console.warn('DianaNotification: Попытка показать пустое уведомление');
+    return null;
+  }
+  
   return (
     <div style={{
       position: 'fixed',
