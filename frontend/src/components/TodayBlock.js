@@ -335,11 +335,19 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         completedMeals.length === newMealStates.length &&
         completedMeals.every((v, i) => v === newMealStates[i]);
       
-      // НЕ пересоздаем если уже есть пользовательские выборы (true/false)
+      // КРИТИЧЕСКАЯ ЗАЩИТА: НЕ пересоздаем если уже есть пользовательские выборы (true/false)
       const hasUserChoices = completedMeals.some(v => v === true || v === false);
       
-      if (!isSame && !hasUserChoices) {
+      // ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА: НЕ пересоздаем если массив уже правильной длины
+      const hasCorrectLength = completedMeals.length === aiMeals.length;
+      
+      setDebugInfo(`🔄 Проверка: isSame=${isSame}, hasUserChoices=${hasUserChoices}, hasCorrectLength=${hasCorrectLength}`);
+      
+      if (!isSame && !hasUserChoices && !hasCorrectLength) {
+        setDebugInfo(`✅ Создаю массив: ${aiMeals.length} элементов`);
         setCompletedMeals(newMealStates);
+      } else {
+        setDebugInfo(`🛡️ ЗАЩИЩЕНО: массив не пересоздан`);
       }
     } else if (Array.isArray(aiMeals) && aiMeals.length === 0) {
       // ТОЛЬКО если aiMeals пустой массив (а не null), тогда сбрасываем
@@ -836,10 +844,17 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
             // Приводим все значения к null, true, false (false только если явно выбран "не съел")
             const finalMealStates = mealStates.map(v => v === true ? true : v === false ? false : null);
             
-            // НЕ ПЕРЕЗАПИСЫВАЕМ если уже есть выбранные значения!
+            // УСИЛЕННАЯ ЗАЩИТА: НЕ ПЕРЕЗАПИСЫВАЕМ если уже есть выбранные значения!
             const hasExistingChoices = Array.isArray(completedMeals) && completedMeals.some(v => v === true || v === false);
-            if (!hasExistingChoices) {
+            const hasCorrectLength = Array.isArray(completedMeals) && completedMeals.length === finalMealStates.length;
+            
+            setDebugInfo(`🔄 fetchDayStatus: hasExistingChoices=${hasExistingChoices}, hasCorrectLength=${hasCorrectLength}`);
+            
+            if (!hasExistingChoices || !hasCorrectLength) {
+              setDebugInfo(`✅ Восстанавливаю с сервера: ${finalMealStates.length} элементов`);
               setCompletedMeals(finalMealStates);
+            } else {
+              setDebugInfo(`🛡️ ЗАЩИЩЕНО: данные с сервера проигнорированы`);
             }
           }
           if (Object.keys(mealReasonsObj).length) setMealReasons(mealReasonsObj);
@@ -854,10 +869,17 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           // ...лог убран...
           const finalMealStates = data.completedMealsArr.map(v => v === true ? true : v === false ? false : null);
           
-          // НЕ ПЕРЕЗАПИСЫВАЕМ если уже есть выбранные значения!
+          // УСИЛЕННАЯ ЗАЩИТА: НЕ ПЕРЕЗАПИСЫВАЕМ если уже есть выбранные значения!
           const hasExistingChoices = Array.isArray(completedMeals) && completedMeals.some(v => v === true || v === false);
-          if (!hasExistingChoices) {
+          const hasCorrectLength = Array.isArray(completedMeals) && completedMeals.length === finalMealStates.length;
+          
+          setDebugInfo(`🔄 completedMealsArr: hasExistingChoices=${hasExistingChoices}, hasCorrectLength=${hasCorrectLength}`);
+          
+          if (!hasExistingChoices || !hasCorrectLength) {
+            setDebugInfo(`✅ Восстанавливаю из completedMealsArr: ${finalMealStates.length} элементов`);
             setCompletedMeals(finalMealStates);
+          } else {
+            setDebugInfo(`🛡️ ЗАЩИЩЕНО: completedMealsArr проигнорирован`);
           }
         }
         if (data.completedExercises) {
