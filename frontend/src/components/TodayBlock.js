@@ -210,7 +210,25 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   const [tasks, setTasks] = useState([]);
   
   // ЖЕЛЕЗНАЯ ЗАЩИТА: completedMeals с localStorage бэкапом
-  const [completedMeals, setCompletedMealsState] = useState([]);
+  const [completedMeals, setCompletedMealsState] = useState(() => {
+    // КРИТИЧЕСКИ ВАЖНО: инициализируем из localStorage при создании компонента
+    if (typeof window !== 'undefined' && window.localStorage) {
+      // Пробуем определить дату из day или текущей даты
+      const dateToUse = day?.date || new Date().toISOString().split('T')[0];
+      const saved = localStorage.getItem(`diana_completed_meals_${dateToUse}`);
+      if (saved) {
+        try {
+          const parsedData = JSON.parse(saved);
+          if (Array.isArray(parsedData)) {
+            return parsedData;
+          }
+        } catch (e) {
+          console.warn('Ошибка восстановления completedMeals из localStorage:', e);
+        }
+      }
+    }
+    return [];
+  });
   
   // Обертка для setCompletedMeals с автосохранением в localStorage
   const setCompletedMeals = (newValue) => {
@@ -1028,6 +1046,12 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     
     if (!answers?.userId || !currentDay?.date) return;
     
+    // КРИТИЧЕСКАЯ ЗАЩИТА: не отправляем если completedMeals только что инициализирован и пуст
+    if (Array.isArray(completedMeals) && completedMeals.length === 0 && Array.isArray(aiMeals) && aiMeals.length > 0) {
+      // Есть aiMeals, но completedMeals пуст - значит он еще не инициализирован, не отправляем
+      return;
+    }
+    
     // ...лог убран...
     
     const builtTasks = buildTasks();
@@ -1258,6 +1282,10 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     // Приёмы пищи (используем aiMeals вместо currentDay.meals)
     if (Array.isArray(aiMeals) && aiMeals.length > 0) {
       aiMeals.forEach((m, i) => {
+        // КРИТИЧЕСКАЯ ЗАЩИТА: если completedMeals короче aiMeals, не добавляем задачу
+        if (i >= completedMeals.length) {
+          return; // Пропускаем эту задачу
+        }
         tasks.push({
           name: m.type || m.name,
           type: 'meal',
