@@ -208,7 +208,18 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [tasks, setTasks] = useState([]);
-  const [completedMeals, setCompletedMeals] = useState([]);
+  
+  // ЖЕЛЕЗНАЯ ЗАЩИТА: completedMeals с localStorage бэкапом
+  const [completedMeals, setCompletedMealsState] = useState([]);
+  
+  // Обертка для setCompletedMeals с автосохранением в localStorage
+  const setCompletedMeals = (newValue) => {
+    setCompletedMealsState(newValue);
+    if (currentDay?.date) {
+      localStorage.setItem(`diana_completed_meals_${currentDay.date}`, JSON.stringify(newValue));
+    }
+  };
+  
   const [completedExercises, setCompletedExercises] = useState([]);
   const [walkingMinutes, setWalkingMinutes] = useState(null);
   const [stepsStatus, setStepsStatus] = useState(null);
@@ -235,6 +246,23 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     ],
     completed: false,
   };
+
+  // Восстановление completedMeals из localStorage при смене дня (ПОСЛЕ определения currentDay)
+  useEffect(() => {
+    if (currentDay?.date) {
+      const saved = localStorage.getItem(`diana_completed_meals_${currentDay.date}`);
+      if (saved) {
+        try {
+          const parsedData = JSON.parse(saved);
+          if (Array.isArray(parsedData)) {
+            setCompletedMealsState(parsedData);
+          }
+        } catch (e) {
+          console.warn('Ошибка восстановления completedMeals из localStorage:', e);
+        }
+      }
+    }
+  }, [currentDay?.date]);
 
 
   // Проверка: все приемы пищи выполнены
@@ -793,8 +821,20 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           if (mealStates.length) {
             // Приводим все значения к null, true, false (false только если явно выбран "не съел")
             const finalMealStates = mealStates.map(v => v === true ? true : v === false ? false : null);
-            // setCompletedMeals только если массив пустой или это первая загрузка
-            if (completedMeals.length === 0 || isInitialLoading) {
+            
+            // ЖЕЛЕЗНАЯ ЗАЩИТА: проверяем localStorage ДО любых изменений
+            const savedMeals = localStorage.getItem(`diana_completed_meals_${currentDay.date}`);
+            let hasLocalStorageData = false;
+            if (savedMeals) {
+              try {
+                const parsedMeals = JSON.parse(savedMeals);
+                hasLocalStorageData = Array.isArray(parsedMeals) && parsedMeals.some(v => v === true || v === false);
+              } catch (e) {}
+            }
+            
+            // setCompletedMeals ТОЛЬКО если нет пользовательского прогресса И нет данных в localStorage
+            const hasUserProgress = completedMeals.some(v => v === true || v === false);
+            if (completedMeals.length === 0 && !hasUserProgress && !hasLocalStorageData && isInitialLoading) {
               setCompletedMeals(finalMealStates);
             }
           }
@@ -809,8 +849,20 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         if (data.completedMealsArr) {
           // ...лог убран...
           const finalMealStates = data.completedMealsArr.map(v => v === true ? true : v === false ? false : null);
-          // setCompletedMeals только если массив пустой или это первая загрузка
-          if (completedMeals.length === 0 || isInitialLoading) {
+          
+          // ЖЕЛЕЗНАЯ ЗАЩИТА: проверяем localStorage ДО любых изменений
+          const savedMeals = localStorage.getItem(`diana_completed_meals_${currentDay.date}`);
+          let hasLocalStorageData = false;
+          if (savedMeals) {
+            try {
+              const parsedMeals = JSON.parse(savedMeals);
+              hasLocalStorageData = Array.isArray(parsedMeals) && parsedMeals.some(v => v === true || v === false);
+            } catch (e) {}
+          }
+          
+          // setCompletedMeals ТОЛЬКО если нет пользовательского прогресса И нет данных в localStorage
+          const hasUserProgress = completedMeals.some(v => v === true || v === false);
+          if (completedMeals.length === 0 && !hasUserProgress && !hasLocalStorageData && isInitialLoading) {
             setCompletedMeals(finalMealStates);
           }
         }
