@@ -1005,12 +1005,20 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     
     // ...лог убран...
     
+    const builtTasks = buildTasks();
+    // ЖЕЛЕЗНАЯ ЗАЩИТА: не отправлять tasks если completedMeals пустой или все значения null/undefined
+    const hasMeals = Array.isArray(completedMeals) && completedMeals.some(v => v === true || v === false);
+    const hasExercises = Array.isArray(completedExercises) && completedExercises.some(v => v === true || v === false);
+    const hasSteps = walkingMinutes !== null;
+    if (builtTasks.length === 0 || (!hasMeals && !hasExercises && !hasSteps)) {
+      // Не отправляем пустой прогресс
+      return;
+    }
     const payload = {
       userId: answers.userId,
       date: currentDay.date,
-      tasks: buildTasks()
+      tasks: builtTasks
     };
-    
     fetch(`${API_URL}/api/progress`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
