@@ -211,10 +211,49 @@ function App() {
           if (yesterday) {
             const workoutFailed = yesterday.completedWorkout === false;
             const mealsFailed = yesterday.completedMeals === false;
+            const workoutCompleted = yesterday.completedWorkout === true;
+            const mealsCompleted = yesterday.completedMeals === true;
             const workoutIgnored = yesterday.completedWorkout === null;
             const mealsIgnored = yesterday.completedMeals === null;
+            
+            // Если все задания выполнены - никаких уведомлений
+            if (workoutCompleted && mealsCompleted) {
+              console.log('🔔 Все задания выполнены вчера, уведомления не нужны');
+              return;
+            }
+            
+            // Если и упражнения, и питание имеют false - общее уведомление
+            if (workoutFailed && mealsFailed) {
+              const notification = {
+                type: 'adjustment',
+                text: `Вчера были трудности с выполнением заданий. Рекомендуется снизить количество тренировок в неделю и пересмотреть план питания или постараться следовать текущей диете. Давайте адаптируем план под ваши возможности!`
+              };
+              console.log('🔔 Устанавливаем общее уведомление (оба false):', notification);
+              setDianaNotification(notification);
+              setShowDianaNotification(true);
+            }
+            // Если есть невыполненное упражнение (false) - рекомендация снизить тренировки
+            else if (workoutFailed && !mealsFailed) {
+              const notification = {
+                type: 'adjustment',
+                text: `Вчера была трудность с выполнением тренировки. Рекомендуется снизить количество тренировок в неделю. Давайте адаптируем план под ваши возможности!`
+              };
+              console.log('🔔 Устанавливаем уведомление по тренировкам:', notification);
+              setDianaNotification(notification);
+              setShowDianaNotification(true);
+            }
+            // Если есть невыполненный приём пищи (false) - мотивация по питанию
+            else if (mealsFailed && !workoutFailed) {
+              const notification = {
+                type: 'adjustment',
+                text: `Вчера была трудность с соблюдением плана питания. Можно попробовать другую диету или постараться следовать текущей. Не сдавайтесь - каждый день это новая возможность!`
+              };
+              console.log('🔔 Устанавливаем уведомление по питанию:', notification);
+              setDianaNotification(notification);
+              setShowDianaNotification(true);
+            }
             // Явная проверка: если оба поля null, всегда мотивировать
-            if (workoutIgnored && mealsIgnored) {
+            else if (workoutIgnored && mealsIgnored) {
               const motivationMessages = [
                 `Помните о своей цели! Каждый день приближает вас к результату. Даже небольшой прогресс лучше, чем никакого.`,
                 `Ваше тело ждет заботы! Попробуйте начать с малого - это поможет войти в ритм.`,
@@ -228,20 +267,6 @@ function App() {
                 text: randomMessage
               };
               console.log('🔔 Устанавливаем мотивационное уведомление (оба null):', notification);
-              setDianaNotification(notification);
-              setShowDianaNotification(true);
-            }
-            // Если есть хоть одно false значение - рекомендации по корректировке
-            else if (workoutFailed || mealsFailed) {
-              let advice = [];
-              if (workoutFailed) advice.push('рекомендуется снизить количество тренировок в неделю');
-              if (mealsFailed) advice.push('стоит пересмотреть план питания');
-              
-              const notification = {
-                type: 'adjustment',
-                text: `Вчера были трудности с выполнением заданий. ${advice.join(' и ')}. Давайте адаптируем план под ваши возможности!`
-              };
-              console.log('🔔 Устанавливаем уведомление корректировки:', notification);
               setDianaNotification(notification);
               setShowDianaNotification(true);
             }

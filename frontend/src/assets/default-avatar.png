@@ -1,0 +1,2 @@
+// Стандартная заглушка для аватарки
+module.exports = require('./diana-avatar.png');

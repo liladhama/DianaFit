@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Тест AI анализа недели</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .button { background: #007cba; color: white; padding: 10px 20px; border: none; cursor: pointer; margin: 10px; }
+        .result { border: 1px solid #ccc; padding: 15px; margin: 10px 0; background: #f9f9f9; }
+        .loading { color: #666; font-style: italic; }
+        .error { color: red; }
+        .success { color: green; }
+    </style>
+</head>
+<body>
+    <h1>🤖 Тест AI анализа недели</h1>
+    
+    <div>
+        <input type="text" id="userId" placeholder="userId (например: test123)" value="test123" style="padding: 8px; width: 200px;">
+        <button class="button" onclick="testAIAnalysis()">Тестировать AI анализ</button>
+        <button class="button" onclick="testBackend()">Проверить бэкенд</button>
+    </div>
+    
+    <div id="result" class="result" style="display: none;"></div>
+
+    <script>
+        const API_URL = 'http://localhost:3001';
+        
+        function showResult(content, className = '') {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = content;
+            resultDiv.className = 'result ' + className;
+            resultDiv.style.display = 'block';
+        }
+        
+        async function testBackend() {
+            showResult('🔄 Проверяем доступность бэкенда...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_URL}/api/diana-notification-status?userId=test&date=2025-01-21&dayOfWeek=1`);
+                
+                if (response.ok) {
+                    showResult('✅ Бэкенд работает! Можно тестировать AI анализ.', 'success');
+                } else {
+                    showResult(`❌ Бэкенд отвечает с ошибкой: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                showResult(`❌ Ошибка подключения к бэкенду: ${error.message}<br><br>💡 Запустите бэкенд: <code>cd backend && node index.js</code>`, 'error');
+            }
+        }
+        
+        async function testAIAnalysis() {
+            const userId = document.getElementById('userId').value || 'test123';
+            showResult('🤖 Запускаем AI анализ недели...', 'loading');
+            
+            try {
+                const response = await fetch(`${API_URL}/api/openai-diana-analyze`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    mode: 'cors', // Добавляем явно режим CORS
+                    body: JSON.stringify({ userId: userId })
+                });
+                
+                console.log('Response status:', response.status);
+                console.log('Response headers:', [...response.headers.entries()]);
+                
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    showResult(`❌ Ошибка HTTP ${response.status}: ${errorText}`, 'error');
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('Response data:', data);
+                
+                if (data.message) {
+                    showResult(`✅ <strong>AI анализ получен!</strong><br><br><div style="border-left: 3px solid #007cba; padding-left: 15px; font-style: italic;">${data.message}</div>`, 'success');
+                } else {
+                    showResult(`⚠️ Получен ответ, но без анализа: ${JSON.stringify(data)}`, 'error');
+                }
+                
+            } catch (error) {
+                showResult(`❌ Ошибка: ${error.message}`, 'error');
+            }
+        }
+    </script>
+</body>
+</html>
