@@ -211,11 +211,11 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   
   // ЖЕЛЕЗНАЯ ЗАЩИТА: completedMeals с localStorage бэкапом
   const [completedMeals, setCompletedMealsState] = useState(() => {
-    // КРИТИЧЕСКИ ВАЖНО: инициализируем из localStorage при создании компонента
+    // КРИТИЧЕСКИ ВАЖНО: используем ТУ ЖЕ ЛОГИКУ что и для currentDay
     if (typeof window !== 'undefined' && window.localStorage) {
-      // Пробуем определить дату из day или текущей даты
-      const dateToUse = day?.date || new Date().toISOString().split('T')[0];
-      const saved = localStorage.getItem(`diana_completed_meals_${dateToUse}`);
+      // Используем ту же логику что и для currentDay ниже!
+      const tempCurrentDay = day || personalPlan || { date: '2024-06-03' };
+      const saved = localStorage.getItem(`diana_completed_meals_${tempCurrentDay.date}`);
       if (saved) {
         try {
           const parsedData = JSON.parse(saved);
