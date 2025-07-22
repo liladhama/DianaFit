@@ -336,7 +336,13 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       }
     } else if (Array.isArray(aiMeals) && aiMeals.length === 0) {
       // ТОЛЬКО если aiMeals пустой массив (а не null), тогда сбрасываем
+      console.log('🔥 ВНИМАНИЕ! Собираюсь УДАЛИТЬ completedMeals!', {
+        aiMeals,
+        completedMealsLength: completedMeals.length,
+        completedMeals: completedMeals
+      });
       if (completedMeals.length !== 0) {
+        console.log('💀 УДАЛЯЮ completedMeals!');
         setCompletedMeals([]);
       }
     }
@@ -866,6 +872,12 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   // Загружаем статусы при смене дня
   useEffect(() => {
+    console.log('🚨 КРИТИЧЕСКИЙ useEffect сработал!', {
+      currentDayDate: currentDay?.date,
+      answersUserId: answers?.userId,
+      completedMealsLength: completedMeals.length,
+      completedMeals: completedMeals
+    });
     setIsInitialLoading(true); // Сбрасываем флаг при смене дня
     setIsLoaded(false); // Сбрасываем флаг загрузки
     fetchDayStatus();
