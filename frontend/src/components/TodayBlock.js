@@ -321,7 +321,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
 
 
-  // completedMeals теперь инициализируется ТОЛЬКО из aiMeals (не currentDay.meals) и ТОЛЬКО если пустой
+  // completedMeals ТОЛЬКО создается ОДИН РАЗ при первом входе, потом НИКОГДА не трогается!
   useEffect(() => {
     // --- completedExercises ---
     if (currentDay.workout?.exercises) {
@@ -339,24 +339,19 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     }
 
     // --- completedMeals ---
-    // ИСПРАВЛЕНО: инициализируем ТОЛЬКО из aiMeals и ТОЛЬКО если completedMeals пустой И нет данных в localStorage
-    if (completedMeals.length === 0 && Array.isArray(aiMeals) && aiMeals.length > 0) {
-      // Проверяем localStorage перед инициализацией
+    // ТОЛЬКО создаем массив если его ВООБЩЕ НЕТ, потом НИКОГДА не трогаем!
+    if (Array.isArray(aiMeals) && aiMeals.length > 0) {
+      // Проверяем localStorage - есть ли уже данные для этой даты
       const saved = localStorage.getItem(`diana_completed_meals_${currentDay.date}`);
-      let hasLocalStorageData = false;
-      if (saved) {
-        try {
-          const parsedMeals = JSON.parse(saved);
-          hasLocalStorageData = Array.isArray(parsedMeals) && parsedMeals.some(v => v === true || v === false);
-        } catch (e) {}
-      }
+      const hasExistingData = saved && saved !== '[]' && saved !== 'null';
       
-      // Инициализируем ТОЛЬКО если нет данных в localStorage
-      if (!hasLocalStorageData) {
-        setCompletedMeals(aiMeals.map(() => null));
+      // СОЗДАЕМ массив ТОЛЬКО если его нет в localStorage И completedMeals пустой
+      if (!hasExistingData && completedMeals.length === 0) {
+        const newMealStates = aiMeals.map(() => null);
+        setCompletedMeals(newMealStates);
       }
     }
-    // После этого completedMeals никогда не сбрасывается автоматически!
+    // ПОСЛЕ СОЗДАНИЯ - БОЛЬШЕ НИКОГДА НЕ ТРОГАЕМ!
   }, [currentDay, isLoaded, aiMeals]);
   // Определяем, запущено ли на мобильном устройстве
   const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -794,13 +789,13 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       // ...лог убран...
       setIsInitialLoading(false); // Устанавливаем флаг даже если нет userId
       
-      // ВОССТАНОВЛЕНИЕ ИЗ localStorage даже если нет userId
-      if (currentDay?.date) {
+      // ВОССТАНОВЛЕНИЕ ИЗ localStorage ТОЛЬКО если массив пустой
+      if (currentDay?.date && completedMeals.length === 0) {
         const saved = localStorage.getItem(`diana_completed_meals_${currentDay.date}`);
-        if (saved) {
+        if (saved && saved !== '[]' && saved !== 'null') {
           try {
             const parsedData = JSON.parse(saved);
-            if (Array.isArray(parsedData) && parsedData.some(v => v === true || v === false)) {
+            if (Array.isArray(parsedData)) {
               setCompletedMealsState(parsedData);
             }
           } catch (e) {
@@ -864,11 +859,11 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
               } catch (e) {}
             }
             
-            // setCompletedMeals ТОЛЬКО если нет пользовательского прогресса И нет данных в localStorage
-            const hasUserProgress = completedMeals.some(v => v === true || v === false);
-            if (completedMeals.length === 0 && !hasUserProgress && !hasLocalStorageData && isInitialLoading) {
+            // setCompletedMeals ТОЛЬКО если массив вообще ПУСТОЙ (никогда не был создан)
+            if (completedMeals.length === 0) {
               setCompletedMeals(finalMealStates);
             }
+            // ЕСЛИ МАССИВ УЖЕ ЕСТЬ - НЕ ТРОГАЕМ ЕГО!
           }
           if (Object.keys(mealReasonsObj).length) setMealReasons(mealReasonsObj);
           if (exerciseStates.length) {
@@ -892,27 +887,29 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
             } catch (e) {}
           }
           
-          // setCompletedMeals ТОЛЬКО если нет пользовательского прогресса И нет данных в localStorage
-          const hasUserProgress = completedMeals.some(v => v === true || v === false);
-          if (completedMeals.length === 0 && !hasUserProgress && !hasLocalStorageData && isInitialLoading) {
+          // setCompletedMeals ТОЛЬКО если массив вообще ПУСТОЙ (никогда не был создан)
+          if (completedMeals.length === 0) {
             setCompletedMeals(finalMealStates);
           }
+          // ЕСЛИ МАССИВ УЖЕ ЕСТЬ - НЕ ТРОГАЕМ ЕГО!
         }
         if (data.completedExercises) {
           // ...лог убран...
           setCompletedExercises(data.completedExercises);
         }
       } else {
-        // НЕТ ДАННЫХ С СЕРВЕРА - восстанавливаем из localStorage
-        const saved = localStorage.getItem(`diana_completed_meals_${currentDay.date}`);
-        if (saved) {
-          try {
-            const parsedData = JSON.parse(saved);
-            if (Array.isArray(parsedData) && parsedData.some(v => v === true || v === false)) {
-              setCompletedMealsState(parsedData);
+        // НЕТ ДАННЫХ С СЕРВЕРА - восстанавливаем из localStorage ТОЛЬКО если массив пустой
+        if (completedMeals.length === 0) {
+          const saved = localStorage.getItem(`diana_completed_meals_${currentDay.date}`);
+          if (saved && saved !== '[]' && saved !== 'null') {
+            try {
+              const parsedData = JSON.parse(saved);
+              if (Array.isArray(parsedData)) {
+                setCompletedMealsState(parsedData);
+              }
+            } catch (e) {
+              console.warn('Ошибка восстановления completedMeals из localStorage:', e);
             }
-          } catch (e) {
-            console.warn('Ошибка восстановления completedMeals из localStorage:', e);
           }
         }
       }
