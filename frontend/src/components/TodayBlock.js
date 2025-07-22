@@ -247,22 +247,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     completed: false,
   };
 
-  // Восстановление completedMeals из localStorage при смене дня (ПОСЛЕ определения currentDay)
-  useEffect(() => {
-    if (currentDay?.date) {
-      const saved = localStorage.getItem(`diana_completed_meals_${currentDay.date}`);
-      if (saved) {
-        try {
-          const parsedData = JSON.parse(saved);
-          if (Array.isArray(parsedData)) {
-            setCompletedMealsState(parsedData);
-          }
-        } catch (e) {
-          console.warn('Ошибка восстановления completedMeals из localStorage:', e);
-        }
-      }
-    }
-  }, [currentDay?.date]);
+  // УБРАНО: Этот useEffect ЗАТИРАЛ completedMeals! Восстановление теперь только в fetchDayStatus
 
 
   // Проверка: все приемы пищи выполнены
@@ -318,7 +303,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
 
 
-  // completedMeals теперь инициализируется только один раз и больше не сбрасывается автоматически
+  // completedMeals теперь инициализируется ТОЛЬКО из aiMeals (не currentDay.meals) и ТОЛЬКО если пустой
   useEffect(() => {
     // --- completedExercises ---
     if (currentDay.workout?.exercises) {
@@ -336,12 +321,25 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     }
 
     // --- completedMeals ---
-    // completedMeals инициализируется только если он пустой и есть currentDay.meals
-    if (completedMeals.length === 0 && currentDay.meals && currentDay.meals.length > 0) {
-      setCompletedMeals(currentDay.meals.map(() => null));
+    // ИСПРАВЛЕНО: инициализируем ТОЛЬКО из aiMeals и ТОЛЬКО если completedMeals пустой И нет данных в localStorage
+    if (completedMeals.length === 0 && Array.isArray(aiMeals) && aiMeals.length > 0) {
+      // Проверяем localStorage перед инициализацией
+      const saved = localStorage.getItem(`diana_completed_meals_${currentDay.date}`);
+      let hasLocalStorageData = false;
+      if (saved) {
+        try {
+          const parsedMeals = JSON.parse(saved);
+          hasLocalStorageData = Array.isArray(parsedMeals) && parsedMeals.some(v => v === true || v === false);
+        } catch (e) {}
+      }
+      
+      // Инициализируем ТОЛЬКО если нет данных в localStorage
+      if (!hasLocalStorageData) {
+        setCompletedMeals(aiMeals.map(() => null));
+      }
     }
     // После этого completedMeals никогда не сбрасывается автоматически!
-  }, [currentDay, isLoaded]);
+  }, [currentDay, isLoaded, aiMeals]);
   // Определяем, запущено ли на мобильном устройстве
   const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   const hasTelegramWebApp = window.Telegram?.WebApp;
@@ -629,7 +627,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       setReasonModalData({
         type: 'meal',
         index: idx,
-        itemName: currentDay.meals[idx]?.type || `Прием пищи ${idx + 1}`
+        itemName: (Array.isArray(aiMeals) && aiMeals[idx]) ? (aiMeals[idx].type || aiMeals[idx].name) : `Прием пищи ${idx + 1}`
       });
       setShowReasonModal(true);
       return;
@@ -678,7 +676,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       setReasonModalData({
         type: 'meal',
         index: idx,
-        itemName: currentDay.meals[idx]?.type || `Прием пищи ${idx + 1}`
+        itemName: (Array.isArray(aiMeals) && aiMeals[idx]) ? (aiMeals[idx].type || aiMeals[idx].name) : `Прием пищи ${idx + 1}`
       });
       setShowReasonModal(true);
       return; // Не обновляем состояние сразу, ждем выбор причины
@@ -745,9 +743,9 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       completedTasks += completedExercises.filter(Boolean).length;
     }
 
-    // Считаем приемы пищи
-    if (currentDay.meals && currentDay.meals.length > 0) {
-      totalTasks += currentDay.meals.length;
+    // Считаем приемы пищи (используем aiMeals)
+    if (Array.isArray(aiMeals) && aiMeals.length > 0) {
+      totalTasks += aiMeals.length;
       completedTasks += completedMeals.filter(Boolean).length;
     }
 
@@ -777,6 +775,22 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     if (!answers?.userId || !currentDay?.date) {
       // ...лог убран...
       setIsInitialLoading(false); // Устанавливаем флаг даже если нет userId
+      
+      // ВОССТАНОВЛЕНИЕ ИЗ localStorage даже если нет userId
+      if (currentDay?.date) {
+        const saved = localStorage.getItem(`diana_completed_meals_${currentDay.date}`);
+        if (saved) {
+          try {
+            const parsedData = JSON.parse(saved);
+            if (Array.isArray(parsedData) && parsedData.some(v => v === true || v === false)) {
+              setCompletedMealsState(parsedData);
+            }
+          } catch (e) {
+            console.warn('Ошибка восстановления completedMeals из localStorage:', e);
+          }
+        }
+      }
+      
       return;
     }
     
@@ -871,7 +885,18 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           setCompletedExercises(data.completedExercises);
         }
       } else {
-        // ...лог убран...
+        // НЕТ ДАННЫХ С СЕРВЕРА - восстанавливаем из localStorage
+        const saved = localStorage.getItem(`diana_completed_meals_${currentDay.date}`);
+        if (saved) {
+          try {
+            const parsedData = JSON.parse(saved);
+            if (Array.isArray(parsedData) && parsedData.some(v => v === true || v === false)) {
+              setCompletedMealsState(parsedData);
+            }
+          } catch (e) {
+            console.warn('Ошибка восстановления completedMeals из localStorage:', e);
+          }
+        }
       }
       
       setIsInitialLoading(false); // Завершаем первоначальную загрузку
@@ -952,14 +977,14 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     // --- ПОЗДРАВЛЕНИЕ ЗА ПРИЕМЫ ПИЩИ ---
     const date = currentDay?.date;
     const mealsKey = `congrats_meals_shown_${date}`;
-    const allMealsDone = currentDay?.meals?.length > 0 &&
-      updated.length === currentDay.meals.length &&
+    const allMealsDone = Array.isArray(aiMeals) && aiMeals.length > 0 &&
+      updated.length === aiMeals.length &&
       updated.every(v => v === true);
     const mealsCongratsWasShown = localStorage.getItem(mealsKey) === '1';
     if (
       completed &&
       !mealsCongratsWasShown &&
-      currentDay?.meals?.length > 0 &&
+      Array.isArray(aiMeals) && aiMeals.length > 0 &&
       allMealsDone
     ) {
       setShowCongratsMeals(true);
@@ -1271,8 +1296,9 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         });
       });
     }
-    if (currentDay.meals) {
-      currentDay.meals.forEach((m, i) => {
+    // Используем aiMeals вместо currentDay.meals
+    if (Array.isArray(aiMeals) && aiMeals.length > 0) {
+      aiMeals.forEach((m, i) => {
         tasks.push({
           name: m.type || m.name,
           type: 'meal',
