@@ -295,8 +295,6 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         setCompletedMeals(aiMeals.map((_, i) => completedMeals[i] ?? null));
       }
       // Если длина совпадает — ничего не делаем, completedMeals сохраняется
-    } else if (completedMeals.length !== 0) {
-      setCompletedMeals([]);
     }
   }, [aiMeals]);
 
@@ -339,10 +337,6 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         setCompletedMeals(newMealStates);
       } else if (isLoaded) {
         // ...лог убран...
-      }
-    } else {
-      if (completedMeals.length !== 0) {
-        setCompletedMeals([]);
       }
     }
   }, [currentDay, isLoaded]);
