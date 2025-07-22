@@ -278,11 +278,15 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   useEffect(() => {
     if (Array.isArray(aiMeals)) {
-      if (completedMeals.length !== aiMeals.length) {
-        // Только если длина изменилась, пересчитываем массив (например, если вдруг добавили/убрали приём пищи)
-        setCompletedMeals(aiMeals.map((_, i) => completedMeals[i] ?? null));
+      // completedMeals всегда длиной 5 (или больше, если aiMeals больше 5)
+      const targetLen = Math.max(5, aiMeals.length);
+      if (completedMeals.length !== targetLen) {
+        const newArr = [];
+        for (let i = 0; i < targetLen; i++) {
+          newArr[i] = completedMeals[i] ?? null;
+        }
+        setCompletedMeals(newArr);
       }
-      // Если длина совпадает — ничего не делаем, completedMeals сохраняется
     } else if (completedMeals.length !== 0) {
       setCompletedMeals([]);
     }
@@ -296,43 +300,18 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     // Статусы должны загружаться только с сервера через fetchDayStatus
     if (currentDay.workout?.exercises) {
       const newExerciseStates = currentDay.workout.exercises.map(() => null);
-      // ...лог убран...
-      // Сравниваем массивы перед обновлением
       const isSame =
         completedExercises.length === newExerciseStates.length &&
         completedExercises.every((v, i) => v === newExerciseStates[i]);
       if (!isSame && !isLoaded) {
-        // ...лог убран...
-        // Инициализируем null значениями только если данные еще не загружены
         setCompletedExercises(newExerciseStates);
-      } else if (isLoaded) {
-        // ...лог убран...
       }
     } else {
       if (completedExercises.length !== 0) {
         setCompletedExercises([]);
       }
     }
-
-    if (currentDay.meals) {
-      const newMealStates = currentDay.meals.map(() => null);
-      // ...лог убран...
-      // Сравниваем массивы перед обновлением
-      const isSame =
-        completedMeals.length === newMealStates.length &&
-        completedMeals.every((v, i) => v === newMealStates[i]);
-      if (!isSame && !isLoaded) {
-        // ...лог убран...
-        // Инициализируем null значениями только если данные еще не загружены
-        setCompletedMeals(newMealStates);
-      } else if (isLoaded) {
-        // ...лог убран...
-      }
-    } else {
-      if (completedMeals.length !== 0) {
-        setCompletedMeals([]);
-      }
-    }
+    // completedMeals не трогаем! Только через fetchDayStatus и aiMeals useEffect
   }, [currentDay, isLoaded]);
   // Определяем, запущено ли на мобильном устройстве
   const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -857,48 +836,41 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   };
 
   // Загружаем статусы при смене дня
-  useEffect(() => {
-    setIsInitialLoading(true); // Сбрасываем флаг при смене дня
-    setIsLoaded(false); // Сбрасываем флаг загрузки
-    fetchDayStatus();
-    // eslint-disable-next-line
-  }, [currentDay?.date, answers?.userId]);
-
-  // Принудительная перезагрузка при первом монтировании
-  useEffect(() => {
-    // Принудительно перезагружаем данные при первом запуске
-    if (answers?.userId && currentDay?.date) {
-      // ...лог убран...
-      setIsInitialLoading(true);
-      fetchDayStatus();
-    }
-  }, []);
-
-  // Унификация userId: Telegram ID в проде, demo_user_local_test локально
-  useEffect(() => {
-    if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
-      if (answers && !answers.userId) {
-        answers.userId = window.Telegram.WebApp.initDataUnsafe.user.id;
-        // ...лог убран...
+    try {
+      const res = await fetch(`${API_URL}/api/progress?userId=${answers.userId}&date=${currentDay.date}`);
+      const data = await res.json();
+      if (data && (Array.isArray(data.tasks) || data.completedMealsArr || data.completedExercises)) {
+        if (Array.isArray(data.tasks)) {
+          setTasks(data.tasks);
+          // Парсим задачи для восстановления статусов и причин
+          const mealStates = [];
+          const mealReasonsObj = {};
+          const exerciseStates = [];
+          const exerciseReasonsObj = {};
+          data.tasks.forEach((task, idx) => {
+            if (task.type === 'meal') {
+              mealStates.push(task.done === true ? true : task.done === false ? false : null);
+              if (task.reason) mealReasonsObj[mealStates.length - 1] = task.reason;
+            } else if (task.type === 'workout') {
+              exerciseStates.push(task.done === true ? true : task.done === false ? false : null);
+              if (task.reason) exerciseReasonsObj[exerciseStates.length - 1] = task.reason;
+            } else if (task.type === 'steps') {
+              if (task.walking_minutes) {
+                setWalkingMinutes(task.walking_minutes);
+                setStepsStatus(task.done);
+              }
+            }
+          });
+          // mealStates всегда длиной 5
+          let finalMealStates = mealStates.map(v => v === true ? true : v === false ? false : null);
+          while (finalMealStates.length < 5) finalMealStates.push(null);
+          if (finalMealStates.length > 5) finalMealStates = finalMealStates.slice(0, 5);
+          setCompletedMeals(finalMealStates);
+          if (Object.keys(mealReasonsObj).length) setMealReasons(mealReasonsObj);
+          if (exerciseStates.length) setCompletedExercises(exerciseStates);
+          if (Object.keys(exerciseReasonsObj).length) setExerciseReasons(exerciseReasonsObj);
+        }
       }
-    } else {
-      if (answers && !answers.userId) {
-        answers.userId = 'demo_user_local_test';
-        // ...лог убран...
-      }
-    }
-  }, [answers]);
-
-  // --- Новая функция для отправки статуса приема пищи на backend ---
-  // Обработчик выбора состояния приема пищи (съел/не съел)
-  const handleMealStatusChange = async (idx, completed) => {
-    // ...лог убран...
-    // Если отмечаем как НЕ съедено - показываем модал с причинами
-    if (!completed) {
-      // ...лог убран...
-      const mealName = Array.isArray(aiMeals) && aiMeals[idx] 
-        ? aiMeals[idx].type || aiMeals[idx].name 
-        : `Прием пищи ${idx + 1}`;
       setReasonModalData({
         type: 'meal',
         index: idx,
@@ -1193,15 +1165,14 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         });
       });
     }
-    // Приёмы пищи (используем aiMeals вместо currentDay.meals)
-    if (Array.isArray(aiMeals) && aiMeals.length > 0) {
-      aiMeals.forEach((m, i) => {
-        tasks.push({
-          name: m.type || m.name,
-          type: 'meal',
-          done: completedMeals[i] === null ? null : completedMeals[i] === true, // сохраняем null
-          reason: completedMeals[i] === false && mealReasons[i] ? mealReasons[i] : undefined
-        });
+    // Приёмы пищи — всегда 5 задач
+    for (let i = 0; i < 5; i++) {
+      const meal = aiMeals[i] || {};
+      tasks.push({
+        name: meal.type || meal.name || `Прием пищи ${i + 1}`,
+        type: 'meal',
+        done: completedMeals[i] === null ? null : completedMeals[i] === true,
+        reason: completedMeals[i] === false && mealReasons[i] ? mealReasons[i] : undefined
       });
     }
     // Шаги
@@ -1234,14 +1205,14 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         });
       });
     }
-    if (currentDay.meals) {
-      currentDay.meals.forEach((m, i) => {
-        tasks.push({
-          name: m.type || m.name,
-          type: 'meal',
-          done: mealsArr[i] === null ? null : mealsArr[i] === true, // сохраняем null
-          reason: mealsArr[i] === false && mealReasons[i] ? mealReasons[i] : undefined
-        });
+    // Приёмы пищи — всегда 5 задач
+    for (let i = 0; i < 5; i++) {
+      const meal = aiMeals[i] || {};
+      tasks.push({
+        name: meal.type || meal.name || `Прием пищи ${i + 1}`,
+        type: 'meal',
+        done: mealsArr[i] === null ? null : mealsArr[i] === true,
+        reason: mealsArr[i] === false && mealReasons[i] ? mealReasons[i] : undefined
       });
     }
     return tasks;
