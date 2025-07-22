@@ -290,7 +290,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
 
 
-  // Обновляем состояние при изменении currentDay
+  // completedMeals теперь инициализируется только один раз и больше не сбрасывается автоматически
   useEffect(() => {
     // --- completedExercises ---
     if (currentDay.workout?.exercises) {
@@ -308,15 +308,11 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     }
 
     // --- completedMeals ---
-    if (currentDay.meals) {
-      const newMealStates = currentDay.meals.map(() => null);
-      // completedMeals должен инициализироваться только если это первый запуск дня (isLoaded === false)
-      // и длина не совпадает с количеством приёмов пищи
-      if (!isLoaded && completedMeals.length !== newMealStates.length) {
-        setCompletedMeals(newMealStates);
-      }
-      // Если completedMeals уже есть (даже если все null), не трогаем его вообще
+    // completedMeals инициализируется только если он пустой и есть currentDay.meals
+    if (completedMeals.length === 0 && currentDay.meals && currentDay.meals.length > 0) {
+      setCompletedMeals(currentDay.meals.map(() => null));
     }
+    // После этого completedMeals никогда не сбрасывается автоматически!
   }, [currentDay, isLoaded]);
   // Определяем, запущено ли на мобильном устройстве
   const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
