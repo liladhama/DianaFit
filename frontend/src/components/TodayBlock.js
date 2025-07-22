@@ -209,34 +209,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [tasks, setTasks] = useState([]);
   
-  // ЖЕЛЕЗНАЯ ЗАЩИТА: completedMeals с localStorage бэкапом
-  const [completedMeals, setCompletedMealsState] = useState(() => {
-    // КРИТИЧЕСКИ ВАЖНО: используем ТУ ЖЕ ЛОГИКУ что и для currentDay
-    if (typeof window !== 'undefined' && window.localStorage) {
-      // Используем ту же логику что и для currentDay ниже!
-      const tempCurrentDay = day || personalPlan || { date: '2024-06-03' };
-      const saved = localStorage.getItem(`diana_completed_meals_${tempCurrentDay.date}`);
-      if (saved) {
-        try {
-          const parsedData = JSON.parse(saved);
-          if (Array.isArray(parsedData)) {
-            return parsedData;
-          }
-        } catch (e) {
-          console.warn('Ошибка восстановления completedMeals из localStorage:', e);
-        }
-      }
-    }
-    return [];
-  });
-  
-  // Обертка для setCompletedMeals с автосохранением в localStorage
-  const setCompletedMeals = (newValue) => {
-    setCompletedMealsState(newValue);
-    if (currentDay?.date) {
-      localStorage.setItem(`diana_completed_meals_${currentDay.date}`, JSON.stringify(newValue));
-    }
-  };
+  // ТОЧНО ТА ЖЕ ПРОСТАЯ ЛОГИКА КАК У УПРАЖНЕНИЙ - БЕЗ localStorage!
+  const [completedMeals, setCompletedMeals] = useState([]);
   
   const [completedExercises, setCompletedExercises] = useState([]);
   const [walkingMinutes, setWalkingMinutes] = useState(null);
@@ -339,19 +313,20 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     }
 
     // --- completedMeals ---
-    // ТОЛЬКО создаем массив если его ВООБЩЕ НЕТ, потом НИКОГДА не трогаем!
+    // ТОЧНО ТА ЖЕ ЛОГИКА ЧТО И У УПРАЖНЕНИЙ!
     if (Array.isArray(aiMeals) && aiMeals.length > 0) {
-      // Проверяем localStorage - есть ли уже данные для этой даты
-      const saved = localStorage.getItem(`diana_completed_meals_${currentDay.date}`);
-      const hasExistingData = saved && saved !== '[]' && saved !== 'null';
-      
-      // СОЗДАЕМ массив ТОЛЬКО если его нет в localStorage И completedMeals пустой
-      if (!hasExistingData && completedMeals.length === 0) {
-        const newMealStates = aiMeals.map(() => null);
+      const newMealStates = aiMeals.map(() => null);
+      const isSame =
+        completedMeals.length === newMealStates.length &&
+        completedMeals.every((v, i) => v === newMealStates[i]);
+      if (!isSame && !isLoaded) {
         setCompletedMeals(newMealStates);
       }
+    } else {
+      if (completedMeals.length !== 0) {
+        setCompletedMeals([]);
+      }
     }
-    // ПОСЛЕ СОЗДАНИЯ - БОЛЬШЕ НИКОГДА НЕ ТРОГАЕМ!
   }, [currentDay, isLoaded, aiMeals]);
   // Определяем, запущено ли на мобильном устройстве
   const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -788,22 +763,6 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     if (!answers?.userId || !currentDay?.date) {
       // ...лог убран...
       setIsInitialLoading(false); // Устанавливаем флаг даже если нет userId
-      
-      // ВОССТАНОВЛЕНИЕ ИЗ localStorage ТОЛЬКО если массив пустой
-      if (currentDay?.date && completedMeals.length === 0) {
-        const saved = localStorage.getItem(`diana_completed_meals_${currentDay.date}`);
-        if (saved && saved !== '[]' && saved !== 'null') {
-          try {
-            const parsedData = JSON.parse(saved);
-            if (Array.isArray(parsedData)) {
-              setCompletedMealsState(parsedData);
-            }
-          } catch (e) {
-            console.warn('Ошибка восстановления completedMeals из localStorage:', e);
-          }
-        }
-      }
-      
       return;
     }
     
@@ -848,22 +807,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           if (mealStates.length) {
             // Приводим все значения к null, true, false (false только если явно выбран "не съел")
             const finalMealStates = mealStates.map(v => v === true ? true : v === false ? false : null);
-            
-            // ЖЕЛЕЗНАЯ ЗАЩИТА: проверяем localStorage ДО любых изменений
-            const savedMeals = localStorage.getItem(`diana_completed_meals_${currentDay.date}`);
-            let hasLocalStorageData = false;
-            if (savedMeals) {
-              try {
-                const parsedMeals = JSON.parse(savedMeals);
-                hasLocalStorageData = Array.isArray(parsedMeals) && parsedMeals.some(v => v === true || v === false);
-              } catch (e) {}
-            }
-            
-            // setCompletedMeals ТОЛЬКО если массив вообще ПУСТОЙ (никогда не был создан)
-            if (completedMeals.length === 0) {
-              setCompletedMeals(finalMealStates);
-            }
-            // ЕСЛИ МАССИВ УЖЕ ЕСТЬ - НЕ ТРОГАЕМ ЕГО!
+            setCompletedMeals(finalMealStates);
           }
           if (Object.keys(mealReasonsObj).length) setMealReasons(mealReasonsObj);
           if (exerciseStates.length) {
@@ -876,42 +820,14 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         if (data.completedMealsArr) {
           // ...лог убран...
           const finalMealStates = data.completedMealsArr.map(v => v === true ? true : v === false ? false : null);
-          
-          // ЖЕЛЕЗНАЯ ЗАЩИТА: проверяем localStorage ДО любых изменений
-          const savedMeals = localStorage.getItem(`diana_completed_meals_${currentDay.date}`);
-          let hasLocalStorageData = false;
-          if (savedMeals) {
-            try {
-              const parsedMeals = JSON.parse(savedMeals);
-              hasLocalStorageData = Array.isArray(parsedMeals) && parsedMeals.some(v => v === true || v === false);
-            } catch (e) {}
-          }
-          
-          // setCompletedMeals ТОЛЬКО если массив вообще ПУСТОЙ (никогда не был создан)
-          if (completedMeals.length === 0) {
-            setCompletedMeals(finalMealStates);
-          }
-          // ЕСЛИ МАССИВ УЖЕ ЕСТЬ - НЕ ТРОГАЕМ ЕГО!
+          setCompletedMeals(finalMealStates);
         }
         if (data.completedExercises) {
           // ...лог убран...
           setCompletedExercises(data.completedExercises);
         }
       } else {
-        // НЕТ ДАННЫХ С СЕРВЕРА - восстанавливаем из localStorage ТОЛЬКО если массив пустой
-        if (completedMeals.length === 0) {
-          const saved = localStorage.getItem(`diana_completed_meals_${currentDay.date}`);
-          if (saved && saved !== '[]' && saved !== 'null') {
-            try {
-              const parsedData = JSON.parse(saved);
-              if (Array.isArray(parsedData)) {
-                setCompletedMealsState(parsedData);
-              }
-            } catch (e) {
-              console.warn('Ошибка восстановления completedMeals из localStorage:', e);
-            }
-          }
-        }
+        // НЕТ ДАННЫХ С СЕРВЕРА - ничего не делаем, как с упражнениями
       }
       
       setIsInitialLoading(false); // Завершаем первоначальную загрузку
