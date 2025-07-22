@@ -313,7 +313,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     }
 
     // --- completedMeals ---
-    // ТОЧНО ТА ЖЕ ЛОГИКА ЧТО И У УПРАЖНЕНИЙ!
+    // ТОЧНО ТА ЖЕ ЛОГИКА ЧТО И У УПРАЖНЕНИЙ - С УСЛОВИЕМ !isLoaded!
     if (Array.isArray(aiMeals) && aiMeals.length > 0) {
       const newMealStates = aiMeals.map(() => null);
       const isSame =
