@@ -295,15 +295,22 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
 
 
+  // Отладочное состояние для визуальной отладки в Telegram
+  const [debugInfo, setDebugInfo] = useState('');
+  const [showDebug, setShowDebug] = useState(false);
+
   // completedMeals ТОЛЬКО создается ОДИН РАЗ при первом входе, потом НИКОГДА не трогается!
   useEffect(() => {
-    console.log('🔄 useEffect инициализации:', {
+    const debugData = {
       aiMeals: aiMeals,
       aiMealsLength: Array.isArray(aiMeals) ? aiMeals.length : 'не массив',
       completedMealsLength: completedMeals.length,
       completedMeals: completedMeals,
       isLoaded
-    });
+    };
+    
+    console.log('🔄 useEffect инициализации:', debugData);
+    setDebugInfo(`🔄 Инициализация: aiMeals=${debugData.aiMealsLength}, completedMeals=${debugData.completedMealsLength}, isLoaded=${debugData.isLoaded}`);
     
     // --- completedExercises ---
     if (currentDay.workout?.exercises) {
@@ -341,8 +348,10 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         completedMealsLength: completedMeals.length,
         completedMeals: completedMeals
       });
+      setDebugInfo(`🔥 УДАЛЕНИЕ! aiMeals=[], completedMeals=${completedMeals.length}`);
       if (completedMeals.length !== 0) {
         console.log('💀 УДАЛЯЮ completedMeals!');
+        setDebugInfo(`💀 УДАЛЕНО! completedMeals обнулен`);
         setCompletedMeals([]);
       }
     }
@@ -872,12 +881,16 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   // Загружаем статусы при смене дня
   useEffect(() => {
-    console.log('🚨 КРИТИЧЕСКИЙ useEffect сработал!', {
+    const debugData = {
       currentDayDate: currentDay?.date,
       answersUserId: answers?.userId,
       completedMealsLength: completedMeals.length,
       completedMeals: completedMeals
-    });
+    };
+    
+    console.log('🚨 КРИТИЧЕСКИЙ useEffect сработал!', debugData);
+    setDebugInfo(`🚨 КРИТИЧЕСКИЙ: date=${debugData.currentDayDate}, meals=${debugData.completedMealsLength}`);
+    
     setIsInitialLoading(true); // Сбрасываем флаг при смене дня
     setIsLoaded(false); // Сбрасываем флаг загрузки
     fetchDayStatus();
@@ -1414,6 +1427,36 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         >
           К НЕДЕЛЕ
         </button>
+      </div>
+
+      {/* ОТЛАДОЧНАЯ ПАНЕЛЬ ДЛЯ TELEGRAM */}
+      <div style={{ 
+        position: 'fixed', 
+        bottom: 10, 
+        left: 10, 
+        zIndex: 9999,
+        background: 'rgba(0,0,0,0.8)',
+        color: 'white',
+        padding: '8px',
+        borderRadius: '8px',
+        fontSize: '12px',
+        maxWidth: '300px'
+      }}>
+        <div 
+          onClick={() => setShowDebug(!showDebug)}
+          style={{ cursor: 'pointer', fontWeight: 'bold' }}
+        >
+          🐛 Debug {showDebug ? '▼' : '▶'}
+        </div>
+        {showDebug && (
+          <div style={{ marginTop: '4px' }}>
+            <div>completedMeals: [{completedMeals.map((v, i) => `${i}:${v}`).join(', ')}]</div>
+            <div>aiMeals: {Array.isArray(aiMeals) ? aiMeals.length : 'null'}</div>
+            <div>isLoaded: {String(isLoaded)}</div>
+            <div>isInitialLoading: {String(isInitialLoading)}</div>
+            <div style={{ marginTop: '4px', fontSize: '10px' }}>{debugInfo}</div>
+          </div>
+        )}
       </div>
 
       {/* Мотивация дня */}
