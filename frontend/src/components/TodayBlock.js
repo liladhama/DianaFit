@@ -333,11 +333,10 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         completedMeals.every((v, i) => v === newMealStates[i]);
       if (!isSame && !isLoaded) {
         // ...лог убран...
-        // Инициализируем null значениями только если данные еще не загружены
+        // Инициализируем null значениями только если данные еще не загружены (isLoaded === false)
         setCompletedMeals(newMealStates);
-      } else if (isLoaded) {
-        // ...лог убран...
       }
+      // Если isLoaded === true, не трогаем completedMeals вообще
     }
   }, [currentDay, isLoaded]);
   // Определяем, запущено ли на мобильном устройстве
