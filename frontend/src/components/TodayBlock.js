@@ -793,8 +793,10 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           if (mealStates.length) {
             // Приводим все значения к null, true, false (false только если явно выбран "не съел")
             const finalMealStates = mealStates.map(v => v === true ? true : v === false ? false : null);
-            // ...лог убран...
-            setCompletedMeals(finalMealStates);
+            // setCompletedMeals только если массив пустой или это первая загрузка
+            if (completedMeals.length === 0 || isInitialLoading) {
+              setCompletedMeals(finalMealStates);
+            }
           }
           if (Object.keys(mealReasonsObj).length) setMealReasons(mealReasonsObj);
           if (exerciseStates.length) {
@@ -807,8 +809,10 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         if (data.completedMealsArr) {
           // ...лог убран...
           const finalMealStates = data.completedMealsArr.map(v => v === true ? true : v === false ? false : null);
-          // ...лог убран...
-          setCompletedMeals(finalMealStates);
+          // setCompletedMeals только если массив пустой или это первая загрузка
+          if (completedMeals.length === 0 || isInitialLoading) {
+            setCompletedMeals(finalMealStates);
+          }
         }
         if (data.completedExercises) {
           // ...лог убран...
