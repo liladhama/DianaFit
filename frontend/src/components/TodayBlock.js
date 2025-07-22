@@ -297,6 +297,14 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   // completedMeals ТОЛЬКО создается ОДИН РАЗ при первом входе, потом НИКОГДА не трогается!
   useEffect(() => {
+    console.log('🔄 useEffect инициализации:', {
+      aiMeals: aiMeals,
+      aiMealsLength: Array.isArray(aiMeals) ? aiMeals.length : 'не массив',
+      completedMealsLength: completedMeals.length,
+      completedMeals: completedMeals,
+      isLoaded
+    });
+    
     // --- completedExercises ---
     if (currentDay.workout?.exercises) {
       const newExerciseStates = currentDay.workout.exercises.map(() => null);
@@ -326,7 +334,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       if (!isSame && !hasUserChoices) {
         setCompletedMeals(newMealStates);
       }
-    } else {
+    } else if (Array.isArray(aiMeals) && aiMeals.length === 0) {
+      // ТОЛЬКО если aiMeals пустой массив (а не null), тогда сбрасываем
       if (completedMeals.length !== 0) {
         setCompletedMeals([]);
       }
