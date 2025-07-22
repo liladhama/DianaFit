@@ -1530,17 +1530,13 @@ router.get('/user/weekly-program/:userId', async (req, res) => {
     // ИСПРАВЛЕНО: используем UserProgressLogger вместо старых функций
     const logger = new UserProgressLogger(userId);
     const userData = await logger.loadLog();
-    console.log('[GET WEEKLY PROGRAM] userId:', userId);
-    console.log('[GET WEEKLY PROGRAM] userData:', JSON.stringify(userData, null, 2));
     // Ищем программу в programData или program (для обратной совместимости)
     const program = userData.programData || userData.program;
     if (!program) {
-      console.warn('[GET WEEKLY PROGRAM] Program not found for userId:', userId);
       return res.status(404).json({ error: 'Program not found' });
     }
     res.json(program);
   } catch (error) {
-    console.error('[GET WEEKLY PROGRAM] Ошибка загрузки программы:', error);
     res.status(500).json({ error: error.message });
   }
 });

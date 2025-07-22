@@ -156,9 +156,11 @@ async function sendDailyNotifications() {
         });
         const result = await response.json();
         if (!result.ok) {
+          // Ошибка Telegram API — критическая, оставляем вывод
           console.error(`[Рассылка] Ошибка Telegram API для пользователя ${user.userId} (chatId: ${user.chatId}):`, result);
         }
       } catch (err) {
+        // Ошибка отправки сообщения — критическая, оставляем вывод
         console.error(`[Рассылка] Ошибка отправки сообщения пользователю ${user.userId} (chatId: ${user.chatId}):`, err);
       }
     }
@@ -167,6 +169,7 @@ async function sendDailyNotifications() {
   // Запускать каждую минуту (рабочий режим)
   cron.schedule('* * * * *', () => {
     sendDailyNotifications().catch(err => {
+      // Ошибка рассылки — критическая, оставляем вывод
       console.error('Ошибка рассылки:', err);
     });
   });

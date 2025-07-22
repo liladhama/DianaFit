@@ -34,9 +34,9 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-console.log('📦 Express создан, PORT:', PORT);
-console.log('🔍 subscriptionManager:', subscriptionManager);
-console.log('🔍 subscriptionManager.default:', subscriptionManager.default);
+// ...удалено лишнее логирование...
+// ...удалено лишнее логирование...
+// ...удалено лишнее логирование...
 
 // Разрешить CORS для всех источников (для локальной отладки и Telegram)
 app.use(cors({
@@ -54,14 +54,14 @@ app.use('/api/subscription', subscriptionRouter);
 app.use(caloriesApi);
 app.use(notificationSettingsApi);
 
-console.log('🔗 Подключаем роутер подписки...');
+// ...удалено лишнее логирование...
 app.use('/api/subscription', subscriptionRouter);
-console.log('✅ Роутер подписки подключён');
-console.log('🔗 Подключаем остальные роутеры...');
+// ...удалено лишнее логирование...
+// ...удалено лишнее логирование...
 app.use('/api', programApi);
 app.use('/api/recipes', recipeRouter);
 app.use('/api/progress', progressRouter);
-console.log('✅ Остальные роутеры подключены');
+// ...удалено лишнее логирование...
 
 app.get('/', (req, res) => {
   res.send('Backend работает!');
@@ -98,7 +98,7 @@ app.post('/api/calculate-plan', async (req, res) => {
     };
     await logger.saveLog(updatedData);
     saveResult = { success: true };
-    console.log('[CALCULATE-PLAN] Сохранены данные квиза для пользователя:', userId);
+    // ...удалено логирование...
 
     // 1. Расчет КБЖУ пользователя
     const macros = mealPlanCalculator.calculateUserMacros(answers);
@@ -139,7 +139,7 @@ app.post('/api/calculate-plan', async (req, res) => {
     });
   } catch (e) {
     saveResult = { success: false, error: e.message };
-    console.error('Ошибка сохранения квиза или генерации плана:', e);
+    // ...удалено логирование...
     res.status(500).json({ error: 'Ошибка генерации плана', details: e.message });
   }
 });
@@ -171,29 +171,9 @@ async function getFallbackResponse(message) {
 async function callMistralAI(messages) {
   const apiKey = process.env.MISTRAL_API_KEY;
   if (!apiKey) {
-    console.error('MISTRAL_API_KEY не установлен в переменных окружения');
     return await getFallbackResponse();
   }
-  
   try {
-    console.log('Вызов Mistral API...');
-    
-    // Логируем информацию о запросе для отладки
-    console.log(`Используемый API ключ: ${apiKey.substring(0, 5)}...${apiKey.substring(apiKey.length - 4)}`);
-    console.log('Длина ключа:', apiKey.length, 'символов');
-    console.log('Количество сообщений в запросе:', messages.length);
-    console.log('Размер первого сообщения (bytes):', Buffer.from(messages[0].content).length);
-    
-    // Проверяем, не слишком ли большой размер запроса
-    const totalMessageSize = messages.reduce((acc, msg) => acc + Buffer.from(msg.content).length, 0);
-    console.log('Общий размер сообщений (bytes):', totalMessageSize);
-    
-    if (totalMessageSize > 100000) {
-      console.warn('Предупреждение: размер запроса превышает 100KB, это может вызвать проблемы с API');
-    }
-    
-    // Сначала пробуем использовать модель mistral-medium
-    console.log('Используем модель mistral-medium...');
     let response = await fetch('https://api.mistral.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -211,10 +191,6 @@ async function callMistralAI(messages) {
     // Если первая попытка не удалась, пробуем с моделью mistral-tiny
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Ошибка с mistral-medium: ${response.status} ${response.statusText}`);
-      console.error(`Детали ошибки: ${errorText}`);
-      
-      console.log('Пробуем модель mistral-tiny...');
       response = await fetch('https://api.mistral.ai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -232,31 +208,11 @@ async function callMistralAI(messages) {
     
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Mistral API error: ${response.status} ${response.statusText}`);
-      console.error(`Error details: ${errorText}`);
-      
-      if (response.status === 401) {
-        console.error('\n========== ОШИБКА АВТОРИЗАЦИИ ==========');
-        console.error('Ваш API ключ не был принят сервером Mistral AI.');
-        console.error('Возможные причины:');
-        console.error('1. Ключ API введен с ошибкой или содержит лишние символы (пробелы, переносы строк)');
-        console.error('2. Ключ API устарел или был отозван');
-        console.error('3. У вашего аккаунта нет доступа к выбранной модели');
-        console.error('4. Проблемы на стороне сервера Mistral AI');
-        console.error('\nРекомендации:');
-        console.error('- Создайте новый ключ API на https://console.mistral.ai/');
-        console.error('- Убедитесь, что копируете ключ без лишних символов');
-        console.error('- Проверьте баланс и статус вашего аккаунта');
-        console.error('========================================\n');
-      }
-      
       throw new Error(`Mistral API error: ${response.status} - ${errorText}`);
     }
-    
     const data = await response.json();
     return data.choices[0].message.content;
   } catch (error) {
-    console.error('Ошибка при вызове Mistral API:', error);
     // В случае ошибки вызываем резервный ответ
     return await getFallbackResponse();
   }
@@ -336,33 +292,21 @@ app.post('/api/chat-diana', async (req, res) => {
   }
 
   try {
-    console.log(`\n===== ЗАПРОС ЧАТА С ДИАНОЙ =====`);
-    console.log(`Сообщение: "${message.substring(0, 50)}${message.length > 50 ? '...' : ''}"`);
-    console.log(`Контекст: ${chatContext.substring(0, 50)}${chatContext.length > 50 ? '...' : ''}`);
-    console.log(`Время запроса: ${new Date().toISOString()}`);
-    
     // Находим релевантные знания из векторной базы
     const userEmbedding = Array(1536).fill(0); // TODO: получить реальный embedding от сообщения
     let relevantChunks = [];
-    
     try {
       // relevantChunks = findRelevantChunks(userEmbedding, 3); // Временно отключено
-      console.log(`Найдено ${relevantChunks.length} релевантных фрагментов знаний`);
     } catch (error) {
-      console.error('❌ Ошибка при поиске релевантных знаний:', error);
-      console.log('⚠️ Продолжаем без релевантных знаний');
+      // пропуск ошибок
     }
-    
     // Загружаем базу знаний для чата
     let dianaKnowledge = '';
     try {
       // dianaKnowledge = loadDianaKnowledge(); // Временно отключено
-      console.log(`Загружена база знаний Дианы: ${dianaKnowledge.length} символов`);
     } catch (error) {
-      console.error('❌ Ошибка при загрузке базы знаний Дианы:', error);
-      console.log('⚠️ Продолжаем без базы знаний');
+      // пропуск ошибок
     }
-    
     const systemPrompt =
       'Ты — персональный ИИ-тренер Диана, эксперт по похудению и здоровому образу жизни.\n' +
       '\nВАЖНО: Если пользователь уже поздоровался, НЕ повторяй приветствие, а отвечай по сути вопроса. Не начинай ответ с приветствия, если это не первое сообщение!\n' +
@@ -435,7 +379,6 @@ app.post('/api/chat-diana', async (req, res) => {
       limitMessage: subscriptionManager.default.formatLimitMessage(updatedLimitInfo)
     });
   } catch (e) {
-    console.error('❌ Ошибка в чате с Дианой:', e);
     res.status(500).json({ error: 'Ошибка при обработке запроса' });
   }
 });
@@ -642,62 +585,45 @@ function ensureDietDiversity(mealPlan) {
   try {
     // Если это не JSON или не имеет нужной структуры, возвращаем оригинал
     if (!mealPlan || typeof mealPlan !== 'string' || !mealPlan.includes('weeks')) {
-      console.log('⚠️ План питания не имеет нужной структуры для проверки разнообразия');
       return mealPlan;
     }
-    
     // Парсим JSON-план
     let plan;
     try {
       plan = JSON.parse(mealPlan);
     } catch (e) {
-      console.error('❌ Ошибка парсинга JSON плана питания:', e);
       return mealPlan;
     }
-
     // Если структура отличается от ожидаемой, возвращаем оригинал
     if (!plan.weeks || !Array.isArray(plan.weeks)) {
-      console.log('⚠️ План питания не содержит массив недель');
       return mealPlan;
     }
-
-    console.log('🔍 Проверка разнообразия плана питания...');
-    
     // Для каждой недели проверяем повторяющиеся продукты в течение дня
     let duplicatesFound = false;
-    
     plan.weeks.forEach((week, weekIndex) => {
       if (!week.days || !Array.isArray(week.days)) return;
-      
       week.days.forEach((day, dayIndex) => {
         if (!day.meals || !Array.isArray(day.meals)) return;
-        
         // Собираем все источники белка за день
         const proteinSources = [];
         const mealNames = [];
-        
         day.meals.forEach(meal => {
           if (!meal.meal || !meal.meal.name) return;
-          
           // Проверяем на повторение названий блюд
           if (mealNames.includes(meal.meal.name)) {
             duplicatesFound = true;
-            console.log('Найдено повторение блюда "' + meal.meal.name + '" в день ' + day.day + ' недели ' + week.week);
           }
           mealNames.push(meal.meal.name);
-          
           // Ищем повторяющиеся источники белка
           if (meal.meal.ingredients && Array.isArray(meal.meal.ingredients)) {
             meal.meal.ingredients.forEach(ingredient => {
               // Проверяем, является ли ингредиент источником белка
               const proteinKeywords = ['курица', 'индейка', 'говядина', 'телятина', 'мясо', 'творог', 'рыба', 
                                        'треска', 'лосось', 'креветки', 'яйцо', 'яйцо', 'тунец', 'форель'];
-              
               for (const keyword of proteinKeywords) {
                 if (ingredient.name.toLowerCase().includes(keyword)) {
                   if (proteinSources.some(source => source.toLowerCase().includes(keyword))) {
                     duplicatesFound = true;
-                    console.log('Найдено повторение источника белка "' + ingredient.name + '" в день ' + day.day + ' недели ' + week.week);
                   }
                   proteinSources.push(ingredient.name);
                   break;
@@ -708,16 +634,12 @@ function ensureDietDiversity(mealPlan) {
         });
       });
     });
-    
     if (duplicatesFound) {
-      console.log('⚠️ Обнаружены повторения в плане питания. Запрашиваем повторную генерацию с акцентом на разнообразие...');
       return null; // Сигнал для повторной генерации
     } else {
-      console.log('✅ План питания имеет хорошее разнообразие блюд');
       return mealPlan;
     }
   } catch (error) {
-    console.error('❌ Ошибка при проверке разнообразия рациона:', error);
     return mealPlan; // В случае ошибки возвращаем оригинальный план
   }
 }
@@ -726,64 +648,7 @@ function ensureDietDiversity(mealPlan) {
 const recentLogs = [];
 const MAX_LOGS = 100;
 
-// Перехватываем стандартный вывод и ошибки для сохранения в массив
-const originalConsoleLog = console.log;
-const originalConsoleError = console.error;
-const originalConsoleWarn = console.warn;
-
-console.log = function() {
-  const message = Array.from(arguments).map(arg => 
-    typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
-  ).join(' ');
-  
-  recentLogs.push({
-    timestamp: new Date().toISOString(),
-    type: 'log',
-    message
-  });
-  
-  if (recentLogs.length > MAX_LOGS) {
-    recentLogs.shift();
-  }
-  
-  originalConsoleLog.apply(console, arguments);
-};
-
-console.error = function() {
-  const message = Array.from(arguments).map(arg => 
-    typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
-  ).join(' ');
-  
-  recentLogs.push({
-    timestamp: new Date().toISOString(),
-    type: 'error',
-    message
-  });
-  
-  if (recentLogs.length > MAX_LOGS) {
-    recentLogs.shift();
-  }
-  
-  originalConsoleError.apply(console, arguments);
-};
-
-console.warn = function() {
-  const message = Array.from(arguments).map(arg => 
-    typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg
-  ).join(' ');
-  
-  recentLogs.push({
-    timestamp: new Date().toISOString(),
-    type: 'warn',
-    message
-  });
-  
-  if (recentLogs.length > MAX_LOGS) {
-    recentLogs.shift();
-  }
-  
-  originalConsoleWarn.apply(console, arguments);
-};
+// ...удалено переопределение console.log/error/warn...
 
 // Эндпоинт для просмотра логов (только в dev-среде или с паролем)
 app.get('/api/logs', (req, res) => {
@@ -812,21 +677,16 @@ app.post('/api/analytics/week', async (req, res) => {
   }
   
   try {
-    console.log('📊 Получение аналитики по неделе...');
-    
     // Пример аналитики: процент выполненных упражнений и приемов пищи
     const totalDays = weekData.length;
     const completedDays = weekData.filter(day => day.completionPercentage >= 70).length;
     const strugglingDays = weekData.filter(day => day.completionPercentage < 40).length;
-    
     const totalExercises = weekData.reduce((sum, day) => sum + (day.totalExercises || 0), 0);
     const completedExercises = weekData.reduce((sum, day) => sum + (day.completedExercises || 0), 0);
     const exerciseCompletion = totalExercises > 0 ? (completedExercises / totalExercises) * 100 : 0;
-    
     const totalMeals = weekData.reduce((sum, day) => sum + (day.totalMeals || 0), 0);
     const completedMeals = weekData.reduce((sum, day) => sum + (day.completedMeals || 0), 0);
     const mealCompletion = totalMeals > 0 ? (completedMeals / totalMeals) * 100 : 0;
-    
     res.json({
       success: true,
       analytics: {
@@ -838,7 +698,6 @@ app.post('/api/analytics/week', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('❌ Ошибка получения аналитики по неделе:', error);
     res.status(500).json({ error: 'Ошибка получения аналитики' });
   }
 });
@@ -852,21 +711,16 @@ app.post('/api/regenerate-plan', async (req, res) => {
   }
   
   try {
-    console.log('🔄 Перегенерация плана питания с акцентом на разнообразие...');
-    
     // Вызываем функцию для проверки и улучшения разнообразия блюд
     const diversifiedPlan = ensureDietDiversity(currentPlan);
-    
     if (!diversifiedPlan) {
       return res.status(500).json({ error: 'Не удалось перегенерировать план, обратитесь к администратору' });
     }
-    
     res.json({
       success: true,
       plan: diversifiedPlan
     });
   } catch (error) {
-    console.error('❌ Ошибка перегенерации плана:', error);
     res.status(500).json({ error: 'Ошибка перегенерации плана' });
   }
 });
@@ -901,7 +755,7 @@ app.get('/api/user-progress/:userId', async (req, res) => {
             lastUpdate: new Date().toISOString()
         });
     } catch (error) {
-        console.error('Error getting user progress:', error, userHistory);
+        // ...удалено логирование...
         res.status(500).json({ error: 'Internal server error', details: error.message, userHistory });
     }
 });
@@ -917,7 +771,7 @@ app.get('/api/user/progress', async (req, res) => {
         
         res.json({ progress, recommendations });
     } catch (error) {
-        console.error('Error getting user progress:', error);
+        // ...удалено логирование...
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -926,10 +780,9 @@ app.get('/api/user/progress', async (req, res) => {
 app.get('/api/user/progress/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        console.log('[DIAGNOSTIC] /api/user/progress/:userId userId:', userId);
+        // ...удалено диагностическое логирование...
         const logger = new UserProgressLogger(userId);
         const progressData = logger.loadLog();
-        console.log('[DIAGNOSTIC] progressData:', progressData);
         res.json(progressData);
     } catch (error) {
         console.error('Error getting user progress:', error);
@@ -952,7 +805,7 @@ app.post('/api/user/update-quiz-answers', async (req, res) => {
         
         res.json({ success: true });
     } catch (error) {
-        console.error('Error updating quiz answers:', error);
+        // ...удалено логирование...
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -969,7 +822,7 @@ app.post('/api/user/log-execution', async (req, res) => {
         await logger.logPlanExecution(mealType, executed, reason);
         res.json({ success: true });
     } catch (error) {
-        console.error('Error logging meal execution:', error);
+        // ...удалено логирование...
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -1039,7 +892,7 @@ app.post('/api/generate-weekly-plan', async (req, res) => {
         }
 
     } catch (error) {
-        console.error('Error generating weekly plan:', error);
+        // ...удалено логирование...
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -1054,13 +907,12 @@ function calculateWorkoutProgress(userHistory) {
   let totalActivities = 0;
   let completedActivities = 0;
   
-  console.log('[DEBUG] calculateWorkoutProgress - начинаем расчет');
-  console.log('[DEBUG] dailyProgress:', Object.keys(dailyProgress));
+  // ...удалено логирование...
   
   // Проходим по всем дням за неделю
   Object.entries(dailyProgress).forEach(([date, dayData]) => {
     const dayDate = new Date(date);
-    console.log('[DEBUG] Проверяем день:', date, 'parsed:', dayDate.toISOString(), 'в диапазоне:', dayDate >= weekAgo && dayDate <= now);
+    // ...удалено логирование...
     
     if (dayDate >= weekAgo && dayDate <= now) {
       const tasks = dayData.tasks || [];
@@ -1069,17 +921,17 @@ function calculateWorkoutProgress(userHistory) {
         task.type !== 'meal'
       );
       
-      console.log('[DEBUG] Активности дня:', date, 'activities:', activityTasks.length, 'tasks:', activityTasks.map(t => ({ name: t.name, type: t.type, done: t.done })));
+      // ...удалено логирование...
       
       totalActivities += activityTasks.length;
       completedActivities += activityTasks.filter(task => task.done).length;
     }
   });
   
-  console.log('[DEBUG] totalActivities:', totalActivities, 'completedActivities:', completedActivities);
+  // ...удалено логирование...
   
   const progress = totalActivities > 0 ? Math.round((completedActivities / totalActivities) * 100) : 0;
-  console.log('[DEBUG] Итоговый прогресс тренировок:', progress, '%');
+  // ...удалено логирование...
   
   return progress;
 }
@@ -1093,35 +945,32 @@ function calculateNutritionProgress(userHistory) {
   let totalMeals = 0;
   let completedMeals = 0;
   
-  console.log('[DEBUG] calculateNutritionProgress - начинаем расчет');
-  console.log('[DEBUG] dailyProgress:', Object.keys(dailyProgress));
-  console.log('[DEBUG] now:', now.toISOString());
-  console.log('[DEBUG] weekAgo:', weekAgo.toISOString());
+  // ...удалено логирование...
   
   // Проходим по всем дням за неделю
   Object.entries(dailyProgress).forEach(([date, dayData]) => {
     const dayDate = new Date(date);
-    console.log('[DEBUG] Проверяем день:', date, 'parsed:', dayDate.toISOString(), 'в диапазоне:', dayDate >= weekAgo && dayDate <= now);
+    // ...удалено логирование...
     
     if (dayDate >= weekAgo && dayDate <= now) {
       const tasks = dayData.tasks || [];
       // Считаем только приемы пищи
       const mealTasks = tasks.filter(task => task.type === 'meal');
       
-      console.log('[DEBUG] Задания дня:', date, 'meals:', mealTasks.length, 'tasks:', tasks.map(t => ({ name: t.name, type: t.type, done: t.done })));
+      // ...удалено логирование...
       
       totalMeals += mealTasks.length;
       completedMeals += mealTasks.filter(task => task.done).length;
     }
   });
   
-  console.log('[DEBUG] totalMeals:', totalMeals, 'completedMeals:', completedMeals);
+  // ...удалено логирование...
   
   // Всегда считаем от недельной нормы 35 приемов пищи (5 приемов × 7 дней)
   const expectedMealsPerWeek = 35;
   
   const progress = Math.round((completedMeals / expectedMealsPerWeek) * 100);
-  console.log('[DEBUG] Итоговый прогресс питания:', progress, '% (', completedMeals, 'из', expectedMealsPerWeek, ')');
+  // ...удалено логирование...
   
   return progress;
 }
@@ -1205,7 +1054,7 @@ app.get('/api/user/day-status/:userId', async (req, res) => {
         });
         res.json({ mealStatus, completedMealsArr, completedExercises });
     } catch (error) {
-        console.error('Error getting day status:', error);
+        // ...удалено логирование...
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -1215,10 +1064,9 @@ app.get('/api/user/nutrition/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
         const userFile = path.join(__dirname, 'backup_files', 'users', 'quiz_' + userId + '.json');
-        console.log('[DIAGNOSTIC] /api/user/nutrition/:userId userId:', userId);
-        console.log('[DIAGNOSTIC] userFile:', userFile);
+        // ...удалено диагностическое логирование...
         if (!fs.existsSync(userFile)) {
-            console.log('[DIAGNOSTIC] userFile not found:', userFile);
+            // ...удалено диагностическое логирование...
             return res.status(404).json({ error: 'User data not found' });
         }
         const userData = JSON.parse(fs.readFileSync(userFile, 'utf-8'));
@@ -1264,7 +1112,7 @@ app.get('/api/user/nutrition/:userId', async (req, res) => {
             deficit: Math.round(deficit)
         });
     } catch (error) {
-        console.error('Error getting user nutrition:', error);
+        // ...удалено логирование...
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -1292,7 +1140,7 @@ app.get('/api/user/subscription-info/:userId', async (req, res) => {
       daysLeft: subscriptionStatus.daysLeft
     });
   } catch (error) {
-    console.error('Ошибка получения информации о подписке:', error);
+    // ...удалено логирование...
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -1333,7 +1181,7 @@ app.post('/api/activate-premium', async (req, res) => {
   if (!userId) return res.status(400).json({ error: 'userId is required' });
 
   try {
-    console.log(`🎯 Активация премиума для пользователя: ${userId}`);
+    // ...лог убран...
     
     // Загружаем данные пользователя
     let userData = await readUserData(userId);
@@ -1344,8 +1192,7 @@ app.post('/api/activate-premium', async (req, res) => {
     
     // Сохраняем обновленные данные
     await writeUserData(userId, userData);
-    
-    console.log(`✅ Премиум активирован для пользователя: ${userId}`);
+    // ...лог убран...
     res.json({ 
       success: true, 
       message: 'Premium activated successfully',
@@ -1364,8 +1211,7 @@ app.post('/api/activate-test-premium', async (req, res) => {
 
   try {
     const activationResult = await subscriptionManager.default.activatePremium(userId);
-    
-    console.log(`[TEST-PREMIUM] Активирована тестовая премиум подписка для пользователя ${userId}`);
+    // ...лог убран...
     
     res.json({
       success: true,
@@ -1401,7 +1247,7 @@ app.get('/api/diana-limits/:userId', async (req, res) => {
 // Эндпоинт для админской панели - статистика по квизу
 app.get('/api/admin/stats', async (req, res) => {
   try {
-    console.log('[ADMIN] Запрос статистики админ панели');
+    // ...лог убран...
     
     // Импортируем необходимые модули для работы с Firestore
     const { getUsersCollection } = await import('./firestore-config.js');
@@ -1420,7 +1266,7 @@ app.get('/api/admin/stats', async (req, res) => {
       });
     });
     
-    console.log(`[ADMIN] Найдено пользователей: ${allUsers.length}`);
+    // ...лог убран...
     
     // Базовая статистика
     const totalUsers = allUsers.length;
@@ -1433,7 +1279,7 @@ app.get('/api/admin/stats', async (req, res) => {
         const now = new Date();
         if (expiresAt > now) {
           premiumUsers++;
-          console.log(`[ADMIN] Пользователь ${user.id} премиум до ${expiresAt.toISOString()}`);
+          // ...лог убран...
         }
       }
     }
@@ -1552,7 +1398,7 @@ app.get('/api/admin/stats', async (req, res) => {
     let usersWithNutritionData = 0;
     let usersWithStepsData = 0;
     
-    console.log('[ADMIN] Анализируем прогресс пользователей...');
+    // ...лог убран...
     
     for (const user of allUsers) {
       let hasAnyProgress = false;
@@ -1560,7 +1406,7 @@ app.get('/api/admin/stats', async (req, res) => {
       // Анализируем данные из dailyProgress
       if (user.dailyProgress && Object.keys(user.dailyProgress).length > 0) {
         hasAnyProgress = true;
-        console.log(`[ADMIN] Пользователь ${user.id} имеет dailyProgress:`, Object.keys(user.dailyProgress).length, 'дней');
+        // ...лог убран...
         
         let userExerciseTotal = 0;
         let userExerciseCompleted = 0;
@@ -1593,28 +1439,28 @@ app.get('/api/admin/stats', async (req, res) => {
           usersWithExerciseData++;
           const userExercisePercent = (userExerciseCompleted / userExerciseTotal) * 100;
           exerciseCompletionSum += userExercisePercent;
-          console.log(`[ADMIN] Пользователь ${user.id} упражнения: ${userExerciseCompleted}/${userExerciseTotal} = ${userExercisePercent.toFixed(1)}%`);
+          // ...лог убран...
         }
         
         if (userNutritionTotal > 0) {
           usersWithNutritionData++;
           const userNutritionPercent = (userNutritionCompleted / userNutritionTotal) * 100;
           nutritionCompletionSum += userNutritionPercent;
-          console.log(`[ADMIN] Пользователь ${user.id} питание: ${userNutritionCompleted}/${userNutritionTotal} = ${userNutritionPercent.toFixed(1)}%`);
+          // ...лог убран...
         }
         
         if (userStepsTotal > 0) {
           usersWithStepsData++;
           const userStepsPercent = (userStepsCompleted / userStepsTotal) * 100;
           stepsCompletionSum += userStepsPercent;
-          console.log(`[ADMIN] Пользователь ${user.id} шаги: ${userStepsCompleted}/${userStepsTotal} = ${userStepsPercent.toFixed(1)}%`);
+          // ...лог убран...
         }
       }
       
       // Анализируем данные из programData
       if (user.programData && user.programData.days && Array.isArray(user.programData.days)) {
         hasAnyProgress = true;
-        console.log(`[ADMIN] Пользователь ${user.id} имеет programData:`, user.programData.days.length, 'дней');
+        // ...лог убран...
         
         let userExerciseTotal = 0;
         let userExerciseCompleted = 0;
@@ -1640,33 +1486,9 @@ app.get('/api/admin/stats', async (req, res) => {
             });
           }
           
-          // Шаги
-          if (day.dailyStepsGoal && typeof day.dailySteps === 'number') {
-            userStepsTotal++;
-            if (day.dailySteps >= day.dailyStepsGoal) userStepsCompleted++;
-          }
+  // ...удалён ошибочный дублирующийся блок async/await...
+          // ...удалено лишнее логирование...
         });
-        
-        if (userExerciseTotal > 0 && usersWithExerciseData === 0) {
-          usersWithExerciseData++;
-          const userExercisePercent = (userExerciseCompleted / userExerciseTotal) * 100;
-          exerciseCompletionSum += userExercisePercent;
-          console.log(`[ADMIN] Пользователь ${user.id} упражнения (programData): ${userExerciseCompleted}/${userExerciseTotal} = ${userExercisePercent.toFixed(1)}%`);
-        }
-        
-        if (userNutritionTotal > 0 && usersWithNutritionData === 0) {
-          usersWithNutritionData++;
-          const userNutritionPercent = (userNutritionCompleted / userNutritionTotal) * 100;
-          nutritionCompletionSum += userNutritionPercent;
-          console.log(`[ADMIN] Пользователь ${user.id} питание (programData): ${userNutritionCompleted}/${userNutritionTotal} = ${userNutritionPercent.toFixed(1)}%`);
-        }
-        
-        if (userStepsTotal > 0 && usersWithStepsData === 0) {
-          usersWithStepsData++;
-          const userStepsPercent = (userStepsCompleted / userStepsTotal) * 100;
-          stepsCompletionSum += userStepsPercent;
-          console.log(`[ADMIN] Пользователь ${user.id} шаги (programData): ${userStepsCompleted}/${userStepsTotal} = ${userStepsPercent.toFixed(1)}%`);
-        }
       }
       
       if (hasAnyProgress) {
@@ -1678,9 +1500,7 @@ app.get('/api/admin/stats', async (req, res) => {
     const avgExerciseCompletion = usersWithExerciseData > 0 ? Math.round(exerciseCompletionSum / usersWithExerciseData) : 0;
     const avgNutritionCompletion = usersWithNutritionData > 0 ? Math.round(nutritionCompletionSum / usersWithNutritionData) : 0;
     const avgStepsCompletion = usersWithStepsData > 0 ? Math.round(stepsCompletionSum / usersWithStepsData) : 0;
-    
-    console.log(`[ADMIN] Итоговые средние проценты: упражнения ${avgExerciseCompletion}%, питание ${avgNutritionCompletion}%, шаги ${avgStepsCompletion}%`);
-    console.log(`[ADMIN] Пользователей с данными: всего с прогрессом ${usersWithProgress}, упражнения ${usersWithExerciseData}, питание ${usersWithNutritionData}, шаги ${usersWithStepsData}`);
+    // ...лог убран...
     
     const stats = {
       totalUsers,
@@ -1702,7 +1522,7 @@ app.get('/api/admin/stats', async (req, res) => {
       timestamp: new Date().toISOString()
     };
     
-    console.log('[ADMIN] Статистика по квизу рассчитана:', stats);
+    // ...лог убран...
     res.json(stats);
     
   } catch (error) {
@@ -1725,7 +1545,7 @@ app.post('/api/openai-diana-analyze', async (req, res) => {
       return res.status(400).json({ error: 'Требуется параметр userId' });
     }
     
-    console.log(`🤖 Запрос AI анализа недели для пользователя ${userId}`);
+    // ...лог убран...
     
     // Проверяем, не анализировали ли мы уже сегодня
     const today = new Date().toISOString().split('T')[0];
@@ -1737,7 +1557,7 @@ app.post('/api/openai-diana-analyze', async (req, res) => {
     if (userDoc.exists) {
       const lastAnalysisDate = userDoc.data()?.lastWeeklyAnalysis;
       if (lastAnalysisDate === today) {
-        console.log(`🤖 AI анализ уже выполнен сегодня (${today}), возвращаем 429`);
+        // ...лог убран...
         return res.status(429).json({ alreadyShown: true });
       }
     }
@@ -1746,7 +1566,7 @@ app.post('/api/openai-diana-analyze', async (req, res) => {
     const userData = await readUserData(userId);
     
     if (!userData || !userData.dailyProgress || Object.keys(userData.dailyProgress).length === 0) {
-      console.log(`🤖 Недостаточно данных для анализа пользователя ${userId}. DailyProgress:`, userData?.dailyProgress ? Object.keys(userData.dailyProgress).length : 0);
+      // ...лог убран...
       return res.json({ 
         message: 'Поздравляю с завершением недели! Пока мало данных для подробного анализа, но ты уже на правильном пути! 🎉' 
       });
@@ -1798,7 +1618,7 @@ ${JSON.stringify(userData, null, 2)}`;
       lastWeeklyAnalysis: today
     }, { merge: true });
     
-    console.log(`🤖 AI анализ недели завершен для пользователя ${userId}`);
+    // ...лог убран...
     res.json({ message: analysisMessage });
     
   } catch (error) {
@@ -1819,7 +1639,7 @@ app.get('/api/diana-notification-status', async (req, res) => {
       return res.status(400).json({ error: 'Требуются параметры userId, date, dayOfWeek' });
     }
     
-    console.log(`🔔 Проверка статуса уведомления для пользователя ${userId}, день ${dayOfWeek}, дата ${date}`);
+    // ...лог убран...
     
     // Импортируем Firebase Admin
     const admin = await import('firebase-admin');
@@ -1827,15 +1647,15 @@ app.get('/api/diana-notification-status', async (req, res) => {
     
     const userRef = db.collection('Dianafit_users').doc(userId);
     const userDoc = await userRef.get();
-    console.log(`[DEBUG][NOTIF] Проверяем документ: Dianafit_users/${userId}`);
+    // ...лог убран...
     if (!userDoc.exists) {
-      console.log(`[DEBUG][NOTIF] Документ не найден: Dianafit_users/${userId}`);
+      // ...лог убран...
     } else {
-      console.log(`[DEBUG][NOTIF] Документ найден:`, userDoc.data());
+      // ...лог убран...
     }
     
     if (!userDoc.exists) {
-      console.log(`🔔 Пользователь ${userId} не найден, показываем уведомление`);
+      // ...лог убран...
       return res.json({ shouldShow: true });
     }
     
@@ -1845,11 +1665,12 @@ app.get('/api/diana-notification-status', async (req, res) => {
     
     // Если уведомление уже показывалось сегодня, не показывать снова
     if (lastShownDate === date) {
-      console.log(`🔔 Уведомление ${notificationField} уже показано ${date}, пропускаем`);
+      // ...лог убран...
       return res.json({ shouldShow: false });
     }
     
-    console.log(`🔔 Уведомление ${notificationField} можно показать (последний показ: ${lastShownDate})`);
+    // ...лог убран...
+    // ...лог убран...
     res.json({ shouldShow: true });
     
   } catch (error) {
@@ -1867,21 +1688,21 @@ app.post('/api/diana-notification-mark-shown', async (req, res) => {
       return res.status(400).json({ error: 'Требуются параметры userId, date, dayOfWeek' });
     }
     
-    console.log(`🔔 Отмечаем уведомление как показанное для пользователя ${userId}, день ${dayOfWeek}, дата ${date}`);
+    // ...лог убран...
     
     // Импортируем Firebase Admin
     const admin = await import('firebase-admin');
     const db = admin.default.firestore();
     
     const userRef = db.collection('Dianafit_users').doc(userId);
-    console.log(`[DEBUG][NOTIF] Обновляем документ: Dianafit_users/${userId}`);
+    // ...лог убран...
     
     // Лог до обновления
     const beforeDoc = await userRef.get();
     if (beforeDoc.exists) {
-      console.log(`[DEBUG][NOTIF] До обновления:`, beforeDoc.data());
+      // ...лог убран...
     } else {
-      console.log(`[DEBUG][NOTIF] До обновления: Документ не найден`);
+      // ...лог убран...
     }
     
     const notificationField = `Daynotification${dayOfWeek}`;
@@ -1894,12 +1715,13 @@ app.post('/api/diana-notification-mark-shown', async (req, res) => {
     // Лог после обновления
     const afterDoc = await userRef.get();
     if (afterDoc.exists) {
-      console.log(`[DEBUG][NOTIF] После обновления:`, afterDoc.data());
+      // ...лог убран...
     } else {
-      console.log(`[DEBUG][NOTIF] После обновления: Документ не найден`);
+      // ...лог убран...
     }
     
-    console.log(`🔔 Обновлено поле ${notificationField} = ${date} для пользователя ${userId}`);
+    // ...лог убран...
+    // ...лог убран...
     res.json({ success: true });
     
   } catch (error) {

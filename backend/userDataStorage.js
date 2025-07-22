@@ -6,7 +6,7 @@ let db = null;
 let firestoreAvailable = false;
 
 // Инициализация Firestore
-console.log('[Firestore] Попытка инициализации...');
+// ...удалено лишнее логирование...
 try {
   admin = await import('firebase-admin');
   const adm = admin.default;
@@ -25,9 +25,8 @@ try {
   
   db = adm.firestore();
   firestoreAvailable = true;
-  console.log('[Firestore] Firestore успешно инициализирован');
-  console.log('[Firestore] Проект:', serviceAccount.project_id);
-  console.log('[Firestore] Коллекция пользователей:', getUsersCollection());
+  // ...удалено лишнее логирование...
+  // ...удалено логирование Firestore...
 } catch (e) {
   firestoreAvailable = false;
   console.error('[Firestore] Ошибка инициализации:', e);
@@ -36,7 +35,7 @@ try {
 
 export async function readUserData(userId) {
   userId = String(userId);
-  console.log(`[Firestore][readUserData] Попытка чтения данных для userId: ${userId}`);
+  // ...удалено логирование Firestore...
   
   if (!firestoreAvailable) {
     throw new Error('Firestore недоступен. Проверьте конфигурацию Firebase');
@@ -44,22 +43,11 @@ export async function readUserData(userId) {
   
   try {
     const collection = getUsersCollection();
-    console.log(`[Firestore][readUserData] Читаем из коллекции: ${collection}/${userId}`);
+    // ...удалено логирование Firestore...
     const doc = await db.collection(collection).doc(userId).get();
     
     if (doc.exists) {
       const data = doc.data();
-      console.log(`[Firestore][readUserData] ✅ Документ найден в Firestore:`, {
-        userId: data.userId,
-        isPremium: data.isPremium || false,
-        hasQuiz: !!data.quiz,
-        hasDailyProgress: !!data.dailyProgress,
-        hasProgramData: !!data.programData,
-        hasDialogHistory: !!data.dialogHistory,
-        hasProfileChanges: !!data.profileChanges,
-        hasPlanExecution: !!data.planExecution,
-        lastUpdate: data.lastUpdate
-      });
       return {
         userId: data.userId,
         isPremium: data.isPremium || false,
@@ -69,12 +57,12 @@ export async function readUserData(userId) {
         dialogHistory: data.dialogHistory,
         profileChanges: data.profileChanges,
         planExecution: data.planExecution,
-        lastUpdate: data.lastUpdate
-       ,subscription: data.subscription || {}
+        lastUpdate: data.lastUpdate,
+        subscription: data.subscription || {}
       };
     }
     
-    console.log(`[Firestore][readUserData] Документ не найден в Firestore: userId=${userId}, создаем новый`);
+    // ...удалено логирование Firestore...
     return { userId, isPremium: false };
   } catch (e) {
     console.error(`[Firestore][readUserData] ❌ Ошибка чтения из Firestore:`, e);
@@ -84,17 +72,8 @@ export async function readUserData(userId) {
 
 export async function writeUserData(userId, data) {
   userId = String(userId);
-  console.log(`[Firestore][writeUserData] Начинаем сохранение данных для userId: ${userId}`);
-  console.log(`[Firestore][writeUserData] Данные для сохранения:`, {
-    userId: data.userId,
-    isPremium: data.isPremium || false,
-    hasQuiz: !!data.quiz,
-    hasDailyProgress: !!data.dailyProgress,
-    hasProgramData: !!data.programData,
-    hasDialogHistory: !!data.dialogHistory,
-    hasProfileChanges: !!data.profileChanges,
-    hasPlanExecution: !!data.planExecution
-  });
+  // ...удалено логирование Firestore...
+  // удалено: вывод промежуточных данных
   
   if (!firestoreAvailable) {
     throw new Error('Firestore недоступен. Проверьте конфигурацию Firebase');
@@ -127,23 +106,13 @@ export async function writeUserData(userId, data) {
     lastUpdate: new Date().toISOString()
   });
   
-  console.log(`[Firestore][writeUserData] Очищенные данные для сохранения:`, {
-    userId: saveData.userId,
-    isPremium: saveData.isPremium,
-    hasQuiz: !!saveData.quiz,
-    hasDailyProgress: !!saveData.dailyProgress,
-    hasProgramData: !!saveData.programData,
-    hasDialogHistory: !!saveData.dialogHistory,
-    hasProfileChanges: !!saveData.profileChanges,
-    hasPlanExecution: !!saveData.planExecution,
-    lastUpdate: saveData.lastUpdate
-  });
+  // удалено: вывод промежуточных данных
   
   try {
     const collection = getUsersCollection();
-    console.log(`[Firestore][writeUserData] Сохраняем в коллекцию: ${collection}/${userId}`);
+    // ...удалено логирование Firestore...
     await db.collection(collection).doc(userId).set(saveData, { merge: true });
-    console.log(`[Firestore][writeUserData] ✅ Данные успешно сохранены в Firestore с merge: ${collection}/${userId}`);
+    // ...удалено логирование Firestore...
   } catch (e) {
     console.error(`[Firestore][writeUserData] ❌ Ошибка записи в Firestore:`, e);
     if (e && e.stack) console.error(e.stack);

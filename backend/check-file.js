@@ -28,6 +28,7 @@ if (fs.existsSync(filePath)) {
             fs.writeFileSync(filePath, JSON.stringify(defaultData, null, 2));
         }
     } catch (error) {
+        // Ошибка — критическая, оставляем вывод
         console.error('Ошибка:', error);
     }
 }

@@ -105,16 +105,13 @@ function normalizeIngredientUnits(ingredient) {
     if (unit === 'г' && GRAM_INGREDIENTS.some(key => name.includes(key))) {
         return { ...ingredient, amount: Math.round(amount), unit };
     }
-    // Отладочный лог для хлеба
-    if (name.includes('хлеб')) {
-        console.log('🍞 Хлеб найден:', { name, unit, amount });
-    }
+    // ...удалён отладочный лог для хлеба...
     
     // Хлеб цельнозерновой: кусочек/кусочка → граммы
     if (name.includes('хлеб') && (unit === 'кусочек' || unit === 'кусочка')) {
         const typicalWeight = EXTRA_UNIT_WEIGHTS['кусочек'] || 35;
         const grams = Math.round(amount * typicalWeight);
-        console.log('🍞 Хлеб конвертирован:', { amount, unit, grams });
+        // ...удалён отладочный лог для хлеба...
         return { ...ingredient, amount: grams, unit: 'г' };
     }
     // Авокадо: шт → граммы

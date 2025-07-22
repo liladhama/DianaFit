@@ -13,7 +13,7 @@ export function getFirebaseConfig() {
   try {
     // Сначала пытаемся получить из переменной окружения
     if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-      console.log('[Firebase Config] Используется конфигурация из переменной окружения');
+      // ...удалено лишнее логирование...
       return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
     }
     
@@ -21,13 +21,13 @@ export function getFirebaseConfig() {
     const configPath = path.join(__dirname, 'dianafit-firebase-adminsdk-fbsvc-7953c18efc.json');
     
     if (fs.existsSync(configPath)) {
-      console.log('[Firebase Config] Используется конфигурация из локального файла');
+      // ...удалено лишнее логирование...
       return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
     }
     
     throw new Error('Конфигурация Firebase не найдена ни в переменной окружения, ни в локальном файле');
   } catch (error) {
-    console.error('[Firebase Config] Ошибка получения конфигурации:', error);
+    // ...удалено лишнее логирование...
     throw error;
   }
 }
@@ -57,7 +57,7 @@ export function validateFirebaseConfig(config) {
     throw new Error('Неверный тип конфигурации Firebase. Должен быть "service_account"');
   }
   
-  console.log('[Firebase Config] Конфигурация валидна');
+  // ...удалено: Firebase Config лог...
   return true;
 }
 
@@ -69,6 +69,7 @@ export function getProjectId() {
     const config = getFirebaseConfig();
     return config.project_id;
   } catch (error) {
+    // ...оставляем только критическую ошибку...
     console.error('[Firebase Config] Ошибка получения project_id:', error);
     return null;
   }

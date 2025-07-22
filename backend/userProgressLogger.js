@@ -309,8 +309,6 @@ class UserProgressLogger {
                 });
             }
         });
-        // Отладочный вывод
-        console.log('[DEBUG WORKOUTS] weekStart:', weekStart.toISOString().slice(0,10), 'weekEnd:', weekEnd.toISOString().slice(0,10), 'totalExercisesWeek:', totalExercisesWeek, 'completedExercisesWeek:', completedExercisesWeek);
 
         // --- Подсчет питания и задач (оставляем как было) ---
         Object.entries(dailyProgress).forEach(([date, dayData]) => {
@@ -381,7 +379,7 @@ class UserProgressLogger {
             }
         };
 
-        console.log(`[ANALYZE] Результат анализа:`, summary);
+        // ...удалено логирование анализа...
 
         return {
             weeklyHistory: Object.entries(dailyProgress)

@@ -23,6 +23,7 @@ router.post('/api/user/calories', async (req, res) => {
     await userRef.set({ quiz }, { merge: true });
     res.json({ success: true });
   } catch (e) {
+    // Ошибка сохранения калоража — критическая, оставляем вывод
     console.error('Ошибка сохранения калоража:', e);
     res.status(500).json({ error: 'Ошибка сервера' });
   }

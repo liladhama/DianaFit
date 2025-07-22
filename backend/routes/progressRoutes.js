@@ -6,19 +6,14 @@ const router = express.Router();
 // Сохранить прогресс за день (еда/тренировка)
 router.post('/', async (req, res) => {
     const { userId, date, ate, workout, tasks } = req.body;
-    console.log('[PROGRESS ROUTE] POST /api/progress body:', req.body);
     if (!userId || !date) {
         return res.status(400).json({ error: 'userId и date обязательны' });
     }
     try {
         const logger = new UserProgressLogger(userId);
-        console.log('[PROGRESS ROUTE] saveDayProgress userId:', userId);
-        console.log('[PROGRESS ROUTE] saveDayProgress data:', { date, ate, workout, tasks });
         await logger.saveDayProgress({ date, ate, workout, tasks });
-        console.log('[PROGRESS ROUTE] saveDayProgress completed successfully');
         res.json({ success: true });
     } catch (e) {
-        console.error('[PROGRESS ROUTE] Ошибка сохранения прогресса:', e, '| userId:', userId);
         res.status(500).json({ error: 'Ошибка сохранения прогресса' });
     }
 });
@@ -26,18 +21,14 @@ router.post('/', async (req, res) => {
 // Получить прогресс за день
 router.get('/', async (req, res) => {
     const { userId, date } = req.query;
-    console.log('[PROGRESS ROUTE] GET /api/progress query:', req.query);
     if (!userId || !date) {
         return res.status(400).json({ error: 'userId и date обязательны' });
     }
     try {
         const logger = new UserProgressLogger(userId);
-        console.log('[PROGRESS ROUTE] getDayProgress userId:', userId);
         const progress = await logger.getDayProgress(date);
-        console.log('[PROGRESS ROUTE] getDayProgress result:', progress);
         res.json(progress);
     } catch (e) {
-        console.error('[PROGRESS ROUTE] Ошибка получения прогресса:', e, '| userId:', userId);
         res.status(500).json({ error: 'Ошибка получения прогресса' });
     }
 });
@@ -60,17 +51,14 @@ router.get('/summary', (req, res) => {
 // Получить недельную историю прогресса
 router.get('/weekly-history', async (req, res) => {
     const { userId } = req.query;
-    console.log('[PROGRESS ROUTE] GET /api/progress/weekly-history query:', req.query);
     if (!userId) {
         return res.status(400).json({ error: 'userId обязателен' });
     }
     try {
         const logger = new UserProgressLogger(userId);
         const weeklyData = await logger.analyzeWeeklyProgressFromHistory();
-        console.log('[PROGRESS ROUTE] Недельная история получена:', weeklyData.summary);
         res.json(weeklyData);
     } catch (e) {
-        console.error('[PROGRESS ROUTE] Ошибка получения недельной истории:', e);
         res.status(500).json({ error: 'Ошибка получения недельной истории прогресса' });
     }
 });

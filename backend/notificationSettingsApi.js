@@ -7,9 +7,9 @@ const router = express.Router();
 router.post('/api/user/notification-settings', async (req, res) => {
   let { userId, timezone, notifyHour } = req.body;
   userId = String(userId);
-  console.log('[NotificationSettingsApi] POST /api/user/notification-settings', req.body);
+  // ...удалено: NotificationSettingsApi POST лог...
   if (!userId || !timezone || typeof notifyHour !== 'number') {
-    console.log('[NotificationSettingsApi] Не хватает userId, timezone или notifyHour');
+    // ...удалено: NotificationSettingsApi error лог...
     return res.status(400).json({ error: 'userId, timezone и notifyHour обязательны' });
   }
   try {
