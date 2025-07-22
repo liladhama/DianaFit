@@ -136,7 +136,22 @@ function App() {
 
   // --- Логика показа уведомлений Дианы по дням недели ---
   useEffect(() => {
-    if (!weekData || !Array.isArray(weekData.days) || !todayDay || !tgUserId) return;
+    console.log('🔔 [УВЕДОМЛЕНИЯ] useEffect сработал с параметрами:', { 
+      hasWeekData: !!weekData, 
+      weekDataDaysIsArray: Array.isArray(weekData?.days),
+      weekDataDaysLength: weekData?.days?.length,
+      hasTodayDay: !!todayDay, 
+      todayDayDate: todayDay?.date,
+      hasTgUserId: !!tgUserId,
+      tgUserId: tgUserId
+    });
+    
+    if (!weekData || !Array.isArray(weekData.days) || !todayDay || !tgUserId) {
+      console.log('🔔 [УВЕДОМЛЕНИЯ] Условия не выполнены, выходим из useEffect');
+      return;
+    }
+    
+    console.log('🔔 [УВЕДОМЛЕНИЯ] Все условия выполнены, продолжаем проверку уведомлений');
     // Получаем первый день тренировок (начало цикла)
     const firstDayStr = weekData.days[0]?.date;
     if (!firstDayStr) return;
@@ -207,7 +222,17 @@ function App() {
         // Дни 2-6 — мотивация при пропусках
         else if (weekDay >= 2 && weekDay <= 6) {
           // Находим вчерашний день
-          const yesterday = weekData.days.find(d => d.date === new Date(new Date(todayStr).getTime() - 86400000).toISOString().slice(0,10));
+          const yesterdayDate = new Date(new Date(todayStr).getTime() - 86400000).toISOString().slice(0,10);
+          const yesterday = weekData.days.find(d => d.date === yesterdayDate);
+          
+          console.log('🔔 [УВЕДОМЛЕНИЯ] Проверяем данные о вчерашнем дне:', {
+            todayStr,
+            yesterdayDate,
+            yesterdayFound: !!yesterday,
+            yesterdayData: yesterday,
+            weekDataDays: weekData.days.map(d => ({ date: d.date, completedWorkout: d.completedWorkout, completedMeals: d.completedMeals }))
+          });
+          
           if (yesterday) {
             const workoutFailed = yesterday.completedWorkout === false;
             const mealsFailed = yesterday.completedMeals === false;
@@ -216,9 +241,18 @@ function App() {
             const workoutIgnored = yesterday.completedWorkout === null;
             const mealsIgnored = yesterday.completedMeals === null;
             
+            console.log('🔔 [УВЕДОМЛЕНИЯ] Анализ состояния вчерашнего дня:', {
+              workoutFailed,
+              mealsFailed,
+              workoutCompleted,
+              mealsCompleted,
+              workoutIgnored,
+              mealsIgnored
+            });
+            
             // Если все задания выполнены - никаких уведомлений
             if (workoutCompleted && mealsCompleted) {
-              console.log('🔔 Все задания выполнены вчера, уведомления не нужны');
+              console.log('🔔 [УВЕДОМЛЕНИЯ] Все задания выполнены вчера, уведомления не нужны');
               return;
             }
             
@@ -288,6 +322,8 @@ function App() {
               });
               setShowDianaNotification(true);
             }
+          } else {
+            console.log('🔔 [УВЕДОМЛЕНИЯ] Вчерашний день не найден в weekData.days');
           }
         }
       })
@@ -325,15 +361,23 @@ function App() {
 
   // Получаем Telegram userId при инициализации
   useEffect(() => {
+    console.log('🔧 [INIT] Проверяем Telegram WebApp:', {
+      hasTelegram: !!window.Telegram,
+      hasWebApp: !!window.Telegram?.WebApp,
+      hasInitData: !!window.Telegram?.WebApp?.initDataUnsafe,
+      hasUser: !!window.Telegram?.WebApp?.initDataUnsafe?.user,
+      userId: window.Telegram?.WebApp?.initDataUnsafe?.user?.id
+    });
+    
     const id = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
     if (id) {
       setTgUserId(id.toString());
-      console.log('✅ Получен Telegram userId:', id);
+      console.log('✅ [INIT] Получен Telegram userId:', id);
     } else {
       // Fallback для локального тестирования
       const demoUserId = 'demo_user_local_test';
       setTgUserId(demoUserId);
-      console.log('🔧 Telegram userId не найден, используем demo userId для локального тестирования:', demoUserId);
+      console.log('🔧 [INIT] Telegram userId не найден, используем demo userId для локального тестирования:', demoUserId);
     }
   }, []);
 
