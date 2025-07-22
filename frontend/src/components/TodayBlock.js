@@ -313,13 +313,13 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     }
 
     // --- completedMeals ---
-    // СОЗДАЕМ МАССИВ ВСЕГДА КОГДА aiMeals ЕСТЬ (как было изначально)!
+    // СОЗДАЕМ МАССИВ ТОЛЬКО ОДИН РАЗ (!isLoaded) КАК У УПРАЖНЕНИЙ!
     if (Array.isArray(aiMeals) && aiMeals.length > 0) {
       const newMealStates = aiMeals.map(() => null);
       const isSame =
         completedMeals.length === newMealStates.length &&
         completedMeals.every((v, i) => v === newMealStates[i]);
-      if (!isSame) {
+      if (!isSame && !isLoaded) {
         setCompletedMeals(newMealStates);
       }
     } else {
