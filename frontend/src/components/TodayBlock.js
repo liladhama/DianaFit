@@ -313,13 +313,13 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     }
 
     // --- completedMeals ---
-    // ТОЧНО ТА ЖЕ ЛОГИКА ЧТО И У УПРАЖНЕНИЙ - С УСЛОВИЕМ !isLoaded!
+    // СОЗДАЕМ МАССИВ ВСЕГДА КОГДА aiMeals ЕСТЬ (как было изначально)!
     if (Array.isArray(aiMeals) && aiMeals.length > 0) {
       const newMealStates = aiMeals.map(() => null);
       const isSame =
         completedMeals.length === newMealStates.length &&
         completedMeals.every((v, i) => v === newMealStates[i]);
-      if (!isSame && !isLoaded) {
+      if (!isSame) {
         setCompletedMeals(newMealStates);
       }
     } else {
@@ -807,7 +807,12 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           if (mealStates.length) {
             // Приводим все значения к null, true, false (false только если явно выбран "не съел")
             const finalMealStates = mealStates.map(v => v === true ? true : v === false ? false : null);
-            setCompletedMeals(finalMealStates);
+            
+            // НЕ ПЕРЕЗАПИСЫВАЕМ если уже есть выбранные значения!
+            const hasExistingChoices = Array.isArray(completedMeals) && completedMeals.some(v => v === true || v === false);
+            if (!hasExistingChoices) {
+              setCompletedMeals(finalMealStates);
+            }
           }
           if (Object.keys(mealReasonsObj).length) setMealReasons(mealReasonsObj);
           if (exerciseStates.length) {
@@ -820,7 +825,12 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         if (data.completedMealsArr) {
           // ...лог убран...
           const finalMealStates = data.completedMealsArr.map(v => v === true ? true : v === false ? false : null);
-          setCompletedMeals(finalMealStates);
+          
+          // НЕ ПЕРЕЗАПИСЫВАЕМ если уже есть выбранные значения!
+          const hasExistingChoices = Array.isArray(completedMeals) && completedMeals.some(v => v === true || v === false);
+          if (!hasExistingChoices) {
+            setCompletedMeals(finalMealStates);
+          }
         }
         if (data.completedExercises) {
           // ...лог убран...
