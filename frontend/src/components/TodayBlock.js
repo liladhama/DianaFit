@@ -288,35 +288,18 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     }
   }, [currentDay]);
 
-  useEffect(() => {
-    if (Array.isArray(aiMeals)) {
-      if (completedMeals.length !== aiMeals.length) {
-        // Только если длина изменилась, пересчитываем массив (например, если вдруг добавили/убрали приём пищи)
-        setCompletedMeals(aiMeals.map((_, i) => completedMeals[i] ?? null));
-      }
-      // Если длина совпадает — ничего не делаем, completedMeals сохраняется
-    }
-  }, [aiMeals]);
+
 
   // Обновляем состояние при изменении currentDay
   useEffect(() => {
-    // ...лог убран...
-
-    // ИСПРАВЛЕНО: НЕ используем статусы из currentDay, только структуру
-    // Статусы должны загружаться только с сервера через fetchDayStatus
+    // --- completedExercises ---
     if (currentDay.workout?.exercises) {
       const newExerciseStates = currentDay.workout.exercises.map(() => null);
-      // ...лог убран...
-      // Сравниваем массивы перед обновлением
       const isSame =
         completedExercises.length === newExerciseStates.length &&
         completedExercises.every((v, i) => v === newExerciseStates[i]);
       if (!isSame && !isLoaded) {
-        // ...лог убран...
-        // Инициализируем null значениями только если данные еще не загружены
         setCompletedExercises(newExerciseStates);
-      } else if (isLoaded) {
-        // ...лог убран...
       }
     } else {
       if (completedExercises.length !== 0) {
@@ -324,19 +307,14 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       }
     }
 
+    // --- completedMeals ---
     if (currentDay.meals) {
       const newMealStates = currentDay.meals.map(() => null);
-      // ...лог убран...
-      // Сравниваем массивы перед обновлением
-      const isSame =
-        completedMeals.length === newMealStates.length &&
-        completedMeals.every((v, i) => v === newMealStates[i]);
-      if (!isSame && !isLoaded) {
-        // ...лог убран...
-        // Инициализируем null значениями только если данные еще не загружены (isLoaded === false)
+      // completedMeals должен инициализироваться только если он пустой или это первый запуск дня
+      if ((!isLoaded && completedMeals.length !== newMealStates.length) || completedMeals.length === 0) {
         setCompletedMeals(newMealStates);
       }
-      // Если isLoaded === true, не трогаем completedMeals вообще
+      // Если completedMeals уже есть (даже если все null), не трогаем его вообще
     }
   }, [currentDay, isLoaded]);
   // Определяем, запущено ли на мобильном устройстве
