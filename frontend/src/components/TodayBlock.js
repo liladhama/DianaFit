@@ -310,8 +310,9 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     // --- completedMeals ---
     if (currentDay.meals) {
       const newMealStates = currentDay.meals.map(() => null);
-      // completedMeals должен инициализироваться только если он пустой или это первый запуск дня
-      if ((!isLoaded && completedMeals.length !== newMealStates.length) || completedMeals.length === 0) {
+      // completedMeals должен инициализироваться только если это первый запуск дня (isLoaded === false)
+      // и длина не совпадает с количеством приёмов пищи
+      if (!isLoaded && completedMeals.length !== newMealStates.length) {
         setCompletedMeals(newMealStates);
       }
       // Если completedMeals уже есть (даже если все null), не трогаем его вообще
