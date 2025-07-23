@@ -342,6 +342,29 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       }
     }
   }, [currentDay, isLoaded, aiMeals]);
+
+  // --- Автоматическое сохранение массива completedMeals сразу после инициализации (как completedExercises) ---
+  useEffect(() => {
+    // Если массив только что инициализирован (все значения null, длина совпадает с aiMeals)
+    if (
+      Array.isArray(aiMeals) && aiMeals.length > 0 &&
+      Array.isArray(completedMeals) && completedMeals.length === aiMeals.length &&
+      completedMeals.every(v => v === null) &&
+      answers?.userId && currentDay?.date && isLoaded
+    ) {
+      // Отправляем buildTasks (как для completedExercises)
+      const payload = {
+        userId: answers.userId,
+        date: currentDay.date,
+        tasks: buildTasks()
+      };
+      fetch(`${API_URL}/api/progress`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+    }
+  }, [aiMeals, completedMeals, isLoaded, answers?.userId, currentDay?.date]);
   // Определяем, запущено ли на мобильном устройстве
   const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   const hasTelegramWebApp = window.Telegram?.WebApp;
