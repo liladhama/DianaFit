@@ -1009,30 +1009,19 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   // --- СИНХРОНИЗАЦИЯ ПРОГРЕССА (POST /api/progress) --- ПРОСТАЯ ЛОГИКА КАК У УПРАЖНЕНИЙ
   useEffect(() => {
     // Не отправляем данные, пока не завершена первоначальная загрузка
-    if (isInitialLoading) {
-      // ...лог убран...
-      return;
-    }
-    
+    if (isInitialLoading) return;
     if (!answers?.userId || !currentDay?.date) return;
-    
-    // ПРОСТАЯ ЗАЩИТА: не отправляем только если массивы полностью пустые
+
+    // Теперь отправляем buildTasks всегда, если есть хотя бы одна задача (даже если все значения null)
     const builtTasks = buildTasks();
-    const hasMeals = Array.isArray(completedMeals) && completedMeals.some(v => v === true || v === false);
-    const hasExercises = Array.isArray(completedExercises) && completedExercises.some(v => v === true || v === false);
-    const hasSteps = walkingMinutes !== null;
-    
-    if (builtTasks.length === 0 || (!hasMeals && !hasExercises && !hasSteps)) {
-      // Не отправляем пустой прогресс
-      return;
-    }
-    
+    if (builtTasks.length === 0) return;
+
     const payload = {
       userId: answers.userId,
       date: currentDay.date,
       tasks: builtTasks
     };
-    
+
     fetch(`${API_URL}/api/progress`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
