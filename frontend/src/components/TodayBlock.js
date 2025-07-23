@@ -142,58 +142,36 @@ if (typeof document !== 'undefined' && !document.querySelector('#spinner-styles'
 
 
 
+
 export default function TodayBlock({ day, answers, onBackToWeek, programId, isPremium, activatePremium, setIsPaymentShown, setShowPayment, userAvatar, onProfileClick }) {
-  // ...все useState/useRef выше...
+  // Сначала определяем currentDay
+  const [personalPlan, setPersonalPlan] = useState(null);
+  const currentDay = day || personalPlan || {
+    date: '2024-06-03',
+    title: 'Понедельник',
+    workout: { title: 'Домашняя тренировка №2', exercises: [ { name: 'Приседания', reps: 15 }, { name: 'Отжимания', reps: 10 } ] },
+    meals: [ 
+      { type: 'Завтрак', menu: 'Овсянка с ягодами', calories: 320 },
+      { type: 'Перекус', menu: 'Греческий йогурт с орехами', calories: 180 },
+      { type: 'Обед', menu: 'Курица с рисом и овощами', calories: 450 },
+      { type: 'Полдник', menu: 'Яблоко с арахисовой пастой', calories: 200 },
+      { type: 'Ужин', menu: 'Запеченная рыба с салатом', calories: 380 }
+    ],
+    completed: false,
+  };
 
-  // ...все остальные useState/useRef...
-
-  // --- Теперь можно использовать хуки и переменные ниже --- 
-
-  // ...другие переменные и функции...
-
-  // ...existing code...
-
-  // Рефы для автоскролла к модалке и поздравлению
-  // ...existing code...
-  // --- Поздравление: просто useState ---
+  // Теперь все useState/useRef, которые используют currentDay
   const [showCongrats, setShowCongrats] = useState(false);
   const [showCongratsMeals, setShowCongratsMeals] = useState(false);
   const [showReasonModal, setShowReasonModal] = useState(false);
-  // --- Поздравление: просто useState ---
-
-  // Рефы для автоскролла к модалке и поздравлению
   const reasonModalRef = useRef(null);
   const congratsRef = useRef(null);
   const congratsMealsRef = useRef(null);
-
-  // Автоскролл к модалке и поздравлению
-
-  useEffect(() => {
-    if (showCongrats && congratsRef.current) {
-      setTimeout(() => {
-        congratsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 50);
-    }
-  }, [showCongrats]);
-
-  useEffect(() => {
-    if (showCongratsMeals && congratsMealsRef.current) {
-      setTimeout(() => {
-        congratsMealsRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 50);
-    }
-  }, [showCongratsMeals]);
-  // --- Поздравление: хранить факт показа в localStorage по дате ---
-  // Для отслеживания перехода "не все выполнены" -> "все выполнены"
   const prevAllDone = useRef(false);
-  // --- Проверяем, начинается ли программа сегодня или позже ---
   const programStartsLater = answers && answers.start_date && new Date(answers.start_date) > new Date();
-  // --- Все useState в начале компонента ---
-  // --- Поздравление: просто useState ---
   const prevExercisesRef = useRef([]);
   const prevMealsRef = useRef([]);
   const congratsShownRef = useRef(false);
-  const [personalPlan, setPersonalPlan] = useState(null);
   const congratsMealsShownRef = useRef(false);
   const [loadingPlan, setLoadingPlan] = useState(false);
   const [planError, setPlanError] = useState(null);
@@ -209,10 +187,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [tasks, setTasks] = useState([]);
-  
   // ТОЧНО ТА ЖЕ ПРОСТАЯ ЛОГИКА КАК У УПРАЖНЕНИЙ - БЕЗ localStorage!
   const [completedMeals, setCompletedMeals] = useState([]);
-  
   const [completedExercises, setCompletedExercises] = useState([]);
   const [walkingMinutes, setWalkingMinutes] = useState(null);
   const [stepsStatus, setStepsStatus] = useState(null);
@@ -222,23 +198,6 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     const defaultState = { training: false, nutrition: false, steps: true, motivation: true };
     return saved ? JSON.parse(saved) : defaultState;
   });
-
-  // --- Теперь можно использовать хуки и переменные ниже ---
-
-  // Проверка: все упражнения выполнены
-  const currentDay = day || personalPlan || {
-    date: '2024-06-03',
-    title: 'Понедельник',
-    workout: { title: 'Домашняя тренировка №2', exercises: [ { name: 'Приседания', reps: 15 }, { name: 'Отжимания', reps: 10 } ] },
-    meals: [ 
-      { type: 'Завтрак', menu: 'Овсянка с ягодами', calories: 320 },
-      { type: 'Перекус', menu: 'Греческий йогурт с орехами', calories: 180 },
-      { type: 'Обед', menu: 'Курица с рисом и овощами', calories: 450 },
-      { type: 'Полдник', menu: 'Яблоко с арахисовой пастой', calories: 200 },
-      { type: 'Ужин', menu: 'Запеченная рыба с салатом', calories: 380 }
-    ],
-    completed: false,
-  };
 
   // УБРАНО: Этот useEffect ЗАТИРАЛ completedMeals! Восстановление теперь только в fetchDayStatus
 

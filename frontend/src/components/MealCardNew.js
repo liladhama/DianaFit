@@ -15,7 +15,11 @@ const MealCard = ({
 }) => {
   // Если есть варианты из aiMeals — используем их, иначе только meal
   const isAI = Array.isArray(aiOptions) && aiOptions.length > 0;
-  const mealInfo = isAI ? aiOptions[selectedIdx] : (meal.meal || { name: meal.menu || 'Не указано', ingredients: [] });
+  // Безопасно получаем meal.options
+  const mealOptions = Array.isArray(meal?.options) ? meal.options : [];
+  const safeAiOptions = Array.isArray(aiOptions) ? aiOptions : [];
+  const safeSelectedIdx = typeof selectedIdx === 'number' && selectedIdx >= 0 ? selectedIdx : 0;
+  const mealInfo = isAI && safeAiOptions[safeSelectedIdx] ? safeAiOptions[safeSelectedIdx] : (meal.meal || { name: meal.menu || 'Не указано', ingredients: [] });
   const mealName = typeof mealInfo === 'string' ? mealInfo : mealInfo.name;
   const ingredients = typeof mealInfo === 'object' && mealInfo.ingredients ? mealInfo.ingredients : [];
   const completed = isCompleted;
@@ -37,11 +41,11 @@ const MealCard = ({
   };
 
   // Стрелки выбора варианта (AI)
-  const handlePrev = () => setSelectedIdx(i => (i - 1 + meal.options.length) % meal.options.length);
-  const handleNext = () => setSelectedIdx(i => (i + 1) % meal.options.length);
+  const handlePrev = () => setSelectedIdx(i => mealOptions.length > 0 ? (i - 1 + mealOptions.length) % mealOptions.length : 0);
+  const handleNext = () => setSelectedIdx(i => mealOptions.length > 0 ? (i + 1) % mealOptions.length : 0);
 
   // Для AI-режима всегда показываем целевую калорийность для всех вариантов
-  const aiCalories = isAI ? meal.options[0]?.calories : undefined;
+  const aiCalories = isAI && mealOptions[0] ? mealOptions[0].calories : undefined;
 
   // Обработка смены статуса
   const handleStatusChange = (completedVal) => {
@@ -112,7 +116,7 @@ const MealCard = ({
           </h3>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, maxWidth: 180, marginLeft: -10 }}>
-          {isAI && meal.options.length > 1 && (
+          {isAI && mealOptions.length > 1 && (
             <>
               <button 
                 onClick={handlePrev} 
