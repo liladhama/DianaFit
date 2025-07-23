@@ -315,56 +315,25 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     // --- completedExercises ---
     if (currentDay.workout?.exercises) {
       const newExerciseStates = currentDay.workout.exercises.map(() => null);
-      const isSame =
-        completedExercises.length === newExerciseStates.length &&
-        completedExercises.every((v, i) => v === newExerciseStates[i]);
-      if (!isSame && !isLoaded) {
+      if (completedExercises.length !== newExerciseStates.length) {
         setCompletedExercises(newExerciseStates);
       }
-    } else {
-      if (completedExercises.length !== 0) {
-        setCompletedExercises([]);
-      }
+    } else if (completedExercises.length !== 0) {
+      setCompletedExercises([]);
     }
 
-    // --- completedMeals --- ТОЧНО ТАКАЯ ЖЕ ЛОГИКА КАК У УПРАЖНЕНИЙ!
+    // --- completedMeals --- ТОЧНО ТАК ЖЕ, КАК ДЛЯ УПРАЖНЕНИЙ ---
     if (Array.isArray(aiMeals) && aiMeals.length > 0) {
       const newMealStates = aiMeals.map(() => null);
-      const isSame =
-        completedMeals.length === newMealStates.length &&
-        completedMeals.every((v, i) => v === newMealStates[i]);
-      if (!isSame && !isLoaded) { // ← ТОЧНО КАК У УПРАЖНЕНИЙ: только если !isLoaded
+      if (completedMeals.length !== newMealStates.length) {
         setCompletedMeals(newMealStates);
       }
-    } else {
-      if (completedMeals.length !== 0) {
-        setCompletedMeals([]);
-      }
+    } else if (completedMeals.length !== 0) {
+      setCompletedMeals([]);
     }
   }, [currentDay, isLoaded, aiMeals]);
 
-  // --- Автоматическое сохранение массива completedMeals сразу после инициализации (как completedExercises) ---
-  useEffect(() => {
-    // Если массив только что инициализирован (все значения null, длина совпадает с aiMeals)
-    if (
-      Array.isArray(aiMeals) && aiMeals.length > 0 &&
-      Array.isArray(completedMeals) && completedMeals.length === aiMeals.length &&
-      completedMeals.every(v => v === null) &&
-      answers?.userId && currentDay?.date && isLoaded
-    ) {
-      // Отправляем buildTasks (как для completedExercises)
-      const payload = {
-        userId: answers.userId,
-        date: currentDay.date,
-        tasks: buildTasks()
-      };
-      fetch(`${API_URL}/api/progress`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-    }
-  }, [aiMeals, completedMeals, isLoaded, answers?.userId, currentDay?.date]);
+
   // Определяем, запущено ли на мобильном устройстве
   const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   const hasTelegramWebApp = window.Telegram?.WebApp;
@@ -1236,10 +1205,6 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     // Приёмы пищи (используем aiMeals вместо currentDay.meals)
     if (Array.isArray(aiMeals) && aiMeals.length > 0) {
       aiMeals.forEach((m, i) => {
-        // КРИТИЧЕСКАЯ ЗАЩИТА: если completedMeals короче aiMeals, не добавляем задачу
-        if (i >= completedMeals.length) {
-          return; // Пропускаем эту задачу
-        }
         tasks.push({
           name: m.type || m.name,
           type: 'meal',
