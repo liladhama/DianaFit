@@ -322,11 +322,17 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       setCompletedExercises([]);
     }
 
-    // --- completedMeals --- НЕ ОЧИЩАЕМ, ЕСЛИ aiMeals ЕЩЁ НЕ ЗАГРУЖЕН ---
+    // --- completedMeals --- НЕ СТИРАЕМ ПРОГРЕСС ПОЛЬЗОВАТЕЛЯ ---
     if (Array.isArray(aiMeals) && aiMeals.length > 0) {
       const newMealStates = aiMeals.map(() => null);
       if (completedMeals.length !== newMealStates.length) {
-        setCompletedMeals(newMealStates);
+        // КРИТИЧЕСКАЯ ПРОВЕРКА: не стираем прогресс пользователя при перезагрузке aiMeals
+        const hasUserProgress = completedMeals.some(v => v === true || v === false);
+        if (!hasUserProgress || !isLoaded) {
+          // Только если нет прогресса ИЛИ данные ещё не загружены с сервера
+          setCompletedMeals(newMealStates);
+        }
+        // Если есть прогресс и данные загружены - НЕ СТИРАЕМ!
       }
     }
     // НЕ ОЧИЩАЕМ completedMeals, если aiMeals === null (ещё не загружен)
