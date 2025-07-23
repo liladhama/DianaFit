@@ -1,23 +1,23 @@
 import React, { useState } from 'react';
 import SwipeSlider from './SwipeSlider';
 
+
 const MealCard = ({ 
   meal, 
+  aiOptions = null,
   index,
   isCompleted, 
   onStatusChange,
   style = {},
   selectedIdx = 0,
   setSelectedIdx = () => {},
-  reason // <--- добавлено
+  reason
 }) => {
-  // AI-режим: если есть несколько вариантов (options)
-  const isAI = Array.isArray(meal.options) && meal.options.length > 0;
-  // Если AI — берем выбранный вариант, иначе обычный режим
-  const mealInfo = isAI ? meal.options[selectedIdx] : (meal.meal || { name: meal.menu || 'Не указано', ingredients: [] });
+  // Если есть варианты из aiMeals — используем их, иначе только meal
+  const isAI = Array.isArray(aiOptions) && aiOptions.length > 0;
+  const mealInfo = isAI ? aiOptions[selectedIdx] : (meal.meal || { name: meal.menu || 'Не указано', ingredients: [] });
   const mealName = typeof mealInfo === 'string' ? mealInfo : mealInfo.name;
   const ingredients = typeof mealInfo === 'object' && mealInfo.ingredients ? mealInfo.ingredients : [];
-  // Статус теперь всегда общий для всего приема пищи
   const completed = isCompleted;
 
   const [showIngredients, setShowIngredients] = useState(false);

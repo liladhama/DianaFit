@@ -204,7 +204,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   const [aiMeals, setAiMeals] = useState(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState(null);
-  const [selectedMealOptionIdx, setSelectedMealOptionIdx] = useState(() => Array.isArray(aiMeals) ? aiMeals.map(() => 0) : []);
+  // selectedMealOptionIdx всегда по currentDay.meals
+  const [selectedMealOptionIdx, setSelectedMealOptionIdx] = useState(() => Array.isArray(currentDay.meals) ? currentDay.meals.map(() => 0) : []);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [tasks, setTasks] = useState([]);
@@ -299,20 +300,9 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   const [debugInfo, setDebugInfo] = useState('');
   const [showDebug, setShowDebug] = useState(false);
 
-  // ТОЧНО ТАКАЯ ЖЕ ПРОСТАЯ ЛОГИКА КАК У УПРАЖНЕНИЙ - инициализация только при первой загрузке!
+  // completedMeals и selectedMealOptionIdx всегда по currentDay.meals
   useEffect(() => {
-    const debugData = {
-      aiMeals: aiMeals,
-      aiMealsLength: Array.isArray(aiMeals) ? aiMeals.length : 'не массив',
-      completedMealsLength: completedMeals.length,
-      completedMeals: completedMeals,
-      isLoaded
-    };
-    
-    console.log('🔄 useEffect инициализации:', debugData);
-    setDebugInfo(`🔄 Инициализация: aiMeals=${debugData.aiMealsLength}, completedMeals=${debugData.completedMealsLength}, isLoaded=${debugData.isLoaded}`);
-    
-    // --- completedExercises ---
+    // completedExercises
     if (currentDay.workout?.exercises) {
       const newExerciseStates = currentDay.workout.exercises.map(() => null);
       if (completedExercises.length !== newExerciseStates.length) {
@@ -321,22 +311,20 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     } else if (completedExercises.length !== 0) {
       setCompletedExercises([]);
     }
-
-    // --- completedMeals --- НЕ СТИРАЕМ ПРОГРЕСС ПОЛЬЗОВАТЕЛЯ ---
-    if (Array.isArray(aiMeals) && aiMeals.length > 0) {
-      const newMealStates = aiMeals.map(() => null);
+    // completedMeals
+    if (Array.isArray(currentDay.meals) && currentDay.meals.length > 0) {
+      const newMealStates = currentDay.meals.map(() => null);
       if (completedMeals.length !== newMealStates.length) {
-        // КРИТИЧЕСКАЯ ПРОВЕРКА: не стираем прогресс пользователя при перезагрузке aiMeals
-        const hasUserProgress = completedMeals.some(v => v === true || v === false);
-        if (!hasUserProgress || !isLoaded) {
-          // Только если нет прогресса ИЛИ данные ещё не загружены с сервера
-          setCompletedMeals(newMealStates);
-        }
-        // Если есть прогресс и данные загружены - НЕ СТИРАЕМ!
+        setCompletedMeals(newMealStates);
       }
+      if (selectedMealOptionIdx.length !== currentDay.meals.length) {
+        setSelectedMealOptionIdx(currentDay.meals.map(() => 0));
+      }
+    } else {
+      if (completedMeals.length !== 0) setCompletedMeals([]);
+      if (selectedMealOptionIdx.length !== 0) setSelectedMealOptionIdx([]);
     }
-    // НЕ ОЧИЩАЕМ completedMeals, если aiMeals === null (ещё не загружен)
-  }, [currentDay, isLoaded, aiMeals]);
+  }, [currentDay, isLoaded]);
 
 
   // Определяем, запущено ли на мобильном устройстве
@@ -1783,79 +1771,64 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
               )}
             </div>
 
-            {/* 4. Блок питания — только AI-данные */}
-            {aiLoading ? (
-              <div style={{ ...cardStyle, textAlign: 'center' }}>
-                <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, color: '#1a1a1a' }}>
-                  🍽️ Генерируем меню дня...
-                </div>
-                <div style={{ fontSize: 14, color: '#666' }}>
-                  AI подбирает блюда по вашему профилю
-                </div>
+            {/* 4. Блок питания — currentDay.meals + варианты из aiMeals */}
+            <div style={cardStyle}>
+              <div 
+                style={{
+                  ...headerStyle,
+                  cursor: 'pointer',
+                  userSelect: 'none',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: openContainers.nutrition ? 16 : 0
+                }}
+                onClick={() => toggleContainer('nutrition')}
+              >
+                <span>🍽️ Питание</span>
+                <span style={{ fontSize: 20, lineHeight: 1.2, display: 'flex', alignItems: 'center' }}>
+                  {openContainers.nutrition ? '▼' : '▶'}
+                </span>
               </div>
-            ) : aiError ? (
-              <div style={{ ...cardStyle, textAlign: 'center', color: '#e74c3c' }}>
-                ❌ {aiError}
-              </div>
-            ) : Array.isArray(aiMeals) && aiMeals.length > 0 && (
-              <div style={cardStyle}>
-                <div 
-                  style={{
-                    ...headerStyle,
-                    cursor: 'pointer',
-                    userSelect: 'none',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: openContainers.nutrition ? 16 : 0
-                  }}
-                  onClick={() => toggleContainer('nutrition')}
-                >
-                  <span>🍽️ Питание</span>
-                  <span style={{ fontSize: 20, lineHeight: 1.2, display: 'flex', alignItems: 'center' }}>
-                    {openContainers.nutrition ? '▼' : '▶'}
-                  </span>
-                </div>
-                
-                {openContainers.nutrition && (
-                  <>
-                    {aiMeals.map((meal, idx) => {
-                      const isAI = Array.isArray(meal.options) && meal.options.length > 0;
-                      // Индекс выбранного варианта для этого приема пищи
-                      const selectedIdx = selectedMealOptionIdx[idx] || 0;
-                      // Функция для смены варианта
-                      const setIdx = (fn) => {
-                        setSelectedMealOptionIdx(prev => {
-                          const arr = [...prev];
-                          arr[idx] = typeof fn === 'function' ? fn(arr[idx] || 0) : fn;
-                          return arr;
-                        });
-                      };
-                      return (
-                        <div key={meal.type + idx}>
-                          <MealCard
-                            meal={meal}
-                            index={idx}
-                            isCompleted={(() => {
-                              const value = completedMeals[idx] ?? null;
-                              // ...лог убран...
-                              return value;
-                            })()}
-                            onStatusChange={handleMealStatusChange}
-                            style={{ marginBottom: 18 }}
-                            selectedIdx={selectedIdx}
-                            setSelectedIdx={setIdx}
-                            reason={mealReasons[idx]}
-                          />
-                        </div>
-                      );
-                    })}
-                    {/* Кнопка обновления вариантов питания */}
-                    {refreshMealsButton}
-                  </>
-                )}
-              </div>
-            )}
+              {aiLoading && (
+                <div style={{ fontSize: 14, color: '#666', marginBottom: 12 }}>AI подбирает блюда по вашему профилю...</div>
+              )}
+              {aiError && (
+                <div style={{ color: '#e74c3c', marginBottom: 12 }}>❌ {aiError}</div>
+              )}
+              {openContainers.nutrition && Array.isArray(currentDay.meals) && currentDay.meals.length > 0 && (
+                <>
+                  {currentDay.meals.map((meal, idx) => {
+                    // Варианты для этого приёма пищи из aiMeals (если есть)
+                    const aiOptions = Array.isArray(aiMeals) && aiMeals[idx]?.options ? aiMeals[idx].options : null;
+                    const selectedIdx = selectedMealOptionIdx[idx] || 0;
+                    const setIdx = (fn) => {
+                      setSelectedMealOptionIdx(prev => {
+                        const arr = [...prev];
+                        arr[idx] = typeof fn === 'function' ? fn(arr[idx] || 0) : fn;
+                        return arr;
+                      });
+                    };
+                    return (
+                      <div key={meal.type + idx}>
+                        <MealCard
+                          meal={meal}
+                          aiOptions={aiOptions}
+                          index={idx}
+                          isCompleted={completedMeals[idx] ?? null}
+                          onStatusChange={handleMealStatusChange}
+                          style={{ marginBottom: 18 }}
+                          selectedIdx={selectedIdx}
+                          setSelectedIdx={setIdx}
+                          reason={mealReasons[idx]}
+                        />
+                      </div>
+                    );
+                  })}
+                  {refreshMealsButton}
+                </>
+              )}
+            </div>
 
           </>
         )}
