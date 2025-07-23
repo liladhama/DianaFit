@@ -227,7 +227,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
 
 
-  // Синхронизация длины completedMeals с aiMeals (без сброса отмеченных значений)
+  // Синхронизация длины completedMeals с currentDay.meals (НЕ с aiMeals!)
   // --- Подгружаем сохранённые шаги из currentDay (если есть) ---
   useEffect(() => {
     // ...лог убран...
@@ -270,17 +270,21 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     } else if (completedExercises.length !== 0) {
       setCompletedExercises([]);
     }
-    // completedMeals
+    // completedMeals - НЕ сбрасываем если уже есть данные (восстановленные с сервера)
     if (Array.isArray(currentDay.meals) && currentDay.meals.length > 0) {
-      const newMealStates = currentDay.meals.map(() => null);
-      if (completedMeals.length !== newMealStates.length) {
+      // Только если длина не совпадает И данные еще не загружены
+      if (completedMeals.length !== currentDay.meals.length && completedMeals.every(v => v === null)) {
+        const newMealStates = currentDay.meals.map(() => null);
         setCompletedMeals(newMealStates);
       }
       if (selectedMealOptionIdx.length !== currentDay.meals.length) {
         setSelectedMealOptionIdx(currentDay.meals.map(() => 0));
       }
     } else {
-      if (completedMeals.length !== 0) setCompletedMeals([]);
+      // Только сбрасываем если данные не были восстановлены с сервера
+      if (completedMeals.length !== 0 && completedMeals.every(v => v === null)) {
+        setCompletedMeals([]);
+      }
       if (selectedMealOptionIdx.length !== 0) setSelectedMealOptionIdx([]);
     }
   }, [currentDay, isLoaded]);
@@ -573,7 +577,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       setReasonModalData({
         type: 'meal',
         index: idx,
-        itemName: (Array.isArray(aiMeals) && aiMeals[idx]) ? (aiMeals[idx].type || aiMeals[idx].name) : `Прием пищи ${idx + 1}`
+        itemName: (Array.isArray(currentDay.meals) && currentDay.meals[idx]) ? (currentDay.meals[idx].type || currentDay.meals[idx].menu || currentDay.meals[idx].name) : `Прием пищи ${idx + 1}`
       });
       setShowReasonModal(true);
       return;
@@ -622,7 +626,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       setReasonModalData({
         type: 'meal',
         index: idx,
-        itemName: (Array.isArray(aiMeals) && aiMeals[idx]) ? (aiMeals[idx].type || aiMeals[idx].name) : `Прием пищи ${idx + 1}`
+        itemName: (Array.isArray(currentDay.meals) && currentDay.meals[idx]) ? (currentDay.meals[idx].type || currentDay.meals[idx].menu || currentDay.meals[idx].name) : `Прием пищи ${idx + 1}`
       });
       setShowReasonModal(true);
       return; // Не обновляем состояние сразу, ждем выбор причины
@@ -689,9 +693,9 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       completedTasks += completedExercises.filter(Boolean).length;
     }
 
-    // Считаем приемы пищи (используем aiMeals)
-    if (Array.isArray(aiMeals) && aiMeals.length > 0) {
-      totalTasks += aiMeals.length;
+    // Считаем приемы пищи (используем currentDay.meals)
+    if (Array.isArray(currentDay.meals) && currentDay.meals.length > 0) {
+      totalTasks += currentDay.meals.length;
       completedTasks += completedMeals.filter(Boolean).length;
     }
 
@@ -859,8 +863,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     // Если отмечаем как НЕ съедено - показываем модал с причинами
     if (!completed) {
       // ...лог убран...
-      const mealName = Array.isArray(aiMeals) && aiMeals[idx] 
-        ? aiMeals[idx].type || aiMeals[idx].name 
+      const mealName = Array.isArray(currentDay.meals) && currentDay.meals[idx] 
+        ? currentDay.meals[idx].type || currentDay.meals[idx].menu || currentDay.meals[idx].name 
         : `Прием пищи ${idx + 1}`;
       setReasonModalData({
         type: 'meal',
@@ -886,14 +890,14 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     // --- ПОЗДРАВЛЕНИЕ ЗА ПРИЕМЫ ПИЩИ ---
     const date = currentDay?.date;
     const mealsKey = `congrats_meals_shown_${date}`;
-    const allMealsDone = Array.isArray(aiMeals) && aiMeals.length > 0 &&
-      updated.length === aiMeals.length &&
+    const allMealsDone = Array.isArray(currentDay.meals) && currentDay.meals.length > 0 &&
+      updated.length === currentDay.meals.length &&
       updated.every(v => v === true);
     const mealsCongratsWasShown = localStorage.getItem(mealsKey) === '1';
     if (
       completed &&
       !mealsCongratsWasShown &&
-      Array.isArray(aiMeals) && aiMeals.length > 0 &&
+      Array.isArray(currentDay.meals) && currentDay.meals.length > 0 &&
       allMealsDone
     ) {
       setShowCongratsMeals(true);
@@ -1154,11 +1158,11 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         });
       });
     }
-    // Приёмы пищи (используем aiMeals вместо currentDay.meals)
-    if (Array.isArray(aiMeals) && aiMeals.length > 0) {
-      aiMeals.forEach((m, i) => {
+    // Приёмы пищи (используем ТОЛЬКО currentDay.meals, НЕ aiMeals!)
+    if (Array.isArray(currentDay.meals) && currentDay.meals.length > 0) {
+      currentDay.meals.forEach((m, i) => {
         tasks.push({
-          name: m.type || m.name,
+          name: m.type || m.menu || m.name || `Прием пищи ${i + 1}`,
           type: 'meal',
           done: completedMeals[i] === null ? null : completedMeals[i] === true, // сохраняем null
           reason: completedMeals[i] === false && mealReasons[i] ? mealReasons[i] : undefined
@@ -1195,11 +1199,11 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         });
       });
     }
-    // Используем aiMeals вместо currentDay.meals
-    if (Array.isArray(aiMeals) && aiMeals.length > 0) {
-      aiMeals.forEach((m, i) => {
+    // Используем ТОЛЬКО currentDay.meals, НЕ aiMeals
+    if (Array.isArray(currentDay.meals) && currentDay.meals.length > 0) {
+      currentDay.meals.forEach((m, i) => {
         tasks.push({
-          name: m.type || m.name,
+          name: m.type || m.menu || m.name || `Прием пищи ${i + 1}`,
           type: 'meal',
           done: mealsArr[i] === null ? null : mealsArr[i] === true, // сохраняем null
           reason: mealsArr[i] === false && mealReasons[i] ? mealReasons[i] : undefined
@@ -1222,10 +1226,10 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         });
       });
     }
-    if (Array.isArray(aiMeals) && aiMeals.length > 0) {
-      aiMeals.forEach((m, i) => {
+    if (Array.isArray(currentDay.meals) && currentDay.meals.length > 0) {
+      currentDay.meals.forEach((m, i) => {
         tasks.push({
-          name: m.type || m.name,
+          name: m.type || m.menu || m.name || `Прием пищи ${i + 1}`,
           type: 'meal',
           done: completedMeals[i] === null ? null : completedMeals[i] === true, // сохраняем null
           reason: completedMeals[i] === false && mealReasons[i] ? mealReasons[i] : undefined
