@@ -1562,4 +1562,112 @@ router.patch('/user/weekly-program/:userId/progress', async (req, res) => {
   }
 });
 
+// --- Генерация одного приема пищи ---
+router.get('/generate-single-meal', async (req, res) => {
+  try {
+    const { goals, activity, dietary, dislikes, mealType, targetCalories } = req.query;
+    
+    console.log('=== ГЕНЕРАЦИЯ ОДНОГО ПРИЕМА ПИЩИ ===');
+    console.log('Входящие параметры:', { goals, activity, dietary, dislikes, mealType, targetCalories });
+    
+    // Парсим параметры
+    const parsedGoals = goals ? JSON.parse(goals) : [];
+    const parsedDietary = dietary ? JSON.parse(dietary) : [];
+    const parsedDislikes = dislikes ? JSON.parse(dislikes) : [];
+    const dailyCalories = parseInt(targetCalories) || 1800;
+    
+    // Определяем тип диеты
+    let dietType = 'meat'; // по умолчанию
+    if (parsedDietary.includes('vegan')) dietType = 'vegan';
+    else if (parsedDietary.includes('vegetarian')) dietType = 'vegetarian';
+    else if (parsedDietary.includes('fish')) dietType = 'fish';
+    
+    // Иерархия типов диеты
+    const dietTypeHierarchy = {
+      vegan: ['vegan'],
+      vegetarian: ['vegan', 'vegetarian'],
+      vegetarian_egg: ['vegan', 'vegetarian', 'vegetarian_egg'],
+      fish: ['vegan', 'vegetarian', 'vegetarian_egg', 'fish'],
+      meat: ['vegan', 'vegetarian', 'vegetarian_egg', 'fish', 'meat'],
+    };
+    const allowedDietTypes = dietTypeHierarchy[dietType] || ['vegan'];
+    
+    // Калории для конкретного приема пищи
+    const mealPercents = {
+      'завтрак': 0.25,
+      'перекус': 0.10,
+      'обед': 0.35,
+      'полдник': 0.10,
+      'ужин': 0.20
+    };
+    
+    // Приводим тип приема пищи к правильному формату (с заглавной буквы)
+    const mealTypeFormatted = mealType.charAt(0).toUpperCase() + mealType.slice(1).toLowerCase();
+    const mealCalories = Math.round(dailyCalories * (mealPercents[mealType.toLowerCase()] || 0.25));
+    
+    // Получаем все рецепты для этого типа приема пищи
+    const allRecipes = [];
+    for (const [type, arr] of Object.entries(recipeUtils.recipes)) {
+      for (const r of arr) {
+        allRecipes.push({
+          name: r.name,
+          type: r.type,
+          dietType: r.dietType,
+          calories: r.calories,
+          protein: r.protein,
+          fat: r.fat,
+          carbs: r.carbs,
+          ingredients: r.ingredients,
+          instructions: r.instructions
+        });
+      }
+    }
+    
+    // Фильтруем по типу приема пищи и диете
+    const suitableRecipes = allRecipes.filter(r => 
+      r.type === mealTypeFormatted && 
+      allowedDietTypes.includes(r.dietType)
+    );
+    
+    if (suitableRecipes.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: 'Нет подходящих рецептов для данного типа приема пищи и диеты'
+      });
+    }
+    
+    // Выбираем случайный рецепт
+    const randomRecipe = suitableRecipes[Math.floor(Math.random() * suitableRecipes.length)];
+    
+    // Масштабируем под целевые калории
+    const scaleFactor = mealCalories / randomRecipe.calories;
+    const scaledRecipe = {
+      name: randomRecipe.name,
+      type: randomRecipe.type,
+      dietType: randomRecipe.dietType,
+      calories: Math.round(randomRecipe.calories * scaleFactor),
+      protein: Math.round(randomRecipe.protein * scaleFactor),
+      fat: Math.round(randomRecipe.fat * scaleFactor),
+      carbs: Math.round(randomRecipe.carbs * scaleFactor),
+      ingredients: randomRecipe.ingredients.map(ing => ({
+        ...ing,
+        amount: typeof ing.amount === 'number' ? Math.round(ing.amount * scaleFactor * 100) / 100 : ing.amount
+      })),
+      instructions: randomRecipe.instructions
+    };
+    
+    res.json({
+      success: true,
+      meal: scaledRecipe
+    });
+    
+  } catch (error) {
+    console.error('Ошибка генерации одного приема пищи:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 export default router;

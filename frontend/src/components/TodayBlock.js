@@ -190,6 +190,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   // ТОЧНО ТА ЖЕ ПРОСТАЯ ЛОГИКА КАК У УПРАЖНЕНИЙ - БЕЗ localStorage!
   const [completedMeals, setCompletedMeals] = useState([]);
   const [completedExercises, setCompletedExercises] = useState([]);
+  const [refreshingMeals, setRefreshingMeals] = useState([]);
   const [walkingMinutes, setWalkingMinutes] = useState(null);
   const [stepsStatus, setStepsStatus] = useState(null);
   const [stepsFixed, setStepsFixed] = useState(false);
@@ -372,6 +373,22 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     fetchAIMealPlan();
     // setCompletedMeals([]); // Убрано: не сбрасываем статусы
     setSelectedMealOptionIdx([]); // Сбросить выбранные варианты
+  };
+
+  // ФУНКЦИЯ ОБНОВЛЕНИЯ ОДНОГО ПРИЕМА ПИЩИ
+  const handleRefreshSingleMeal = async (mealIndex) => {
+    // Устанавливаем состояние загрузки для этого приема пищи
+    setRefreshingMeals(prev => [...prev, mealIndex]);
+    
+    try {
+      // Используем ту же логику что и общая кнопка - просто обновляем все и берем нужный индекс
+      await fetchAIMealPlan();
+    } catch (e) {
+      console.error('Ошибка обновления приема пищи:', e);
+    } finally {
+      // Убираем состояние загрузки для этого приема пищи
+      setRefreshingMeals(prev => prev.filter(idx => idx !== mealIndex));
+    }
   };
 
   // Вычисляем общие калории и БЖУ
@@ -1784,11 +1801,12 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
                           selectedIdx={selectedIdx}
                           setSelectedIdx={setIdx}
                           reason={mealReasons[idx]}
+                          onRefreshMeal={handleRefreshSingleMeal}
+                          isRefreshing={refreshingMeals.includes(idx)}
                         />
                       </div>
                     );
                   })}
-                  {refreshMealsButton}
                 </>
               )}
             </div>

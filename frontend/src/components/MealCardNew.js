@@ -11,7 +11,9 @@ const MealCard = ({
   style = {},
   selectedIdx = 0,
   setSelectedIdx = () => {},
-  reason
+  reason,
+  onRefreshMeal = () => {},
+  isRefreshing = false
 }) => {
   // Если есть варианты из aiMeals — используем их, иначе только meal
   const isAI = Array.isArray(aiOptions) && aiOptions.length > 0;
@@ -115,6 +117,44 @@ const MealCard = ({
             {meal.type}
           </h3>
         </div>
+        {/* Кнопка обновления рецепта для этого приема пищи */}
+        {onRefreshMeal && (
+          <button
+            onClick={() => onRefreshMeal(index)}
+            disabled={isRefreshing}
+            style={{
+              padding: '6px 14px',
+              fontSize: 14,
+              fontWeight: 600,
+              color: '#fff',
+              background: isRefreshing 
+                ? 'linear-gradient(90deg, #9ca3af 0%, #6b7280 100%)' 
+                : 'linear-gradient(90deg, #2196f3 0%, #00c6ff 100%)',
+              border: 'none',
+              borderRadius: 8,
+              cursor: isRefreshing ? 'not-allowed' : 'pointer',
+              boxShadow: '0 2px 6px rgba(33,150,243,0.15)',
+              transition: 'all 0.2s',
+              marginLeft: 12,
+              letterSpacing: '0.3px',
+              opacity: isRefreshing ? 0.7 : 1
+            }}
+            onMouseEnter={e => {
+              if (!isRefreshing) {
+                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.boxShadow = '0 4px 12px rgba(33,150,243,0.25)';
+              }
+            }}
+            onMouseLeave={e => {
+              if (!isRefreshing) {
+                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.boxShadow = '0 2px 6px rgba(33,150,243,0.15)';
+              }
+            }}
+          >
+            {isRefreshing ? 'Обновляется...' : 'Обновить'}
+          </button>
+        )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, maxWidth: 180, marginLeft: -10 }}>
           {isAI && mealOptions.length > 1 && (
             <>
