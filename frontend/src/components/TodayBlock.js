@@ -299,7 +299,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   const [debugInfo, setDebugInfo] = useState('');
   const [showDebug, setShowDebug] = useState(false);
 
-  // completedMeals ТОЛЬКО создается ОДИН РАЗ при первом входе, потом НИКОГДА не трогается!
+  // ТОЧНО ТАКАЯ ЖЕ ПРОСТАЯ ЛОГИКА КАК У УПРАЖНЕНИЙ - инициализация только при первой загрузке!
   useEffect(() => {
     const debugData = {
       aiMeals: aiMeals,
@@ -327,39 +327,17 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       }
     }
 
-    // --- completedMeals ---
-    // СОЗДАЕМ МАССИВ КОГДА aiMeals ПОЯВЛЯЕТСЯ (без проверки isLoaded, т.к. aiMeals загружается позже)!
+    // --- completedMeals --- ТОЧНО ТАКАЯ ЖЕ ЛОГИКА КАК У УПРАЖНЕНИЙ!
     if (Array.isArray(aiMeals) && aiMeals.length > 0) {
       const newMealStates = aiMeals.map(() => null);
       const isSame =
         completedMeals.length === newMealStates.length &&
         completedMeals.every((v, i) => v === newMealStates[i]);
-      
-      // КРИТИЧЕСКАЯ ЗАЩИТА: НЕ пересоздаем если уже есть пользовательские выборы (true/false)
-      const hasUserChoices = completedMeals.some(v => v === true || v === false);
-      
-      // ДОПОЛНИТЕЛЬНАЯ ЗАЩИТА: НЕ пересоздаем если массив уже правильной длины
-      const hasCorrectLength = completedMeals.length === aiMeals.length;
-      
-      setDebugInfo(`🔄 Проверка: isSame=${isSame}, hasUserChoices=${hasUserChoices}, hasCorrectLength=${hasCorrectLength}`);
-      
-      if (!isSame && !hasUserChoices && !hasCorrectLength) {
-        setDebugInfo(`✅ Создаю массив: ${aiMeals.length} элементов`);
+      if (!isSame && !isLoaded) { // ← ТОЧНО КАК У УПРАЖНЕНИЙ: только если !isLoaded
         setCompletedMeals(newMealStates);
-      } else {
-        setDebugInfo(`🛡️ ЗАЩИЩЕНО: массив не пересоздан`);
       }
-    } else if (Array.isArray(aiMeals) && aiMeals.length === 0) {
-      // ТОЛЬКО если aiMeals пустой массив (а не null), тогда сбрасываем
-      console.log('🔥 ВНИМАНИЕ! Собираюсь УДАЛИТЬ completedMeals!', {
-        aiMeals,
-        completedMealsLength: completedMeals.length,
-        completedMeals: completedMeals
-      });
-      setDebugInfo(`🔥 УДАЛЕНИЕ! aiMeals=[], completedMeals=${completedMeals.length}`);
+    } else {
       if (completedMeals.length !== 0) {
-        console.log('💀 УДАЛЯЮ completedMeals!');
-        setDebugInfo(`💀 УДАЛЕНО! completedMeals обнулен`);
         setCompletedMeals([]);
       }
     }
@@ -844,18 +822,9 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
             // Приводим все значения к null, true, false (false только если явно выбран "не съел")
             const finalMealStates = mealStates.map(v => v === true ? true : v === false ? false : null);
             
-            // УСИЛЕННАЯ ЗАЩИТА: НЕ ПЕРЕЗАПИСЫВАЕМ если уже есть выбранные значения!
-            const hasExistingChoices = Array.isArray(completedMeals) && completedMeals.some(v => v === true || v === false);
-            const hasCorrectLength = Array.isArray(completedMeals) && completedMeals.length === finalMealStates.length;
-            
-            setDebugInfo(`🔄 fetchDayStatus: hasExistingChoices=${hasExistingChoices}, hasCorrectLength=${hasCorrectLength}`);
-            
-            if (!hasExistingChoices || !hasCorrectLength) {
-              setDebugInfo(`✅ Восстанавливаю с сервера: ${finalMealStates.length} элементов`);
-              setCompletedMeals(finalMealStates);
-            } else {
-              setDebugInfo(`🛡️ ЗАЩИЩЕНО: данные с сервера проигнорированы`);
-            }
+            // ПРОСТАЯ ЛОГИКА КАК У УПРАЖНЕНИЙ: ВСЕГДА перезаписываем данными с сервера!
+            setDebugInfo(`✅ Восстанавливаю с сервера: ${finalMealStates.length} элементов`);
+            setCompletedMeals(finalMealStates);
           }
           if (Object.keys(mealReasonsObj).length) setMealReasons(mealReasonsObj);
           if (exerciseStates.length) {
@@ -869,25 +838,20 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           // ...лог убран...
           const finalMealStates = data.completedMealsArr.map(v => v === true ? true : v === false ? false : null);
           
-          // УСИЛЕННАЯ ЗАЩИТА: НЕ ПЕРЕЗАПИСЫВАЕМ если уже есть выбранные значения!
-          const hasExistingChoices = Array.isArray(completedMeals) && completedMeals.some(v => v === true || v === false);
-          const hasCorrectLength = Array.isArray(completedMeals) && completedMeals.length === finalMealStates.length;
-          
-          setDebugInfo(`🔄 completedMealsArr: hasExistingChoices=${hasExistingChoices}, hasCorrectLength=${hasCorrectLength}`);
-          
-          if (!hasExistingChoices || !hasCorrectLength) {
-            setDebugInfo(`✅ Восстанавливаю из completedMealsArr: ${finalMealStates.length} элементов`);
-            setCompletedMeals(finalMealStates);
-          } else {
-            setDebugInfo(`🛡️ ЗАЩИЩЕНО: completedMealsArr проигнорирован`);
-          }
+          // ПРОСТАЯ ЛОГИКА КАК У УПРАЖНЕНИЙ: ВСЕГДА перезаписываем данными с сервера!
+          setDebugInfo(`✅ Восстанавливаю из completedMealsArr: ${finalMealStates.length} элементов`);
+          setCompletedMeals(finalMealStates);
         }
         if (data.completedExercises) {
           // ...лог убран...
           setCompletedExercises(data.completedExercises);
         }
+      } else if (data === null) {
+        // НЕТ ДАННЫХ С СЕРВЕРА (null) - ничего не делаем, сохраняем текущее состояние
+        setDebugInfo(`🛡️ СЕРВЕР ВЕРНУЛ NULL: данные не перезаписываем`);
       } else {
         // НЕТ ДАННЫХ С СЕРВЕРА - ничего не делаем, как с упражнениями
+        setDebugInfo(`🛡️ СЕРВЕР ВЕРНУЛ ПУСТОЙ ОБЪЕКТ: данные не перезаписываем`);
       }
       
       setIsInitialLoading(false); // Завершаем первоначальную загрузку
@@ -1019,7 +983,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     // ...лог убран...
   };
 
-  // --- СИНХРОНИЗАЦИЯ ПРОГРЕССА (POST /api/progress) ---
+  // --- СИНХРОНИЗАЦИЯ ПРОГРЕССА (POST /api/progress) --- ПРОСТАЯ ЛОГИКА КАК У УПРАЖНЕНИЙ
   useEffect(() => {
     // Не отправляем данные, пока не завершена первоначальная загрузка
     if (isInitialLoading) {
@@ -1029,28 +993,23 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     
     if (!answers?.userId || !currentDay?.date) return;
     
-    // КРИТИЧЕСКАЯ ЗАЩИТА: не отправляем если completedMeals только что инициализирован и пуст
-    if (Array.isArray(completedMeals) && completedMeals.length === 0 && Array.isArray(aiMeals) && aiMeals.length > 0) {
-      // Есть aiMeals, но completedMeals пуст - значит он еще не инициализирован, не отправляем
-      return;
-    }
-    
-    // ...лог убран...
-    
+    // ПРОСТАЯ ЗАЩИТА: не отправляем только если массивы полностью пустые
     const builtTasks = buildTasks();
-    // ЖЕЛЕЗНАЯ ЗАЩИТА: не отправлять tasks если completedMeals пустой или все значения null/undefined
     const hasMeals = Array.isArray(completedMeals) && completedMeals.some(v => v === true || v === false);
     const hasExercises = Array.isArray(completedExercises) && completedExercises.some(v => v === true || v === false);
     const hasSteps = walkingMinutes !== null;
+    
     if (builtTasks.length === 0 || (!hasMeals && !hasExercises && !hasSteps)) {
       // Не отправляем пустой прогресс
       return;
     }
+    
     const payload = {
       userId: answers.userId,
       date: currentDay.date,
       tasks: builtTasks
     };
+    
     fetch(`${API_URL}/api/progress`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

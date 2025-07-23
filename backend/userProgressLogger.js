@@ -132,8 +132,8 @@ class UserProgressLogger {
         if (log.dailyProgress && log.dailyProgress[date]) {
             return log.dailyProgress[date];
         }
-        // ИСПРАВЛЕНО: возвращаем null для несуществующих записей
-        return { ate: null, workout: null, tasks: [] };
+        // ИСПРАВЛЕНО: возвращаем null для несуществующих записей БЕЗ пустого массива tasks!
+        return null; // Возвращаем null вместо объекта с пустыми полями
     }
 
     // Получить недельную историю прогресса (последние 7 дней)
