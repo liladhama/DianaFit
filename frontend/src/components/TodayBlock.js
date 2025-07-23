@@ -322,15 +322,14 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       setCompletedExercises([]);
     }
 
-    // --- completedMeals --- ТОЧНО ТАК ЖЕ, КАК ДЛЯ УПРАЖНЕНИЙ ---
+    // --- completedMeals --- НЕ ОЧИЩАЕМ, ЕСЛИ aiMeals ЕЩЁ НЕ ЗАГРУЖЕН ---
     if (Array.isArray(aiMeals) && aiMeals.length > 0) {
       const newMealStates = aiMeals.map(() => null);
       if (completedMeals.length !== newMealStates.length) {
         setCompletedMeals(newMealStates);
       }
-    } else if (completedMeals.length !== 0) {
-      setCompletedMeals([]);
     }
+    // НЕ ОЧИЩАЕМ completedMeals, если aiMeals === null (ещё не загружен)
   }, [currentDay, isLoaded, aiMeals]);
 
 
