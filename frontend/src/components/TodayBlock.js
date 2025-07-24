@@ -256,9 +256,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
 
 
-  // Отладочное состояние для визуальной отладки в Telegram
-  const [debugInfo, setDebugInfo] = useState('');
-  const [showDebug, setShowDebug] = useState(false);
+  // ...existing code...
 
   // completedMeals и selectedMealOptionIdx всегда по currentDay.meals
   useEffect(() => {
@@ -788,7 +786,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
             const finalMealStates = mealStates.map(v => v === true ? true : v === false ? false : null);
             
             // ПРОСТАЯ ЛОГИКА КАК У УПРАЖНЕНИЙ: ВСЕГДА перезаписываем данными с сервера!
-            setDebugInfo(`✅ Восстанавливаю с сервера: ${finalMealStates.length} элементов`);
+            // ...existing code...
             setCompletedMeals(finalMealStates);
           }
           if (Object.keys(mealReasonsObj).length) setMealReasons(mealReasonsObj);
@@ -804,7 +802,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           const finalMealStates = data.completedMealsArr.map(v => v === true ? true : v === false ? false : null);
           
           // ПРОСТАЯ ЛОГИКА КАК У УПРАЖНЕНИЙ: ВСЕГДА перезаписываем данными с сервера!
-          setDebugInfo(`✅ Восстанавливаю из completedMealsArr: ${finalMealStates.length} элементов`);
+          // ...existing code...
           setCompletedMeals(finalMealStates);
         }
         if (data.completedExercises) {
@@ -813,10 +811,10 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         }
       } else if (data === null) {
         // НЕТ ДАННЫХ С СЕРВЕРА (null) - ничего не делаем, сохраняем текущее состояние
-        setDebugInfo(`🛡️ СЕРВЕР ВЕРНУЛ NULL: данные не перезаписываем`);
+        // ...existing code...
       } else {
         // НЕТ ДАННЫХ С СЕРВЕРА - ничего не делаем, как с упражнениями
-        setDebugInfo(`🛡️ СЕРВЕР ВЕРНУЛ ПУСТОЙ ОБЪЕКТ: данные не перезаписываем`);
+        // ...existing code...
       }
       
       setIsInitialLoading(false); // Завершаем первоначальную загрузку
@@ -832,15 +830,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   // Загружаем статусы при смене дня
   useEffect(() => {
-    const debugData = {
-      currentDayDate: currentDay?.date,
-      answersUserId: answers?.userId,
-      completedMealsLength: completedMeals.length,
-      completedMeals: completedMeals
-    };
-    
-    console.log('🚨 КРИТИЧЕСКИЙ useEffect сработал!', debugData);
-    setDebugInfo(`🚨 КРИТИЧЕСКИЙ: date=${debugData.currentDayDate}, meals=${debugData.completedMealsLength}`);
+    // ...existing code...
     
     setIsInitialLoading(true); // Сбрасываем флаг при смене дня
     setIsLoaded(false); // Сбрасываем флаг загрузки
@@ -1360,35 +1350,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         </button>
       </div>
 
-      {/* ОТЛАДОЧНАЯ ПАНЕЛЬ ДЛЯ TELEGRAM */}
-      <div style={{ 
-        position: 'fixed', 
-        bottom: 10, 
-        left: 10, 
-        zIndex: 9999,
-        background: 'rgba(0,0,0,0.8)',
-        color: 'white',
-        padding: '8px',
-        borderRadius: '8px',
-        fontSize: '12px',
-        maxWidth: '300px'
-      }}>
-        <div 
-          onClick={() => setShowDebug(!showDebug)}
-          style={{ cursor: 'pointer', fontWeight: 'bold' }}
-        >
-          🐛 Debug {showDebug ? '▼' : '▶'}
-        </div>
-        {showDebug && (
-          <div style={{ marginTop: '4px' }}>
-            <div>completedMeals: [{completedMeals.map((v, i) => `${i}:${v}`).join(', ')}]</div>
-            <div>aiMeals: {Array.isArray(aiMeals) ? aiMeals.length : 'null'}</div>
-            <div>isLoaded: {String(isLoaded)}</div>
-            <div>isInitialLoading: {String(isInitialLoading)}</div>
-            <div style={{ marginTop: '4px', fontSize: '10px' }}>{debugInfo}</div>
-          </div>
-        )}
-      </div>
+      {/* ...existing code... */}
 
       {/* Мотивация дня */}
       <div style={{
