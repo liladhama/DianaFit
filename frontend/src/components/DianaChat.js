@@ -222,6 +222,17 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
     WebkitBackfaceVisibility: 'hidden'
   };
 
+  // Функция для простого рендера жирного текста по **текст**
+  function renderBold(text) {
+    const parts = text.split(/(\*\*[^*]+\*\*)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('**') && part.endsWith('**')) {
+        return <strong key={i}>{part.slice(2, -2)}</strong>;
+      }
+      return part;
+    });
+  }
+
   return (
     <div style={overlayStyle}>
       <div style={{
@@ -353,7 +364,7 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
                     fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif',
                     fontWeight: 500,
                   }}>
-                    {message.text}
+                    {renderBold(message.text)}
                   </div>
                 </div>
               ))}
