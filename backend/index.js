@@ -257,9 +257,8 @@ app.post('/api/chat-diana', async (req, res) => {
   let userData = await readUserData(userId);
   if (!userData.dialogHistory) userData.dialogHistory = [];
 
-  // Формируем контекст для ИИ из последних 5 сообщений
-  const lastMessages = userData.dialogHistory.slice(-5);
-  let chatContext = lastMessages.map(m => `${m.role}: ${m.text}`).join('\n');
+  // Формируем контекст для ИИ из всего диалога
+  let chatContext = userData.dialogHistory.map(m => `${m.role}: ${m.text}`).join('\n');
 
   // Для простых приветствий не тратим лимит
   if (isGreeting && !isDietRequest) {
