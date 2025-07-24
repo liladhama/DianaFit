@@ -306,7 +306,7 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
                 wordBreak: 'break-word',
                 whiteSpace: 'pre-wrap',
                 fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif',
-                fontWeight: 700,
+                fontWeight: 500,
               }}>
                 {message.text}
               </div>
@@ -362,7 +362,7 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
                  resize: 'none',
                  outline: 'none',
                  fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif',
-                 fontWeight: 700,
+                 fontWeight: 500,
                  backgroundColor: !canSendMessage ? '#f5f5f5' : '#fff',
                  cursor: isPremium ? 'text' : 'pointer'
                }}
