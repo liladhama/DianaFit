@@ -9,6 +9,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
   // --- СТЕЙТЫ ---
   const [nutritionInfo, setNutritionInfo] = useState(null);
   const [quizAnswers, setQuizAnswers] = useState({});
+  const [isQuizLoading, setIsQuizLoading] = useState(true);
   const [subscriptionInfo, setSubscriptionInfo] = useState(null);
   const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
@@ -248,6 +249,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
   useEffect(() => {
     const fetchQuizAnswers = async () => {
       try {
+        setIsQuizLoading(true);
         const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
         const response = await fetch(`${API_URL}/api/user/quiz-answers/${userId}`);
         if (response.ok) {
@@ -259,6 +261,8 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
       } catch (error) {
         console.error('Ошибка загрузки quizAnswers:', error);
         // Можно добавить fallback/заглушку
+      } finally {
+        setIsQuizLoading(false);
       }
     };
     fetchQuizAnswers();
@@ -552,59 +556,96 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
         maxWidth: 320,
         width: '95%'
       }}>
-        {/* Имя */}
-        <h1 style={{
-          fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-          fontSize: 28,
-          fontWeight: 800,
-          margin: '0 0 8px 0',
-          color: '#222',
-          letterSpacing: '0.5px',
-          textShadow: 'none',
-        }}>
-          {quizAnswers.name || quizAnswers.first_name}
-        </h1>
-        {/* Возраст */}
-        <p style={{
-          fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-          fontSize: 16,
-          color: '#222',
-          margin: '0 0 14px 0',
-          fontWeight: 500,
-          letterSpacing: '0.3px',
-          textShadow: 'none',
-        }}>
-          {quizAnswers.age ? `${quizAnswers.age} лет` : 'Возраст не указан'}
-        </p>
-        {/* Тип диеты */}
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 8,
-          background: 'rgba(255, 255, 255, 0.2)',
-          backdropFilter: 'blur(10px)',
-          padding: '10px 16px',
-          borderRadius: 30,
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          fontSize: 14,
-          color: '#222',
-          fontWeight: 600,
-          fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
-          letterSpacing: '0.3px',
-          textShadow: 'none',
-        }}>
-          <img 
-            src={getDietIcon(quizAnswers.diet_flags)} 
-            alt={getDietName(quizAnswers.diet_flags)}
-            style={{ 
-              width: 20, 
-              height: 20, 
-              objectFit: 'contain',
-              filter: 'brightness(1.2) contrast(1.1)'
-            }}
-          />
-          <span>{getDietDisplayName(quizAnswers.diet_flags)}</span>
-        </div>
+        {/* Имя, возраст, диета — показываем только после загрузки */}
+        {isQuizLoading ? (
+          <div style={{
+            height: 80, 
+            display: 'flex', 
+            flexDirection: 'column', 
+            alignItems: 'center', 
+            justifyContent: 'center'
+          }}>
+            <div style={{
+              width: 120, 
+              height: 28, 
+              background: 'rgba(255, 255, 255, 0.3)', 
+              borderRadius: 8, 
+              marginBottom: 8,
+              animation: 'pulse 1.5s ease-in-out infinite'
+            }} />
+            <div style={{
+              width: 60, 
+              height: 18, 
+              background: 'rgba(255, 255, 255, 0.3)', 
+              borderRadius: 8, 
+              marginBottom: 12,
+              animation: 'pulse 1.5s ease-in-out infinite'
+            }} />
+            <div style={{
+              width: 180, 
+              height: 28, 
+              background: 'rgba(255, 255, 255, 0.3)', 
+              borderRadius: 16,
+              animation: 'pulse 1.5s ease-in-out infinite'
+            }} />
+          </div>
+        ) : (
+          <>
+            {/* Имя */}
+            <h1 style={{
+              fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
+              fontSize: 28,
+              fontWeight: 800,
+              margin: '0 0 8px 0',
+              color: '#222',
+              letterSpacing: '0.5px',
+              textShadow: 'none',
+            }}>
+              {quizAnswers.name || quizAnswers.first_name || 'Пользователь'}
+            </h1>
+            {/* Возраст */}
+            <p style={{
+              fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
+              fontSize: 16,
+              color: '#222',
+              margin: '0 0 14px 0',
+              fontWeight: 500,
+              letterSpacing: '0.3px',
+              textShadow: 'none',
+            }}>
+              {quizAnswers.age ? `${quizAnswers.age} лет` : 'Возраст не указан'}
+            </p>
+            {/* Тип диеты */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              background: 'rgba(255, 255, 255, 0.2)',
+              backdropFilter: 'blur(10px)',
+              padding: '10px 16px',
+              borderRadius: 30,
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              fontSize: 14,
+              color: '#222',
+              fontWeight: 600,
+              fontFamily: "'Alte Haas Grotesk RUS', Arial, sans-serif",
+              letterSpacing: '0.3px',
+              textShadow: 'none',
+            }}>
+              <img 
+                src={getDietIcon(quizAnswers.diet_flags)} 
+                alt={getDietName(quizAnswers.diet_flags)}
+                style={{ 
+                  width: 20, 
+                  height: 20, 
+                  objectFit: 'contain',
+                  filter: 'brightness(1.2) contrast(1.1)'
+                }}
+              />
+              <span>{getDietDisplayName(quizAnswers.diet_flags)}</span>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Для отладки: показываем текущий Telegram ID */}
