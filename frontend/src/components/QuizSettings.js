@@ -104,13 +104,15 @@ const QuizSettings = () => {
         setUserAnswers(prev => ({ ...prev, [questionId]: value }));
     };
 
-    const handleSaveAnswer = async (questionId) => {
+    const handleSaveAnswer = async (questionId, valueToSave = null) => {
         setSavingStates(prev => ({ ...prev, [questionId]: true }));
         try {
-            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'testuser1';
-            let dataToSave = { [questionId]: userAnswers[questionId] };
+            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
+            // Используем переданное значение или берём из состояния
+            const finalValue = valueToSave !== null ? valueToSave : userAnswers[questionId];
+            let dataToSave = { [questionId]: finalValue };
             let apiUrl = `${API_URL}/api/user/quiz-answers/${userId}`;
-            let method = 'PUT';
+            let method = 'PATCH';
             // Для timezone и notifyHour используем отдельный API
             if (questionId === 'timezone' || questionId === 'notifyHour') {
                 dataToSave = {
@@ -179,7 +181,7 @@ const QuizSettings = () => {
         useEffect(() => { setLocalValue(currentValue); }, [currentValue]);
         const handleSave = () => {
             if (handleAnswerSelect) handleAnswerSelect(question.id, localValue);
-            if (handleSaveAnswer) handleSaveAnswer(question.id);
+            if (handleSaveAnswer) handleSaveAnswer(question.id, localValue);
             onClose();
         };
         if (!isOpen) return null;

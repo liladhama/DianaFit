@@ -42,7 +42,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(cors({
   origin: true, // Разрешить все origins
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
@@ -1171,6 +1171,24 @@ app.post('/api/user/quiz-answers/:userId', async (req, res) => {
         res.json({ success: true });
     } catch (error) {
         console.error('Error saving user quiz answers:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+// PATCH /api/user/quiz-answers/:userId — частичное обновление quiz
+app.patch('/api/user/quiz-answers/:userId', async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const patchData = req.body;
+        console.log('[PATCH quiz-answers] userId:', userId, 'patchData:', patchData);
+        let userData = await readUserData(userId);
+        if (!userData.quiz) userData.quiz = {};
+        userData.quiz = { ...userData.quiz, ...patchData };
+        console.log('[PATCH quiz-answers] userData.quiz после merge:', userData.quiz);
+        await writeUserData(userId, userData);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Error patching user quiz answers:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
