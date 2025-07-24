@@ -1106,7 +1106,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
           cursor: 'pointer',
           transition: 'background 0.2s, color 0.2s',
         }}
-        onClick={() => alert('В будущем здесь будет чат или ссылка на поддержку в Telegram!')}
+        onClick={() => window.open('https://t.me/diana_ai_support', '_blank')}
       >
         🛟 Обратиться в поддержку
       </button>
