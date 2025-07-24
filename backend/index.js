@@ -297,6 +297,7 @@ app.post('/api/chat-diana', async (req, res) => {
     let relevantChunks = [];
     try {
       // relevantChunks = findRelevantChunks(userEmbedding, 3); // Временно отключено
+
     } catch (error) {
       // пропуск ошибок
     }
@@ -307,8 +308,26 @@ app.post('/api/chat-diana', async (req, res) => {
     } catch (error) {
       // пропуск ошибок
     }
+
+    // Получаем пол пользователя (sex) из userData.quiz или userData.profile
+    let userSex = 'female';
+    if (userData && userData.quiz && userData.quiz.sex) {
+      userSex = userData.quiz.sex;
+    } else if (userData && userData.sex) {
+      userSex = userData.sex;
+    }
+
+    // Формируем инструкцию для пола
+    let genderInstruction = '';
+    if (userSex === 'male') {
+      genderInstruction = '\nВАЖНО: Пользователь — мужчина. Всегда обращайся к нему в мужском роде, используй мужские окончания, местоимения и стиль общения. Не используй женский род.';
+    } else {
+      genderInstruction = '\nВАЖНО: Пользователь — женщина. Всегда обращайся к ней в женском роде, используй женские окончания, местоимения и стиль общения. Не используй мужской род.';
+    }
+
     const systemPrompt =
       'Ты — персональный ИИ-тренер Диана, эксперт по похудению и здоровому образу жизни.\n' +
+      genderInstruction +
       '\nВАЖНО: Если пользователь уже поздоровался, НЕ повторяй приветствие, а отвечай по сути вопроса. Не начинай ответ с приветствия, если это не первое сообщение!\n' +
       '\nВАЖНО: Отвечай ВСЕГДА в стиле и манере Дианы:\n' +
       '- Будь дружелюбной, понимающей и поддерживающей\n' +

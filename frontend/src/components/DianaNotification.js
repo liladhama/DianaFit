@@ -76,6 +76,32 @@ async function fetchOpenAIDianaAnalysis(userId) {
 const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessage, aiAnalysis, notificationType, hasUncompletedTasks }) => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [userSex, setUserSex] = useState('female'); // По умолчанию женский
+
+  // Функция для получения пола пользователя
+  const getUserSex = async () => {
+    if (!userId) return 'female';
+    
+    try {
+      const response = await fetch(`${API_URL}/api/user/quiz-answers/${userId}`);
+      if (response.ok) {
+        const quizData = await response.json();
+        return quizData.sex || 'female';
+      }
+    } catch (error) {
+      console.error('Ошибка получения пола пользователя:', error);
+    }
+    return 'female';
+  };
+
+  // Получаем пол пользователя при открытии уведомления
+  useEffect(() => {
+    if (isVisible && userId) {
+      getUserSex().then(sex => {
+        setUserSex(sex);
+      });
+    }
+  }, [isVisible, userId]);
 
   // Обертка для onClose: при закрытии уведомления отправляем отметку на сервер
   const handleClose = async () => {
@@ -95,13 +121,21 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
     onClose && onClose();
   };
 
-  // Массив мотивирующих напутствий для первого дня
-  const greetingMessages = [
+  // Массивы мотивирующих напутствий для первого дня (разделены по полу)
+  const greetingMessagesFemale = [
     "Новая неделя — новые возможности! Ты уже на шаг ближе к своей цели. Верь в себя и не останавливайся! 💪✨",
     "Ты невероятно сильная! Пусть эта неделя принесёт тебе радость, энергию и уверенность в своих силах. Вперёд к победам! 🌟",
     "Каждый понедельник — это шанс начать с чистого листа. Я рядом, чтобы поддержать тебя на каждом шаге! Давай сделаем эту неделю особенной! 🚀",
     "Ты уже доказала, что способна на многое. Пусть эта неделя будет наполнена маленькими победами и большим вдохновением! 🔥",
     "Смотри на себя с гордостью — ты выбрала путь перемен! Пусть каждый день этой недели будет шагом к лучшей версии себя. Я верю в тебя! 🌈"
+  ];
+
+  const greetingMessagesMale = [
+    "Новая неделя — новые возможности! Ты уже на шаг ближе к своей цели. Верь в себя и не останавливайся! 💪✨",
+    "Ты невероятно сильный! Пусть эта неделя принесёт тебе энергию, мотивацию и уверенность в своих силах. Вперёд к победам! 🌟",
+    "Каждый понедельник — это шанс начать с чистого листа. Я рядом, чтобы поддержать тебя на каждом шаге! Давай сделаем эту неделю особенной! 🚀",
+    "Ты уже доказал, что способен на многое. Пусть эта неделя будет наполнена маленькими победами и большим вдохновением! 🔥",
+    "Смотри на себя с гордостью — ты выбрал путь перемен! Пусть каждый день этой недели будет шагом к лучшей версии себя. Я верю в тебя! 🌈"
   ];
 
   // Слушаем событие от TypewriterPagedText для перехода в TodayBlock
@@ -113,14 +147,19 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
   }, [isVisible]);
 
   // Простые сообщения для разных дней без вызова AI
-  const getSimpleMessage = (day, hasIncomplete) => {
+  const getSimpleMessage = (day, hasIncomplete, sex = 'female') => {
     if (day === 1) {
-      // День 1 - случайное напутствие на новую неделю
+      // День 1 - случайное напутствие на новую неделю (с учетом пола)
+      const greetingMessages = sex === 'male' ? greetingMessagesMale : greetingMessagesFemale;
       const idx = Math.floor(Math.random() * greetingMessages.length);
       return greetingMessages[idx];
     } else if (hasIncomplete) {
-      // Дни 2-6 с невыполненными заданиями
-      return "Вчера я заметила, что ты не выполнил(а) все задания. Это нормально - иногда жизнь вносит свои коррективы! Рекомендую немного снизить нагрузку в настройках или скорректировать диету. Главное - не сдаваться! Сегодня новый день, и я верю в тебя! 🌟";
+      // Дни 2-6 с невыполненными заданиями (с учетом пола)
+      if (sex === 'male') {
+        return "Вчера я заметила, что ты не выполнил все задания. Это нормально - иногда жизнь вносит свои коррективы! Рекомендую немного снизить нагрузку в настройках или скорректировать диету. Главное - не сдаваться! Сегодня новый день, и я верю в тебя! 🌟";
+      } else {
+        return "Вчера я заметила, что ты не выполнила все задания. Это нормально - иногда жизнь вносит свои коррективы! Рекомендую немного снизить нагрузку в настройках или скорректировать диету. Главное - не сдаваться! Сегодня новый день, и я верю в тебя! 🌟";
+      }
     }
     return null;
   };
@@ -144,7 +183,8 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
 
     // Приоритет 3: Определяем тип уведомления и показываем соответствующее сообщение
     if (notificationType === 'greeting') {
-      // День 1 - случайное напутствие на новую неделю
+      // День 1 - случайное напутствие на новую неделю (с учетом пола)
+      const greetingMessages = userSex === 'male' ? greetingMessagesMale : greetingMessagesFemale;
       const idx = Math.floor(Math.random() * greetingMessages.length);
       setMessage(greetingMessages[idx]);
       setLoading(false);
@@ -152,14 +192,24 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
     }
 
     if (notificationType === 'motivation') {
-      // Мотивирующие сообщения для null значений
-      const motivationMessages = [
-        "Помните о своей цели! Каждый день приближает вас к результату. Даже небольшой прогресс лучше, чем никакого.",
-        "Ваше тело ждет заботы! Попробуйте начать с малого - это поможет войти в ритм.",
-        "Не забывайте о себе! Регулярность - ключ к достижению цели, которую вы выбрали.",
-        "Диана верит в вас! Попробуйте отметить хотя бы один пункт сегодня - это станет началом позитивных изменений.",
-        "Ваша цель стоит усилий! Начните день с заботы о себе - отметьте выполненные задания."
+      // Мотивирующие сообщения для null значений (с учетом пола)
+      const motivationMessagesFemale = [
+        "Помни о своей цели! Каждый день приближает тебя к результату. Даже небольшой прогресс лучше, чем никакого.",
+        "Твое тело ждет заботы! Попробуй начать с малого - это поможет войти в ритм.",
+        "Не забывай о себе! Регулярность - ключ к достижению цели, которую ты выбрала.",
+        "Диана верит в тебя! Попробуй отметить хотя бы один пункт сегодня - это станет началом позитивных изменений.",
+        "Твоя цель стоит усилий! Начни день с заботы о себе - отметь выполненные задания."
       ];
+
+      const motivationMessagesMale = [
+        "Помни о своей цели! Каждый день приближает тебя к результату. Даже небольшой прогресс лучше, чем никакого.",
+        "Твое тело ждет заботы! Попробуй начать с малого - это поможет войти в ритм.",
+        "Не забывай о себе! Регулярность - ключ к достижению цели, которую ты выбрал.",
+        "Диана верит в тебя! Попробуй отметить хотя бы один пункт сегодня - это станет началом позитивных изменений.",
+        "Твоя цель стоит усилий! Начни день с заботы о себе - отметь выполненные задания."
+      ];
+
+      const motivationMessages = userSex === 'male' ? motivationMessagesMale : motivationMessagesFemale;
       const idx = Math.floor(Math.random() * motivationMessages.length);
       setMessage(motivationMessages[idx]);
       setLoading(false);
@@ -181,7 +231,7 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
     }
 
     // Получаем простое сообщение для дней 1-6 (fallback)
-    const simpleMsg = getSimpleMessage(dayOfWeek, hasUncompletedTasks);
+    const simpleMsg = getSimpleMessage(dayOfWeek, hasUncompletedTasks, userSex);
     if (simpleMsg) {
       setMessage(simpleMsg);
       setLoading(false);
@@ -213,7 +263,7 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
         })
         .finally(() => setLoading(false));
     }
-  }, [isVisible, userId, dayOfWeek, customMessage, aiAnalysis, notificationType, hasUncompletedTasks]);
+  }, [isVisible, userId, dayOfWeek, customMessage, aiAnalysis, notificationType, hasUncompletedTasks, userSex]);
 
   // Слушаем событие от TypewriterPagedText для перехода в TodayBlock
   useEffect(() => {
