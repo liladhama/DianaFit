@@ -98,17 +98,18 @@ const MealCard = ({
       border: '1px solid #f1f5f9',
       ...style
     }}>
-      {/* Заголовок приема пищи + стрелки */}
+      {/* Заголовок приема пищи + кнопка обновить */}
       <div style={{
+        position: 'relative',
         display: 'flex',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 8
+        marginBottom: 8,
+        minHeight: 40
       }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 4 // уменьшено расстояние между названием и эмодзи
+          gap: 4
         }}>
           <span style={{ fontSize: 22, marginRight: 2 }}>
             {getMealIcon(meal.type)}
@@ -117,12 +118,15 @@ const MealCard = ({
             {meal.type}
           </h3>
         </div>
-        {/* Кнопка обновления рецепта для этого приема пищи */}
         {onRefreshMeal && (
           <button
             onClick={() => onRefreshMeal(index)}
             disabled={isRefreshing}
             style={{
+              position: 'absolute',
+              right: 0,
+              top: '50%',
+              transform: 'translateY(-50%)',
               padding: '6px 14px',
               fontSize: 14,
               fontWeight: 600,
@@ -135,19 +139,18 @@ const MealCard = ({
               cursor: isRefreshing ? 'not-allowed' : 'pointer',
               boxShadow: '0 2px 6px rgba(33,150,243,0.15)',
               transition: 'all 0.2s',
-              marginLeft: 12,
               letterSpacing: '0.3px',
               opacity: isRefreshing ? 0.7 : 1
             }}
             onMouseEnter={e => {
               if (!isRefreshing) {
-                e.currentTarget.style.transform = 'scale(1.05)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)';
                 e.currentTarget.style.boxShadow = '0 4px 12px rgba(33,150,243,0.25)';
               }
             }}
             onMouseLeave={e => {
               if (!isRefreshing) {
-                e.currentTarget.style.transform = 'scale(1)';
+                e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
                 e.currentTarget.style.boxShadow = '0 2px 6px rgba(33,150,243,0.15)';
               }
             }}
