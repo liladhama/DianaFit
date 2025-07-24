@@ -3,8 +3,8 @@ import { readUserData, writeUserData } from '../userDataStorage.js';
 
 export class SubscriptionManager {
   constructor() {
-    this.FREE_DAILY_LIMIT = 10; // Максимум 10 запросов в день для бесплатных пользователей
-    this.PREMIUM_DAILY_LIMIT = 1000; // Практически безлимитно для премиум пользователей
+    this.FREE_DAILY_LIMIT = 0; // Бесплатные пользователи не могут задавать вопросы
+    this.PREMIUM_DAILY_LIMIT = 10; // Премиум пользователи могут задать 10 вопросов в день
     this.PREMIUM_DURATION_DAYS = 30; // Премиум подписка на 30 дней
   }
 
@@ -99,20 +99,27 @@ export class SubscriptionManager {
 
   // Увеличение счетчика запросов
   async incrementDailyRequests(userId) {
+    console.log('🔢 [subscriptionManager] incrementDailyRequests для userId:', userId);
     const userData = await readUserData(userId);
     const subscription = userData.subscription || {};
     
     const today = new Date().toISOString().split('T')[0];
+    console.log('📅 [subscriptionManager] Сегодняшняя дата:', today);
     
     if (!subscription.dailyRequests) {
       subscription.dailyRequests = {};
     }
+    
+    const oldValue = subscription.dailyRequests[today] || 0;
+    console.log('📊 [subscriptionManager] Старое значение для', today, ':', oldValue);
     
     if (!subscription.dailyRequests[today]) {
       subscription.dailyRequests[today] = 0;
     }
     
     subscription.dailyRequests[today]++;
+    const newValue = subscription.dailyRequests[today];
+    console.log('📊 [subscriptionManager] Новое значение для', today, ':', newValue);
     
     // Очищаем старые записи (оставляем только последние 7 дней)
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
@@ -123,8 +130,21 @@ export class SubscriptionManager {
     });
     
     await this.saveSubscriptionData(userId, subscription);
+    console.log('💾 [subscriptionManager] Данные сохранены');
     
-    return subscription.dailyRequests[today];
+    // Возвращаем полную информацию о лимитах после обновления
+    const subscriptionStatus = await this.getSubscriptionStatus(userId);
+    const dailyLimit = subscriptionStatus.isPremium ? this.PREMIUM_DAILY_LIMIT : this.FREE_DAILY_LIMIT;
+    const todayRequests = subscription.dailyRequests[today];
+    
+    return {
+      canMakeRequest: todayRequests < dailyLimit,
+      requestsUsed: todayRequests,
+      dailyLimit: dailyLimit,
+      requestsLeft: Math.max(0, dailyLimit - todayRequests),
+      isPremium: subscriptionStatus.isPremium,
+      premiumDaysLeft: subscriptionStatus.daysLeft
+    };
   }
 
   // Сохранение данных подписки

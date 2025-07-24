@@ -271,12 +271,14 @@ app.post('/api/chat-diana', async (req, res) => {
       userData.dialogHistory.push({ role: 'assistant', text: 'Привет! Я Диана, твой тренер. Как настроение? Чем могу помочь сегодня?', timestamp: new Date().toISOString() });
       await writeUserData(userId, userData);
       return res.json({
-        response: 'Привет! Я Диана, твой тренер. Как настроение? Чем могу помочь сегодня?'
+        response: 'Привет! Я Диана, твой тренер. Как настроение? Чем могу помочь сегодня?',
+        limitInfo: limitInfo
       });
     } else {
       await writeUserData(userId, userData);
       return res.json({
-        response: 'Рада снова тебя видеть! Чем могу помочь?'
+        response: 'Рада снова тебя видеть! Чем могу помочь?',
+        limitInfo: limitInfo
       });
     }
   }
@@ -382,15 +384,14 @@ app.post('/api/chat-diana', async (req, res) => {
     ]);
     
     // Увеличиваем счетчик запросов после успешного ответа
-    await subscriptionManager.default.incrementDailyRequests(userId);
+    console.log('🔢 Увеличиваем счетчик запросов для userId:', userId);
+    const updatedLimitInfo = await subscriptionManager.default.incrementDailyRequests(userId);
+    console.log('✅ Счетчик запросов увеличен, новая информация о лимитах:', updatedLimitInfo);
     
     // Сохраняем сообщение пользователя и ответ Дианы в историю
     userData.dialogHistory.push({ role: 'user', text: message, timestamp: new Date().toISOString() });
     userData.dialogHistory.push({ role: 'assistant', text: aiResponse, timestamp: new Date().toISOString() });
     await writeUserData(userId, userData);
-    
-    // Получаем обновленную информацию о лимитах
-    const updatedLimitInfo = await subscriptionManager.default.checkDailyLimit(userId);
     
     res.json({ 
       response: aiResponse,
@@ -1171,7 +1172,8 @@ app.get('/api/user/quiz-answers/:userId', async (req, res) => {
         if (!userData.quiz) {
             return res.status(404).json({ error: 'Quiz data not found' });
         }
-        res.json(userData.quiz);
+        // Возвращаем полную userData для доступа к dialogHistory
+        res.json(userData);
     } catch (error) {
         console.error('Error getting user quiz answers:', error);
         res.status(500).json({ error: 'Internal server error' });

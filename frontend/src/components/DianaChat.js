@@ -24,20 +24,13 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
       window.scrollTo(0, scrollY);
     };
   }, []);
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      from: 'diana',
-      text: isPremium 
-        ? 'Привет! Я Диана, твой персональный фитнес-тренер! 💪\n\nУ тебя есть 10 вопросов в день. Я помогу тебе с вопросами о тренировках, питании, мотивации, режиме дня, рецептах и советах по похудению.\n\nМожешь спросить меня, например:\n• Как составить тренировку дома или в зале?\n• Как рассчитать калории?\n• Какие продукты лучше для похудения?\n• Как не потерять мотивацию?\n• Какой режим дня выбрать?\n\nЧто тебя интересует?'
-        : 'Чат с ИИ-тренером доступен только для пользователей с премиум подпиской! Оформите подписку для получения персональных консультаций.',
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [limitInfo, setLimitInfo] = useState({ requestsUsed: 0, dailyLimit: 10, requestsLeft: 10, isPremium: false });
+  const [isHistoryLoaded, setIsHistoryLoaded] = useState(false);
 
   // Инициализация Telegram WebApp
   useEffect(() => {
@@ -56,27 +49,68 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
     }
   }, []);
 
-  // Система лимитов только для премиум пользователей
-  const getToday = () => new Date().toDateString();
-  const getTodayUsage = () => {
-    const stored = localStorage.getItem('dianaChat_usage');
-    if (!stored) return { date: getToday(), count: 0 };
-    
-    const usage = JSON.parse(stored);
-    if (usage.date !== getToday()) {
-      // Новый день - сброс счетчика
-      return { date: getToday(), count: 0 };
-    }
-    return usage;
-  };
+  // Получаем userId из Telegram WebApp
+  const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
+  const userId = tgUser?.id || tgUser?.id?.toString() || 'demo_user_local_test';
 
-  const [dailyUsage, setDailyUsage] = useState(getTodayUsage());
-  const maxDailyQuestions = 10; // 10 запросов для премиум пользователей
-  const canSendMessage = isPremium && dailyUsage.count < maxDailyQuestions;
-
+  // Загружаем историю диалога и лимит при открытии чата
   useEffect(() => {
-    localStorage.setItem('dianaChat_usage', JSON.stringify(dailyUsage));
-  }, [dailyUsage]);
+    const loadHistoryAndLimit = async () => {
+      try {
+        let userData = null;
+        let currentLimitInfo = { requestsUsed: 0, dailyLimit: 10, requestsLeft: 10, isPremium: false };
+        
+        // Сначала загружаем лимит запросов
+        const limitRes = await fetch(`${API_URL}/api/diana-limits/${userId}`);
+        if (limitRes.ok) {
+          const limitData = await limitRes.json();
+          currentLimitInfo = {
+            requestsUsed: limitData.requestsUsed,
+            dailyLimit: limitData.dailyLimit,
+            requestsLeft: limitData.requestsLeft,
+            isPremium: limitData.isPremium
+          };
+          setLimitInfo(currentLimitInfo);
+        }
+        
+        // Затем загружаем историю диалога
+        const historyRes = await fetch(`${API_URL}/api/user/quiz-answers/${userId}`);
+        if (historyRes.ok) {
+          userData = await historyRes.json();
+          if (userData.dialogHistory && Array.isArray(userData.dialogHistory)) {
+            const loadedMessages = userData.dialogHistory.map((msg, idx) => ({
+              id: idx + 1,
+              from: msg.role === 'assistant' ? 'diana' : 'user',
+              text: msg.text,
+              timestamp: msg.timestamp ? new Date(msg.timestamp) : new Date()
+            }));
+            setMessages(loadedMessages);
+          }
+        }
+        
+        // Если нет истории, показываем приветствие
+        if (!userData?.dialogHistory?.length) {
+          setMessages([{
+            id: 1,
+            from: 'diana',
+            text: currentLimitInfo.isPremium 
+              ? 'Привет! Я Диана, твой персональный фитнес-тренер! 💪\n\nУ тебя есть 10 вопросов в день. Я помогу тебе с вопросами о тренировках, питании, мотивации, режиме дня, рецептах и советах по похудению.\n\nМожешь спросить меня, например:\n• Как составить тренировку дома или в зале?\n• Как рассчитать калории?\n• Какие продукты лучше для похудения?\n• Как не потерять мотивацию?\n• Какой режим дня выбрать?\n\nЧто тебя интересует?'
+              : 'Чат с ИИ-тренером доступен только для пользователей с премиум подпиской! Оформите подписку для получения 10 персональных консультаций в день.',
+            timestamp: new Date()
+          }]);
+        }
+        
+        setIsHistoryLoaded(true);
+      } catch (error) {
+        console.error('Ошибка загрузки истории:', error);
+        setIsHistoryLoaded(true);
+      }
+    };
+
+    loadHistoryAndLimit();
+  }, [userId]);
+
+  const canSendMessage = limitInfo.isPremium && limitInfo.requestsLeft > 0;
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -88,13 +122,13 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
 
   const handleSendMessage = async () => {
     if (!inputText.trim()) return;
-    if (!isPremium) {
+    if (!limitInfo.isPremium) {
       setShowPremiumModal(true);
       return;
     }
 
     if (!canSendMessage) {
-      alert(`Вы использовали все ${maxDailyQuestions} вопросов на сегодня! Завтра лимит обновится. 🕐`);
+      alert(`Вы использовали все ${limitInfo.dailyLimit} вопросов на сегодня! Завтра лимит обновится. 🕐`);
       return;
     }
 
@@ -109,19 +143,7 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
     setInputText('');
     setIsLoading(true);
 
-    // Увеличиваем счетчик использования для премиум пользователей
-    setDailyUsage(prev => ({ ...prev, count: prev.count + 1 }));
-
     try {
-      // Получаем userId из Telegram WebApp
-      const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-      const userId = tgUser?.id || tgUser?.id?.toString() || 'demo_user_local_test';
-      
-      console.log('🔍 DianaChat userId:', userId);
-      console.log('🔍 Telegram WebApp available:', !!window.Telegram?.WebApp);
-      console.log('🔍 Telegram user data:', tgUser);
-      console.log('🔍 Full initDataUnsafe:', window.Telegram?.WebApp?.initDataUnsafe);
-      
       const response = await fetch(`${API_URL}/api/chat-diana`, {
         method: 'POST',
         headers: {
@@ -144,6 +166,16 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
       };
 
       setMessages(prev => [...prev, dianaMessage]);
+
+      // Обновляем лимит после получения ответа
+      if (data.limitInfo) {
+        setLimitInfo({
+          requestsUsed: data.limitInfo.requestsUsed,
+          dailyLimit: data.limitInfo.dailyLimit,
+          requestsLeft: data.limitInfo.requestsLeft,
+          isPremium: data.limitInfo.isPremium
+        });
+      }
     } catch (error) {
       console.error('Ошибка чата:', error);
       const errorMessage = {
@@ -236,11 +268,11 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
             </div>
             <div>
               <div style={{ color: '#fff', fontWeight: 700, fontSize: 16 }}>
-                <span style={{fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif'}}>Диана</span> {isPremium ? '💎' : '🔒'}
+                <span style={{fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif'}}>Диана</span> {limitInfo.isPremium ? '💎' : '🔒'}
               </div>
               <div style={{ color: '#e0e6ff', fontSize: 12 }}>
-                {isPremium 
-                  ? `ИИ-тренер • ${maxDailyQuestions - dailyUsage.count}/${maxDailyQuestions} вопросов`
+                {limitInfo.isPremium 
+                  ? `ИИ-тренер • ${limitInfo.requestsLeft}/${limitInfo.dailyLimit} вопросов`
                   : 'Только для премиум'
                 }
               </div>
@@ -263,16 +295,16 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
 
         {/* Счетчик вопросов */}
         <div style={{
-          background: isPremium ? '#e8f5e8' : '#fff3e0',
+          background: limitInfo.isPremium ? '#e8f5e8' : '#fff3e0',
           padding: '8px 20px',
           borderBottom: '1px solid #e2e8f0',
           fontSize: 12,
           color: '#666',
           textAlign: 'center'
         }}>
-          {isPremium 
-            ? `Осталось вопросов: ${maxDailyQuestions - dailyUsage.count} из ${maxDailyQuestions}`
-            : `Бесплатно: ${dailyUsage.count} из ${maxDailyQuestions} вопросов на сегодня`
+          {limitInfo.isPremium 
+            ? `Осталось вопросов: ${limitInfo.requestsLeft} из ${limitInfo.dailyLimit}`
+            : `Бесплатно: ${limitInfo.requestsUsed} из ${limitInfo.dailyLimit} вопросов на сегодня`
           }
         </div>
 
@@ -285,45 +317,60 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
           flexDirection: 'column',
           gap: 16
         }}>
-          {messages.map((message) => (
-            <div
-              key={message.id}
-              style={{
-                display: 'flex',
-                justifyContent: message.from === 'user' ? 'flex-end' : 'flex-start'
-              }}
-            >
-              <div style={{
-                maxWidth: '75%',
-                padding: '12px 16px',
-                borderRadius: 16,
-                background: message.from === 'user' 
-                  ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
-                  : '#f1f5f9',
-                color: message.from === 'user' ? '#fff' : '#1a1a1a',
-                fontSize: 14,
-                lineHeight: 1.4,
-                wordBreak: 'break-word',
-                whiteSpace: 'pre-wrap',
-                fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif',
-                fontWeight: 500,
-              }}>
-                {message.text}
-              </div>
+          {!isHistoryLoaded ? (
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '100%',
+              color: '#666',
+              fontSize: 14
+            }}>
+              Загружаю историю...
             </div>
-          ))}
-          {isLoading && (
-            <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
-              <div style={{
-                padding: '12px 16px',
-                borderRadius: 16,
-                background: '#f1f5f9',
-                color: '#666',
-                fontSize: 14
-              }}>
-                Диана печатает...
-              </div>
-            </div>
+          ) : (
+            <>
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  style={{
+                    display: 'flex',
+                    justifyContent: message.from === 'user' ? 'flex-end' : 'flex-start'
+                  }}
+                >
+                  <div style={{
+                    maxWidth: '75%',
+                    padding: '12px 16px',
+                    borderRadius: 16,
+                    background: message.from === 'user' 
+                      ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+                      : '#f1f5f9',
+                    color: message.from === 'user' ? '#fff' : '#1a1a1a',
+                    fontSize: 14,
+                    lineHeight: 1.4,
+                    wordBreak: 'break-word',
+                    whiteSpace: 'pre-wrap',
+                    fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif',
+                    fontWeight: 500,
+                  }}>
+                    {message.text}
+                  </div>
+                </div>
+              ))}
+              {isLoading && (
+                <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+                  <div style={{
+                    padding: '12px 16px',
+                    borderRadius: 16,
+                    background: '#f1f5f9',
+                    color: '#666',
+                    fontSize: 14
+                  }}>
+                    Диана печатает...
+                  </div>
+                </div>
+              )}
+            </>
           )}
           <div ref={messagesEndRef} />
         </div>
@@ -336,17 +383,17 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
         }}>
           <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end' }}>
              <textarea
-               value={isPremium ? inputText : ''}
-               onChange={isPremium ? (e) => setInputText(e.target.value) : undefined}
-               onKeyPress={isPremium ? handleKeyPress : undefined}
+               value={limitInfo.isPremium ? inputText : ''}
+               onChange={limitInfo.isPremium ? (e) => setInputText(e.target.value) : undefined}
+               onKeyPress={limitInfo.isPremium ? handleKeyPress : undefined}
                onFocus={() => {
-                 if (!isPremium) {
+                 if (!limitInfo.isPremium) {
                    setShowPremiumModal(true);
                  }
                }}
-               placeholder={isPremium 
+               placeholder={limitInfo.isPremium 
                  ? (canSendMessage 
-                     ? `Напишите ваш вопрос... (осталось ${maxDailyQuestions - dailyUsage.count} из ${maxDailyQuestions})`
+                     ? `Напишите ваш вопрос... (осталось ${limitInfo.requestsLeft} из ${limitInfo.dailyLimit})`
                      : 'Лимит вопросов на сегодня исчерпан')
                  : 'Только для премиум пользователей'
                }
@@ -364,7 +411,7 @@ const DianaChat = ({ onClose, isPremium = false, activatePremium, setShowPayment
                  fontFamily: 'Montserrat Alternates, Montserrat, Arial, sans-serif',
                  fontWeight: 500,
                  backgroundColor: !canSendMessage ? '#f5f5f5' : '#fff',
-                 cursor: isPremium ? 'text' : 'pointer'
+                 cursor: limitInfo.isPremium ? 'text' : 'pointer'
                }}
                rows={1}
              />
