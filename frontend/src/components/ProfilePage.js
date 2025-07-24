@@ -254,9 +254,10 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
         const response = await fetch(`${API_URL}/api/user/quiz-answers/${userId}`);
         if (response.ok) {
           const data = await response.json();
-          // Приводим возраст к строке для корректного отображения
-          if (typeof data.age !== 'undefined') data.age = String(data.age);
-          setQuizAnswers(data);
+          // data.quiz — это объект с ответами квиза
+          const quiz = data.quiz || {};
+          if (typeof quiz.age !== 'undefined') quiz.age = String(quiz.age);
+          setQuizAnswers(quiz);
         }
       } catch (error) {
         console.error('Ошибка загрузки quizAnswers:', error);

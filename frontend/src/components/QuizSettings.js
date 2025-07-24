@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { API_URL } from '../config/api';
 
-const QuizSettings = () => {
-    const [userAnswers, setUserAnswers] = useState({});
+const QuizSettings = ({ quizAnswers = {}, onSettingChange }) => {
+    const [userAnswers, setUserAnswers] = useState(quizAnswers || {});
     const [savingStates, setSavingStates] = useState({});
     const [openPicker, setOpenPicker] = useState(null);
     const [selectedValue, setSelectedValue] = useState(null);
@@ -10,33 +10,10 @@ const QuizSettings = () => {
     const [debugStatus, setDebugStatus] = useState('');
     const [debugError, setDebugError] = useState('');
 
-    // Получаем userAnswers напрямую из API при монтировании и после каждого сохранения
-    const fetchUserAnswers = async () => {
-        try {
-            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
-            setDebugUserId(userId); // debug
-            const response = await fetch(`${API_URL}/api/user/quiz-answers/${userId}`);
-            setDebugStatus(response.status);
-            if (response.ok) {
-                const data = await response.json();
-                // Приводим возраст к строке для корректного отображения
-                if (typeof data.age !== 'undefined') data.age = String(data.age);
-                setUserAnswers(data);
-                setDebugError('');
-                console.log('[DEBUG userAnswers]', data); // debug-лог
-            } else {
-                setDebugError(await response.text());
-                setUserAnswers({});
-            }
-        } catch (error) {
-            setDebugError(error.message);
-            setUserAnswers({});
-        }
-    };
-
+    // Синхронизируем userAnswers с quizAnswers из пропсов
     useEffect(() => {
-        fetchUserAnswers();
-    }, []);
+        setUserAnswers(quizAnswers || {});
+    }, [quizAnswers]);
 
     // Вопросы и ключи строго соответствуют backup-файлу
     const quizQuestions = [
@@ -101,7 +78,11 @@ const QuizSettings = () => {
     ];
 
     const handleAnswerSelect = (questionId, value) => {
-        setUserAnswers(prev => ({ ...prev, [questionId]: value }));
+        setUserAnswers(prev => {
+            const updated = { ...prev, [questionId]: value };
+            if (onSettingChange) onSettingChange({ [questionId]: value });
+            return updated;
+        });
     };
 
     const handleSaveAnswer = async (questionId, valueToSave = null) => {
@@ -133,7 +114,7 @@ const QuizSettings = () => {
                 setTimeout(() => {
                     setSavingStates(prev => ({ ...prev, [questionId]: false }));
                 }, 1500);
-                await fetchUserAnswers();
+                // fetchUserAnswers удалён: теперь обновление quizAnswers идёт через пропсы из ProfilePage
             }
         } catch (error) {
             setSavingStates(prev => ({ ...prev, [questionId]: 'error' }));
