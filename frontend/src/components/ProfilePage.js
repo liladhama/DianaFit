@@ -532,18 +532,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
               }
             }}
           />
-          {/* Статус онлайн */}
-          <div style={{
-            position: 'absolute',
-            bottom: 6,
-            right: 6,
-            width: 18,
-            height: 18,
-            background: 'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)',
-            borderRadius: '50%',
-            border: '2px solid white',
-            animation: 'pulse 2s infinite'
-          }} />
+          {/* Статус онлайн удалён по запросу */}
         </div>
       </div>
 
