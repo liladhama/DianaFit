@@ -12,7 +12,7 @@ const MealCard = ({
   selectedIdx = 0,
   setSelectedIdx = () => {},
   reason,
-  onRefreshMeal = () => {},
+  onRefreshMeal = null,
   isRefreshing = false
 }) => {
   // Если есть варианты из aiMeals — используем их, иначе только meal
@@ -98,66 +98,77 @@ const MealCard = ({
       border: '1px solid #f1f5f9',
       ...style
     }}>
-      {/* Заголовок приема пищи + кнопка обновить */}
+      {/* Заголовок приема пищи + стрелки */}
       <div style={{
-        position: 'relative',
         display: 'flex',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 8,
-        minHeight: 40
+        marginBottom: 8
       }}>
         <div style={{
           display: 'flex',
           alignItems: 'center',
-          gap: 4
+          justifyContent: 'flex-start',
+          flex: 1,
+          paddingRight: 8 // чтобы правая граница совпадала с остальными блоками
         }}>
-          <span style={{ fontSize: 22, marginRight: 2 }}>
-            {getMealIcon(meal.type)}
-          </span>
-          <h3 style={{ fontSize: 20, color: '#1e293b', margin: 0 }}>
-            {meal.type}
-          </h3>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 4,
+            flex: 1,
+            minWidth: 0
+          }}>
+            <span style={{ fontSize: 22, marginRight: 2 }}>
+              {getMealIcon(meal.type)}
+            </span>
+            <h3 style={{ fontSize: 20, color: '#1e293b', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {meal.type}
+            </h3>
+          </div>
+          {/* Кнопка обновления отдельного приема пищи */}
+          {onRefreshMeal && (
+            <button
+              onClick={() => onRefreshMeal(index)}
+              disabled={isRefreshing}
+              style={{
+                padding: '6px 12px',
+                borderRadius: 8,
+                background: isRefreshing 
+                  ? 'linear-gradient(90deg, #666 0%, #888 100%)' 
+                  : 'linear-gradient(90deg, #2196f3 0%, #00c6ff 100%)',
+                color: '#fff',
+                border: 'none',
+                fontSize: 13,
+                fontWeight: 600,
+                cursor: isRefreshing ? 'not-allowed' : 'pointer',
+                boxShadow: isRefreshing 
+                  ? '0 2px 8px rgba(102,102,102,0.2)' 
+                  : '0 2px 8px rgba(33,150,243,0.25)',
+                transition: 'all 0.2s ease',
+                opacity: isRefreshing ? 0.7 : 1,
+                minWidth: 80,
+                marginLeft: 12,
+                marginRight: 0
+              }}
+              onMouseEnter={e => {
+                if (!isRefreshing) {
+                  e.currentTarget.style.transform = 'scale(1.03)';
+                  e.currentTarget.style.boxShadow = '0 4px 16px rgba(33,150,243,0.35)';
+                }
+              }}
+              onMouseLeave={e => {
+                if (!isRefreshing) {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = '0 2px 8px rgba(33,150,243,0.25)';
+                }
+              }}
+              title={isRefreshing ? "Обновляется..." : "Обновить варианты для этого приема пищи"}
+            >
+              {isRefreshing ? 'Обновляется...' : 'Обновить'}
+            </button>
+          )}
         </div>
-        {onRefreshMeal && (
-          <button
-            onClick={() => onRefreshMeal(index)}
-            disabled={isRefreshing}
-            style={{
-              position: 'absolute',
-              right: 0,
-              top: '50%',
-              transform: 'translateY(-50%)',
-              padding: '6px 14px',
-              fontSize: 14,
-              fontWeight: 600,
-              color: '#fff',
-              background: isRefreshing 
-                ? 'linear-gradient(90deg, #9ca3af 0%, #6b7280 100%)' 
-                : 'linear-gradient(90deg, #2196f3 0%, #00c6ff 100%)',
-              border: 'none',
-              borderRadius: 8,
-              cursor: isRefreshing ? 'not-allowed' : 'pointer',
-              boxShadow: '0 2px 6px rgba(33,150,243,0.15)',
-              transition: 'all 0.2s',
-              letterSpacing: '0.3px',
-              opacity: isRefreshing ? 0.7 : 1
-            }}
-            onMouseEnter={e => {
-              if (!isRefreshing) {
-                e.currentTarget.style.transform = 'translateY(-50%) scale(1.05)';
-                e.currentTarget.style.boxShadow = '0 4px 12px rgba(33,150,243,0.25)';
-              }
-            }}
-            onMouseLeave={e => {
-              if (!isRefreshing) {
-                e.currentTarget.style.transform = 'translateY(-50%) scale(1)';
-                e.currentTarget.style.boxShadow = '0 2px 6px rgba(33,150,243,0.15)';
-              }
-            }}
-          >
-            {isRefreshing ? 'Обновляется...' : 'Обновить'}
-          </button>
-        )}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, maxWidth: 180, marginLeft: -10 }}>
           {isAI && mealOptions.length > 1 && (
             <>
@@ -252,12 +263,20 @@ const MealCard = ({
       </div>
 
       {/* Кнопки для разворачивания ингредиентов и рецепта */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+      <div style={{ 
+        display: 'flex', 
+        gap: 8, 
+        marginBottom: 12,
+        width: '100%',
+        boxSizing: 'border-box'
+      }}>
         <button
           onClick={handleShowIngredients}
           style={{
-            flex: 1,
-            padding: '8px 14px',
+            flex: '1 1 0',
+            minWidth: 0,
+            maxWidth: 'calc(50% - 4px)',
+            padding: '8px 12px',
             backgroundColor: showIngredients ? '#ddd6fe' : '#e2e8f0',
             color: showIngredients ? '#5b21b6' : '#64748b',
             border: showIngredients ? '2px solid #a855f7' : '1px solid #cbd5e1',
@@ -267,16 +286,28 @@ const MealCard = ({
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
+            justifyContent: 'center',
+            gap: 4,
             transition: 'all 0.2s ease',
-            boxShadow: showIngredients ? '0 2px 8px rgba(168, 85, 247, 0.2)' : 'none'
+            boxShadow: showIngredients ? '0 2px 8px rgba(168, 85, 247, 0.2)' : 'none',
+            boxSizing: 'border-box',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
           }}
         >
-          📊 {showIngredients ? 'Скрыть граммовки' : 'Показать граммовки'}
+          <span style={{ 
+            overflow: 'hidden', 
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}>
+            📊 {showIngredients ? 'Скрыть' : 'Граммовки'}
+          </span>
           <span style={{ 
             transform: showIngredients ? 'rotate(180deg)' : 'rotate(0deg)', 
             transition: 'transform 0.2s',
-            fontSize: 12
+            fontSize: 12,
+            flexShrink: 0
           }}>
             ▼
           </span>
@@ -284,8 +315,10 @@ const MealCard = ({
         <button
           onClick={handleShowInstructions}
           style={{
-            flex: 1,
-            padding: '8px 14px',
+            flex: '1 1 0',
+            minWidth: 0,
+            maxWidth: 'calc(50% - 4px)',
+            padding: '8px 12px',
             backgroundColor: showInstructions ? '#dbeafe' : '#e2e8f0',
             color: showInstructions ? '#2563eb' : '#64748b',
             border: showInstructions ? '2px solid #2563eb' : '1px solid #cbd5e1',
@@ -295,16 +328,28 @@ const MealCard = ({
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: 6,
+            justifyContent: 'center',
+            gap: 4,
             transition: 'all 0.2s ease',
-            boxShadow: showInstructions ? '0 2px 8px rgba(37, 99, 235, 0.15)' : 'none'
+            boxShadow: showInstructions ? '0 2px 8px rgba(37, 99, 235, 0.15)' : 'none',
+            boxSizing: 'border-box',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
           }}
         >
-          📝 {showInstructions ? 'Скрыть рецепт' : 'Рецепт приготовления'}
+          <span style={{ 
+            overflow: 'hidden', 
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap'
+          }}>
+            📝 {showInstructions ? 'Скрыть' : 'Рецепт'}
+          </span>
           <span style={{ 
             transform: showInstructions ? 'rotate(180deg)' : 'rotate(0deg)', 
             transition: 'transform 0.2s',
-            fontSize: 12
+            fontSize: 12,
+            flexShrink: 0
           }}>
             ▼
           </span>
