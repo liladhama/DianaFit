@@ -395,7 +395,34 @@ function App() {
         let quizData = null;
         if (quizRes.ok) {
           const userData = await quizRes.json();
-          quizData = userData.quiz; // Извлекаем quiz из userData
+          console.log('[DEBUG FRONT] Получен ответ с бэкенда - userData keys:', Object.keys(userData || {}));
+          console.log('[DEBUG FRONT] userData.quiz существует:', !!userData.quiz);
+          
+          // Проверяем структуру quiz - может быть вложенный или на верхнем уровне
+          if (userData.quiz) {
+            console.log('[DEBUG FRONT] userData.quiz keys:', Object.keys(userData.quiz || {}));
+            quizData = userData.quiz; // Извлекаем quiz из userData
+          } else if (userData.name || userData.sex || userData.age) {
+            console.log('[DEBUG FRONT] Quiz данные находятся на верхнем уровне userData');
+            // Quiz данные на верхнем уровне - создаем объект quiz
+            quizData = {
+              name: userData.name,
+              sex: userData.sex,
+              age: userData.age,
+              height_cm: userData.height_cm,
+              weight_kg: userData.weight_kg,
+              goal: userData.goal,
+              gym_or_home: userData.gym_or_home,
+              training_level: userData.training_level,
+              activity_coef: userData.activity_coef,
+              workouts_per_week: userData.workouts_per_week,
+              diet_flags: userData.diet_flags,
+              timezone: userData.timezone,
+              calories: userData.calories,
+              notifyHour: userData.notifyHour
+            };
+          }
+          
           console.log('✅ Quiz данные загружены:', !!quizData);
           console.log('[DEBUG] userData:', !!userData, 'userData.quiz:', !!userData.quiz, 'quizData после извлечения:', !!quizData);
           if (quizData) {
