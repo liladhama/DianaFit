@@ -10,9 +10,72 @@ import { callMistralAI } from './utils/aiUtils.js';
 import mealPlanCalculator from './utils/mealPlanCalculator.js';
 import fetch from 'node-fetch';
 import UserProgressLogger from './userProgressLogger.js';
+import admin from 'firebase-admin';
+import { getFirebaseConfig } from './firestore-config.js';
 
 // Импортируем функцию нормализации ингредиентов
 import { normalizeIngredientUnits } from './utils/recipeUtils.js';
+
+// Инициализация Firebase Admin SDK (если еще не инициализирован)
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(getFirebaseConfig()),
+  });
+}
+
+// --- Функция для создания новой недельной программы ---
+async function createWeeklyProgram(answers) {
+  console.log('🔄 Создание новой недельной программы с настройками:', answers);
+  
+  // 1. Расчет КБЖУ пользователя
+  const macros = mealPlanCalculator.calculateUserMacros(answers);
+  console.log('📊 Расчитанные макросы:', macros);
+  
+  // 2. Распределение калорий по приемам пищи
+  const mealCalories = mealPlanCalculator.distributeMealCalories(macros.calories);
+  console.log('🍽️ Распределение калорий по приемам пищи:', mealCalories);
+  
+  // 3. Для каждого приема пищи подобрать 5 вариантов из базы с масштабированием
+  const mealTypes = ['Завтрак', 'Перекус', 'Обед', 'Полдник', 'Ужин'];
+  const dietType = answers.diet_flags || 'meat';
+  const days = [];
+  
+  for (let day = 1; day <= 7; day++) {
+    const meals = mealTypes.map(type => {
+      const options = mealPlanCalculator.getMealOptionsByTypeAndDiet(
+        type,
+        dietType,
+        mealCalories[type],
+        5
+      );
+      return {
+        type,
+        options,
+        targetCalories: mealCalories[type]
+      };
+    });
+    
+    days.push({
+      day,
+      date: new Date(Date.now() + (day - 1) * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+      isWorkoutDay: (day % 2 === 1),
+      workout: (day % 2 === 1) ? { 
+        exercises: [], 
+        duration: 30, 
+        difficulty: answers.training_level || 'beginner' 
+      } : null,
+      meals
+    });
+  }
+  
+  const program = {
+    weeks: [{ week: 1, days }],
+    macros
+  };
+  
+  console.log('✅ Новая недельная программа создана');
+  return program;
+}
 
 // В памяти (для примера)
 const programs = {};
@@ -1435,13 +1498,64 @@ router.get('/user/weekly-program/:userId', async (req, res) => {
     // ИСПРАВЛЕНО: используем UserProgressLogger вместо старых функций
     const logger = new UserProgressLogger(userId);
     const userData = await logger.loadLog();
-    // Ищем программу в programData или program (для обратной совместимости)
+    
+    // Проверяем, не прошло ли 7+ дней с начала программы (нужна новая неделя)
+    let shouldCreateNewWeek = false;
+    let programStartDate = null;
+    
+    if (userData.programData && userData.programData.days && userData.programData.days.length > 0) {
+      // Определяем дату старта программы
+      if (userData.createdAt) {
+        programStartDate = new Date(userData.createdAt);
+      } else if (userData.programData.days[0].date) {
+        programStartDate = new Date(userData.programData.days[0].date);
+      }
+      
+      if (programStartDate) {
+        const now = new Date();
+        const daysPassed = Math.floor((now - programStartDate) / (1000 * 60 * 60 * 24));
+        console.log(`[AUTO NEW WEEK] Дней прошло с начала программы: ${daysPassed}`);
+        
+        // Если прошло 7+ дней, нужна новая неделя
+        if (daysPassed >= 7) {
+          shouldCreateNewWeek = true;
+          console.log('🔄 Создаем новую неделю на основе обновленных настроек');
+        }
+      }
+    }
+    
+    // Если нужна новая неделя или программы нет, создаем новую с актуальными настройками
+    if (shouldCreateNewWeek || !userData.programData) {
+      console.log('📅 Генерируем новую недельную программу с актуальными настройками из Firestore');
+      
+      // Получаем актуальные настройки пользователя из Firestore
+      const db = admin.firestore();
+      const userDoc = await db.collection('Dianafit_users').doc(userId).get();
+      const currentUserData = userDoc.exists ? userDoc.data() : {};
+      const currentQuiz = currentUserData.quiz || {};
+      
+      console.log('📊 Актуальные настройки для новой недели:', currentQuiz);
+      
+      // Создаем новую программу с актуальными настройками
+      const newProgram = await createWeeklyProgram(currentQuiz);
+      
+      // Сохраняем новую программу в UserProgressLogger
+      userData.programData = newProgram;
+      userData.createdAt = new Date().toISOString(); // Обновляем дату создания
+      await logger.saveLog(userData);
+      
+      console.log('✅ Новая недельная программа создана и сохранена');
+      return res.json(newProgram);
+    }
+    
+    // Возвращаем существующую программу, если новая неделя не нужна
     const program = userData.programData || userData.program;
     if (!program) {
       return res.status(404).json({ error: 'Program not found' });
     }
     res.json(program);
   } catch (error) {
+    console.error('Ошибка при получении недельной программы:', error);
     res.status(500).json({ error: error.message });
   }
 });
