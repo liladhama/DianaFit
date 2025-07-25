@@ -1866,67 +1866,7 @@ function App() {
         </div>
       )}
 
-      {/* Аватарка пользователя из Telegram в правом верхнем углу */}
-      {/* Показываем только на странице TestWeek (тренировочная неделя), но НЕ в профиле и НЕ на странице оплаты */}
-      {!showSplash && showTestWeek && !showProfile && !isPaymentShown && (
-        <div
-          onClick={() => setShowProfile(true)}
-          style={{
-            position: 'fixed',
-            top: 20,
-            right: 20,
-            width: 60,
-            height: 60,
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #0088cc 0%, #005699 100%)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            zIndex: 1001, // Выше чем у кнопки чата
-            boxShadow: '0 4px 20px rgba(0, 136, 204, 0.4)',
-            transition: 'all 0.3s ease',
-            border: '2px solid rgba(255, 255, 255, 0.2)',
-            overflow: 'hidden'
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.transform = 'scale(1.1)';
-            e.target.style.boxShadow = '0 6px 16px rgba(0, 136, 204, 0.4)';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.transform = 'scale(1)';
-            e.target.style.boxShadow = '0 4px 20px rgba(0, 136, 204, 0.4)';
-          }}
-        >
-          {/* Аватарка пользователя из Telegram или иконка по умолчанию */}
-          {userAvatar ? (
-            <img 
-              src={userAvatar}
-              alt="User Avatar"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                borderRadius: '50%'
-              }}
-              onError={() => {
-                // Если изображение не загрузилось, убираем аватарку
-                setUserAvatar(null);
-              }}
-            />
-          ) : (
-            <span 
-              style={{ 
-                fontSize: 24, 
-                color: 'white', 
-                fontWeight: 'bold'
-              }}
-            >
-              👤
-            </span>
-          )}
-        </div>
-      )}
+
       
       {showSplash ? (
         <div>
@@ -1966,6 +1906,8 @@ function App() {
           setIsPaymentShown={setIsPaymentShown}
           weekData={weekData}
           answers={answers}
+          userAvatar={userAvatar}
+          onProfileClick={() => setShowProfile(true)}
           onStartProgram={() => {
             setShowTestWeek(false);
             setShowToday(true);

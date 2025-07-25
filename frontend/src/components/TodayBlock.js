@@ -1381,8 +1381,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         {/* Confetti теперь только в CongratsModal */}
         {profileButton}
         {dianaButton}
-      {/* Кнопка К неделе по центру */}
-      <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '32px 0 16px 0' }}>
+      {/* Кнопка К неделе по центру (максимально вверх) */}
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 0 8px 0' }}>
         <button
           onClick={onBackToWeek}
           style={{
@@ -1408,9 +1408,9 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
       {/* ...existing code... */}
 
-      {/* Мотивация дня */}
+      {/* Мотивация дня (вернул прежний отступ) */}
       <div style={{
-        padding: '20px',
+        padding: '12px 20px 20px 20px',
         maxWidth: 480,
         margin: '0 auto',
         width: '100%',
