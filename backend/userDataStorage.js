@@ -34,6 +34,7 @@ try {
 }
 
 export async function readUserData(userId) {
+  const originalUserId = userId;
   userId = String(userId);
   // ...удалено логирование Firestore...
   
@@ -44,7 +45,21 @@ export async function readUserData(userId) {
   try {
     const collection = getUsersCollection();
     // ...удалено логирование Firestore...
-    const doc = await db.collection(collection).doc(userId).get();
+    
+    // Сначала ищем по строковому id
+    let doc = await db.collection(collection).doc(userId).get();
+    
+    // Если не найден и originalUserId было числом - ищем по числовому id
+    if (!doc.exists && typeof originalUserId === 'number') {
+      console.log(`[DEBUG] Документ не найден по строковому id ${userId}, пробуем числовой ${originalUserId}`);
+      doc = await db.collection(collection).doc(originalUserId.toString()).get();
+    }
+    
+    // Если всё ещё не найден и originalUserId была строка с числом - ищем по числу
+    if (!doc.exists && !isNaN(Number(originalUserId))) {
+      console.log(`[DEBUG] Документ не найден по строковому id ${userId}, пробуем числовой ${Number(originalUserId)}`);
+      doc = await db.collection(collection).doc(Number(originalUserId).toString()).get();
+    }
     
     if (doc.exists) {
       const data = doc.data();
