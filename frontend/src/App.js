@@ -397,6 +397,10 @@ function App() {
           const userData = await quizRes.json();
           quizData = userData.quiz; // Извлекаем quiz из userData
           console.log('✅ Quiz данные загружены:', !!quizData);
+          console.log('[DEBUG] userData:', !!userData, 'userData.quiz:', !!userData.quiz, 'quizData после извлечения:', !!quizData);
+          if (quizData) {
+            console.log('[DEBUG] quizData содержит:', Object.keys(quizData || {}));
+          }
         } else {
           console.log('❌ Quiz данные не найдены, статус:', quizRes.status);
         }
@@ -475,15 +479,6 @@ function App() {
               if (retryRes.ok) {
                 const programData = await retryRes.json();
                 console.log('✅ Программа создана и загружена:', !!programData.days);
-                
-                // Проверяем квиз перед показом TodayBlock
-                if (!quizData) {
-                  console.log('❌ Нет квиза, показываем форму квиза (даже после создания программы)');
-                  setShowQuiz(true);
-                  setIsLoadingUserData(false);
-                  setShowSplash(false);
-                  return;
-                }
                 
                 setWeekData(programData);
                 setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
