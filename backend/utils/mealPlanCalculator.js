@@ -37,12 +37,12 @@ class MealPlanCalculator {
         const age = Number(userAnswers.age) || 30;
         const sex = (userAnswers.gender || userAnswers.sex || 'female').toLowerCase();
 
-        // Расчет BMR по формуле Миффлина-Сан Жеора
+        // Единая формула BMR (Harris-Benedict как везде)
         let bmr;
         if (sex === 'male') {
-            bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+            bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
         } else {
-            bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+            bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
         }
 
         // Коэффициент активности
@@ -64,9 +64,8 @@ class MealPlanCalculator {
             calories = Math.round(calories - deficit);
         }
 
-        // Минимум 1200 ккал для женщин, 1500 для мужчин
-        const minCalories = sex === 'male' ? 1500 : 1200;
-        calories = Math.max(minCalories, calories);
+        // Минимум 1400 ккал для всех (единая политика)
+        calories = Math.max(1400, calories);
 
         // Расчет белков, жиров, углеводов (единая формула)
         const protein = Math.round(weight * 1.5); // Исправлено: была 1.7, теперь 1.5 как везде
