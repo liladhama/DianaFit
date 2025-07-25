@@ -394,7 +394,8 @@ function App() {
         const quizRes = await fetch(`${API_URL}/api/user/quiz-answers/${tgUserId}`);
         let quizData = null;
         if (quizRes.ok) {
-          quizData = await quizRes.json();
+          const userData = await quizRes.json();
+          quizData = userData.quiz; // Извлекаем quiz из userData
           console.log('✅ Quiz данные загружены:', !!quizData);
         } else {
           console.log('❌ Quiz данные не найдены, статус:', quizRes.status);
