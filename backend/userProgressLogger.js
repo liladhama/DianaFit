@@ -136,6 +136,22 @@ class UserProgressLogger {
         return null; // Возвращаем null вместо объекта с пустыми полями
     }
 
+    // Получить полную историю программ пользователя для анализа ИИ
+    async getProgramHistory() {
+        const log = await this.loadLog();
+        const history = {
+            currentProgram: {
+                program: log.programData,
+                createdAt: log.createdAt,
+                isActive: true
+            },
+            previousPrograms: log.programHistory || [],
+            totalWeeks: (log.programHistory?.length || 0) + (log.programData ? 1 : 0),
+            userSince: log.programHistory?.[0]?.createdAt || log.createdAt
+        };
+        return history;
+    }
+
     // Получить недельную историю прогресса (последние 7 дней)
     async getWeeklyProgressHistory() {
         const log = await this.loadLog();

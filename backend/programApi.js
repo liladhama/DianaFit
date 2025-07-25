@@ -12,7 +12,6 @@ import fetch from 'node-fetch';
 import UserProgressLogger from './userProgressLogger.js';
 import admin from 'firebase-admin';
 import { getFirebaseConfig } from './firestore-config.js';
-import { readUserData } from './userDataStorage.js';
 
 // Импортируем функцию нормализации ингредиентов
 import { normalizeIngredientUnits } from './utils/recipeUtils.js';
@@ -1500,21 +1499,28 @@ router.get('/user/weekly-program/:userId', async (req, res) => {
     const logger = new UserProgressLogger(userId);
     const userData = await logger.loadLog();
     
-    // ИСПРАВЛЕНО: Создаем программу только если её нет, а не каждые 7 дней
-    // Проверяем, есть ли программа вообще
-    let shouldCreateNewProgram = false;
+    // Проверяем, не прошло ли 7+ дней с начала программы (нужна новая неделя)
+    let shouldCreateNewWeek = false;
+    let programStartDate = null;
     
-    if (!userData.programData || !userData.programData.days || userData.programData.days.length === 0) {
-      shouldCreateNewProgram = true;
-      console.log('📅 Программа не найдена, создаем новую программу');
-    } else {
-      console.log('✅ Программа существует, возвращаем существующую');
-      // Логируем информацию о существующей программе
-      const programStartDate = userData.createdAt ? new Date(userData.createdAt) : new Date(userData.programData.days[0].date);
+    if (userData.programData && userData.programData.days && userData.programData.days.length > 0) {
+      // Определяем дату старта программы
+      if (userData.createdAt) {
+        programStartDate = new Date(userData.createdAt);
+      } else if (userData.programData.days[0].date) {
+        programStartDate = new Date(userData.programData.days[0].date);
+      }
+      
       if (programStartDate) {
         const now = new Date();
         const daysPassed = Math.floor((now - programStartDate) / (1000 * 60 * 60 * 24));
-        console.log(`[INFO] Дней прошло с начала программы: ${daysPassed} (программа активна)`);
+        console.log(`[AUTO NEW WEEK] Дней прошло с начала программы: ${daysPassed}`);
+        
+        // Если прошло 7+ дней, нужна новая неделя
+        if (daysPassed >= 7) {
+          shouldCreateNewWeek = true;
+          console.log('🔄 Создаем новую неделю на основе обновленных настроек');
+        }
       }
     }
     
@@ -1522,32 +1528,28 @@ router.get('/user/weekly-program/:userId', async (req, res) => {
     if (shouldCreateNewWeek || !userData.programData) {
       console.log('📅 Генерируем новую недельную программу с актуальными настройками из Firestore');
       
-      // Получаем актуальные настройки пользователя через единую функцию readUserData
-      // ИСПРАВЛЕНО: используем ту же функцию что и в /api/user/quiz-answers/:userId
-      const currentUserData = await readUserData(userId);
+      // Получаем актуальные настройки пользователя из Firestore
+      const db = admin.firestore();
+      const userDoc = await db.collection('Dianafit_users').doc(userId).get();
+      const currentUserData = userDoc.exists ? userDoc.data() : {};
       const currentQuiz = currentUserData.quiz || {};
       
-      console.log('📊 [DEBUG WEEKLY] currentUserData найден:', !!currentUserData);
-      console.log('📊 [DEBUG WEEKLY] currentUserData keys:', Object.keys(currentUserData || {}));
-      console.log('📊 [DEBUG WEEKLY] currentUserData.quiz exists:', !!currentUserData.quiz);
-      console.log('📊 [DEBUG WEEKLY] currentQuiz keys:', Object.keys(currentQuiz || {}));
-      console.log('📊 [DEBUG WEEKLY] currentQuiz содержит name:', currentQuiz.name || 'НЕТ');
       console.log('📊 Актуальные настройки для новой недели:', currentQuiz);
       
       // Создаем новую программу с актуальными настройками
-      console.log('🔄 [DEBUG WEEKLY] Проверяем currentQuiz перед созданием программы:', {
-        hasName: !!currentQuiz.name,
-        hasSex: !!currentQuiz.sex,
-        hasAge: !!currentQuiz.age,
-        isEmpty: Object.keys(currentQuiz).length === 0
-      });
-      
-      if (Object.keys(currentQuiz).length === 0 || !currentQuiz.name) {
-        console.error('❌ [DEBUG WEEKLY] currentQuiz пустой! Не можем создать программу без настроек пользователя');
-        return res.status(400).json({ error: 'Настройки пользователя не найдены. Пройдите квиз заново.' });
-      }
-      
       const newProgram = await createWeeklyProgram(currentQuiz);
+      
+      // ИСПРАВЛЕНО: Сохраняем старую программу в историю перед заменой
+      if (!userData.programHistory) userData.programHistory = [];
+      if (userData.programData) {
+        userData.programHistory.push({
+          program: userData.programData,
+          createdAt: userData.createdAt || new Date().toISOString(),
+          completedAt: new Date().toISOString(),
+          weekNumber: userData.programHistory.length + 1
+        });
+        console.log(`📚 Сохранили программу №${userData.programHistory.length} в историю`);
+      }
       
       // Сохраняем новую программу в UserProgressLogger
       userData.programData = newProgram;
@@ -1566,6 +1568,19 @@ router.get('/user/weekly-program/:userId', async (req, res) => {
     res.json(program);
   } catch (error) {
     console.error('Ошибка при получении недельной программы:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// --- Получить полную историю программ пользователя ---
+router.get('/user/program-history/:userId', async (req, res) => {
+  try {
+    const userId = req.params.userId;
+    const logger = new UserProgressLogger(userId);
+    const history = await logger.getProgramHistory();
+    res.json(history);
+  } catch (error) {
+    console.error('Ошибка при получении истории программ:', error);
     res.status(500).json({ error: error.message });
   }
 });

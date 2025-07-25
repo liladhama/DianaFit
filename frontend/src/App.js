@@ -194,7 +194,11 @@ function App() {
         else if (weekDay === 7) {
           // Получаем анализ ИИ с бэкенда
           try {
-            const aiRes = await fetch(`${API_URL}/api/openai-diana-analyze?userId=${tgUserId}`);
+            const aiRes = await fetch(`${API_URL}/api/openai-diana-analyze`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId: tgUserId })
+            });
             const aiContentType = aiRes.headers.get('content-type') || '';
             let aiData = {};
             if (aiContentType.includes('application/json')) {
@@ -207,7 +211,7 @@ function App() {
             setDianaNotification({
               type: 'ai',
               text: 'Анализ недели от Дианы:',
-              aiAnalysis: aiData?.analysis || 'Нет данных анализа.'
+              aiAnalysis: aiData?.message || aiData?.analysis || 'Нет данных анализа.'
             });
             setShowDianaNotification(true);
           } catch (err) {
