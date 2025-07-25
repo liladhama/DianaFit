@@ -10,6 +10,38 @@ import cors from 'cors';
 import { fileURLToPath } from 'url';
 import UserProgressLogger from './userProgressLogger.js';
 // Импортируем роутер рецептов
+// --- Метрики prom-client ---
+import client from 'prom-client';
+
+// Создаём реестр метрик
+const register = new client.Registry();
+client.collectDefaultMetrics({ register });
+
+// Создаём счетчик HTTP-запросов
+const httpRequestCounter = new client.Counter({
+  name: 'http_requests_total',
+  help: 'Общее количество HTTP-запросов',
+  labelNames: ['method', 'route', 'status']
+});
+register.registerMetric(httpRequestCounter);
+
+// Middleware для учёта запросов
+app.use((req, res, next) => {
+  res.on('finish', () => {
+    httpRequestCounter.inc({
+      method: req.method,
+      route: req.route ? req.route.path : req.path,
+      status: res.statusCode
+    });
+  });
+  next();
+});
+
+// Эндпоинт для метрик Prometheus
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
+});
 import recipeRouter from './routes/recipeRoutes.js';
 import progressRouter from './routes/progressRoutes.js';
 import mealPlanCalculator from './utils/mealPlanCalculator.js';
