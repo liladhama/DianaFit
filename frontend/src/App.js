@@ -386,6 +386,7 @@ function App() {
     console.log('🔄 useEffect загрузки weekData:', { showSplash, tgUserId });
     if (!showSplash && tgUserId) {
       console.log('✅ Условия выполнены, начинаем загрузку данных пользователя');
+      console.log('[DEBUG] tgUserId:', tgUserId, 'typeof:', typeof tgUserId, '==', tgUserId == null ? 'null' : tgUserId);
       setIsLoadingUserData(true);
       const fetchWithRetry = async (retries = 5, delay = 400) => {
         console.log('📡 Начинаем fetch данных пользователя:', tgUserId);
