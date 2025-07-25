@@ -1173,6 +1173,10 @@ router.post('/ai-meal-plan', async (req, res) => {
       deficit = profile.goal * 7700 / 30;
       dailyCalories = Math.round(calories_before_goal - deficit);
     }
+    
+    // Минимум 1400 ккал для всех (единая формула)
+    dailyCalories = Math.max(1400, dailyCalories);
+    
     // Формула Дианы: белки 1.5 г/кг, жиры 0.9 г/кг, углеводы - остаток
     const protein = Math.round(weight * 1.5);
     const fat = Math.round(weight * 0.9);
@@ -1257,109 +1261,6 @@ router.post('/generate-recipe', async (req, res) => {
 router.post('/get-today-plan', async (req, res) => {
   // Здесь можно реализовать реальную логику, если потребуется
   res.status(501).json({ success: false, error: 'Эндпоинт не реализован' });
-});
-
-// --- AI-подбор меню по КБЖУ и базе рецептов с несколькими вариантами для каждого приёма пищи ---
-router.post('/ai-meal-plan', async (req, res) => {
-  console.log('=== AI MEAL PLAN ENDPOINT CALLED ===');
-  try {
-    const profile = req.body.profile || req.body;
-    // --- Итоговая цель ---
-    let numericGoal = Number(profile.goal);
-    if (![3, 4, 5].includes(numericGoal)) {
-      numericGoal = Number(profile.goal_weight_loss);
-    }
-    if (![3, 4, 5].includes(numericGoal)) {
-      numericGoal = 4;
-    }
-    profile.goal = numericGoal;
-
-    // 1. Расчёт суточной нормы КБЖУ
-    const sex = profile.sex || 'female';
-    const age = profile.age || 25;
-    const weight = profile.weight_kg || 65;
-    const height = profile.height_cm || 165;
-    const activity = profile.activity_coef || 1.4;
-    const goal = profile.goal_weight_loss || 'weight_loss';
-    let dietType = profile.diet_flags || 'meat'; if (dietType === 'vegetarian_eggs') dietType = 'vegetarian_egg'; if (dietType === 'vegetarian_no_eggs') dietType = 'vegetarian';
-
-    let bmr;
-    if (sex === 'male') {
-      bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
-    } else {
-      bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
-    }
-    let calories_before_goal = bmr * activity;
-    let dailyCalories = calories_before_goal;
-    // --- Новый расчёт дефицита по goal (3/4/5 кг в месяц) ---
-    let deficit = 0;
-    if ([3,4,5].includes(profile.goal)) {
-      deficit = profile.goal * 7700 / 30;
-      dailyCalories = Math.round(calories_before_goal - deficit);
-    }
-    // Формула Дианы: белки 1.5 г/кг, жиры 0.9 г/кг, углеводы - остаток
-    const protein = Math.round(weight * 1.5);
-    const fat = Math.round(weight * 0.9);
-    const proteinCals = protein * 4;
-    const fatCals = fat * 9;
-    const carbs = Math.round((dailyCalories - (proteinCals + fatCals)) / 4);
-
-    // Индивидуальные цели для каждого приёма пищи
-    const mealTypes = ['Завтрак', 'Перекус', 'Обед', 'Полдник', 'Ужин'];
-    const mealPercents = [0.25, 0.10, 0.35, 0.10, 0.20];
-    const mealTargets = mealPercents.map(p => ({
-      calories: Math.round(dailyCalories * p),
-      protein: Math.round(protein * p),
-      fat: Math.round(fat * p),
-      carbs: Math.round(carbs * p)
-    }));
-    // --- Новый режим: фильтрация по типу диеты ---
-    const dietTypeHierarchy = {
-      vegan: ['vegan'],
-      vegetarian: ['vegan', 'vegetarian'],
-      vegetarian_egg: ['vegan', 'vegetarian', 'vegetarian_egg'],
-      fish: ['vegan', 'vegetarian', 'vegetarian_egg', 'fish'],
-      meat: ['vegan', 'vegetarian', 'vegetarian_egg', 'fish', 'meat'],
-    };
-    const allowedDietTypes = dietTypeHierarchy[dietType] || ['vegan'];
-    // 2. Список всех рецептов из базы (с БЖУ, калориями, ингредиентами)
-    const allRecipes = [];
-    for (const [type, arr] of Object.entries(recipeUtils.recipes)) {
-      for (const r of arr) {
-        allRecipes.push({
-          name: r.name,
-          type: r.type,
-          dietType: r.dietType,
-          calories: r.calories,
-          protein: r.protein,
-          fat: r.fat,
-          carbs: r.carbs,
-          ingredients: r.ingredients,
-          instructions: r.instructions
-        });
-      }
-    }
-    // Для каждого приема пищи берем любые блюда по типу и диете, затем масштабируем под целевые калории
-    const detailedMeals = mealTypes.map((type, idx) => {
-      const recipes = allRecipes.filter(r => r.type === type && allowedDietTypes.includes(r.dietType));
-      // Перемешиваем блюда для разнообразия
-      const shuffled = [...recipes].sort(() => Math.random() - 0.5);
-      const target = mealTargets[idx];
-      // Масштабируем ингредиенты под целевые калории
-      const options = shuffled.slice(0, 5).map(r => scaleRecipeToTargets(r, target));
-      return { type, options };
-    });
-
-    res.json({
-      success: true,
-      profile,
-      dailyCalories: Math.round(dailyCalories),
-      protein, fat, carbs,
-      meals: detailedMeals
-    });
-  } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
-  }
 });
 
 // --- Маппинг типовых весов для овощей/фруктов/зелени ---
@@ -1725,6 +1626,9 @@ router.post('/refresh-single-meal', async (req, res) => {
       deficit = numericGoal * 7700 / 30;
       dailyCalories = Math.round(calories_before_goal - deficit);
     }
+    
+    // Минимум 1400 ккал для всех (единая формула)
+    dailyCalories = Math.max(1400, dailyCalories);
     
     const protein = Math.round(weight * 1.5);
     const fat = Math.round(weight * 0.9);

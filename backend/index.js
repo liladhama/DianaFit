@@ -1078,25 +1078,30 @@ app.get('/api/user/day-status/:userId', async (req, res) => {
     }
 });
 
-// Эндпоинт для получения КБЖУ пользователя
+// Эндпоинт для получения КБЖУ пользователя из Firestore
 app.get('/api/user/nutrition/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        const userFile = path.join(__dirname, 'backup_files', 'users', 'quiz_' + userId + '.json');
-        // ...удалено диагностическое логирование...
-        if (!fs.existsSync(userFile)) {
-            // ...удалено диагностическое логирование...
+        
+        // Получаем данные пользователя из Firestore
+        const userDoc = await db.collection('Dianafit_users').doc(userId).get();
+        
+        if (!userDoc.exists) {
             return res.status(404).json({ error: 'User data not found' });
         }
-        const userData = JSON.parse(fs.readFileSync(userFile, 'utf-8'));
-        // Расчет BMR и КБЖУ как в programApi.js
-        const age = userData.age || 25;
-        const weight = userData.weight_kg || 65;
-        const height = userData.height_cm || 165;
-        const sex = userData.sex || 'female';
-        const activity = userData.activity_coef || 1.375;
-        const goal = userData.goal || 4;
         
+        const userData = userDoc.data();
+        const quiz = userData.quiz || {};
+        
+        // Единая формула КБЖУ (как в programApi.js)
+        const age = Number(quiz.age) || 25;
+        const weight = Number(quiz.weight) || Number(quiz.weight_kg) || 65;
+        const height = Number(quiz.height) || Number(quiz.height_cm) || 165;
+        const sex = quiz.sex || 'female';
+        const activity = Number(quiz.activity) || Number(quiz.activity_coef) || 1.375;
+        const goal = Number(quiz.goal) || 4;
+        
+        // Единая формула BMR (Harris-Benedict как в programApi.js)
         let bmr;
         if (sex === 'male') {
             bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
@@ -1104,7 +1109,7 @@ app.get('/api/user/nutrition/:userId', async (req, res) => {
             bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
         }
         
-        // Итоговые калории с учётом цели
+        // Итоговые калории с учётом цели (единая формула как в programApi.js)
         let dailyCalories;
         let deficit = 0;
         if ([3,4,5].includes(goal)) {
@@ -1114,11 +1119,11 @@ app.get('/api/user/nutrition/:userId', async (req, res) => {
             dailyCalories = Math.round(bmr * activity);
         }
         
-        // Минимум 1400 ккал для всех (по базе Дианы)
+        // Минимум 1400 ккал для всех
         dailyCalories = Math.max(1400, dailyCalories);
         
-        // Расчёт БЖУ
-        const protein = Math.round(weight * 1.8);
+        // Единая формула БЖУ (как в programApi.js)
+        const protein = Math.round(weight * 1.5); // Исправлено: была 1.8, теперь 1.5 как везде
         const fat = Math.round(weight * 0.9);
         const carbs = Math.round((dailyCalories - (protein * 4 + fat * 9)) / 4);
         

@@ -68,8 +68,8 @@ class MealPlanCalculator {
         const minCalories = sex === 'male' ? 1500 : 1200;
         calories = Math.max(minCalories, calories);
 
-        // Расчет белков, жиров, углеводов
-        const protein = Math.round(weight * 1.7);
+        // Расчет белков, жиров, углеводов (единая формула)
+        const protein = Math.round(weight * 1.5); // Исправлено: была 1.7, теперь 1.5 как везде
         const fat = Math.round(weight * 0.9);
         const carbs = Math.round((calories - (protein * 4 + fat * 9)) / 4);
 
