@@ -245,57 +245,59 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
         )}
       </button>
 
-      {/* Кнопка профиля пользователя (справа сверху) */}
-      <button
-        onClick={() => {
-          if (typeof onProfileClick === 'function') {
-            onProfileClick();
-          }
-        }}
-        style={{
-          position: 'fixed',
-          top: 20,
-          right: 20,
-          width: 60,
-          height: 60,
-          borderRadius: '50%',
-          background: 'linear-gradient(135deg, #0088cc 0%, #005699 100%)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          zIndex: 1001,
-          boxShadow: '0 4px 20px rgba(0, 136, 204, 0.4)',
-          transition: 'all 0.3s ease',
-          border: '2px solid rgba(255, 255, 255, 0.2)',
-          overflow: 'hidden',
-          padding: 0,
-          outline: 'none',
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.transform = 'scale(1.07)';
-          e.currentTarget.style.boxShadow = '0 6px 24px rgba(0, 136, 204, 0.5)';
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.transform = 'scale(1)';
-          e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 136, 204, 0.4)';
-        }}
-      >
-        {userAvatar ? (
-          <img
-            src={userAvatar}
-            alt="User Avatar"
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              borderRadius: '50%'
-            }}
-          />
-        ) : (
-          <span style={{ fontSize: 28, color: 'white', fontWeight: 'bold' }}>👤</span>
-        )}
-      </button>
+      {/* Кнопка профиля пользователя (справа сверху) показывается только если чат Дианы не открыт */}
+      {!showDianaChat && (
+        <button
+          onClick={() => {
+            if (typeof onProfileClick === 'function') {
+              onProfileClick();
+            }
+          }}
+          style={{
+            position: 'fixed',
+            top: 20,
+            right: 20,
+            width: 60,
+            height: 60,
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, #0088cc 0%, #005699 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 1001,
+            boxShadow: '0 4px 20px rgba(0, 136, 204, 0.4)',
+            transition: 'all 0.3s ease',
+            border: '2px solid rgba(255, 255, 255, 0.2)',
+            overflow: 'hidden',
+            padding: 0,
+            outline: 'none',
+          }}
+          onMouseEnter={e => {
+            e.currentTarget.style.transform = 'scale(1.07)';
+            e.currentTarget.style.boxShadow = '0 6px 24px rgba(0, 136, 204, 0.5)';
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = '0 4px 20px rgba(0, 136, 204, 0.4)';
+          }}
+        >
+          {userAvatar ? (
+            <img
+              src={userAvatar}
+              alt="User Avatar"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                borderRadius: '50%'
+              }}
+            />
+          ) : (
+            <span style={{ fontSize: 28, color: 'white', fontWeight: 'bold' }}>👤</span>
+          )}
+        </button>
+      )}
 
       {/* Кнопка "ТЕКУЩИЙ ДЕНЬ" */}
       <button
