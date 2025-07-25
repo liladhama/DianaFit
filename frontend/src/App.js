@@ -372,7 +372,7 @@ function App() {
     const id = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
     if (id) {
       setTgUserId(id.toString());
-      console.log('✅ [INIT] Получен Telegram userId:', id);
+      console.log('✅ [INIT] Получен Telegram userId:', id, 'typeof:', typeof id, 'после toString:', id.toString());
     } else {
       // Fallback для локального тестирования
       const demoUserId = 'demo_user_local_test';
@@ -492,10 +492,18 @@ function App() {
         }
         // Если не удалось получить/создать программу — fallback
         console.log('❌ Не удалось загрузить weekData, fallback режим');
-        setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
-        setShowTodayBlock(false);
-        setIsLoadingUserData(false);
-        setShowSplash(false);
+        if (quizData) {
+          // Есть квиз — показываем TodayBlock даже без weekData
+          setAnswers({ ...quizData, userId: tgUserId });
+          setShowTodayBlock(true);
+          setIsLoadingUserData(false);
+          setShowSplash(false);
+        } else {
+          // Нет квиза — показываем форму квиза
+          setShowQuiz(true);
+          setIsLoadingUserData(false);
+          setShowSplash(false);
+        }
       };
       fetchWithRetry();
     } else {
@@ -860,11 +868,11 @@ function App() {
 
   async function handleQuizFinish(quizAnswers) {
     // Используем Telegram userId или demo userId для локального тестирования
-    const userId = tgUserId || 'demo_user_local_test';
+    const userId = tgUserId ? String(tgUserId) : 'demo_user_local_test';
     quizAnswers.userId = userId;
     // Определяем timezone пользователя
     quizAnswers.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    console.log('💾 Сохраняем квиз для userId:', userId);
+    console.log('💾 Сохраняем квиз для userId:', userId, 'typeof:', typeof userId);
     try {
       await safeFetch(`${API_URL}/api/user/quiz-answers/${userId}`, {
         method: 'POST',
