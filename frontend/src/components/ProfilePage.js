@@ -19,24 +19,39 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
   const getDietName = dietUtils.getDietName;
   const getDietDisplayName = dietUtils.getDietDisplayName;
 
-  // --- ЛОКАЛЬНЫЕ ФУНКЦИИ ДЛЯ КБЖУ ---
+  // --- ЕДИНАЯ ФУНКЦИЯ ДЛЯ КБЖУ (КАК В BACKEND) ---
   function calculateMacrosFromQuiz(answers) {
-    // Примерная логика, замените на свою
-    const weight = Number(answers.weight) || 70;
-    const height = Number(answers.height) || 170;
-    const age = Number(answers.age) || 30;
+    const weight = Number(answers.weight) || Number(answers.weight_kg) || 65;
+    const height = Number(answers.height) || Number(answers.height_cm) || 165;
+    const age = Number(answers.age) || 25;
     const sex = answers.sex || 'female';
-    const activity = Number(answers.activity) || 1.2;
-    const deficit = Number(answers.deficit) || 400;
-    // Базовый метаболизм
+    const activity = Number(answers.activity) || Number(answers.activity_coef) || 1.375;
+    const goal = Number(answers.goal) || 4;
+    
+    // Единая формула BMR (Harris-Benedict как в backend)
     let bmr = sex === 'male'
-      ? 88.36 + 13.4 * weight + 4.8 * height - 5.7 * age
-      : 447.6 + 9.2 * weight + 3.1 * height - 4.3 * age;
-    let calories = Math.round(bmr * activity - deficit);
-    let protein = Math.round(weight * 1.7);
-    let fat = Math.round(weight * 0.9);
-    let carbs = Math.round((calories - (protein * 4 + fat * 9)) / 4);
-    return { calories, protein, fats: fat, carbs };
+      ? 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age)
+      : 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+    
+    // Единая формула калорий с учётом цели
+    let dailyCalories;
+    let deficit = 0;
+    if ([3,4,5].includes(goal)) {
+      deficit = goal * 7700 / 30;
+      dailyCalories = Math.round(bmr * activity - deficit);
+    } else {
+      dailyCalories = Math.round(bmr * activity);
+    }
+    
+    // Минимум 1400 ккал
+    dailyCalories = Math.max(1400, dailyCalories);
+    
+    // Единая формула БЖУ (как в backend)
+    const protein = Math.round(weight * 1.5); // Исправлено: была 1.7, теперь 1.5 как везде
+    const fat = Math.round(weight * 0.9);
+    const carbs = Math.round((dailyCalories - (protein * 4 + fat * 9)) / 4);
+    
+    return { calories: dailyCalories, protein, fats: fat, carbs };
   }
 
   function roundMacros(macros) {

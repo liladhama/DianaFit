@@ -375,14 +375,70 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
 
   // ФУНКЦИЯ ОБНОВЛЕНИЯ ОДНОГО ПРИЕМА ПИЩИ
   const handleRefreshSingleMeal = async (mealIndex) => {
+    if (!answers || !aiMeals || !aiMeals[mealIndex]) {
+      console.error('Нет данных для обновления блюда');
+      return;
+    }
+
     // Устанавливаем состояние загрузки для этого приема пищи
     setRefreshingMeals(prev => [...prev, mealIndex]);
     
     try {
-      // Используем ту же логику что и общая кнопка - просто обновляем все и берем нужный индекс
-      await fetchAIMealPlan();
+      const mealType = aiMeals[mealIndex].type; // Тип приема пищи (Завтрак, Обед и т.д.)
+      
+      // Собираем список уже использованных блюд для исключения повторов
+      const usedRecipes = [];
+      if (aiMeals[mealIndex].options && aiMeals[mealIndex].options.length > 0) {
+        aiMeals[mealIndex].options.forEach(option => {
+          if (option.name) usedRecipes.push(option.name);
+        });
+      }
+
+      console.log(`Обновляем ${mealType}, исключаем рецепты:`, usedRecipes);
+
+      // Делаем запрос на обновление одного приема пищи
+      const response = await fetch(`${API_URL}/api/refresh-single-meal`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          profile: answers,
+          mealType: mealType,
+          mealIndex: mealIndex,
+          excludedRecipes: usedRecipes
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      if (data.success && data.options) {
+        // Обновляем только один прием пищи в массиве aiMeals
+        setAiMeals(prevMeals => {
+          const newMeals = [...prevMeals];
+          newMeals[mealIndex] = {
+            ...newMeals[mealIndex],
+            options: data.options
+          };
+          return newMeals;
+        });
+
+        // Сбрасываем выбранный вариант для этого приема пищи на первый
+        setSelectedMealOptionIdx(prev => {
+          const newIdx = [...prev];
+          newIdx[mealIndex] = 0;
+          return newIdx;
+        });
+
+        console.log(`Успешно обновлен ${mealType}:`, data.options.length, 'вариантов');
+      } else {
+        throw new Error(data.error || 'Ошибка обновления блюда');
+      }
     } catch (e) {
       console.error('Ошибка обновления приема пищи:', e);
+      setAiError(`Ошибка обновления ${aiMeals[mealIndex]?.type}: ${e.message}`);
     } finally {
       // Убираем состояние загрузки для этого приема пищи
       setRefreshingMeals(prev => prev.filter(idx => idx !== mealIndex));
