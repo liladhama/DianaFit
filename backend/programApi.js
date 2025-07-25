@@ -318,7 +318,11 @@ function generateMeals(goal, profile) {
   const weight = profile.weight_kg || 65;
   const height = profile.height_cm || 165;
   const activity = profile.activity_coef || 1.4;
-  const dietType = profile.diet_flags || 'meat';
+  
+  // Преобразуем diet_flags в правильный формат для базы рецептов
+  let dietType = profile.diet_flags || 'meat';
+  if (dietType === 'vegetarian_eggs') dietType = 'vegetarian_egg';
+  if (dietType === 'vegetarian_no_eggs') dietType = 'vegetarian';
   if (sex === 'male') {
     bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
   } else {
@@ -1153,7 +1157,7 @@ router.post('/ai-meal-plan', async (req, res) => {
     const height = profile.height_cm || 165;
     const activity = profile.activity_coef || 1.4;
     const goal = profile.goal_weight_loss || 'weight_loss';
-    const dietType = profile.diet_flags || 'meat';
+    let dietType = profile.diet_flags || 'meat'; if (dietType === 'vegetarian_eggs') dietType = 'vegetarian_egg'; if (dietType === 'vegetarian_no_eggs') dietType = 'vegetarian';
 
     let bmr;
     if (sex === 'male') {
@@ -1277,7 +1281,7 @@ router.post('/ai-meal-plan', async (req, res) => {
     const height = profile.height_cm || 165;
     const activity = profile.activity_coef || 1.4;
     const goal = profile.goal_weight_loss || 'weight_loss';
-    const dietType = profile.diet_flags || 'meat';
+    let dietType = profile.diet_flags || 'meat'; if (dietType === 'vegetarian_eggs') dietType = 'vegetarian_egg'; if (dietType === 'vegetarian_no_eggs') dietType = 'vegetarian';
 
     let bmr;
     if (sex === 'male') {
@@ -1663,6 +1667,146 @@ router.get('/generate-single-meal', async (req, res) => {
     
   } catch (error) {
     console.error('Ошибка генерации одного приема пищи:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// --- Обновление одного приема пищи (генерация новых вариантов) ---
+router.post('/refresh-single-meal', async (req, res) => {
+  console.log('=== REFRESH SINGLE MEAL ENDPOINT CALLED ===');
+  try {
+    const { profile, mealType, mealIndex } = req.body;
+    console.log('Received data:', { mealType, mealIndex, dietFlags: profile?.diet_flags });
+    
+    if (!profile || !mealType) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Не хватает данных: profile и mealType обязательны' 
+      });
+    }
+
+    // --- Расчёт суточной нормы КБЖУ (такой же как в ai-meal-plan) ---
+    let numericGoal = Number(profile.goal);
+    if (![3, 4, 5].includes(numericGoal)) {
+      numericGoal = Number(profile.goal_weight_loss);
+    }
+    if (![3, 4, 5].includes(numericGoal)) {
+      numericGoal = 4;
+    }
+
+    const sex = profile.sex || 'female';
+    const age = profile.age || 25;
+    const weight = profile.weight_kg || 65;
+    const height = profile.height_cm || 165;
+    const activity = profile.activity_coef || 1.4;
+    
+    // Преобразуем diet_flags в правильный формат для базы рецептов
+    let dietType = profile.diet_flags || 'meat';
+    if (dietType === 'vegetarian_eggs') dietType = 'vegetarian_egg';
+    if (dietType === 'vegetarian_no_eggs') dietType = 'vegetarian';
+    
+    console.log('Diet type after conversion:', dietType);
+
+    let bmr;
+    if (sex === 'male') {
+      bmr = 88.362 + (13.397 * weight) + (4.799 * height) - (5.677 * age);
+    } else {
+      bmr = 447.593 + (9.247 * weight) + (3.098 * height) - (4.330 * age);
+    }
+    
+    let calories_before_goal = bmr * activity;
+    let dailyCalories = calories_before_goal;
+    
+    let deficit = 0;
+    if ([3,4,5].includes(numericGoal)) {
+      deficit = numericGoal * 7700 / 30;
+      dailyCalories = Math.round(calories_before_goal - deficit);
+    }
+    
+    const protein = Math.round(weight * 1.5);
+    const fat = Math.round(weight * 0.9);
+    const proteinCals = protein * 4;
+    const fatCals = fat * 9;
+    const carbs = Math.round((dailyCalories - (proteinCals + fatCals)) / 4);
+
+    // Определяем процент калорий для данного типа приема пищи
+    const mealPercents = {
+      'Завтрак': 0.25,
+      'Перекус': 0.10,
+      'Обед': 0.35,
+      'Полдник': 0.10,
+      'Ужин': 0.20
+    };
+    
+    const mealPercent = mealPercents[mealType] || 0.25;
+    const target = {
+      calories: Math.round(dailyCalories * mealPercent),
+      protein: Math.round(protein * mealPercent),
+      fat: Math.round(fat * mealPercent),
+      carbs: Math.round(carbs * mealPercent)
+    };
+
+    // --- Фильтрация по типу диеты ---
+    const dietTypeHierarchy = {
+      vegan: ['vegan'],
+      vegetarian: ['vegan', 'vegetarian'],
+      vegetarian_egg: ['vegan', 'vegetarian', 'vegetarian_egg'],
+      fish: ['vegan', 'vegetarian', 'vegetarian_egg', 'fish'],
+      meat: ['vegan', 'vegetarian', 'vegetarian_egg', 'fish', 'meat'],
+    };
+    const allowedDietTypes = dietTypeHierarchy[dietType] || ['vegan'];
+    console.log('Allowed diet types:', allowedDietTypes);
+
+    // Получаем все рецепты для данного типа приема пищи
+    const allRecipes = [];
+    for (const [type, arr] of Object.entries(recipeUtils.recipes)) {
+      for (const r of arr) {
+        allRecipes.push({
+          name: r.name,
+          type: r.type,
+          dietType: r.dietType,
+          calories: r.calories,
+          protein: r.protein,
+          fat: r.fat,
+          carbs: r.carbs,
+          ingredients: r.ingredients,
+          instructions: r.instructions
+        });
+      }
+    }
+    console.log('Total recipes:', allRecipes.length);
+
+    // Фильтруем рецепты по типу приема пищи и диете
+    const recipes = allRecipes.filter(r => 
+      r.type === mealType && allowedDietTypes.includes(r.dietType)
+    );
+    console.log(`Filtered recipes for "${mealType}" and diet "${dietType}":`, recipes.length);
+    
+    if (recipes.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: `Не найдено рецептов для типа "${mealType}" и диеты "${dietType}"`
+      });
+    }
+
+    // Перемешиваем блюда для разнообразия и берем 5 новых вариантов
+    const shuffled = [...recipes].sort(() => Math.random() - 0.5);
+    const options = shuffled.slice(0, 5).map(r => scaleRecipeToTargets(r, target));
+    console.log('Generated options:', options.length, 'first option name:', options[0]?.name);
+
+    res.json({
+      success: true,
+      mealType,
+      mealIndex,
+      target,
+      options
+    });
+
+  } catch (error) {
+    console.error('Ошибка обновления одного приема пищи:', error);
     res.status(500).json({
       success: false,
       error: error.message
