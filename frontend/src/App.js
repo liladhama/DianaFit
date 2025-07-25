@@ -395,38 +395,16 @@ function App() {
         let quizData = null;
         if (quizRes.ok) {
           const userData = await quizRes.json();
-          console.log('[DEBUG FRONT] Получен ответ с бэкенда - userData keys:', Object.keys(userData || {}));
-          console.log('[DEBUG FRONT] userData.quiz существует:', !!userData.quiz);
           
-          // Проверяем структуру quiz - может быть вложенный или на верхнем уровне
-          if (userData.quiz) {
-            console.log('[DEBUG FRONT] userData.quiz keys:', Object.keys(userData.quiz || {}));
-            quizData = userData.quiz; // Извлекаем quiz из userData
-          } else if (userData.name || userData.sex || userData.age) {
-            console.log('[DEBUG FRONT] Quiz данные находятся на верхнем уровне userData');
-            // Quiz данные на верхнем уровне - создаем объект quiz
-            quizData = {
-              name: userData.name,
-              sex: userData.sex,
-              age: userData.age,
-              height_cm: userData.height_cm,
-              weight_kg: userData.weight_kg,
-              goal: userData.goal,
-              gym_or_home: userData.gym_or_home,
-              training_level: userData.training_level,
-              activity_coef: userData.activity_coef,
-              workouts_per_week: userData.workouts_per_week,
-              diet_flags: userData.diet_flags,
-              timezone: userData.timezone,
-              calories: userData.calories,
-              notifyHour: userData.notifyHour
-            };
-          }
+          // ПРОСТАЯ ЛОГИКА: если backend говорит "quiz есть: true", то просто берем userData.quiz
+          quizData = userData.quiz;
           
           console.log('✅ Quiz данные загружены:', !!quizData);
-          console.log('[DEBUG] userData:', !!userData, 'userData.quiz:', !!userData.quiz, 'quizData после извлечения:', !!quizData);
           if (quizData) {
             console.log('[DEBUG] quizData содержит:', Object.keys(quizData || {}));
+          } else {
+            console.error('[DEBUG] ❌ quizData пустой, хотя backend сказал что quiz есть!');
+            console.error('[DEBUG] userData:', userData);
           }
         } else {
           console.log('❌ Quiz данные не найдены, статус:', quizRes.status);
@@ -444,16 +422,20 @@ function App() {
           });
           
           // Проверяем квиз перед показом TodayBlock
-          if (!quizData) {
-            console.log('❌ Нет квиза, показываем форму квиза (даже если есть программа)');
-            setShowQuiz(true);
-            setIsLoadingUserData(false);
-            setShowSplash(false);
-            return;
-          }
+          console.log('[DEBUG FRONT] Проверка наличия квиза перед показом TodayBlock:', {
+            quizDataExists: !!quizData,
+            quizDataIsObject: typeof quizData === 'object',
+            quizDataKeys: quizData ? Object.keys(quizData) : 'null',
+            quizDataKeysLength: quizData ? Object.keys(quizData).length : 0,
+            weeklyProgramExists: !!weeklyProgram,
+            weeklyProgramDays: weeklyProgram?.days?.length || 0
+          });
+          
+          // УБИРАЕМ ПРОВЕРКУ !quizData - backend говорит что квиз есть, значит показываем TodayBlock
+          console.log('[DEBUG FRONT] Backend сказал что quiz есть, показываем TodayBlock независимо от содержимого quizData');
           
           setWeekData(weeklyProgram);
-          setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
+          setAnswers(quizData ? { ...quizData, userId: tgUserId } : { userId: tgUserId });
           setShowTodayBlock(true);
           setIsLoadingUserData(false);
           setShowSplash(false);
@@ -466,32 +448,19 @@ function App() {
             const newProgram = await regenRes.json();
             console.log('✅ Новая программа создана:', !!newProgram.days);
             
-            // Проверяем квиз перед показом TodayBlock
-            if (!quizData) {
-              console.log('❌ Нет квиза, показываем форму квиза (даже после пересоздания программы)');
-              setShowQuiz(true);
-              setIsLoadingUserData(false);
-              setShowSplash(false);
-              return;
-            }
+            // Backend подтвердил наличие квиза, показываем TodayBlock
+            console.log('✅ Backend подтвердил квиз, показываем TodayBlock после пересоздания программы');
             
             setWeekData(newProgram);
-            setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
+            setAnswers(quizData ? { ...quizData, userId: tgUserId } : { userId: tgUserId });
             setShowTodayBlock(true);
             setIsLoadingUserData(false);
             setShowSplash(false);
             return;
           }
         } else if (weeklyRes.status === 404) {
-          if (!quizData) {
-            console.log('❌ Нет квиза, показываем форму квиза');
-            // Нет квиза — показываем форму квиза, не создаём программу!
-            setShowQuiz(true);
-            setIsLoadingUserData(false);
-            setShowSplash(false);
-            return;
-          }
-          console.log('🔄 Создаем новую программу на основе квиза');
+          // Backend сказал что квиз есть, поэтому создаем программу
+          console.log('🔄 Создаем новую программу на основе квиза (backend подтвердил наличие квиза)');
           // Есть квиз — создаём программу
           const createRes = await fetch(`${API_URL}/api/user/weekly-program/${tgUserId}`, {
             method: 'POST',
@@ -1954,7 +1923,7 @@ function App() {
           onClose={() => setShowPayment(false)}
           onPaymentSuccess={activatePremium}
         />
-      ) : showTodayBlock && todayDay ? (
+      ) : (showTodayBlock && todayDay) || (showTodayBlock && answers && !weekData) ? (
         (() => {
           console.log('🎯 App.js РЕНДЕР: Передаем данные в TodayBlock:', {
             todayDay: !!todayDay,

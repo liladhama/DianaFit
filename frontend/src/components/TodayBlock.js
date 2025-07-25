@@ -908,7 +908,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   useEffect(() => {
     if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
       if (answers && !answers.userId) {
-        answers.userId = window.Telegram.WebApp.initDataUnsafe.user.id;
+        answers.userId = window.Telegram.WebApp.initDataUnsafe.user.id.toString();
         // ...лог убран...
       }
     } else {

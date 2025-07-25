@@ -1175,11 +1175,17 @@ app.get('/api/user/quiz-answers/:userId', async (req, res) => {
         console.log('[DEBUG] GET /api/user/quiz-answers/:userId запрос для userId:', userId, typeof userId);
         const userData = await readUserData(userId);
         console.log('[DEBUG] userData найден:', !!userData, 'quiz есть:', !!userData.quiz);
+        console.log('[DEBUG] userData.quiz структура:', userData.quiz ? Object.keys(userData.quiz) : 'нет quiz');
+        console.log('[DEBUG DETAILED] Полные данные userData:', userData);
+        console.log('[DEBUG DETAILED] userData.quiz полное содержимое:', userData.quiz);
+        
         if (!userData.quiz) {
             console.log('[DEBUG] Quiz не найден для userId:', userId);
             return res.status(404).json({ error: 'Quiz data not found' });
         }
         console.log('[DEBUG] Возвращаем quiz для userId:', userId);
+        console.log('[DEBUG] Возвращаемые данные - userData.quiz содержит keys:', Object.keys(userData.quiz || {}));
+        console.log('[DEBUG] Полная структура ответа - userData содержит keys:', Object.keys(userData || {}));
         // Возвращаем полную userData для доступа к dialogHistory
         res.json(userData);
     } catch (error) {

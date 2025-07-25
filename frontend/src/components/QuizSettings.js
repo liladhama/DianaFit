@@ -88,7 +88,7 @@ const QuizSettings = ({ quizAnswers = {}, onSettingChange }) => {
     const handleSaveAnswer = async (questionId, valueToSave = null) => {
         setSavingStates(prev => ({ ...prev, [questionId]: true }));
         try {
-            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
+            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id?.toString() || 'demo_user_local_test';
             // Используем переданное значение или берём из состояния
             const finalValue = valueToSave !== null ? valueToSave : userAnswers[questionId];
             let dataToSave = { [questionId]: finalValue };
