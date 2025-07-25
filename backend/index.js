@@ -1172,10 +1172,14 @@ app.get('/api/user/subscription-info/:userId', async (req, res) => {
 app.get('/api/user/quiz-answers/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
+        console.log('[DEBUG] GET /api/user/quiz-answers/:userId запрос для userId:', userId, typeof userId);
         const userData = await readUserData(userId);
+        console.log('[DEBUG] userData найден:', !!userData, 'quiz есть:', !!userData.quiz);
         if (!userData.quiz) {
+            console.log('[DEBUG] Quiz не найден для userId:', userId);
             return res.status(404).json({ error: 'Quiz data not found' });
         }
+        console.log('[DEBUG] Возвращаем quiz для userId:', userId);
         // Возвращаем полную userData для доступа к dialogHistory
         res.json(userData);
     } catch (error) {
