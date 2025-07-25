@@ -76,29 +76,57 @@ async function fetchOpenAIDianaAnalysis(userId) {
 const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessage, aiAnalysis, notificationType, hasUncompletedTasks }) => {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [userSex, setUserSex] = useState('female'); // По умолчанию женский
+  const [userSex, setUserSex] = useState(null); // null означает, что пол еще не загружен
+  const [isUserSexLoaded, setIsUserSexLoaded] = useState(false);
 
   // Функция для получения пола пользователя
   const getUserSex = async () => {
-    if (!userId) return 'female';
+    if (!userId) {
+      console.log('DianaNotification: userId не передан, используем fallback female');
+      return 'female';
+    }
     
     try {
+      console.log('DianaNotification: запрашиваем пол пользователя для userId:', userId);
       const response = await fetch(`${API_URL}/api/user/quiz-answers/${userId}`);
       if (response.ok) {
         const quizData = await response.json();
-        return quizData.sex || 'female';
+        console.log('DianaNotification: получены данные квиза:', quizData);
+        
+        // Пробуем разные варианты расположения поля sex
+        let sex = quizData.sex || quizData.quiz?.sex || quizData.quiz?.answers?.sex;
+        console.log('DianaNotification: пол пользователя из квиза:', sex);
+        
+        // Если не нашли, ищем в answers массиве
+        if (!sex && quizData.quiz?.answers && Array.isArray(quizData.quiz.answers)) {
+          const sexAnswer = quizData.quiz.answers.find(answer => 
+            answer.questionId === 'sex' || answer.question?.includes('пол')
+          );
+          sex = sexAnswer?.answer;
+          console.log('DianaNotification: пол из массива answers:', sex);
+        }
+        
+        const finalSex = sex || 'female';
+        console.log('DianaNotification: итоговый пол:', finalSex);
+        return finalSex;
+      } else {
+        console.warn('DianaNotification: ошибка HTTP при получении квиза:', response.status);
       }
     } catch (error) {
-      console.error('Ошибка получения пола пользователя:', error);
+      console.error('DianaNotification: ошибка получения пола пользователя:', error);
     }
+    console.log('DianaNotification: используем fallback female');
     return 'female';
   };
 
   // Получаем пол пользователя при открытии уведомления
   useEffect(() => {
     if (isVisible && userId) {
+      console.log('DianaNotification: начинаем загрузку пола пользователя');
       getUserSex().then(sex => {
+        console.log('DianaNotification: пол пользователя загружен:', sex);
         setUserSex(sex);
+        setIsUserSexLoaded(true);
       });
     }
   }, [isVisible, userId]);
@@ -138,6 +166,15 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
     "Смотри на себя с гордостью — ты выбрал путь перемен! Пусть каждый день этой недели будет шагом к лучшей версии себя. Я верю в тебя! 🌈"
   ];
 
+  // Универсальные сообщения (fallback для случаев, когда пол не определен)
+  const greetingMessagesUniversal = [
+    "Новая неделя — новые возможности! Ты уже на шаг ближе к своей цели. Верь в себя и не останавливайся! 💪✨",
+    "Ты невероятно сильный человек! Пусть эта неделя принесёт энергию, мотивацию и уверенность в своих силах. Вперёд к победам! 🌟",
+    "Каждый понедельник — это шанс начать с чистого листа. Я рядом, чтобы поддержать тебя на каждом шаге! Давай сделаем эту неделю особенной! 🚀",
+    "Ты уже доказал(а), что способен(на) на многое. Пусть эта неделя будет наполнена маленькими победами и большим вдохновением! 🔥",
+    "Смотри на себя с гордостью — ты выбрал(а) путь перемен! Пусть каждый день этой недели будет шагом к лучшей версии себя. Я верю в тебя! 🌈"
+  ];
+
   // Слушаем событие от TypewriterPagedText для перехода в TodayBlock
   useEffect(() => {
     if (!isVisible) return;
@@ -147,19 +184,23 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
   }, [isVisible]);
 
   // Простые сообщения для разных дней без вызова AI
-  const getSimpleMessage = (day, hasIncomplete, sex = 'female') => {
+  const getSimpleMessage = (day, hasIncomplete, sex = null) => {
     if (day === 1) {
       // День 1 - случайное напутствие на новую неделю (с учетом пола)
-      const greetingMessages = sex === 'male' ? greetingMessagesMale : greetingMessagesFemale;
+      let greetingMessages;
+      if (sex === 'male') {
+        greetingMessages = greetingMessagesMale;
+      } else if (sex === 'female') {
+        greetingMessages = greetingMessagesFemale;
+      } else {
+        // Если пол не определен - используем универсальные сообщения
+        greetingMessages = greetingMessagesUniversal;
+      }
       const idx = Math.floor(Math.random() * greetingMessages.length);
       return greetingMessages[idx];
     } else if (hasIncomplete) {
-      // Дни 2-6 с невыполненными заданиями (с учетом пола)
-      if (sex === 'male') {
-        return "Вчера я заметила, что ты не выполнил все задания. Это нормально - иногда жизнь вносит свои коррективы! Рекомендую немного снизить нагрузку в настройках или скорректировать диету. Главное - не сдаваться! Сегодня новый день, и я верю в тебя! 🌟";
-      } else {
-        return "Вчера я заметила, что ты не выполнила все задания. Это нормально - иногда жизнь вносит свои коррективы! Рекомендую немного снизить нагрузку в настройках или скорректировать диету. Главное - не сдаваться! Сегодня новый день, и я верю в тебя! 🌟";
-      }
+      // Дни 2-6 с невыполненными заданиями (универсальные для 1-6 дней)
+      return "Вчера я заметила, что не все задания были выполнены. Это нормально - иногда жизнь вносит свои коррективы! Рекомендую немного снизить нагрузку в настройках или скорректировать диету. Главное - не сдаваться! Сегодня новый день, и я верю в тебя! 🌟";
     }
     return null;
   };
@@ -167,26 +208,38 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
   useEffect(() => {
     if (!isVisible) return;
     
-    // Приоритет 1: Если передан кастомный текст - используем его
+    // Приоритет 1: Если передан кастомный текст - используем его (не зависит от пола)
     if (customMessage) {
       setMessage(customMessage);
       setLoading(false);
       return;
     }
-
-    // Приоритет 2: Если передан AI анализ - используем его  
-    if (aiAnalysis) {
-      setMessage(aiAnalysis);
-      setLoading(false);
+    
+    // Для остальных сообщений ждем загрузки пола пользователя
+    if (!isUserSexLoaded) {
+      setLoading(true);
       return;
     }
 
     // Приоритет 3: Определяем тип уведомления и показываем соответствующее сообщение
     if (notificationType === 'greeting') {
       // День 1 - случайное напутствие на новую неделю (с учетом пола)
-      const greetingMessages = userSex === 'male' ? greetingMessagesMale : greetingMessagesFemale;
+      console.log('DianaNotification: выбираем greeting сообщение для пола:', userSex);
+      let greetingMessages;
+      if (userSex === 'male') {
+        console.log('DianaNotification: используем мужские сообщения');
+        greetingMessages = greetingMessagesMale;
+      } else if (userSex === 'female') {
+        console.log('DianaNotification: используем женские сообщения');
+        greetingMessages = greetingMessagesFemale;
+      } else {
+        console.log('DianaNotification: пол не определен, используем универсальные сообщения');
+        greetingMessages = greetingMessagesUniversal;
+      }
       const idx = Math.floor(Math.random() * greetingMessages.length);
-      setMessage(greetingMessages[idx]);
+      const selectedMessage = greetingMessages[idx];
+      console.log('DianaNotification: выбранное сообщение:', selectedMessage);
+      setMessage(selectedMessage);
       setLoading(false);
       return;
     }
@@ -209,7 +262,24 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
         "Твоя цель стоит усилий! Начни день с заботы о себе - отметь выполненные задания."
       ];
 
-      const motivationMessages = userSex === 'male' ? motivationMessagesMale : motivationMessagesFemale;
+      const motivationMessagesUniversal = [
+        "Помни о своей цели! Каждый день приближает тебя к результату. Даже небольшой прогресс лучше, чем никакого.",
+        "Твое тело ждет заботы! Попробуй начать с малого - это поможет войти в ритм.",
+        "Не забывай о себе! Регулярность - ключ к достижению цели, которую ты выбрал(а).",
+        "Диана верит в тебя! Попробуй отметить хотя бы один пункт сегодня - это станет началом позитивных изменений.",
+        "Твоя цель стоит усилий! Начни день с заботы о себе - отметь выполненные задания."
+      ];
+
+      let motivationMessages;
+      if (userSex === 'male') {
+        motivationMessages = motivationMessagesMale;
+      } else if (userSex === 'female') {
+        motivationMessages = motivationMessagesFemale;
+      } else {
+        // Если пол не определен - используем универсальные сообщения
+        motivationMessages = motivationMessagesUniversal;
+      }
+      
       const idx = Math.floor(Math.random() * motivationMessages.length);
       setMessage(motivationMessages[idx]);
       setLoading(false);
@@ -263,7 +333,7 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
         })
         .finally(() => setLoading(false));
     }
-  }, [isVisible, userId, dayOfWeek, customMessage, aiAnalysis, notificationType, hasUncompletedTasks, userSex]);
+  }, [isVisible, userId, dayOfWeek, customMessage, aiAnalysis, notificationType, hasUncompletedTasks, userSex, isUserSexLoaded]);
 
   // Слушаем событие от TypewriterPagedText для перехода в TodayBlock
   useEffect(() => {
@@ -275,8 +345,12 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
 
   if (!isVisible) return null;
   
+  // Показываем загрузку, пока загружается пол пользователя или сообщение
+  const isLoadingUserData = !isUserSexLoaded;
+  const shouldShowLoading = loading || isLoadingUserData;
+  
   // Не показываем уведомление, если нет сообщения и не идет загрузка
-  if (!loading && !message) {
+  if (!shouldShowLoading && !message) {
     console.warn('DianaNotification: Попытка показать пустое уведомление');
     return null;
   }
@@ -376,7 +450,7 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
             overflow: 'hidden',
           }}
         >
-          {loading ? (
+          {shouldShowLoading ? (
             <SplashScreen />
           ) : (
             <TypewriterPagedText text={message} speed={28} charsPerPage={220} />

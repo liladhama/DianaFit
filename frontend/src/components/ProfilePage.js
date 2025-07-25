@@ -658,7 +658,11 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                   filter: 'brightness(1.2) contrast(1.1)'
                 }}
               />
-              <span>{getDietDisplayName(quizAnswers.diet_flags)}</span>
+              <span>{
+                getDietDisplayName(quizAnswers.diet_flags) === 'Вегетарианство 🥚'
+                  ? 'Вегетарианство с яйцами'
+                  : getDietDisplayName(quizAnswers.diet_flags)
+              }</span>
             </div>
           </>
         )}
@@ -789,27 +793,17 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
               onSettingChange={async (changes) => {
                 try {
                   const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'default';
-                  console.log('Updating settings:', changes);
+                  console.log('Updating settings (только сохранение, пересчет на 8 день):', changes);
                   setQuizAnswers(prev => ({ ...prev, ...changes }));
                   
-                  // Обновляем КБЖУ с бэкенда при изменении настроек
+                  // НЕ пересчитываем КБЖУ сразу! Только сохраняем настройки в Firestore
+                  // Пересчет произойдет автоматически на 8 день (начало новой недели)
+                  console.log('✅ Настройки сохранены, пересчет КБЖУ произойдет на 8 день');
+                  
+                  // Показываем уведомление пользователю о том, что изменения применятся позже
                   if (changes.weight || changes.height || changes.age || changes.activity_level || changes.goal) {
-                    try {
-                      const response = await fetch(`${API_URL}/api/user/nutrition/${userId}`);
-                      if (response.ok) {
-                        const data = await response.json();
-                        setNutritionInfo(data);
-                      } else {
-                        // Fallback к локальному расчету
-                        const macros = calculateMacrosFromQuiz({ ...quizAnswers, ...changes });
-                        setNutritionInfo(roundMacros(macros));
-                      }
-                    } catch (error) {
-                      console.error('Error fetching updated nutrition:', error);
-                      // Fallback к локальному расчету
-                      const macros = calculateMacrosFromQuiz({ ...quizAnswers, ...changes });
-                      setNutritionInfo(roundMacros(macros));
-                    }
+                    console.log('💡 Изменения калорий и БЖУ будут применены автоматически с началом новой недели (8 день)');
+                    // TODO: Можно добавить toast-уведомление для пользователя
                   }
                 } catch (error) {
                   console.error('Error updating settings:', error);

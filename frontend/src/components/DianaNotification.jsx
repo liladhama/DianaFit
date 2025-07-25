@@ -10,14 +10,13 @@ const DianaNotification = ({ isVisible, onClose, progressData = {}, userAnswers 
 
     const generateMessage = () => {
         const { workouts = 0, nutrition = 0 } = progressData;
-        const name = userAnswers.name || 'дорогая';
         
         if (workouts >= 80 && nutrition >= 80) {
-            return `${name}, великолепная неделя! 🌟 Ты превзошла все ожидания!`;
+            return `Великолепная неделя! 🌟 Все ожидания превзойдены!`;
         } else if (workouts >= 60 || nutrition >= 60) {
-            return `${name}, отличная работа! 💪 Продолжай в том же духе!`;
+            return `Отличная работа! 💪 Продолжайте в том же духе!`;
         } else {
-            return `${name}, помни - каждый шаг важен! 💖 Завтра новый день!`;
+            return `Помните — каждый шаг важен! 💖 Завтра новый день!`;
         }
     };
 

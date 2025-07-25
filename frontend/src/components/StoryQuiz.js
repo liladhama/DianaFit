@@ -852,7 +852,7 @@ export default function StoryQuiz({ onFinish }) {
     if (slide.key === 'diet_flags') {
       // Кастомный слайд выбора типа питания
       const options = [
-        { label: 'вегетарианство 🥚', value: 'vegetarian_eggs' },
+        { label: 'вегетарианство с яйцами', value: 'vegetarian_eggs' },
         { label: 'вегетарианство', value: 'vegetarian_no_eggs' },
         { label: 'мясной', value: 'meat' },
         { label: 'рыбный', value: 'fish' },
