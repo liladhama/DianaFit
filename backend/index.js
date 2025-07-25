@@ -13,6 +13,10 @@ import UserProgressLogger from './userProgressLogger.js';
 // --- Метрики prom-client ---
 import client from 'prom-client';
 
+const app = express();
+const PORT = process.env.PORT || 3001;
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 // Создаём реестр метрик
 const register = new client.Registry();
 client.collectDefaultMetrics({ register });
@@ -61,10 +65,6 @@ const openai = new OpenAI({
 });
 
 console.log('🚀 Старт приложения...');
-
-const app = express();
-const PORT = process.env.PORT || 3001;
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 // ...удалено лишнее логирование...
 // ...удалено лишнее логирование...
