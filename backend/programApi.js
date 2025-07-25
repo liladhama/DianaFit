@@ -1678,8 +1678,8 @@ router.get('/generate-single-meal', async (req, res) => {
 router.post('/refresh-single-meal', async (req, res) => {
   console.log('=== REFRESH SINGLE MEAL ENDPOINT CALLED ===');
   try {
-    const { profile, mealType, mealIndex } = req.body;
-    console.log('Received data:', { mealType, mealIndex, dietFlags: profile?.diet_flags });
+    const { profile, mealType, mealIndex, excludedRecipes = [] } = req.body;
+    console.log('Received data:', { mealType, mealIndex, dietFlags: profile?.diet_flags, excludedRecipes });
     
     if (!profile || !mealType) {
       return res.status(400).json({ 
@@ -1780,10 +1780,21 @@ router.post('/refresh-single-meal', async (req, res) => {
     console.log('Total recipes:', allRecipes.length);
 
     // Фильтруем рецепты по типу приема пищи и диете
-    const recipes = allRecipes.filter(r => 
+    let recipes = allRecipes.filter(r => 
       r.type === mealType && allowedDietTypes.includes(r.dietType)
     );
     console.log(`Filtered recipes for "${mealType}" and diet "${dietType}":`, recipes.length);
+    
+    // Исключаем недавно использованные рецепты для разнообразия
+    if (excludedRecipes.length > 0) {
+      const filteredRecipes = recipes.filter(r => !excludedRecipes.includes(r.name));
+      if (filteredRecipes.length >= 5) {
+        recipes = filteredRecipes;
+        console.log(`After excluding recent recipes (${excludedRecipes.length}):`, recipes.length);
+      } else {
+        console.log('Not enough recipes after exclusion, using all available recipes');
+      }
+    }
     
     if (recipes.length === 0) {
       return res.status(400).json({
