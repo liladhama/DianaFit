@@ -233,97 +233,147 @@ function App() {
             todayStr,
             yesterdayDate,
             yesterdayFound: !!yesterday,
-            yesterdayData: yesterday,
-            weekDataDays: weekData.days.map(d => ({ date: d.date, completedWorkout: d.completedWorkout, completedMeals: d.completedMeals }))
+            yesterdayIsWorkoutDay: yesterday?.isWorkoutDay,
+            yesterdayHasWorkout: !!yesterday?.workout
           });
           
           if (yesterday) {
-            const workoutFailed = yesterday.completedWorkout === false;
-            const mealsFailed = yesterday.completedMeals === false;
-            const workoutCompleted = yesterday.completedWorkout === true;
-            const mealsCompleted = yesterday.completedMeals === true;
-            const workoutIgnored = yesterday.completedWorkout === null;
-            const mealsIgnored = yesterday.completedMeals === null;
-            
-            console.log('🔔 [УВЕДОМЛЕНИЯ] Анализ состояния вчерашнего дня:', {
-              workoutFailed,
-              mealsFailed,
-              workoutCompleted,
-              mealsCompleted,
-              workoutIgnored,
-              mealsIgnored
-            });
-            
-            // Если все задания выполнены - никаких уведомлений
-            if (workoutCompleted && mealsCompleted) {
-              console.log('🔔 [УВЕДОМЛЕНИЯ] Все задания выполнены вчера, уведомления не нужны');
-              return;
-            }
-            
-            // Если и упражнения, и питание имеют false - общее уведомление
-            if (workoutFailed && mealsFailed) {
-              const notification = {
-                type: 'adjustment',
-                text: `Вчера были трудности с выполнением заданий. Рекомендую снизить количество тренировок в неделю и пересмотреть план питания или постараться следовать текущей диете. Адаптируем план под возможности!`
-              };
-              console.log('🔔 Устанавливаем общее уведомление (оба false):', notification);
-              setDianaNotification(notification);
-              setShowDianaNotification(true);
-            }
-            // Если есть невыполненное упражнение (false) - рекомендация снизить тренировки
-            else if (workoutFailed && !mealsFailed) {
-              const notification = {
-                type: 'adjustment',
-                text: `Вчера была трудность с выполнением тренировки. Рекомендую снизить количество тренировок в неделю. Адаптируем план под возможности!`
-              };
-              console.log('🔔 Устанавливаем уведомление по тренировкам:', notification);
-              setDianaNotification(notification);
-              setShowDianaNotification(true);
-            }
-            // Если есть невыполненный приём пищи (false) - мотивация по питанию
-            else if (mealsFailed && !workoutFailed) {
-              const notification = {
-                type: 'adjustment',
-                text: `Вчера была трудность с соблюдением плана питания. Можно попробовать другую диету или постараться следовать текущей. Каждый день — новая возможность!`
-              };
-              console.log('🔔 Устанавливаем уведомление по питанию:', notification);
-              setDianaNotification(notification);
-              setShowDianaNotification(true);
-            }
-            // Явная проверка: если оба поля null, всегда мотивировать
-            else if (workoutIgnored && mealsIgnored) {
-              const motivationMessages = [
-                `Важно помнить о цели! Каждый день приближает к результату. Даже небольшой прогресс лучше, чем никакого.`,
-                `Тело ждет заботы! Попробуйте начать с малого — это поможет войти в ритм.`,
-                `Забота о себе важна! Регулярность — ключ к достижению выбранной цели.`,
-                `Я верю в успех! Попробуйте отметить хотя бы один пункт сегодня — это станет началом позитивных изменений.`,
-                `Цель стоит усилий! Начните день с заботы о себе — отметьте выполненные задания.`
-              ];
-              const randomMessage = motivationMessages[Math.floor(Math.random() * motivationMessages.length)];
-              const notification = {
-                type: 'motivation',
-                text: randomMessage
-              };
-              console.log('🔔 Устанавливаем мотивационное уведомление (оба null):', notification);
-              setDianaNotification(notification);
-              setShowDianaNotification(true);
-            }
-            // Если только один из них null (а второй true), тоже мотивировать
-            else if (workoutIgnored || mealsIgnored) {
-              const motivationMessages = [
-                `Важно помнить о цели! Каждый день приближает к результату. Даже небольшой прогресс лучше, чем никакого.`,
-                `Тело ждет заботы! Попробуйте начать с малого — это поможет войти в ритм.`,
-                `Забота о себе важна! Регулярность — ключ к достижению выбранной цели.`,
-                `Я верю в успех! Попробуйте отметить хотя бы один пункт сегодня — это станет началом позитивных изменений.`,
-                `Цель стоит усилий! Начните день с заботы о себе — отметьте выполненные задания.`
-              ];
+            // Получаем РЕАЛЬНЫЙ прогресс из API вместо weekData
+            try {
+              const progressRes = await fetch(`${API_URL}/api/progress?userId=${tgUserId}&date=${yesterdayDate}`);
+              const progressData = await progressRes.json();
               
-              const randomMessage = motivationMessages[Math.floor(Math.random() * motivationMessages.length)];
+              console.log('🔔 [УВЕДОМЛЕНИЯ] Реальный прогресс из API:', progressData);
               
-              setDianaNotification({
-                type: 'motivation',
-                text: randomMessage
+              // Анализируем есть ли тренировка в этот день
+              const isWorkoutDay = yesterday.isWorkoutDay || !!yesterday.workout;
+              
+              // Анализируем выполнение заданий из реального прогресса
+              const tasks = progressData.tasks || [];
+              const workoutTasks = tasks.filter(t => t.type === 'exercise');
+              const mealTasks = tasks.filter(t => t.type === 'meal');
+              
+              // Статусы для тренировок (только если был тренировочный день)
+              let workoutCompleted = null;
+              let workoutFailed = null;
+              let workoutIgnored = null;
+              
+              if (isWorkoutDay) {
+                if (workoutTasks.length > 0) {
+                  const completedWorkouts = workoutTasks.filter(t => t.done === true);
+                  const failedWorkouts = workoutTasks.filter(t => t.done === false);
+                  
+                  if (completedWorkouts.length === workoutTasks.length) {
+                    workoutCompleted = true;
+                  } else if (failedWorkouts.length > 0) {
+                    workoutFailed = true;
+                  } else {
+                    workoutIgnored = true;
+                  }
+                } else {
+                  workoutIgnored = true; // Нет записей о тренировках
+                }
+              }
+              
+              // Статусы для питания
+              let mealsCompleted = null;
+              let mealsFailed = null;
+              let mealsIgnored = null;
+              
+              if (mealTasks.length > 0) {
+                const completedMeals = mealTasks.filter(t => t.done === true);
+                const failedMeals = mealTasks.filter(t => t.done === false);
+                
+                if (completedMeals.length === mealTasks.length && mealTasks.length >= 3) {
+                  mealsCompleted = true;
+                } else if (failedMeals.length > 0) {
+                  mealsFailed = true;
+                } else {
+                  mealsIgnored = true;
+                }
+              } else {
+                mealsIgnored = true; // Нет записей о питании
+              }
+              
+              console.log('🔔 [УВЕДОМЛЕНИЯ] Анализ реального состояния вчерашнего дня:', {
+                isWorkoutDay,
+                workoutTasks: workoutTasks.length,
+                mealTasks: mealTasks.length,
+                workoutCompleted,
+                workoutFailed,
+                workoutIgnored,
+                mealsCompleted,
+                mealsFailed,
+                mealsIgnored
               });
+              
+              // Если все задания выполнены - никаких уведомлений
+              if ((workoutCompleted || !isWorkoutDay) && mealsCompleted) {
+                console.log('🔔 [УВЕДОМЛЕНИЯ] Все задания выполнены вчера, уведомления не нужны');
+                return;
+              }
+              
+              // Логика уведомлений на основе реальных данных
+              // Если и упражнения, и питание провалены
+              if (isWorkoutDay && workoutFailed && mealsFailed) {
+                const notification = {
+                  type: 'adjustment',
+                  text: `Вчера были трудности с выполнением заданий. Рекомендую снизить количество тренировок в неделю и пересмотреть план питания или постараться следовать текущей диете. Адаптируем план под возможности!`
+                };
+                console.log('🔔 Устанавливаем общее уведомление (оба failed):', notification);
+                setDianaNotification(notification);
+                setShowDianaNotification(true);
+              }
+              // Если есть невыполненное упражнение (только в тренировочный день)
+              else if (isWorkoutDay && workoutFailed && !mealsFailed) {
+                const notification = {
+                  type: 'adjustment',
+                  text: `Вчера была трудность с выполнением тренировки. Рекомендую снизить количество тренировок в неделю. Адаптируем план под возможности!`
+                };
+                console.log('🔔 Устанавливаем уведомление по тренировкам:', notification);
+                setDianaNotification(notification);
+                setShowDianaNotification(true);
+              }
+              // Если есть невыполненный приём пищи
+              else if (mealsFailed && (!isWorkoutDay || !workoutFailed)) {
+                const notification = {
+                  type: 'adjustment',
+                  text: `Вчера была трудность с соблюдением плана питания. Можно попробовать другую диету или постараться следовать текущей. Каждый день — новая возможность!`
+                };
+                console.log('🔔 Устанавливаем уведомление по питанию:', notification);
+                setDianaNotification(notification);
+                setShowDianaNotification(true);
+              }
+              // Если оба проигнорированы или один из них проигнорирован
+              else if ((isWorkoutDay && workoutIgnored && mealsIgnored) || 
+                       (!isWorkoutDay && mealsIgnored) ||
+                       (isWorkoutDay && (workoutIgnored || mealsIgnored))) {
+                const motivationMessages = [
+                  `Важно помнить о цели! Каждый день приближает к результату. Даже небольшой прогресс лучше, чем никакого.`,
+                  `Тело ждет заботы! Попробуйте начать с малого — это поможет войти в ритм.`,
+                  `Забота о себе важна! Регулярность — ключ к достижению выбранной цели.`,
+                  `Я верю в успех! Попробуйте отметить хотя бы один пункт сегодня — это станет началом позитивных изменений.`,
+                  `Цель стоит усилий! Начните день с заботы о себе — отметьте выполненные задания.`
+                ];
+                const randomMessage = motivationMessages[Math.floor(Math.random() * motivationMessages.length)];
+                const notification = {
+                  type: 'motivation',
+                  text: randomMessage
+                };
+                console.log('🔔 Устанавливаем мотивационное уведомление (ignored):', notification);
+                setDianaNotification(notification);
+                setShowDianaNotification(true);
+              }
+              
+            } catch (progressError) {
+              console.error('🔔 [УВЕДОМЛЕНИЯ] Ошибка получения прогресса:', progressError);
+              // Показываем общее мотивационное уведомление при ошибке
+              const notification = {
+                type: 'motivation',
+                text: 'Важно помнить о цели! Каждый день приближает к результату. Даже небольшой прогресс лучше, чем никакого.'
+              };
+              console.log('🔔 Устанавливаем fallback уведомление при ошибке:', notification);
+              setDianaNotification(notification);
               setShowDianaNotification(true);
             }
           } else {
@@ -387,8 +437,8 @@ function App() {
 
   // --- Загрузка answers/weekData по Telegram userId ---
   useEffect(() => {
-    console.log('🔄 useEffect загрузки weekData:', { showSplash, tgUserId });
-    if (!showSplash && tgUserId) {
+    console.log('🔄 useEffect загрузки weekData:', { tgUserId, isLoadingUserData });
+    if (tgUserId && !answers && !weekData) { // ИСПРАВЛЕНО: загружаем только когда нет данных
       console.log('✅ Условия выполнены, начинаем загрузку данных пользователя');
       console.log('[DEBUG] tgUserId:', tgUserId, 'typeof:', typeof tgUserId, '==', tgUserId == null ? 'null' : tgUserId);
       setIsLoadingUserData(true);
@@ -442,7 +492,7 @@ function App() {
           setAnswers(quizData ? { ...quizData, userId: tgUserId } : { userId: tgUserId });
           setShowTodayBlock(true);
           setIsLoadingUserData(false);
-          setShowSplash(false);
+          // Убираем setShowSplash(false) - сплэш скроется по таймеру
           return;
         } else if (weeklyRes.status === 410) {
           console.log('⏰ Программа устарела, пересоздаем...');
@@ -459,7 +509,7 @@ function App() {
             setAnswers(quizData ? { ...quizData, userId: tgUserId } : { userId: tgUserId });
             setShowTodayBlock(true);
             setIsLoadingUserData(false);
-            setShowSplash(false);
+            // Убираем setShowSplash(false) - сплэш скроется по таймеру
             return;
           }
         } else if (weeklyRes.status === 404) {
@@ -484,7 +534,7 @@ function App() {
                 setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
                 setShowTodayBlock(true);
                 setIsLoadingUserData(false);
-                setShowSplash(false);
+                // Убираем setShowSplash(false) - сплэш скроется по таймеру
                 return;
               }
             }
@@ -497,19 +547,19 @@ function App() {
           setAnswers({ ...quizData, userId: tgUserId });
           setShowTodayBlock(true);
           setIsLoadingUserData(false);
-          setShowSplash(false);
+          // Убираем setShowSplash(false) - сплэш скроется по таймеру
         } else {
           // Нет квиза — показываем форму квиза
           setShowQuiz(true);
           setIsLoadingUserData(false);
-          setShowSplash(false);
+          // Убираем setShowSplash(false) - сплэш скроется по таймеру
         }
       };
       fetchWithRetry();
     } else {
-      console.log('⏳ Условия не выполнены для загрузки данных:', { showSplash, tgUserId });
+      console.log('⏳ Условия не выполнены для загрузки данных:', { tgUserId, hasAnswers: !!answers, hasWeekData: !!weekData });
     }
-  }, [showSplash, tgUserId]);
+  }, [tgUserId, answers, weekData]); // ИСПРАВЛЕНО: зависим от наличия данных
 
   // Обновляем todayDay при изменении weekData
   useEffect(() => {
@@ -657,7 +707,11 @@ function App() {
     if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.expand) {
       window.Telegram.WebApp.expand();
     }
-    const timer = setTimeout(() => setShowSplash(false), 4000); // 4 секунды
+    // Скрываем сплэш через 3 секунды, независимо от загрузки данных
+    const timer = setTimeout(() => {
+      console.log('⏰ Автоматическое скрытие SplashScreen через 3 секунды');
+      setShowSplash(false);
+    }, 3000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -973,7 +1027,7 @@ function App() {
             const weeklyProgram = await retryRes.json();
             setWeekData(weeklyProgram);
             setShowTodayBlock(true);
-            setShowSplash(false);
+            // Убираем setShowSplash(false) - сплэш скроется по таймеру
             setIsLoadingUserData(false);
             console.log('✅ WeekData загружена после создания программы, TodayBlock активирован');
             break;
@@ -1777,6 +1831,7 @@ function App() {
           }}
         />
       )}
+      {/* SplashScreen показывается только в начале загрузки приложения */}
       {showSplash ? (
         <SplashScreen />
       ) : showVideoTest ? (
@@ -1873,11 +1928,8 @@ function App() {
 
 
       
-      {showSplash ? (
-        <div>
-          <SplashScreen />
-        </div>
-      ) : showProfile ? (
+      {/* Основной контент приложения */}
+      {showSplash ? null : showProfile ? (
         <ProfilePage
           onClose={() => setShowProfile(false)}
           unlocked={unlocked}
@@ -1965,8 +2017,6 @@ function App() {
         </>
       ) : showQuiz ? (
         <StoryQuiz onFinish={handleQuizFinish} />
-      ) : isLoadingUserData ? (
-        <SplashScreen />
       ) : (
         <StoryQuiz onFinish={handleQuizFinish} />
       )}
