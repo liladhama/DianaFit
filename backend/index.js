@@ -9,6 +9,7 @@ import programApi from './programApi.js';
 import cors from 'cors';
 import { fileURLToPath } from 'url';
 import UserProgressLogger from './userProgressLogger.js';
+// import './tracing.js'; // Временно отключено - файл пустой
 // Импортируем роутер рецептов
 // --- Метрики prom-client ---
 import client from 'prom-client';
