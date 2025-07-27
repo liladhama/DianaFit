@@ -2177,21 +2177,15 @@ function App() {
             console.log('🔒 [PROGRAM ACCESS] Результат проверки:', accessData);
             
             if (!accessData.hasAccess && accessData.reason === 'trial_expired') {
-              // Если пользователь только что вернулся с оплаты, не показываем модалку снова
-              if (justReturnedFromPayment) {
-                console.log('🔒 [PROGRAM ACCESS] Пробный период истек, но пользователь только что вернулся с оплаты - остаемся в TestWeek без модалки');
-                setJustReturnedFromPayment(false); // Сбрасываем флаг
-                return; // Остаемся в TestWeek без показа модалки
-              }
-              
               console.log('🔒 [PROGRAM ACCESS] Доступ запрещен, НЕМЕДЛЕННО показываем уведомление о премиум');
-              // Используем setTimeout чтобы гарантировать, что состояние обновится
-              setTimeout(() => {
-                console.log('🔒 [PROGRAM ACCESS] Устанавливаем showTrialExpiredModal = true');
-                setShowTrialExpiredModal(true);
-                // Форсируем обновление компонента
-                console.log('🔒 [PROGRAM ACCESS] Модалка должна показаться!');
-              }, 10);
+              
+              // Сбрасываем флаг возврата с оплаты перед показом модалки
+              setJustReturnedFromPayment(false);
+              
+              // Показываем модалку немедленно без setTimeout
+              console.log('🔒 [PROGRAM ACCESS] Устанавливаем showTrialExpiredModal = true');
+              setShowTrialExpiredModal(true);
+              console.log('🔒 [PROGRAM ACCESS] Модалка должна показаться!');
               return; // Остаемся в TestWeek
             }
             
@@ -2270,7 +2264,11 @@ function App() {
       {/* Модальное окно об истечении пробного периода */}
       {(() => {
         console.log('🔍 [MODAL RENDER] showTrialExpiredModal:', showTrialExpiredModal);
-        return showTrialExpiredModal;
+        console.log('🔍 [MODAL RENDER] justReturnedFromPayment:', justReturnedFromPayment);
+        console.log('🔍 [MODAL RENDER] showTestWeek:', showTestWeek);
+        const shouldShowModal = showTrialExpiredModal;
+        console.log('🔍 [MODAL RENDER] shouldShowModal:', shouldShowModal);
+        return shouldShowModal;
       })() && (
         <div style={{
           position: 'fixed',
