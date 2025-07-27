@@ -177,7 +177,11 @@ function App() {
           console.log('🔒 [УВЕДОМЛЕНИЯ] Пробный период истек - уведомления отключены, показываем TestWeek');
           setShowSplash(false);
           setShowTestWeek(true);
-          setShowTrialExpiredModal(true); // Показываем модалку премиума поверх TestWeek
+          setShowTodayBlock(false); // Явно отключаем TodayBlock
+          // Показываем модалку только если пользователь НЕ вернулся с оплаты
+          if (!justReturnedFromPayment) {
+            setShowTrialExpiredModal(true); // Показываем модалку премиума поверх TestWeek
+          }
           return; // Прерываем выполнение - никаких уведомлений
         }
         
@@ -2179,26 +2183,27 @@ function App() {
       ) : showPayment ? (
         <PaymentPage
           onClose={async () => {
-            setShowPayment(false);
             // Проверяем доступ после закрытия страницы оплаты
             const accessData = await checkProgramAccess(tgUserId);
             if (!accessData.hasAccess && accessData.reason === 'trial_expired') {
               console.log('🔒 [PAYMENT CLOSE] Пробный период истек, возвращаемся в TestWeek БЕЗ модалки');
+              // Сначала устанавливаем TestWeek, потом закрываем Payment
               setShowTestWeek(true);
               setShowTodayBlock(false);
-              // НЕ показываем модалку снова после возврата с оплаты
               setShowTrialExpiredModal(false);
-              setJustReturnedFromPayment(true); // Устанавливаем флаг возврата с оплаты
+              setJustReturnedFromPayment(true);
+              setShowPayment(false);
             } else {
               console.log('✅ [PAYMENT CLOSE] Доступ есть, переходим в TodayBlock');
               setShowTestWeek(false);
               setShowTodayBlock(true);
               setJustReturnedFromPayment(false);
+              setShowPayment(false);
             }
           }}
           onPaymentSuccess={activatePremium}
         />
-      ) : (showTodayBlock && todayDay) || (showTodayBlock && answers && !weekData) ? (
+      ) : (showTodayBlock && todayDay && !justReturnedFromPayment) || (showTodayBlock && answers && !weekData && !justReturnedFromPayment) ? (
         (() => {
           console.log('🎯 App.js РЕНДЕР: Передаем данные в TodayBlock:', {
             todayDay: !!todayDay,
