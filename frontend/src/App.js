@@ -163,248 +163,273 @@ function App() {
     }
     
     console.log('🔔 [УВЕДОМЛЕНИЯ] Все данные готовы, проверяем необходимость уведомлений');
-    // Получаем первый день тренировок (начало цикла)
-    const firstDayStr = weekData.days[0]?.date;
-    if (!firstDayStr) return;
-    const todayStr = todayDay.date;
-    // Считаем номер дня с начала программы (0-based)
-    const dayDiff = Math.floor((new Date(todayStr) - new Date(firstDayStr)) / (1000*60*60*24));
-    const weekDay = (dayDiff % 7) + 1; // 1...7
-
-    // Проверяем, было ли уже показано уведомление сегодня (через Firestore)
-    console.log('🔔 Проверяем статус уведомления для:', { userId: tgUserId, date: todayStr, weekDay });
-    fetch(`${API_URL}/api/diana-notification-status?userId=${tgUserId}&date=${todayStr}&dayOfWeek=${weekDay}`)
-      .then(async res => {
-        const contentType = res.headers.get('content-type') || '';
-        if (!contentType.includes('application/json')) {
-          const text = await res.text();
-          console.error('Ожидался JSON, получен:', contentType, '\nПервые 500 символов ответа:', text.substring(0, 500));
-          return null;
-        }
-        return res.json();
-      })
-      .then(async (data) => {
-        console.log('🔔 Ответ от сервера о статусе уведомления:', data);
-        if (!data) return;
-        if (data && !data.shouldShow) {
-          console.log('🔔 Уведомление уже показано сегодня, скрываем SplashScreen и показываем TodayBlock');
-          setShowSplash(false); // Скрываем SplashScreen
+    
+    // 🔒 НОВАЯ ПРОВЕРКА: Сначала проверяем доступ к программе (пробный период)
+    fetch(`${API_URL}/api/program-access/${tgUserId}`)
+      .then(res => res.json())
+      .then(accessData => {
+        console.log('🔒 [УВЕДОМЛЕНИЯ] Проверка доступа к программе:', accessData);
+        
+        // Если пробный период истек, НЕ показываем уведомления
+        if (!accessData.hasAccess && accessData.reason === 'trial_expired') {
+          console.log('🔒 [УВЕДОМЛЕНИЯ] Пробный период истек - уведомления отключены, скрываем SplashScreen');
+          setShowSplash(false);
           setShowTodayBlock(true);
-          return; // Уже показано
+          return; // Прерываем выполнение - никаких уведомлений
         }
+        
+        // Если есть доступ, продолжаем обычную логику уведомлений
+        console.log('🔔 [УВЕДОМЛЕНИЯ] Доступ есть, продолжаем проверку уведомлений');
+        
+        // Получаем первый день тренировок (начало цикла)
+        const firstDayStr = weekData.days[0]?.date;
+        if (!firstDayStr) return;
+        const todayStr = todayDay.date;
+        // Считаем номер дня с начала программы (0-based)
+        const dayDiff = Math.floor((new Date(todayStr) - new Date(firstDayStr)) / (1000*60*60*24));
+        const weekDay = (dayDiff % 7) + 1; // 1...7
 
-        // День 1 недели — мотивационное приветствие
-        if (weekDay === 1) {
-          console.log('🔔 Показываем приветствие для 1-го дня недели');
-          const notification = {
-            type: 'greeting'
-          };
-          console.log('🔔 Устанавливаем уведомление:', notification);
-          setShowSplash(false); // Скрываем SplashScreen ПЕРЕД показом уведомления
-          setDianaNotification(notification);
-          setShowDianaNotification(true);
-        }
-        // День 7 недели — анализ ИИ
-        else if (weekDay === 7) {
-          // Получаем анализ ИИ с бэкенда
-          try {
-            const aiRes = await fetch(`${API_URL}/api/openai-diana-analyze`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ userId: tgUserId })
-            });
-            const aiContentType = aiRes.headers.get('content-type') || '';
-            let aiData = {};
-            if (aiContentType.includes('application/json')) {
-              aiData = await aiRes.json();
-            } else {
-              const aiText = await aiRes.text();
-              console.error('Ожидался JSON от openai-diana-analyze, получен:', aiContentType, '\nПервые 500 символов ответа:', aiText.substring(0, 500));
-              aiData = { analysis: 'Ошибка получения анализа ИИ.' };
+        // Проверяем, было ли уже показано уведомление сегодня (через Firestore)
+        console.log('🔔 Проверяем статус уведомления для:', { userId: tgUserId, date: todayStr, weekDay });
+        fetch(`${API_URL}/api/diana-notification-status?userId=${tgUserId}&date=${todayStr}&dayOfWeek=${weekDay}`)
+          .then(async res => {
+            const contentType = res.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+              const text = await res.text();
+              console.error('Ожидался JSON, получен:', contentType, '\nПервые 500 символов ответа:', text.substring(0, 500));
+              return null;
             }
-            setDianaNotification({
-              type: 'ai',
-              text: 'Анализ недели от Дианы:',
-              aiAnalysis: aiData?.message || aiData?.analysis || 'Нет данных анализа.'
-            });
-            setShowSplash(false); // Скрываем SplashScreen ПЕРЕД показом уведомления
-            setShowDianaNotification(true);
-          } catch (err) {
-            setDianaNotification({
-              type: 'ai',
-              text: 'Анализ недели от Дианы:',
-              aiAnalysis: 'Ошибка получения анализа ИИ.'
-            });
-            setShowSplash(false); // Скрываем SplashScreen ПЕРЕД показом уведомления
-            setShowDianaNotification(true);
-          }
-        }
-        // Дни 2-6 — мотивация при пропусках
-        else if (weekDay >= 2 && weekDay <= 6) {
-          // Находим вчерашний день
-          const yesterdayDate = new Date(new Date(todayStr).getTime() - 86400000).toISOString().slice(0,10);
-          const yesterday = weekData.days.find(d => d.date === yesterdayDate);
-          
-          console.log('🔔 [УВЕДОМЛЕНИЯ] Проверяем данные о вчерашнем дне:', {
-            todayStr,
-            yesterdayDate,
-            yesterdayFound: !!yesterday,
-            yesterdayIsWorkoutDay: yesterday?.isWorkoutDay,
-            yesterdayHasWorkout: !!yesterday?.workout
-          });
-          
-          if (yesterday) {
-            // Получаем РЕАЛЬНЫЙ прогресс из API вместо weekData
-            try {
-              const progressRes = await fetch(`${API_URL}/api/progress?userId=${tgUserId}&date=${yesterdayDate}`);
-              const progressData = await progressRes.json();
-              
-              console.log('🔔 [УВЕДОМЛЕНИЯ] Реальный прогресс из API:', progressData);
-              
-              // Анализируем есть ли тренировка в этот день
-              const isWorkoutDay = yesterday.isWorkoutDay || !!yesterday.workout;
-              
-              // Анализируем выполнение заданий из реального прогресса
-              const tasks = progressData.tasks || [];
-              const workoutTasks = tasks.filter(t => t.type === 'exercise');
-              const mealTasks = tasks.filter(t => t.type === 'meal');
-              
-              // Статусы для тренировок (только если был тренировочный день)
-              let workoutCompleted = null;
-              let workoutFailed = null;
-              let workoutIgnored = null;
-              
-              if (isWorkoutDay) {
-                if (workoutTasks.length > 0) {
-                  const completedWorkouts = workoutTasks.filter(t => t.done === true);
-                  const failedWorkouts = workoutTasks.filter(t => t.done === false);
-                  
-                  if (completedWorkouts.length === workoutTasks.length) {
-                    workoutCompleted = true;
-                  } else if (failedWorkouts.length > 0) {
-                    workoutFailed = true;
-                  } else {
-                    workoutIgnored = true;
-                  }
-                } else {
-                  workoutIgnored = true; // Нет записей о тренировках
-                }
-              }
-              
-              // Статусы для питания
-              let mealsCompleted = null;
-              let mealsFailed = null;
-              let mealsIgnored = null;
-              
-              if (mealTasks.length > 0) {
-                const completedMeals = mealTasks.filter(t => t.done === true);
-                const failedMeals = mealTasks.filter(t => t.done === false);
-                
-                if (completedMeals.length === mealTasks.length && mealTasks.length >= 3) {
-                  mealsCompleted = true;
-                } else if (failedMeals.length > 0) {
-                  mealsFailed = true;
-                } else {
-                  mealsIgnored = true;
-                }
-              } else {
-                mealsIgnored = true; // Нет записей о питании
-              }
-              
-              console.log('🔔 [УВЕДОМЛЕНИЯ] Анализ реального состояния вчерашнего дня:', {
-                isWorkoutDay,
-                workoutTasks: workoutTasks.length,
-                mealTasks: mealTasks.length,
-                workoutCompleted,
-                workoutFailed,
-                workoutIgnored,
-                mealsCompleted,
-                mealsFailed,
-                mealsIgnored
-              });
-              
-              // Если все задания выполнены - никаких уведомлений
-              if ((workoutCompleted || !isWorkoutDay) && mealsCompleted) {
-                console.log('🔔 [УВЕДОМЛЕНИЯ] Все задания выполнены вчера, уведомления не нужны');
-                return;
-              }
-              
-              // Логика уведомлений на основе реальных данных
-              // Если и упражнения, и питание провалены
-              if (isWorkoutDay && workoutFailed && mealsFailed) {
-                const notification = {
-                  type: 'adjustment',
-                  text: `Вчера были трудности с выполнением заданий. Рекомендую снизить количество тренировок в неделю и пересмотреть план питания или постараться следовать текущей диете. Адаптируем план под возможности!`
-                };
-                console.log('🔔 Устанавливаем общее уведомление (оба failed):', notification);
-                setDianaNotification(notification);
-                setShowDianaNotification(true);
-              }
-              // Если есть невыполненное упражнение (только в тренировочный день)
-              else if (isWorkoutDay && workoutFailed && !mealsFailed) {
-                const notification = {
-                  type: 'adjustment',
-                  text: `Вчера была трудность с выполнением тренировки. Рекомендую снизить количество тренировок в неделю. Адаптируем план под возможности!`
-                };
-                console.log('🔔 Устанавливаем уведомление по тренировкам:', notification);
-                setDianaNotification(notification);
-                setShowDianaNotification(true);
-              }
-              // Если есть невыполненный приём пищи
-              else if (mealsFailed && (!isWorkoutDay || !workoutFailed)) {
-                const notification = {
-                  type: 'adjustment',
-                  text: `Вчера была трудность с соблюдением плана питания. Можно попробовать другую диету или постараться следовать текущей. Каждый день — новая возможность!`
-                };
-                console.log('🔔 Устанавливаем уведомление по питанию:', notification);
-                setDianaNotification(notification);
-                setShowDianaNotification(true);
-              }
-              // Если оба проигнорированы или один из них проигнорирован
-              else if ((isWorkoutDay && workoutIgnored && mealsIgnored) || 
-                       (!isWorkoutDay && mealsIgnored) ||
-                       (isWorkoutDay && (workoutIgnored || mealsIgnored))) {
-                const motivationMessages = [
-                  `Важно помнить о цели! Каждый день приближает к результату. Даже небольшой прогресс лучше, чем никакого.`,
-                  `Тело ждет заботы! Попробуйте начать с малого — это поможет войти в ритм.`,
-                  `Забота о себе важна! Регулярность — ключ к достижению выбранной цели.`,
-                  `Я верю в успех! Попробуйте отметить хотя бы один пункт сегодня — это станет началом позитивных изменений.`,
-                  `Цель стоит усилий! Начните день с заботы о себе — отметьте выполненные задания.`
-                ];
-                const randomMessage = motivationMessages[Math.floor(Math.random() * motivationMessages.length)];
-                const notification = {
-                  type: 'motivation',
-                  text: randomMessage
-                };
-                console.log('🔔 Устанавливаем мотивационное уведомление (ignored):', notification);
-                setDianaNotification(notification);
-                setShowDianaNotification(true);
-              }
-              
-            } catch (progressError) {
-              console.error('🔔 [УВЕДОМЛЕНИЯ] Ошибка получения прогресса:', progressError);
-              // Показываем общее мотивационное уведомление при ошибке
+            return res.json();
+          })
+          .then(async (data) => {
+            console.log('🔔 Ответ от сервера о статусе уведомления:', data);
+            if (!data) return;
+            if (data && !data.shouldShow) {
+              console.log('🔔 Уведомление уже показано сегодня, скрываем SplashScreen и показываем TodayBlock');
+              setShowSplash(false); // Скрываем SplashScreen
+              setShowTodayBlock(true);
+              return; // Уже показано
+            }
+
+            // День 1 недели — мотивационное приветствие
+            if (weekDay === 1) {
+              console.log('🔔 Показываем приветствие для 1-го дня недели');
               const notification = {
-                type: 'motivation',
-                text: 'Важно помнить о цели! Каждый день приближает к результату. Даже небольшой прогресс лучше, чем никакого.'
+                type: 'greeting'
               };
-              console.log('🔔 Устанавливаем fallback уведомление при ошибке:', notification);
+              console.log('🔔 Устанавливаем уведомление:', notification);
+              setShowSplash(false); // Скрываем SplashScreen ПЕРЕД показом уведомления
               setDianaNotification(notification);
               setShowDianaNotification(true);
             }
-          } else {
-            console.log('🔔 [УВЕДОМЛЕНИЯ] Вчерашний день не найден в weekData.days');
-          }
-        } else {
-          // Дни недели без уведомлений - скрываем SplashScreen и показываем TodayBlock
-          console.log('🔔 [УВЕДОМЛЕНИЯ] День без уведомлений, скрываем SplashScreen и показываем TodayBlock');
+            // День 7 недели — анализ ИИ
+            else if (weekDay === 7) {
+              // Получаем анализ ИИ с бэкенда
+              try {
+                const aiRes = await fetch(`${API_URL}/api/openai-diana-analyze`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ userId: tgUserId })
+                });
+                const aiContentType = aiRes.headers.get('content-type') || '';
+                let aiData = {};
+                if (aiContentType.includes('application/json')) {
+                  aiData = await aiRes.json();
+                } else {
+                  const aiText = await aiRes.text();
+                  console.error('Ожидался JSON от openai-diana-analyze, получен:', aiContentType, '\nПервые 500 символов ответа:', aiText.substring(0, 500));
+                  aiData = { analysis: 'Ошибка получения анализа ИИ.' };
+                }
+                setDianaNotification({
+                  type: 'ai',
+                  text: 'Анализ недели от Дианы:',
+                  aiAnalysis: aiData?.message || aiData?.analysis || 'Нет данных анализа.'
+                });
+                setShowSplash(false); // Скрываем SplashScreen ПЕРЕД показом уведомления
+                setShowDianaNotification(true);
+              } catch (err) {
+                setDianaNotification({
+                  type: 'ai',
+                  text: 'Анализ недели от Дианы:',
+                  aiAnalysis: 'Ошибка получения анализа ИИ.'
+                });
+                setShowSplash(false); // Скрываем SplashScreen ПЕРЕД показом уведомления
+                setShowDianaNotification(true);
+              }
+            }
+            // Дни 2-6 — мотивация при пропусках
+            else if (weekDay >= 2 && weekDay <= 6) {
+              // Находим вчерашний день
+              const yesterdayDate = new Date(new Date(todayStr).getTime() - 86400000).toISOString().slice(0,10);
+              const yesterday = weekData.days.find(d => d.date === yesterdayDate);
+              
+              console.log('🔔 [УВЕДОМЛЕНИЯ] Проверяем данные о вчерашнем дне:', {
+                todayStr,
+                yesterdayDate,
+                yesterdayFound: !!yesterday,
+                yesterdayIsWorkoutDay: yesterday?.isWorkoutDay,
+                yesterdayHasWorkout: !!yesterday?.workout
+              });
+              
+              if (yesterday) {
+                // Получаем РЕАЛЬНЫЙ прогресс из API вместо weekData
+                try {
+                  const progressRes = await fetch(`${API_URL}/api/progress?userId=${tgUserId}&date=${yesterdayDate}`);
+                  const progressData = await progressRes.json();
+                  
+                  console.log('🔔 [УВЕДОМЛЕНИЯ] Реальный прогресс из API:', progressData);
+                  
+                  // Анализируем есть ли тренировка в этот день
+                  const isWorkoutDay = yesterday.isWorkoutDay || !!yesterday.workout;
+                  
+                  // Анализируем выполнение заданий из реального прогресса
+                  const tasks = progressData.tasks || [];
+                  const workoutTasks = tasks.filter(t => t.type === 'exercise');
+                  const mealTasks = tasks.filter(t => t.type === 'meal');
+                  
+                  // Статусы для тренировок (только если был тренировочный день)
+                  let workoutCompleted = null;
+                  let workoutFailed = null;
+                  let workoutIgnored = null;
+                  
+                  if (isWorkoutDay) {
+                    if (workoutTasks.length > 0) {
+                      const completedWorkouts = workoutTasks.filter(t => t.done === true);
+                      const failedWorkouts = workoutTasks.filter(t => t.done === false);
+                      
+                      if (completedWorkouts.length === workoutTasks.length) {
+                        workoutCompleted = true;
+                      } else if (failedWorkouts.length > 0) {
+                        workoutFailed = true;
+                      } else {
+                        workoutIgnored = true;
+                      }
+                    } else {
+                      workoutIgnored = true; // Нет записей о тренировках
+                    }
+                  }
+                  
+                  // Статусы для питания
+                  let mealsCompleted = null;
+                  let mealsFailed = null;
+                  let mealsIgnored = null;
+                  
+                  if (mealTasks.length > 0) {
+                    const completedMeals = mealTasks.filter(t => t.done === true);
+                    const failedMeals = mealTasks.filter(t => t.done === false);
+                    
+                    if (completedMeals.length === mealTasks.length && mealTasks.length >= 3) {
+                      mealsCompleted = true;
+                    } else if (failedMeals.length > 0) {
+                      mealsFailed = true;
+                    } else {
+                      mealsIgnored = true;
+                    }
+                  } else {
+                    mealsIgnored = true; // Нет записей о питании
+                  }
+                  
+                  console.log('🔔 [УВЕДОМЛЕНИЯ] Анализ реального состояния вчерашнего дня:', {
+                    isWorkoutDay,
+                    workoutTasks: workoutTasks.length,
+                    mealTasks: mealTasks.length,
+                    workoutCompleted,
+                    workoutFailed,
+                    workoutIgnored,
+                    mealsCompleted,
+                    mealsFailed,
+                    mealsIgnored
+                  });
+                  
+                  // Если все задания выполнены - никаких уведомлений
+                  if ((workoutCompleted || !isWorkoutDay) && mealsCompleted) {
+                    console.log('🔔 [УВЕДОМЛЕНИЯ] Все задания выполнены вчера, уведомления не нужны');
+                    return;
+                  }
+                  
+                  // Логика уведомлений на основе реальных данных
+                  // Если и упражнения, и питание провалены
+                  if (isWorkoutDay && workoutFailed && mealsFailed) {
+                    const notification = {
+                      type: 'adjustment',
+                      text: `Вчера были трудности с выполнением заданий. Рекомендую снизить количество тренировок в неделю и пересмотреть план питания или постараться следовать текущей диете. Адаптируем план под возможности!`
+                    };
+                    console.log('🔔 Устанавливаем общее уведомление (оба failed):', notification);
+                    setDianaNotification(notification);
+                    setShowDianaNotification(true);
+                  }
+                  // Если есть невыполненное упражнение (только в тренировочный день)
+                  else if (isWorkoutDay && workoutFailed && !mealsFailed) {
+                    const notification = {
+                      type: 'adjustment',
+                      text: `Вчера была трудность с выполнением тренировки. Рекомендую снизить количество тренировок в неделю. Адаптируем план под возможности!`
+                    };
+                    console.log('🔔 Устанавливаем уведомление по тренировкам:', notification);
+                    setDianaNotification(notification);
+                    setShowDianaNotification(true);
+                  }
+                  // Если есть невыполненный приём пищи
+                  else if (mealsFailed && (!isWorkoutDay || !workoutFailed)) {
+                    const notification = {
+                      type: 'adjustment',
+                      text: `Вчера была трудность с соблюдением плана питания. Можно попробовать другую диету или постараться следовать текущей. Каждый день — новая возможность!`
+                    };
+                    console.log('🔔 Устанавливаем уведомление по питанию:', notification);
+                    setDianaNotification(notification);
+                    setShowDianaNotification(true);
+                  }
+                  // Если оба проигнорированы или один из них проигнорирован
+                  else if ((isWorkoutDay && workoutIgnored && mealsIgnored) || 
+                           (!isWorkoutDay && mealsIgnored) ||
+                           (isWorkoutDay && (workoutIgnored || mealsIgnored))) {
+                    const motivationMessages = [
+                      `Важно помнить о цели! Каждый день приближает к результату. Даже небольшой прогресс лучше, чем никакого.`,
+                      `Тело ждет заботы! Попробуйте начать с малого — это поможет войти в ритм.`,
+                      `Забота о себе важна! Регулярность — ключ к достижению выбранной цели.`,
+                      `Я верю в успех! Попробуйте отметить хотя бы один пункт сегодня — это станет началом позитивных изменений.`,
+                      `Цель стоит усилий! Начните день с заботы о себе — отметьте выполненные задания.`
+                    ];
+                    const randomMessage = motivationMessages[Math.floor(Math.random() * motivationMessages.length)];
+                    const notification = {
+                      type: 'motivation',
+                      text: randomMessage
+                    };
+                    console.log('🔔 Устанавливаем мотивационное уведомление (ignored):', notification);
+                    setDianaNotification(notification);
+                    setShowDianaNotification(true);
+                  }
+                  
+                } catch (progressError) {
+                  console.error('🔔 [УВЕДОМЛЕНИЯ] Ошибка получения прогресса:', progressError);
+                  // Показываем общее мотивационное уведомление при ошибке
+                  const notification = {
+                    type: 'motivation',
+                    text: 'Важно помнить о цели! Каждый день приближает к результату. Даже небольшой прогресс лучше, чем никакого.'
+                  };
+                  console.log('🔔 Устанавливаем fallback уведомление при ошибке:', notification);
+                  setDianaNotification(notification);
+                  setShowDianaNotification(true);
+                }
+              } else {
+                console.log('🔔 [УВЕДОМЛЕНИЯ] Вчерашний день не найден в weekData.days');
+              }
+            } else {
+              // Дни недели без уведомлений - скрываем SplashScreen и показываем TodayBlock
+              console.log('🔔 [УВЕДОМЛЕНИЯ] День без уведомлений, скрываем SplashScreen и показываем TodayBlock');
+              setShowSplash(false);
+              setShowTodayBlock(true);
+            }
+          })
+          .catch(err => {
+            console.error('Ошибка при получении статуса уведомления Дианы:', err);
+          });
+        })
+        .catch(err => {
+          console.error('🔒 [УВЕДОМЛЕНИЯ] Ошибка проверки доступа к программе:', err);
+          // При ошибке проверки доступа скрываем SplashScreen и показываем TodayBlock
           setShowSplash(false);
           setShowTodayBlock(true);
-        }
-      })
-      .catch(err => {
-        console.error('Ошибка при получении статуса уведомления Дианы:', err);
-      });
+        });
   }, [weekData, todayDay, tgUserId]); // Убрали showSplash из зависимостей
 
   // --- Сохраняем факт показа уведомления в Firestore ---
