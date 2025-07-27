@@ -57,8 +57,17 @@ import './dailyTelegramNotifier.js';
 import caloriesApi from './caloriesApi.js';
 import notificationSettingsApi from './notificationSettingsApi.js';
 import OpenAI from 'openai';
+import admin from 'firebase-admin';
+import { getFirebaseConfig } from './firestore-config.js';
 
 dotenv.config();
+
+// Инициализация Firebase Admin SDK (если еще не инициализирован)
+if (!admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(getFirebaseConfig()),
+  });
+}
 
 // Инициализация OpenAI клиента
 const openai = new OpenAI({
