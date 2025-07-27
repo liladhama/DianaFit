@@ -18,7 +18,12 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
       });
       const data = await res.json();
       if (data.success) {
+        console.log('✅ Премиум активирован на backend:', data);
         alert('🎉 Премиум доступ активирован на месяц! Все функции открыты.');
+        
+        // Обновляем localStorage
+        localStorage.setItem('dianafit_premium', 'true');
+        
         if (onPaymentSuccess) onPaymentSuccess();
       } else {
         alert('❌ Ошибка активации премиума: ' + (data.message || 'Неизвестная ошибка'));

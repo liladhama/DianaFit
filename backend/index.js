@@ -1287,22 +1287,17 @@ app.post('/api/activate-premium', async (req, res) => {
   if (!userId) return res.status(400).json({ error: 'userId is required' });
 
   try {
-    // ...лог убран...
+    console.log('🎉 Активируем премиум для userId:', userId);
     
-    // Загружаем данные пользователя
-    let userData = await readUserData(userId);
+    // Используем subscriptionManager для активации премиума
+    const activationResult = await subscriptionManager.default.activatePremium(userId);
     
-    // Активируем премиум
-    userData.isPremium = true;
-    userData.premiumActivatedAt = new Date().toISOString();
-    
-    // Сохраняем обновленные данные
-    await writeUserData(userId, userData);
-    // ...лог убран...
+    console.log('✅ Премиум активирован:', activationResult);
     res.json({ 
       success: true, 
       message: 'Premium activated successfully',
-      isPremium: true
+      isPremium: true,
+      ...activationResult
     });
   } catch (error) {
     console.error('❌ Ошибка активации премиума:', error);

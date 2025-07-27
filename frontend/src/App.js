@@ -133,7 +133,7 @@ function App() {
   const [weekData, setWeekData] = useState(null);
   const [showQuiz, setShowQuiz] = useState(false); // Новый стейт для показа квиза
   const [weekDataError, setWeekDataError] = useState(null); // Стейт для ошибки загрузки программы
-  const [appUsageInfo, setAppUsageInfo] = useState(null); // Информация о днях использования
+  const [showTrialExpiredModal, setShowTrialExpiredModal] = useState(false); // Стейт для модального окна истечения пробного периода
 
   // --- Логика показа уведомлений Дианы по дням недели ---
   useEffect(() => {
@@ -179,14 +179,9 @@ function App() {
         console.log('🔔 Ответ от сервера о статусе уведомления:', data);
         if (!data) return;
         if (data && !data.shouldShow) {
-          console.log('🔔 Уведомление уже показано сегодня, скрываем SplashScreen');
+          console.log('🔔 Уведомление уже показано сегодня, скрываем SplashScreen и показываем TodayBlock');
           setShowSplash(false); // Скрываем SplashScreen
-          // Проверяем доступность TodayBlock
-          if (appUsageInfo?.canUseTodayBlock) {
-            setShowTodayBlock(true);
-          } else {
-            setShowTestWeek(true);
-          }
+          setShowTodayBlock(true);
           return; // Уже показано
         }
 
@@ -393,15 +388,10 @@ function App() {
             console.log('🔔 [УВЕДОМЛЕНИЯ] Вчерашний день не найден в weekData.days');
           }
         } else {
-          // Дни недели без уведомлений - скрываем SplashScreen
-          console.log('🔔 [УВЕДОМЛЕНИЯ] День без уведомлений, скрываем SplashScreen');
+          // Дни недели без уведомлений - скрываем SplashScreen и показываем TodayBlock
+          console.log('🔔 [УВЕДОМЛЕНИЯ] День без уведомлений, скрываем SplashScreen и показываем TodayBlock');
           setShowSplash(false);
-          // Проверяем доступность TodayBlock
-          if (appUsageInfo?.canUseTodayBlock) {
-            setShowTodayBlock(true);
-          } else {
-            setShowTestWeek(true);
-          }
+          setShowTodayBlock(true);
         }
       })
       .catch(err => {
@@ -509,10 +499,24 @@ function App() {
           });
           
           // УБИРАЕМ ПРОВЕРКУ !quizData - backend говорит что квиз есть, значит показываем TodayBlock
-          console.log('[DEBUG FRONT] Backend сказал что quiz есть, показываем TodayBlock независимо от содержимого quizData');
+          console.log('[DEBUG FRONT] Backend сказал что quiz есть, проверяем доступ к программе');
+          
+          // Проверяем доступ к программе (3-дневный пробный период)
+          const accessData = await checkProgramAccess(tgUserId);
           
           setWeekData(weeklyProgram);
           setAnswers(quizData ? { ...quizData, userId: tgUserId } : { userId: tgUserId });
+          
+          // Если доступ запрещен - перенаправляем в TestWeek с уведомлением
+          if (!accessData.hasAccess && accessData.reason === 'trial_expired') {
+            console.log('🔒 [PROGRAM ACCESS] Пробный период истек, перенаправляем в TestWeek');
+            setShowTestWeek(true);
+            setIsLoadingUserData(false);
+            // Показываем модальное окно о необходимости премиум
+            setShowTrialExpiredModal(true);
+            return;
+          }
+          
           setShowTodayBlock(true);
           setIsLoadingUserData(false);
           // Убираем setShowSplash(false) - сплэш скроется по таймеру
@@ -525,11 +529,25 @@ function App() {
             const newProgram = await regenRes.json();
             console.log('✅ Новая программа создана:', !!newProgram.days);
             
-            // Backend подтвердил наличие квиза, показываем TodayBlock
-            console.log('✅ Backend подтвердил квиз, показываем TodayBlock после пересоздания программы');
+            // Backend подтвердил наличие квиза, проверяем доступ к программе
+            console.log('✅ Backend подтвердил квиз, проверяем доступ после пересоздания программы');
+            
+            // Проверяем доступ к программе (3-дневный пробный период)
+            const accessData = await checkProgramAccess(tgUserId);
             
             setWeekData(newProgram);
             setAnswers(quizData ? { ...quizData, userId: tgUserId } : { userId: tgUserId });
+            
+            // Если доступ запрещен - перенаправляем в TestWeek с уведомлением
+            if (!accessData.hasAccess && accessData.reason === 'trial_expired') {
+              console.log('🔒 [PROGRAM ACCESS] Пробный период истек, перенаправляем в TestWeek');
+              setShowTestWeek(true);
+              setIsLoadingUserData(false);
+              // Показываем модальное окно о необходимости премиум
+              setShowTrialExpiredModal(true);
+              return;
+            }
+            
             setShowTodayBlock(true);
             setIsLoadingUserData(false);
             // Убираем setShowSplash(false) - сплэш скроется по таймеру
@@ -553,8 +571,22 @@ function App() {
                 const programData = await retryRes.json();
                 console.log('✅ Программа создана и загружена:', !!programData.days);
                 
+                // Проверяем доступ к программе (3-дневный пробный период)
+                const accessData = await checkProgramAccess(tgUserId);
+                
                 setWeekData(programData);
                 setAnswers(quizData ? { ...quizData, userId: tgUserId } : null);
+                
+                // Если доступ запрещен - перенаправляем в TestWeek с уведомлением
+                if (!accessData.hasAccess && accessData.reason === 'trial_expired') {
+                  console.log('🔒 [PROGRAM ACCESS] Пробный период истек, перенаправляем в TestWeek');
+                  setShowTestWeek(true);
+                  setIsLoadingUserData(false);
+                  // Показываем модальное окно о необходимости премиум
+                  setShowTrialExpiredModal(true);
+                  return;
+                }
+                
                 setShowTodayBlock(true);
                 setIsLoadingUserData(false);
                 // Убираем setShowSplash(false) - сплэш скроется по таймеру
@@ -566,6 +598,19 @@ function App() {
         // Если не удалось получить/создать программу — fallback
         console.log('❌ Не удалось загрузить weekData, fallback режим');
         if (quizData) {
+          // Проверяем доступ к программе (3-дневный пробный период)
+          const accessData = await checkProgramAccess(tgUserId);
+          
+          // Если доступ запрещен - перенаправляем в TestWeek с уведомлением
+          if (!accessData.hasAccess && accessData.reason === 'trial_expired') {
+            console.log('🔒 [PROGRAM ACCESS] Пробный период истек, перенаправляем в TestWeek (fallback)');
+            setShowTestWeek(true);
+            setIsLoadingUserData(false);
+            // Показываем модальное окно о необходимости премиум
+            setShowTrialExpiredModal(true);
+            return;
+          }
+          
           // Есть квиз — показываем TodayBlock даже без weekData
           setAnswers({ ...quizData, userId: tgUserId });
           setShowTodayBlock(true);
@@ -603,6 +648,20 @@ function App() {
     }
   }, [weekData, showTodayBlock]);
 
+  // Функция проверки доступа к программе (3-дневный пробный период)
+  const checkProgramAccess = async (userId) => {
+    try {
+      const response = await fetch(`${API_URL}/api/program-access/${userId}`);
+      const accessData = await response.json();
+      console.log('🔒 [PROGRAM ACCESS] Результат проверки:', accessData);
+      return accessData;
+    } catch (error) {
+      console.error('❌ [PROGRAM ACCESS] Ошибка проверки доступа:', error);
+      // Если ошибка запроса - разрешаем доступ (fallback)
+      return { hasAccess: true, reason: 'api_error' };
+    }
+  };
+
   // Функция активации премиум доступа (для тестирования)
   const activatePremium = async () => {
     const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
@@ -619,6 +678,11 @@ function App() {
         setUnlocked(true);
         localStorage.setItem('dianafit_premium', 'true');
         console.log('🔥 App.js: Премиум доступ активирован на сервере!');
+        
+        // Перепроверяем доступ к программе после активации премиума
+        const accessData = await checkProgramAccess(tgUserId);
+        console.log('🔄 Проверка доступа к программе после активации премиума:', accessData);
+        
       } else {
         console.error('❌ Ошибка активации премиум на сервере:', data);
       }
@@ -634,45 +698,19 @@ function App() {
       try {
         const res = await fetch(`https://dianafit.onrender.com/api/diana-limits/${tgUserId}`);
         const data = await res.json();
-        
-        console.log('📊 Получена информация о статусе пользователя:', data);
-        
-        // Устанавливаем информацию о днях использования
-        setAppUsageInfo({
-          canUseTodayBlock: data.canUseTodayBlock,
-          canUseWeeklySchedule: data.canUseWeeklySchedule,
-          daysUsed: data.daysUsed,
-          daysLeft: data.daysLeft,
-          trialExpired: data.trialExpired
-        });
-        
         if (data.isPremium) {
           setIsPremium(true);
           setUnlocked(true);
           localStorage.setItem('dianafit_premium', 'true');
-          console.log('✅ Премиум активен, все функции открыты!');
+          console.log('� Премиум активен, все функции открыты!');
         } else {
           setIsPremium(false);
           setUnlocked(false);
           localStorage.removeItem('dianafit_premium');
-          console.log('ℹ️ Премиум неактивен, базовые функции.');
-          
-          if (data.trialExpired) {
-            console.log(`⏰ Пробный период истек (${data.daysUsed} дней использования). TodayBlock недоступен.`);
-          } else {
-            console.log(`🆓 Пробный период: день ${data.daysUsed} из 3. Осталось ${data.daysLeft} дней.`);
-          }
+          console.log('� Премиум неактивен, базовые функции.');
         }
       } catch (e) {
         console.error('Ошибка проверки премиума:', e);
-        // При ошибке разрешаем доступ по умолчанию
-        setAppUsageInfo({
-          canUseTodayBlock: true,
-          canUseWeeklySchedule: true,
-          daysUsed: 0,
-          daysLeft: 3,
-          trialExpired: false
-        });
       }
     }
     checkPremium();
@@ -1999,13 +2037,7 @@ function App() {
           hasUncompletedTasks={dianaNotification && dianaNotification.type === 'motivation'}
           onClose={() => {
             setShowDianaNotification(false);
-            // Проверяем доступность TodayBlock
-            if (appUsageInfo?.canUseTodayBlock) {
-              setShowTodayBlock(true);
-            } else {
-              // Если TodayBlock недоступен, показываем недельное расписание
-              setShowTestWeek(true);
-            }
+            setShowTodayBlock(true);
           }}
         />
       ) : showProfile ? (
@@ -2048,7 +2080,23 @@ function App() {
             setShowTestWeek(false);
             setShowToday(true);
           }}
-          onShowTodayBlock={() => {
+          onShowTodayBlock={async () => {
+            // Проверяем доступ к программе перед переходом в TodayBlock
+            if (!tgUserId) {
+              console.error('❌ [PROGRAM ACCESS] tgUserId не найден');
+              alert('Ошибка: не удалось определить пользователя');
+              return;
+            }
+            
+            const accessData = await checkProgramAccess(tgUserId);
+            
+            if (!accessData.hasAccess && accessData.reason === 'trial_expired') {
+              console.log('🔒 [PROGRAM ACCESS] Доступ запрещен, показываем уведомление о премиум');
+              setShowTrialExpiredModal(true);
+              return; // Остаемся в TestWeek
+            }
+            
+            // Доступ разрешен - переходим в TodayBlock
             setShowTestWeek(false);
             setShowTodayBlock(true);
           }}
@@ -2058,7 +2106,7 @@ function App() {
           onClose={() => setShowPayment(false)}
           onPaymentSuccess={activatePremium}
         />
-      ) : (showTodayBlock && todayDay && appUsageInfo?.canUseTodayBlock) || (showTodayBlock && answers && !weekData && appUsageInfo?.canUseTodayBlock) ? (
+      ) : (showTodayBlock && todayDay) || (showTodayBlock && answers && !weekData) ? (
         (() => {
           console.log('🎯 App.js РЕНДЕР: Передаем данные в TodayBlock:', {
             todayDay: !!todayDay,
@@ -2070,9 +2118,7 @@ function App() {
             todayDayDate: todayDay?.date,
             answers: !!answers,
             programId,
-            fullTodayDay: todayDay,
-            canUseTodayBlock: appUsageInfo?.canUseTodayBlock,
-            appUsageInfo
+            fullTodayDay: todayDay
           });
           return null;
         })(),
@@ -2096,41 +2142,105 @@ function App() {
             }} 
           />
         </>
-      ) : (showTodayBlock && !appUsageInfo?.canUseTodayBlock) ? (
-        // Показываем недельное расписание если TodayBlock недоступен
-        <TestWeek 
-          isPremium={isPremium}
-          activatePremium={activatePremium}
-          setIsPaymentShown={setIsPaymentShown}
-          weekData={weekData}
-          answers={answers}
-          userAvatar={userAvatar}
-          onProfileClick={() => setShowProfile(true)}
-          onStartProgram={() => {
-            setShowTestWeek(false);
-            setShowToday(true);
-          }}
-          onShowTodayBlock={() => {
-            // Проверяем доступность TodayBlock
-            if (appUsageInfo?.canUseTodayBlock) {
-              setShowTestWeek(false);
-              setShowTodayBlock(true);
-            } else {
-              // Показываем уведомление о необходимости премиума
-              alert(`Пробный период (3 дня) истек. Для доступа к сегодняшнему дню необходимо оформить подписку.`);
-              setShowPayment(true);
-            }
-          }}
-          trialInfo={appUsageInfo ? {
-            daysUsed: appUsageInfo.daysUsed,
-            daysLeft: appUsageInfo.daysLeft,
-            trialExpired: appUsageInfo.trialExpired
-          } : null}
-        />
       ) : showQuiz ? (
         <StoryQuiz onFinish={handleQuizFinish} />
       ) : (
         <StoryQuiz onFinish={handleQuizFinish} />
+      )}
+
+      {/* Модальное окно об истечении пробного периода */}
+      {showTrialExpiredModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '20px',
+            padding: '30px',
+            maxWidth: '400px',
+            width: '100%',
+            textAlign: 'center',
+            boxShadow: '0 20px 40px rgba(0, 0, 0, 0.3)'
+          }}>
+            <div style={{
+              fontSize: '48px',
+              marginBottom: '20px'
+            }}>
+              ⏰
+            </div>
+            <h2 style={{
+              margin: '0 0 15px 0',
+              color: '#2c3e50',
+              fontSize: '24px',
+              fontWeight: '600'
+            }}>
+              Пробный период истек
+            </h2>
+            <p style={{
+              margin: '0 0 25px 0',
+              color: '#7f8c8d',
+              fontSize: '16px',
+              lineHeight: '1.4'
+            }}>
+              Ваш 3-дневный пробный период истек. Для продолжения использования программы необходимо подключить Premium подписку.
+            </p>
+            <div style={{
+              display: 'flex',
+              gap: '10px',
+              justifyContent: 'center'
+            }}>
+              <button
+                onClick={() => {
+                  setShowTrialExpiredModal(false);
+                  setShowPayment(true);
+                }}
+                style={{
+                  backgroundColor: '#e74c3c',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '12px 24px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#c0392b'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#e74c3c'}
+              >
+                Подключить Premium
+              </button>
+              <button
+                onClick={() => setShowTrialExpiredModal(false)}
+                style={{
+                  backgroundColor: '#95a5a6',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '12px 24px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease'
+                }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#7f8c8d'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#95a5a6'}
+              >
+                Закрыть
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

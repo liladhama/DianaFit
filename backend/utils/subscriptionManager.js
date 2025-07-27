@@ -6,64 +6,6 @@ export class SubscriptionManager {
     this.FREE_DAILY_LIMIT = 0; // Бесплатные пользователи не могут задавать вопросы
     this.PREMIUM_DAILY_LIMIT = 10; // Премиум пользователи могут задать 10 вопросов в день
     this.PREMIUM_DURATION_DAYS = 30; // Премиум подписка на 30 дней
-    this.FREE_TRIAL_DAYS = 3; // Бесплатное использование приложения 3 дня
-  }
-
-  // Проверка дней использования приложения
-  async checkAppUsageDays(userId) {
-    const userData = await readUserData(userId);
-    userId = String(userId);
-    
-    // Если есть премиум - разрешаем все
-    const subscriptionStatus = await this.getSubscriptionStatus(userId);
-    if (subscriptionStatus.isPremium) {
-      return {
-        canUseTodayBlock: true,
-        canUseWeeklySchedule: true,
-        daysUsed: 0,
-        daysLeft: subscriptionStatus.daysLeft,
-        isPremium: true,
-        trialExpired: false
-      };
-    }
-    
-    // Проверяем дату создания программы или квиза
-    let firstUsageDate = null;
-    if (userData.createdAt) {
-      firstUsageDate = new Date(userData.createdAt);
-    } else if (userData.quiz?.completedAt) {
-      firstUsageDate = new Date(userData.quiz.completedAt);
-    } else if (userData.programData?.createdAt) {
-      firstUsageDate = new Date(userData.programData.createdAt);
-    }
-    
-    if (!firstUsageDate) {
-      // Новый пользователь - разрешаем все
-      return {
-        canUseTodayBlock: true,
-        canUseWeeklySchedule: true,
-        daysUsed: 0,
-        daysLeft: this.FREE_TRIAL_DAYS,
-        isPremium: false,
-        trialExpired: false
-      };
-    }
-    
-    // Вычисляем количество дней с первого использования
-    const now = new Date();
-    const daysDiff = Math.floor((now - firstUsageDate) / (1000 * 60 * 60 * 24));
-    const daysUsed = daysDiff + 1; // +1 так как первый день считается как день 1
-    
-    const trialExpired = daysUsed > this.FREE_TRIAL_DAYS;
-    
-    return {
-      canUseTodayBlock: !trialExpired, // Сегодняшний день доступен только в рамках триала
-      canUseWeeklySchedule: true, // Недельное расписание всегда доступно
-      daysUsed,
-      daysLeft: Math.max(0, this.FREE_TRIAL_DAYS - daysUsed + 1),
-      isPremium: false,
-      trialExpired
-    };
   }
 
   // Проверка и получение статуса подписки пользователя
