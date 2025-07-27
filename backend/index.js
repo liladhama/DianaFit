@@ -1345,6 +1345,97 @@ app.get('/api/diana-limits/:userId', async (req, res) => {
   }
 });
 
+// Тестовый эндпоинт для установки даты создания программы в прошлое (для тестирования)
+app.post('/api/test-set-program-date/:userId', async (req, res) => {
+  const { userId } = req.params;
+  const { daysAgo } = req.body;
+  if (!userId) return res.status(400).json({ error: 'No userId provided' });
+
+  try {
+    const userData = await readUserData(userId);
+    
+    if (!userData.programData) {
+      return res.status(404).json({ error: 'Program not found for this user' });
+    }
+
+    // Устанавливаем дату создания программы на N дней назад
+    const pastDate = new Date();
+    pastDate.setDate(pastDate.getDate() - (daysAgo || 4));
+    
+    userData.programData.createdAt = pastDate.toISOString();
+    await writeUserData(userId, userData);
+    
+    res.json({
+      success: true,
+      message: `Дата создания программы установлена на ${daysAgo || 4} дней назад`,
+      programCreatedAt: userData.programData.createdAt,
+      daysAgo: daysAgo || 4
+    });
+  } catch (error) {
+    console.error('Ошибка установки даты программы:', error);
+    res.status(500).json({ error: 'Ошибка при установке даты программы' });
+  }
+});
+
+// Тестовый эндпоинт для симуляции нажатия кнопки "Подключить премиум" в модальном окне
+app.post('/api/modal-premium-button/:userId', async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) return res.status(400).json({ error: 'No userId provided' });
+
+  try {
+    // Проверяем доступ к программе (как в модальном окне)
+    const subscriptionStatus = await subscriptionManager.default.getSubscriptionStatus(userId);
+    
+    if (subscriptionStatus.isPremium) {
+      return res.json({
+        action: 'already_premium',
+        message: 'Пользователь уже имеет премиум',
+        redirectTo: 'program'
+      });
+    }
+
+    // Получаем данные пользователя для проверки пробного периода
+    const userData = await readUserData(userId);
+    
+    if (!userData.programData || !userData.programData.createdAt) {
+      return res.json({
+        action: 'no_program',
+        message: 'Программа не создана, модальное окно не должно появляться',
+        redirectTo: 'quiz'
+      });
+    }
+
+    const programCreatedAt = new Date(userData.programData.createdAt);
+    const now = new Date();
+    const daysPassed = Math.floor((now - programCreatedAt) / (1000 * 60 * 60 * 24));
+    
+    if (daysPassed >= 3) {
+      // Симулируем логику кнопки в модальном окне
+      return res.json({
+        action: 'redirect_to_payment',
+        message: 'Кнопка "Подключить премиум" нажата - переход на страницу оплаты',
+        modalClosed: true,
+        testWeekClosed: true,
+        paymentPageOpened: true,
+        trialExpired: true,
+        daysPassed,
+        redirectTo: 'payment'
+      });
+    } else {
+      return res.json({
+        action: 'trial_active',
+        message: 'Пробный период еще активен, модальное окно не должно появляться',
+        daysLeft: 3 - daysPassed,
+        redirectTo: 'program'
+      });
+    }
+
+  } catch (error) {
+    console.error('Ошибка симуляции кнопки модального окна:', error);
+    res.status(500).json({ error: 'Ошибка при обработке запроса' });
+  }
+});
+
 // Роут для проверки доступа к программе (проверка 3-дневного пробного периода)
 app.get('/api/program-access/:userId', async (req, res) => {
   const { userId } = req.params;
