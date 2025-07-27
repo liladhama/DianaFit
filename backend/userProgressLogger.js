@@ -49,14 +49,14 @@ class UserProgressLogger {
         await this.saveLog(log);
     }
 
-    // Сохранить прогресс (еда/тренировка/задачи) за конкретную дату
+    // Сохранить прогресс (еда/тренировка/задачи) за конкретную дату - МАКСИМАЛЬНО ОПТИМИЗИРОВАНО
     async saveDayProgress({ date, ate, workout, tasks }) {
-        // Загружаем весь существующий лог
         const log = await this.loadLog();
         if (!log.dailyProgress) {
             log.dailyProgress = {};
         }
-        // --- Сохраняем в dailyProgress (как было) ---
+        
+        // --- ЕДИНСТВЕННАЯ точка записи (убрали тройное дублирование) ---
         log.dailyProgress[date] = {
             ate: ate === null ? null : !!ate,
             workout: workout === null ? null : !!workout,
@@ -64,64 +64,50 @@ class UserProgressLogger {
             updatedAt: new Date().toISOString()
         };
 
-        // --- Новое: сохраняем в progressHistory для недельного анализа ---
-        if (!log.progressHistory) log.progressHistory = [];
-        log.progressHistory.push({
-            date,
-            timestamp: new Date().toISOString(),
-            ate: ate === null ? null : !!ate,
-            workout: workout === null ? null : !!workout,
-            tasks: Array.isArray(tasks) ? tasks.map(t => ({
-                name: t.name,
-                type: t.type,
-                done: t.done,
-                reason: t.reason || undefined
-            })) : [],
-            actionType: 'progress_update'
-        });
-        // Ограничиваем историю 90 днями (по timestamp)
-        const ninetyDaysAgo = new Date();
-        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-        log.progressHistory = log.progressHistory.filter(entry => new Date(entry.timestamp) >= ninetyDaysAgo);
-
-        // --- Синхронизируем с programData.days (как было) ---
-        if (log.programData && log.programData.days) {
+        // УБРАНО: progressHistory - избыточная история, замедляет работу
+        
+        // --- ОПТИМИЗИРОВАНО: Минимальная синхронизация с programData.days ---
+        if (log.programData && log.programData.days && Array.isArray(tasks) && tasks.length > 0) {
             const dayToUpdate = log.programData.days.find(day => day.date === date);
             if (dayToUpdate) {
-                if (Array.isArray(tasks)) {
-                    // --- Питание ---
-                    const mealTasks = tasks.filter(task => task.type === 'meal');
-                    if (mealTasks.length > 0) {
-                        dayToUpdate.completedMealsArr = dayToUpdate.completedMealsArr || [];
-                        mealTasks.forEach((task) => {
-                            // Поиск по имени/типу, как с упражнениями
-                            const idx = dayToUpdate.completedMealsArr.findIndex((v, i) => dayToUpdate.meals && dayToUpdate.meals[i]?.name === task.name);
-                            if (idx !== -1) {
-                                dayToUpdate.completedMealsArr[idx] = task.done;
-                            }
-                        });
-                        dayToUpdate.completedMeals = mealTasks.some(task => task.done);
-                    }
-                    // --- Упражнения ---
-                    const workoutTasks = tasks.filter(task => task.type === 'workout');
-                    if (workoutTasks.length > 0) {
-                        dayToUpdate.completedExercises = dayToUpdate.completedExercises || [];
-                        workoutTasks.forEach((task) => {
-                            const idx = dayToUpdate.completedExercises.findIndex((v, i) => dayToUpdate.workout && dayToUpdate.workout.exercises && dayToUpdate.workout.exercises[i]?.name === task.name);
-                            if (idx !== -1) {
-                                dayToUpdate.completedExercises[idx] = task.done;
-                            }
-                        });
-                        dayToUpdate.completedWorkout = workoutTasks.some(task => task.done);
-                    }
-                    // --- Шаги ---
-                    const stepsTask = tasks.find(task => task.type === 'steps');
-                    if (stepsTask) {
-                        dayToUpdate.dailySteps = stepsTask.steps_estimated || 0;
-                    }
+                // Создаем быстрый индекс для поиска
+                const taskIndex = new Map();
+                tasks.forEach(task => {
+                    taskIndex.set(`${task.type}_${task.name}`, task.done);
+                });
+
+                // --- Питание (быстрый поиск) ---
+                if (dayToUpdate.meals) {
+                    dayToUpdate.completedMealsArr = dayToUpdate.completedMealsArr || [];
+                    dayToUpdate.meals.forEach((meal, i) => {
+                        const mealName = meal.type || meal.menu || meal.name;
+                        const done = taskIndex.get(`meal_${mealName}`);
+                        if (done !== undefined) {
+                            dayToUpdate.completedMealsArr[i] = done;
+                        }
+                    });
+                }
+                
+                // --- Упражнения (быстрый поиск) ---
+                if (dayToUpdate.workout?.exercises) {
+                    dayToUpdate.completedExercises = dayToUpdate.completedExercises || [];
+                    dayToUpdate.workout.exercises.forEach((exercise, i) => {
+                        const done = taskIndex.get(`workout_${exercise.name}`);
+                        if (done !== undefined) {
+                            dayToUpdate.completedExercises[i] = done;
+                        }
+                    });
+                }
+                
+                // --- Шаги ---
+                const stepsTask = tasks.find(t => t.type === 'steps');
+                if (stepsTask) {
+                    dayToUpdate.dailySteps = stepsTask.steps_estimated || 0;
+                    dayToUpdate.walkingMinutes = stepsTask.walking_minutes || 0;
                 }
             }
         }
+        
         // --- Сохраняем весь лог ---
         await this.saveLog(log);
     }

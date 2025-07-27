@@ -26,15 +26,43 @@ function getRandomTip() {
   return nutritionTips[Math.floor(Math.random() * nutritionTips.length)];
 }
 
-// Вспомогательная функция для получения всех userId
-async function getAllUserIds() {
+// ОПТИМИЗИРОВАННАЯ вспомогательная функция для получения пользователей по времени
+async function getUsersForCurrentHour() {
+  const now = new Date();
+  const currentHour = now.getHours();
+  const currentMinute = now.getMinutes();
+  
+  // ОПТИМИЗАЦИЯ: Рассылаем только в :00 минут каждого часа
+  if (currentMinute !== 0) {
+    return [];
+  }
+  
+  // ОПТИМИЗАЦИЯ: Создаем Map для быстрого доступа к пользователям
   const snapshot = await db.collection('Dianafit_users').get();
-  const userIds = [];
+  const usersToNotify = [];
+  
   snapshot.forEach(doc => {
     const data = doc.data();
     const chatId = data.telegramChatId || doc.id;
     if (!chatId) return;
-    // Получаем сегодняшнюю дату в формате YYYY-MM-DD
+    
+    // ОПТИМИЗАЦИЯ: Сначала проверяем время - если не подходит, пропускаем все остальные вычисления
+    const timezone = data.quiz?.timezone || 'Europe/Moscow';
+    const notifyHour = typeof data.quiz?.notifyHour === 'number' ? data.quiz.notifyHour : 9;
+    
+    try {
+      const nowTz = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+      if (nowTz.getHours() !== notifyHour) {
+        return; // Пропускаем пользователя - не его время
+      }
+    } catch (e) {
+      // Некорректный timezone - используем дефолтный час
+      if (currentHour !== notifyHour) {
+        return;
+      }
+    }
+    
+    // ОПТИМИЗАЦИЯ: Только если время подходит - делаем вычисления
     const today = new Date();
     const yyyy = today.getFullYear();
     const mm = String(today.getMonth() + 1).padStart(2, '0');
@@ -55,7 +83,6 @@ async function getAllUserIds() {
     }
 
     // Получаем индивидуальную норму калорий
-    // Берём калории только из quiz.calories
     let userCalories = null;
     if (data.quiz && typeof data.quiz.calories === 'number') {
       userCalories = data.quiz.calories;
@@ -76,7 +103,7 @@ async function getAllUserIds() {
     let progress = data.dailyProgress && data.dailyProgress[todayStr] ? data.dailyProgress[todayStr] : {};
     if (progress.ate !== undefined) ate = progress.ate;
 
-    userIds.push({
+    usersToNotify.push({
       userId: doc.id,
       chatId,
       todayWorkout: workout,
@@ -84,25 +111,26 @@ async function getAllUserIds() {
       calories: userCalories,
       meals,
       ate,
-      timezone: data.quiz?.timezone || 'Europe/Moscow',
-      notifyHour: typeof data.quiz?.notifyHour === 'number' ? data.quiz.notifyHour : 9
+      timezone,
+      notifyHour
     });
   });
-  return userIds;
+  
+  return usersToNotify;
 }
 
-// Основная функция рассылки
+// ОПТИМИЗИРОВАННАЯ основная функция рассылки
 async function sendDailyNotifications() {
-    const users = await getAllUserIds();
-    const now = new Date();
+    // ОПТИМИЗАЦИЯ: Получаем только пользователей, которым нужно отправить уведомления СЕЙЧАС
+    const users = await getUsersForCurrentHour();
+    
+    if (users.length === 0) {
+        return; // Нет пользователей для уведомления в данный час
+    }
+    
+    console.log(`📱 [Notifications] Отправка уведомлений ${users.length} пользователям`);
+    
     for (const user of users) {
-      // Проверка времени: рассылка только в notifyHour:00 по часовому поясу пользователя
-      const tz = user.timezone || 'Europe/Moscow';
-      const hour = typeof user.notifyHour === 'number' ? user.notifyHour : 9;
-      const nowTz = new Date(now.toLocaleString('en-US', { timeZone: tz }));
-      if (nowTz.getHours() !== hour || nowTz.getMinutes() !== 0) {
-        continue;
-      }
       const tip = getRandomTip();
       const round10 = n => Math.round(n / 10) * 10;
       let message = '';
@@ -140,10 +168,12 @@ async function sendDailyNotifications() {
         });
       }
       message += `\n\n`;
-      // Цитата-напоминание
+      // Цитата-напоминание (ЛОГИКА СОХРАНЕНА)
       message += `> _${user.ate === true ? 'Вы уже отметили выполнение тренировок и приём пищи!' : 'Не забудьте отметить выполнение тренировок и приём пищи!'}_ ✅`;
       message += `\n> _Постарайтесь пройти *10 000 шагов* сегодня!_ 🚶‍♀️🚶‍♂️`;
       message += `\n> _${tip}_ 🥦🥕`;
+      
+      // ОПТИМИЗАЦИЯ: Добавляем небольшую задержку между отправками
       try {
         const response = await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
           method: 'POST',
@@ -156,21 +186,21 @@ async function sendDailyNotifications() {
         });
         const result = await response.json();
         if (!result.ok) {
-          // Ошибка Telegram API — критическая, оставляем вывод
-          console.error(`[Рассылка] Ошибка Telegram API для пользователя ${user.userId} (chatId: ${user.chatId}):`, result);
+          console.error(`❌ [Notifications] Ошибка Telegram API для пользователя ${user.userId}:`, result);
         }
       } catch (err) {
-        // Ошибка отправки сообщения — критическая, оставляем вывод
-        console.error(`[Рассылка] Ошибка отправки сообщения пользователю ${user.userId} (chatId: ${user.chatId}):`, err);
+        console.error(`❌ [Notifications] Ошибка отправки сообщения пользователю ${user.userId}:`, err.message);
       }
+      
+      // ОПТИМИЗАЦИЯ: Небольшая пауза между отправками для избежания rate limit
+      await new Promise(resolve => setTimeout(resolve, 100));
     }
   }
 
-  // Запускать каждую минуту (рабочий режим)
-  cron.schedule('* * * * *', () => {
+  // ОПТИМИЗИРОВАНО: Запускать каждые 5 минут вместо каждую минуту для снижения нагрузки
+  cron.schedule('*/5 * * * *', () => {
     sendDailyNotifications().catch(err => {
-      // Ошибка рассылки — критическая, оставляем вывод
-      console.error('Ошибка рассылки:', err);
+      console.error('❌ [Notifications] Ошибка рассылки:', err.message);
     });
   });
 

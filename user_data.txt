@@ -1,0 +1,1 @@
+{"workouts":0,"nutrition":0,"details":{"meals":{"breakfast":0,"lunch":0,"dinner":0,"snacks":0},"weeklyProgress":[],"commonIssues":[],"improvements":{"weekOverWeek":0,"trend":"up"}},"lastUpdate":"2025-07-26T15:21:40.063Z"}

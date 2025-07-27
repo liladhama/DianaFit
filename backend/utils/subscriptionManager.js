@@ -64,6 +64,48 @@ export class SubscriptionManager {
     }
   }
 
+  // ОПТИМИЗИРОВАНО: Проверка и активация премиума в одном вызове (убирает двойное чтение)
+  async activatePremiumOptimized(userId) {
+    try {
+      const userData = await readUserData(userId);
+      userId = String(userId);
+      const subscription = userData.subscription || {};
+      
+      // Проверяем текущий статус
+      if (subscription.premiumExpiresAt) {
+        const now = new Date();
+        const expireDate = new Date(subscription.premiumExpiresAt);
+        
+        if (now <= expireDate) {
+          return {
+            alreadyActive: true,
+            isPremium: true,
+            expiresAt: subscription.premiumExpiresAt,
+            daysLeft: Math.ceil((expireDate - now) / (1000 * 60 * 60 * 24))
+          };
+        }
+      }
+      
+      // Активируем премиум
+      const now = new Date();
+      const expiresAt = new Date(now.getTime() + (this.PREMIUM_DURATION_DAYS * 24 * 60 * 60 * 1000));
+      subscription.premiumActivatedAt = now.toISOString();
+      subscription.premiumExpiresAt = expiresAt.toISOString();
+      await this.saveSubscriptionData(userId, subscription);
+      
+      return {
+        alreadyActive: false,
+        success: true,
+        activatedAt: subscription.premiumActivatedAt,
+        expiresAt: subscription.premiumExpiresAt,
+        daysLeft: this.PREMIUM_DURATION_DAYS
+      };
+    } catch (e) {
+      console.error(`[activatePremiumOptimized] Ошибка для userId=${userId}:`, e.message);
+      throw e;
+    }
+  }
+
   // Проверка лимита запросов к Диане
   async checkDailyLimit(userId) {
     const userData = await readUserData(userId);

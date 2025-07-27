@@ -1205,58 +1205,69 @@ app.get('/api/user/subscription-info/:userId', async (req, res) => {
 app.get('/api/user/quiz-answers/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
-        console.log('[DEBUG] GET /api/user/quiz-answers/:userId запрос для userId:', userId, typeof userId);
+        
+        // ОПТИМИЗИРОВАНО: Убираем избыточное логирование
         const userData = await readUserData(userId);
-        console.log('[DEBUG] userData найден:', !!userData, 'quiz есть:', !!userData.quiz);
-        console.log('[DEBUG] userData.quiz структура:', userData.quiz ? Object.keys(userData.quiz) : 'нет quiz');
-        console.log('[DEBUG DETAILED] Полные данные userData:', userData);
-        console.log('[DEBUG DETAILED] userData.quiz полное содержимое:', userData.quiz);
         
         if (!userData.quiz) {
-            console.log('[DEBUG] Quiz не найден для userId:', userId);
             return res.status(404).json({ error: 'Quiz data not found' });
         }
-        console.log('[DEBUG] Возвращаем quiz для userId:', userId);
-        console.log('[DEBUG] Возвращаемые данные - userData.quiz содержит keys:', Object.keys(userData.quiz || {}));
-        console.log('[DEBUG] Полная структура ответа - userData содержит keys:', Object.keys(userData || {}));
-        // Возвращаем полную userData для доступа к dialogHistory
-        res.json(userData);
+        
+        // ОПТИМИЗИРОВАНО: Возвращаем только нужные поля вместо всего документа
+        res.json({
+            userId: userData.userId,
+            quiz: userData.quiz,
+            dialogHistory: userData.dialogHistory || [],
+            lastUpdate: userData.lastUpdate
+        });
     } catch (error) {
-        console.error('Error getting user quiz answers:', error);
+        console.error('❌ [quiz-answers] Error getting user quiz answers:', error.message);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
 
-// Эндпоинт для сохранения ответов квиза пользователя
+// Эндпоинт для сохранения ответов квиза пользователя - ОПТИМИЗИРОВАНО
 app.post('/api/user/quiz-answers/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
         const quizData = req.body;
+        
+        // ОПТИМИЗИРОВАНО: Валидация данных
+        if (!quizData || typeof quizData !== 'object') {
+            return res.status(400).json({ error: 'Invalid quiz data' });
+        }
+        
         let userData = await readUserData(userId);
         userData.quiz = quizData;
+        userData.lastUpdate = new Date().toISOString();
         await writeUserData(userId, userData);
         res.json({ success: true });
     } catch (error) {
-        console.error('Error saving user quiz answers:', error);
+        console.error('❌ [quiz-answers] Error saving user quiz answers:', error.message);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
 
-// PATCH /api/user/quiz-answers/:userId — частичное обновление quiz
+// PATCH /api/user/quiz-answers/:userId — частичное обновление quiz - ОПТИМИЗИРОВАНО
 app.patch('/api/user/quiz-answers/:userId', async (req, res) => {
     try {
         const { userId } = req.params;
         const patchData = req.body;
-        console.log('[PATCH quiz-answers] userId:', userId, 'patchData:', patchData);
+        
+        // ОПТИМИЗИРОВАНО: Валидация данных
+        if (!patchData || typeof patchData !== 'object') {
+            return res.status(400).json({ error: 'Invalid patch data' });
+        }
+        
         let userData = await readUserData(userId);
         if (!userData.quiz) userData.quiz = {};
         userData.quiz = { ...userData.quiz, ...patchData };
-        console.log('[PATCH quiz-answers] userData.quiz после merge:', userData.quiz);
+        userData.lastUpdate = new Date().toISOString();
         await writeUserData(userId, userData);
         res.json({ success: true });
     } catch (error) {
-        console.error('Error patching user quiz answers:', error);
+        console.error('❌ [quiz-answers] Error patching user quiz answers:', error.message);
         res.status(500).json({ error: 'Internal server error' });
     }
 });

@@ -181,42 +181,6 @@ class MealPlanCalculator {
     }
 
     /**
-     * Создание 5 вариантов для каждого приема пищи
-     */
-    createMealOptions(mealType, targetCalories, dietType, usedRecipes = []) {
-        const mealTypeKey = this.getMealTypeKey(mealType);
-        let availableRecipes = this.recipes[mealTypeKey] || [];
-        
-        // Фильтруем по типу питания
-        availableRecipes = this.filterRecipesByDiet(availableRecipes, dietType);
-        
-        if (availableRecipes.length === 0) {
-            console.warn(`Нет рецептов для типа питания ${dietType} и приема пищи ${mealType}`);
-            return [];
-        }
-
-        const options = [];
-        const usedInOptions = [];
-
-        // Создаем 5 вариантов
-        for (let i = 0; i < 5; i++) {
-            const selectedRecipe = this.selectRecipeByCalories(
-                availableRecipes, 
-                targetCalories, 
-                [...usedRecipes, ...usedInOptions]
-            );
-            
-            if (selectedRecipe) {
-                const scaledRecipe = this.scaleRecipeToTarget(selectedRecipe, targetCalories);
-                options.push(scaledRecipe);
-                usedInOptions.push(selectedRecipe);
-            }
-        }
-
-        return options;
-    }
-
-    /**
      * Подбор любых блюд по типу и диете, затем масштабирование под нужные калории
      */
     getMealOptionsByTypeAndDiet(mealType, dietType, targetCalories, count = 5) {
@@ -244,7 +208,7 @@ class MealPlanCalculator {
     }
 
     /**
-     * Генерация плана питания на день
+     * Генерация плана питания на день (упрощенная версия)
      */
     generateDayPlan(userAnswers, usedRecipes = {}) {
         const macros = this.calculateUserMacros(userAnswers);
@@ -255,19 +219,19 @@ class MealPlanCalculator {
         const mealTypes = ['Завтрак', 'Перекус', 'Обед', 'Полдник', 'Ужин'];
         for (const mealType of mealTypes) {
             const targetCalories = calorieDistribution[mealType];
-            const mealUsedRecipes = usedRecipes[mealType] || [];
-            const options = this.createMealOptions(
+            // Используем упрощенную версию - генерируем только 1 вариант
+            const options = this.getMealOptionsByTypeAndDiet(
                 mealType, 
-                targetCalories, 
                 dietType, 
-                mealUsedRecipes
+                targetCalories, 
+                1 // Только 1 вариант вместо 5
             );
             if (options.length > 0) {
                 meals.push({
                     type: mealType,
                     options: options,
                     targetCalories: targetCalories,
-                    selectedOption: 0 // По умолчанию выбран первый вариант
+                    selectedOption: 0
                 });
                 if (!usedRecipes[mealType]) {
                     usedRecipes[mealType] = [];

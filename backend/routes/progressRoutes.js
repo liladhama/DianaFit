@@ -3,22 +3,29 @@ import UserProgressLogger from '../userProgressLogger.js';
 
 const router = express.Router();
 
-// Сохранить прогресс за день (еда/тренировка)
+// Сохранить прогресс за день (еда/тренировка) - ОПТИМИЗИРОВАНО
 router.post('/', async (req, res) => {
     const { userId, date, ate, workout, tasks } = req.body;
     if (!userId || !date) {
         return res.status(400).json({ error: 'userId и date обязательны' });
     }
+    
+    // ОПТИМИЗИРОВАНО: Валидация tasks для предотвращения ошибок
+    if (tasks && !Array.isArray(tasks)) {
+        return res.status(400).json({ error: 'tasks должен быть массивом' });
+    }
+    
     try {
         const logger = new UserProgressLogger(userId);
         await logger.saveDayProgress({ date, ate, workout, tasks });
         res.json({ success: true });
     } catch (e) {
+        console.error('❌ [progressRoutes] Ошибка сохранения прогресса:', e.message);
         res.status(500).json({ error: 'Ошибка сохранения прогресса' });
     }
 });
 
-// Получить прогресс за день
+// Получить прогресс за день - ОПТИМИЗИРОВАНО
 router.get('/', async (req, res) => {
     const { userId, date } = req.query;
     if (!userId || !date) {
@@ -29,26 +36,28 @@ router.get('/', async (req, res) => {
         const progress = await logger.getDayProgress(date);
         res.json(progress);
     } catch (e) {
+        console.error('❌ [progressRoutes] Ошибка получения прогресса:', e.message);
         res.status(500).json({ error: 'Ошибка получения прогресса' });
     }
 });
 
-// Получить сводку прогресса за период
-router.get('/summary', (req, res) => {
+// Получить сводку прогресса за период - ОПТИМИЗИРОВАНО
+router.get('/summary', async (req, res) => {
     const { userId, from, to } = req.query;
     if (!userId || !from || !to) {
         return res.status(400).json({ error: 'userId, from, to обязательны' });
     }
     try {
         const logger = new UserProgressLogger(userId);
-        const summary = logger.getProgressSummary({ from, to });
+        const summary = await logger.getProgressSummary({ from, to });
         res.json(summary);
     } catch (e) {
+        console.error('❌ [progressRoutes] Ошибка получения сводки прогресса:', e.message);
         res.status(500).json({ error: 'Ошибка получения сводки прогресса' });
     }
 });
 
-// Получить недельную историю прогресса
+// Получить недельную историю прогресса - ОПТИМИЗИРОВАНО
 router.get('/weekly-history', async (req, res) => {
     const { userId } = req.query;
     if (!userId) {
@@ -59,26 +68,23 @@ router.get('/weekly-history', async (req, res) => {
         const weeklyData = await logger.analyzeWeeklyProgressFromHistory();
         res.json(weeklyData);
     } catch (e) {
+        console.error('❌ [progressRoutes] Ошибка получения недельной истории прогресса:', e.message);
         res.status(500).json({ error: 'Ошибка получения недельной истории прогресса' });
     }
 });
 
-// Получить прогресс по userId (для ProfilePage.js)
-router.get('/:userId', (req, res) => {
+// Получить прогресс по userId - ОПТИМИЗИРОВАНО
+router.get('/:userId', async (req, res) => {
     const { userId } = req.params;
     if (!userId) {
         return res.status(400).json({ error: 'userId обязателен' });
     }
     try {
         const logger = new UserProgressLogger(userId);
-        // Можно возвращать прогресс за сегодня или summary, по желанию:
-        // const today = new Date().toISOString().slice(0, 10);
-        // const progress = logger.getDayProgress(today);
-        // res.json(progress);
-        // Или возвращать весь лог:
-        const log = logger.loadLog();
+        const log = await logger.loadLog();
         res.json(log);
     } catch (e) {
+        console.error('❌ [progressRoutes] Ошибка получения прогресса пользователя:', e.message);
         res.status(500).json({ error: 'Ошибка получения прогресса' });
     }
 });

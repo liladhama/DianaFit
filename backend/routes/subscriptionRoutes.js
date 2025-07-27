@@ -4,7 +4,7 @@ import subscriptionManager from '../utils/subscriptionManager.js';
 
 const router = express.Router();
 
-// Получение информации о подписке для профиля
+// Получение информации о подписке для профиля - ОПТИМИЗИРОВАНО
 router.get('/info/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -22,12 +22,12 @@ router.get('/info/:userId', async (req, res) => {
       type: subscriptionStatus.type || 'premium'
     });
   } catch (error) {
-    console.error('Ошибка получения информации о подписке:', error);
+    console.error('❌ [subscription] Ошибка получения информации о подписке:', error.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Получение текущего статуса подписки
+// Получение текущего статуса подписки - ОПТИМИЗИРОВАНО
 router.get('/status/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -46,19 +46,13 @@ router.get('/status/:userId', async (req, res) => {
       usage: usageStats
     });
   } catch (error) {
-    console.error('Ошибка получения статуса подписки:', error);
+    console.error('❌ [subscription] Ошибка получения статуса подписки:', error.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Активация премиум подписки
+// Активация премиум подписки - ОПТИМИЗИРОВАНО
 router.post('/activate-premium', async (req, res) => {
-  console.log('[SUBSCRIPTION] POST /activate-premium входящий запрос:', {
-    method: req.method,
-    url: req.originalUrl,
-    headers: req.headers,
-    body: req.body
-  });
   try {
     const { userId } = req.body;
     
@@ -66,21 +60,16 @@ router.post('/activate-premium', async (req, res) => {
       return res.status(400).json({ error: 'userId is required' });
     }
 
-    // Проверяем текущий статус
-    const currentStatus = await subscriptionManager.getSubscriptionStatus(userId);
+    // ОПТИМИЗИРОВАНО: Объединяем проверку и активацию в одном вызове
+    const activationResult = await subscriptionManager.activatePremiumOptimized(userId);
     
-    if (currentStatus.isPremium) {
+    if (activationResult.alreadyActive) {
       return res.json({
         success: true,
         message: 'Премиум подписка уже активна',
-        ...currentStatus
+        ...activationResult
       });
     }
-
-    // Активируем премиум
-    const activationResult = await subscriptionManager.activatePremium(userId);
-    
-    console.log(`[PREMIUM] Активирована премиум подписка для пользователя ${userId}`);
     
     res.json({
       success: true,
@@ -88,12 +77,12 @@ router.post('/activate-premium', async (req, res) => {
       ...activationResult
     });
   } catch (error) {
-    console.error('Ошибка активации премиум подписки:', error);
+    console.error('❌ [subscription] Ошибка активации премиум:', error.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Получение лимитов запросов
+// Получение лимитов запросов - ОПТИМИЗИРОВАНО
 router.get('/limits/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -109,12 +98,12 @@ router.get('/limits/:userId', async (req, res) => {
       message: subscriptionManager.formatLimitMessage(limitInfo)
     });
   } catch (error) {
-    console.error('Ошибка получения лимитов:', error);
+    console.error('❌ [subscription] Ошибка получения лимитов:', error.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// Получение статистики использования
+// Получение статистики использования - ОПТИМИЗИРОВАНО
 router.get('/usage/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -127,7 +116,7 @@ router.get('/usage/:userId', async (req, res) => {
     
     res.json(usageStats);
   } catch (error) {
-    console.error('Ошибка получения статистики:', error);
+    console.error('❌ [subscription] Ошибка получения статистики:', error.message);
     res.status(500).json({ error: 'Internal server error' });
   }
 });
