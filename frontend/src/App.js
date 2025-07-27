@@ -147,13 +147,13 @@ function App() {
       showSplash: showSplash // Добавляем проверку статуса SplashScreen
     });
     
-    // ИСПРАВЛЕНИЕ: показываем уведомления только после скрытия SplashScreen
-    if (!weekData || !Array.isArray(weekData.days) || !todayDay || !tgUserId || showSplash) {
-      console.log('🔔 [УВЕДОМЛЕНИЯ] Условия не выполнены, выходим из useEffect. showSplash:', showSplash);
+    // НОВАЯ ЛОГИКА: проверяем все условия, но НЕ скрываем SplashScreen заранее
+    if (!weekData || !Array.isArray(weekData.days) || !todayDay || !tgUserId) {
+      console.log('🔔 [УВЕДОМЛЕНИЯ] Базовые данные не готовы, ждем...');
       return;
     }
     
-    console.log('🔔 [УВЕДОМЛЕНИЯ] Все условия выполнены, продолжаем проверку уведомлений');
+    console.log('🔔 [УВЕДОМЛЕНИЯ] Все данные готовы, проверяем необходимость уведомлений');
     // Получаем первый день тренировок (начало цикла)
     const firstDayStr = weekData.days[0]?.date;
     if (!firstDayStr) return;
@@ -178,7 +178,9 @@ function App() {
         console.log('🔔 Ответ от сервера о статусе уведомления:', data);
         if (!data) return;
         if (data && !data.shouldShow) {
-          console.log('🔔 Уведомление уже показано сегодня, пропускаем');
+          console.log('🔔 Уведомление уже показано сегодня, скрываем SplashScreen и показываем TodayBlock');
+          setShowSplash(false); // Скрываем SplashScreen
+          setShowTodayBlock(true);
           return; // Уже показано
         }
 
@@ -189,6 +191,7 @@ function App() {
             type: 'greeting'
           };
           console.log('🔔 Устанавливаем уведомление:', notification);
+          setShowSplash(false); // Скрываем SplashScreen ПЕРЕД показом уведомления
           setDianaNotification(notification);
           setShowDianaNotification(true);
         }
@@ -215,6 +218,7 @@ function App() {
               text: 'Анализ недели от Дианы:',
               aiAnalysis: aiData?.message || aiData?.analysis || 'Нет данных анализа.'
             });
+            setShowSplash(false); // Скрываем SplashScreen ПЕРЕД показом уведомления
             setShowDianaNotification(true);
           } catch (err) {
             setDianaNotification({
@@ -222,6 +226,7 @@ function App() {
               text: 'Анализ недели от Дианы:',
               aiAnalysis: 'Ошибка получения анализа ИИ.'
             });
+            setShowSplash(false); // Скрываем SplashScreen ПЕРЕД показом уведомления
             setShowDianaNotification(true);
           }
         }
@@ -381,12 +386,17 @@ function App() {
           } else {
             console.log('🔔 [УВЕДОМЛЕНИЯ] Вчерашний день не найден в weekData.days');
           }
+        } else {
+          // Дни недели без уведомлений - скрываем SplashScreen и показываем TodayBlock
+          console.log('🔔 [УВЕДОМЛЕНИЯ] День без уведомлений, скрываем SplashScreen и показываем TodayBlock');
+          setShowSplash(false);
+          setShowTodayBlock(true);
         }
       })
       .catch(err => {
         console.error('Ошибка при получении статуса уведомления Дианы:', err);
       });
-  }, [weekData, todayDay, tgUserId, showSplash]); // Добавили showSplash в зависимости
+  }, [weekData, todayDay, tgUserId]); // Убрали showSplash из зависимостей
 
   // --- Сохраняем факт показа уведомления в Firestore ---
   useEffect(() => {
@@ -709,13 +719,17 @@ function App() {
     if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.expand) {
       window.Telegram.WebApp.expand();
     }
-    // Скрываем сплэш через 3 секунды, независимо от загрузки данных
-    const timer = setTimeout(() => {
-      console.log('⏰ Автоматическое скрытие SplashScreen через 3 секунды');
-      setShowSplash(false);
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
+    
+    // Fallback таймер на 4 секунды, если уведомления не появились
+    const fallbackTimer = setTimeout(() => {
+      console.log('⏰ Fallback: скрываем SplashScreen через 4 секунды, если уведомления нет');
+      if (!showDianaNotification) {
+        setShowSplash(false);
+      }
+    }, 4000);
+    
+    return () => clearTimeout(fallbackTimer);
+  }, [showDianaNotification]);
 
   // УДАЛЕН СТАРЫЙ useEffect - теперь используется только новая логика с Telegram userId и weekData
 
@@ -1833,10 +1847,8 @@ function App() {
           }}
         />
       )}
-      {/* SplashScreen показывается только в начале загрузки приложения И когда НЕТ уведомлений */}
-      {showSplash && !showDianaNotification ? (
-        <SplashScreen />
-      ) : showVideoTest ? (
+      {/* Видеотесты - только в dev режиме */}
+      {showVideoTest ? (
         <div>
           <VideoTest />
         </div>
@@ -1931,7 +1943,29 @@ function App() {
 
       
       {/* Основной контент приложения */}
-      {showSplash ? null : showProfile ? (
+      {showSplash ? (
+        <SplashScreen onFinish={() => setShowSplash(false)} />
+      ) : showDianaNotification ? (
+        <DianaNotification
+          isVisible={showDianaNotification}
+          userId={tgUserId}
+          dayOfWeek={(() => {
+            if (!todayDay || !weekData || !Array.isArray(weekData.days)) return null;
+            const firstDayStr = weekData.days[0]?.date;
+            const todayStr = todayDay.date;
+            const dayDiff = Math.floor((new Date(todayStr) - new Date(firstDayStr)) / (1000*60*60*24));
+            return (dayDiff % 7) + 1;
+          })()}
+          customMessage={dianaNotification?.text}
+          aiAnalysis={dianaNotification?.aiAnalysis}
+          notificationType={dianaNotification?.type}
+          hasUncompletedTasks={dianaNotification && dianaNotification.type === 'motivation'}
+          onClose={() => {
+            setShowDianaNotification(false);
+            setShowTodayBlock(true);
+          }}
+        />
+      ) : showProfile ? (
         <ProfilePage
           onClose={() => setShowProfile(false)}
           unlocked={unlocked}
