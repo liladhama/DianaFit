@@ -96,11 +96,16 @@ const QuizSettings = ({ quizAnswers = {}, onSettingChange }) => {
             let method = 'PATCH';
             // Для timezone и notifyHour используем отдельный API
             if (questionId === 'timezone' || questionId === 'notifyHour') {
+                // ИСПРАВЛЕНО: используем актуальные значения (finalValue для текущего поля)
+                const currentTimezone = questionId === 'timezone' ? finalValue : (userAnswers.timezone || 'Europe/Moscow');
+                const currentNotifyHour = questionId === 'notifyHour' ? Number(finalValue) : (Number(userAnswers.notifyHour) || 9);
+                
                 dataToSave = {
                     userId,
-                    timezone: userAnswers.timezone || 'Europe/Moscow',
-                    notifyHour: Number(userAnswers.notifyHour) || 9
+                    timezone: currentTimezone,
+                    notifyHour: currentNotifyHour
                 };
+                console.log(`🔧 [QuizSettings] Сохраняем ${questionId}:`, { questionId, finalValue, currentTimezone, currentNotifyHour, dataToSave });
                 apiUrl = `${API_URL}/api/user/notification-settings`;
                 method = 'POST';
             }

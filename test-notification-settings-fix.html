@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест исправления сохранения настроек уведомлений</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; color: #155724; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; color: #721c24; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; color: #0c5460; }
+        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #0056b3; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 5px; overflow-x: auto; font-size: 12px; }
+        .log { margin: 10px 0; padding: 8px; background: #f8f9fa; border-left: 3px solid #007bff; font-family: monospace; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 Тест исправления сохранения настроек уведомлений</h1>
+        
+        <div class="test-section info">
+            <h3>📋 Описание проблемы</h3>
+            <p><strong>Проблема:</strong> При сохранении timezone или notifyHour в QuizSettings.js код отправлял старые значения вместо новых.</p>
+            <p><strong>Причина:</strong> В строках 102-103 использовались <code>userAnswers.timezone</code> и <code>userAnswers.notifyHour</code> вместо актуального <code>finalValue</code>.</p>
+            <p><strong>Исправление:</strong> Теперь используются актуальные значения для сохраняемого поля.</p>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Тест API notification-settings</h3>
+            <p>UserID для теста: <span id="testUserId">demo_user_test</span></p>
+            
+            <div style="margin: 10px 0;">
+                <label>Часовой пояс:</label>
+                <select id="timezoneSelect">
+                    <option value="Europe/Moscow">Москва</option>
+                    <option value="Asia/Tbilisi">Тбилиси</option>
+                    <option value="Europe/Kiev">Киев</option>
+                    <option value="Asia/Almaty">Алматы</option>
+                </select>
+            </div>
+
+            <div style="margin: 10px 0;">
+                <label>Час уведомлений:</label>
+                <select id="notifyHourSelect">
+                    <option value="6">6:00</option>
+                    <option value="7">7:00</option>
+                    <option value="8">8:00</option>
+                    <option value="9">9:00</option>
+                    <option value="10">10:00</option>
+                    <option value="11">11:00</option>
+                    <option value="12">12:00</option>
+                </select>
+            </div>
+
+            <button onclick="testTimezoneOnly()">Тест: Сохранить только timezone</button>
+            <button onclick="testNotifyHourOnly()">Тест: Сохранить только notifyHour</button>
+            <button onclick="testBothSettings()">Тест: Сохранить оба</button>
+            <button onclick="checkFirestore()">Проверить Firestore</button>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Результаты тестов</h3>
+            <div id="testResults"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>🔍 Логи</h3>
+            <div id="testLogs"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3001';
+        const userId = 'demo_user_test';
+
+        function addLog(message, type = 'info') {
+            const logsDiv = document.getElementById('testLogs');
+            const logDiv = document.createElement('div');
+            logDiv.className = 'log';
+            logDiv.innerHTML = `<strong>[${new Date().toLocaleTimeString()}]</strong> ${message}`;
+            logsDiv.appendChild(logDiv);
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        function addResult(message, success = true) {
+            const resultsDiv = document.getElementById('testResults');
+            const resultDiv = document.createElement('div');
+            resultDiv.className = success ? 'success' : 'error';
+            resultDiv.style.margin = '10px 0';
+            resultDiv.style.padding = '10px';
+            resultDiv.style.borderRadius = '5px';
+            resultDiv.innerHTML = message;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        async function testTimezoneOnly() {
+            const timezone = document.getElementById('timezoneSelect').value;
+            addLog(`🧪 Тестируем сохранение только timezone: ${timezone}`);
+            
+            try {
+                const response = await fetch(`${API_URL}/api/user/notification-settings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        timezone: timezone,
+                        notifyHour: 9 // дефолтное значение
+                    })
+                });
+
+                const result = await response.json();
+                addLog(`📝 Ответ сервера: ${JSON.stringify(result)}`);
+
+                if (response.ok && result.success) {
+                    addResult(`✅ Timezone успешно сохранен: ${timezone}`, true);
+                } else {
+                    addResult(`❌ Ошибка сохранения timezone: ${result.error || 'Unknown error'}`, false);
+                }
+            } catch (error) {
+                addLog(`❌ Ошибка запроса: ${error.message}`);
+                addResult(`❌ Ошибка сети: ${error.message}`, false);
+            }
+        }
+
+        async function testNotifyHourOnly() {
+            const notifyHour = parseInt(document.getElementById('notifyHourSelect').value);
+            addLog(`🧪 Тестируем сохранение только notifyHour: ${notifyHour}`);
+            
+            try {
+                const response = await fetch(`${API_URL}/api/user/notification-settings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        timezone: 'Europe/Moscow', // дефолтное значение
+                        notifyHour: notifyHour
+                    })
+                });
+
+                const result = await response.json();
+                addLog(`📝 Ответ сервера: ${JSON.stringify(result)}`);
+
+                if (response.ok && result.success) {
+                    addResult(`✅ NotifyHour успешно сохранен: ${notifyHour}:00`, true);
+                } else {
+                    addResult(`❌ Ошибка сохранения notifyHour: ${result.error || 'Unknown error'}`, false);
+                }
+            } catch (error) {
+                addLog(`❌ Ошибка запроса: ${error.message}`);
+                addResult(`❌ Ошибка сети: ${error.message}`, false);
+            }
+        }
+
+        async function testBothSettings() {
+            const timezone = document.getElementById('timezoneSelect').value;
+            const notifyHour = parseInt(document.getElementById('notifyHourSelect').value);
+            addLog(`🧪 Тестируем сохранение обеих настроек: ${timezone}, ${notifyHour}:00`);
+            
+            try {
+                const response = await fetch(`${API_URL}/api/user/notification-settings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: userId,
+                        timezone: timezone,
+                        notifyHour: notifyHour
+                    })
+                });
+
+                const result = await response.json();
+                addLog(`📝 Ответ сервера: ${JSON.stringify(result)}`);
+
+                if (response.ok && result.success) {
+                    addResult(`✅ Обе настройки успешно сохранены: ${timezone}, ${notifyHour}:00`, true);
+                } else {
+                    addResult(`❌ Ошибка сохранения настроек: ${result.error || 'Unknown error'}`, false);
+                }
+            } catch (error) {
+                addLog(`❌ Ошибка запроса: ${error.message}`);
+                addResult(`❌ Ошибка сети: ${error.message}`, false);
+            }
+        }
+
+        async function checkFirestore() {
+            addLog(`🔍 Проверяем данные в Firestore для userId: ${userId}`);
+            
+            try {
+                const response = await fetch(`${API_URL}/api/user/quiz-answers/${userId}`);
+                const result = await response.json();
+                
+                addLog(`📝 Данные из Firestore: ${JSON.stringify(result, null, 2)}`);
+
+                if (response.ok && result.quiz) {
+                    const { timezone, notifyHour } = result.quiz;
+                    addResult(`📊 Текущие настройки в Firestore:<br>
+                              • Timezone: ${timezone || 'не установлен'}<br>
+                              • NotifyHour: ${notifyHour || 'не установлен'} (тип: ${typeof notifyHour})`, true);
+                } else {
+                    addResult(`❌ Не удалось получить данные из Firestore`, false);
+                }
+            } catch (error) {
+                addLog(`❌ Ошибка проверки Firestore: ${error.message}`);
+                addResult(`❌ Ошибка проверки Firestore: ${error.message}`, false);
+            }
+        }
+
+        // Автоматически проверяем при загрузке страницы
+        window.onload = () => {
+            addLog('🚀 Страница тестирования загружена');
+            addLog('ℹ️ Убедитесь, что backend запущен на localhost:3001');
+        };
+    </script>
+</body>
+</html>

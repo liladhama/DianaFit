@@ -7,9 +7,17 @@ const router = express.Router();
 router.post('/api/user/notification-settings', async (req, res) => {
   let { userId, timezone, notifyHour } = req.body;
   userId = String(userId);
-  // ...удалено: NotificationSettingsApi POST лог...
+  
+  console.log('🔧 [NotificationSettingsApi] Получен запрос:', { userId, timezone, notifyHour, typeOfNotifyHour: typeof notifyHour });
+  
   if (!userId || !timezone || typeof notifyHour !== 'number') {
-    // ...удалено: NotificationSettingsApi error лог...
+    console.log('❌ [NotificationSettingsApi] Ошибка валидации:', { 
+      userIdMissing: !userId, 
+      timezoneMissing: !timezone, 
+      notifyHourInvalid: typeof notifyHour !== 'number',
+      notifyHourValue: notifyHour,
+      notifyHourType: typeof notifyHour
+    });
     return res.status(400).json({ error: 'userId, timezone и notifyHour обязательны' });
   }
   try {
