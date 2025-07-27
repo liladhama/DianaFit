@@ -10,6 +10,7 @@ import VideoTest from './components/VideoTest';
 import AITestPage from './components/AITestPage';
 import { API_URL } from './config/api';
 import DianaNotification from './components/DianaNotification';
+import { VideoCacheProvider } from './components/VideoCacheContext';
 
 // 🚨 ГЛОБАЛЬНЫЙ ПЕРЕХВАТЧИК ВСЕХ FETCH-ЗАПРОСОВ ДЛЯ ОТЛАДКИ
 const originalFetch = window.fetch;
@@ -121,6 +122,13 @@ function App() {
   const [showTestWeek, setShowTestWeek] = useState(false);
   const [showTodayBlock, setShowTodayBlock] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  // Универсальная функция перехода на страницу оплаты
+  function handleUnlock() {
+    setShowTrialExpiredModal(false);
+    setShowTestWeek(false);
+    setShowPayment(true);
+    if (typeof setIsPaymentShown === 'function') setIsPaymentShown(true);
+  }
   const [unlocked, setUnlocked] = useState(false);
   const [showVideoTest, setShowVideoTest] = useState(false);
   const [showAITest, setShowAITest] = useState(false);
@@ -579,7 +587,7 @@ function App() {
                 
                 // Если доступ запрещен - перенаправляем в TestWeek с уведомлением
                 if (!accessData.hasAccess && accessData.reason === 'trial_expired') {
-                  console.log('🔒 [PROGRAM ACCESS] Пробный период истек, перенаправляем в TestWeek');
+                  console.log('🔒 [PROGRAM ACCESS] Пробный период истек, перенаправляем в TestWeek (fallback)');
                   setShowTestWeek(true);
                   setIsLoadingUserData(false);
                   // Показываем модальное окно о необходимости премиум
@@ -2231,12 +2239,7 @@ function App() {
               justifyContent: 'center'
             }}>
               <button
-                onClick={() => {
-                  console.log('🎯 [MODAL] Нажата кнопка "Подключить Premium"');
-                  setShowTrialExpiredModal(false);
-                  setShowPayment(true);
-                  console.log('🎯 [MODAL] Модальное окно закрыто, страница оплаты открыта');
-                }}
+                onClick={handleUnlock}
                 style={{
                   backgroundColor: '#e74c3c',
                   color: 'white',
@@ -2279,4 +2282,9 @@ function App() {
   );
 }
 
-export default App;
+// Оборачиваем всё приложение в VideoCacheProvider
+function AppWithCacheProvider(props) {
+  return <VideoCacheProvider><App {...props} /></VideoCacheProvider>;
+}
+
+export default AppWithCacheProvider;

@@ -2083,4 +2083,23 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('✅ Server running on port ' + PORT);
 });
 
+// Эндпоинт для получения всех userId (для тестирования)
+app.get('/api/all-user-ids', async (req, res) => {
+  try {
+    const { getUsersCollection } = await import('./firestore-config.js');
+    const admin = await import('firebase-admin');
+    const db = admin.default.firestore();
+    const usersCollection = getUsersCollection();
+
+    const snapshot = await db.collection(usersCollection).get();
+    const userIds = [];
+    snapshot.forEach(doc => {
+      userIds.push(doc.id);
+    });
+    res.json({ userIds, count: userIds.length });
+  } catch (error) {
+    res.status(500).json({ error: 'Ошибка получения userId', details: error.message });
+  }
+});
+
 console.log('=== BACKEND INDEX.JS ЗАПУЩЕН ===');

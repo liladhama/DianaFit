@@ -1,35 +1,55 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useVideoCache } from './VideoCacheContext';
 
 const VideoPlayer = ({ location, dayId, exerciseName, title }) => {
   const [videoExists, setVideoExists] = useState(false);
   const [videoLoading, setVideoLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [posterUrl, setPosterUrl] = useState(null);
+  const [blobUrl, setBlobUrl] = useState(null);
   const videoRef = useRef(null);
+  const { getVideoFromCache, addVideoToCache } = useVideoCache();
 
   const videoPath = `/videos/${location}/${dayId}/${exerciseName}.mp4`;
+  // Проверяем кэш при инициализации
+  useEffect(() => {
+    const cached = getVideoFromCache(videoPath);
+    if (cached) {
+      setBlobUrl(cached);
+      setVideoExists(true);
+      setVideoLoading(false);
+    }
+  }, [videoPath, getVideoFromCache]);
 
   console.log('🎥 VideoPlayer props:', { location, dayId, exerciseName, title });
   console.log('🎯 Generated video path:', videoPath);
 
   useEffect(() => {
-    // Проверяем существование видео
-    const checkVideo = async () => {
+    // Если уже есть в кэше — не загружаем
+    if (blobUrl) return;
+    // Проверяем существование и загружаем видео
+    const checkAndLoadVideo = async () => {
       try {
-        console.log('🔍 Checking video existence at:', videoPath);
-        const response = await fetch(videoPath, { method: 'HEAD' });
-        console.log('📡 Video check response:', response.status, response.ok);
-        setVideoExists(response.ok);
+        const head = await fetch(videoPath, { method: 'HEAD' });
+        if (head.ok) {
+          setVideoExists(true);
+          // Загружаем видео как Blob
+          const res = await fetch(videoPath);
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          setBlobUrl(url);
+          addVideoToCache(videoPath, url);
+        } else {
+          setVideoExists(false);
+        }
       } catch (error) {
-        console.error('❌ Video check error:', error);
         setVideoExists(false);
       } finally {
         setVideoLoading(false);
       }
     };
-    
-    checkVideo();
-  }, [videoPath]);
+    checkAndLoadVideo();
+  }, [videoPath, blobUrl, addVideoToCache]);
 
   // Получаем первый кадр видео и устанавливаем как poster
   useEffect(() => {
@@ -202,7 +222,7 @@ const VideoPlayer = ({ location, dayId, exerciseName, title }) => {
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
           }}
         >
-          <source src={videoPath} type="video/mp4" />
+          <source src={blobUrl || videoPath} type="video/mp4" />
           Ваш браузер не поддерживает видео.
         </video>
         
