@@ -170,11 +170,12 @@ function App() {
       .then(accessData => {
         console.log('🔒 [УВЕДОМЛЕНИЯ] Проверка доступа к программе:', accessData);
         
-        // Если пробный период истек, НЕ показываем уведомления
+        // Если пробный период истек, НЕ показываем уведомления и перенаправляем в TestWeek
         if (!accessData.hasAccess && accessData.reason === 'trial_expired') {
-          console.log('🔒 [УВЕДОМЛЕНИЯ] Пробный период истек - уведомления отключены, скрываем SplashScreen');
+          console.log('🔒 [УВЕДОМЛЕНИЯ] Пробный период истек - уведомления отключены, показываем TestWeek');
           setShowSplash(false);
-          setShowTodayBlock(true);
+          setShowTestWeek(true);
+          setShowTrialExpiredModal(true); // Показываем модалку премиума поверх TestWeek
           return; // Прерываем выполнение - никаких уведомлений
         }
         
