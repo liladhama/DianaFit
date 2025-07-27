@@ -3,7 +3,6 @@ import AdminPanel from './AdminPanel';
 import dietUtils from '../utils/dietUtils';
 import QuizSettings from './QuizSettings.js';
 import { API_URL } from '../config/api';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
 import "../styles/animations.css";
 export default function ProfilePage({ onClose, unlocked, isPremium, activatePremium, answers, onEditQuiz, onRestart, userAvatar }) {
   // --- СТЕЙТЫ ---
@@ -84,10 +83,9 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
           const macros = calculateMacrosFromQuiz(answers);
           const rounded = roundMacros(macros);
           setNutritionInfo(rounded);
-          // Сохраняем калораж в Firestore
+          // Сохраняем калораж через backend API
           try {
-            const db = getFirestore();
-            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+            const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
             if (userId && rounded.calories) {
               fetch(`${API_URL}/api/user/calories`, {
                 method: 'POST',
@@ -99,7 +97,7 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
                 .catch(err => console.error('Ошибка отправки калоража на бэкенд:', err));
             }
           } catch (err) {
-            console.error('Ошибка сохранения калоража в Firestore:', err);
+            console.error('Ошибка отправки калоража на бэкенд:', err);
           }
         }
       }
@@ -110,20 +108,21 @@ export default function ProfilePage({ onClose, unlocked, isPremium, activatePrem
         const macros = calculateMacrosFromQuiz(answers);
         const rounded = roundMacros(macros);
         setNutritionInfo(rounded);
-        // Сохраняем калораж в Firestore
+        // Сохраняем калораж через backend API
         try {
-          const db = getFirestore();
-          const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id;
+          const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
           if (userId && rounded.calories) {
-            await setDoc(doc(db, 'Dianafit_users', userId), {
-              quiz: {
-                calories: rounded.calories
-              }
-            }, { merge: true });
-            console.log('Индивидуальный калораж сохранён в Firestore:', rounded.calories);
+            fetch(`${API_URL}/api/user/calories`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ userId, caloriesNorm: rounded.calories })
+            })
+              .then(res => res.json())
+              .then(data => console.log('Индивидуальный калораж отправлен на бэкенд:', data))
+              .catch(err => console.error('Ошибка отправки калоража на бэкенд:', err));
           }
         } catch (err) {
-          console.error('Ошибка сохранения калоража в Firestore:', err);
+          console.error('Ошибка отправки калоража на бэкенд:', err);
         }
       }
     }
