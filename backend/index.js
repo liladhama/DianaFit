@@ -1350,6 +1350,74 @@ app.get('/api/diana-limits/:userId', async (req, res) => {
   }
 });
 
+// Роут для проверки доступа к программе (проверка 3-дневного пробного периода)
+app.get('/api/program-access/:userId', async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) return res.status(400).json({ error: 'No userId provided' });
+
+  try {
+    // Проверяем статус премиум подписки
+    const subscriptionStatus = await subscriptionManager.default.getSubscriptionStatus(userId);
+    
+    // Если есть премиум - доступ разрешен
+    if (subscriptionStatus.isPremium) {
+      return res.json({
+        hasAccess: true,
+        isPremium: true,
+        reason: 'premium_access',
+        message: 'Доступ разрешен (Premium подписка)'
+      });
+    }
+
+    // Получаем данные пользователя для проверки даты создания программы
+    const userData = await readUserData(userId);
+    
+    // Если нет программы - пользователь еще не начинал
+    if (!userData.programData || !userData.programData.createdAt) {
+      return res.json({
+        hasAccess: true,
+        isPremium: false,
+        reason: 'no_program_yet',
+        message: 'Программа еще не создана'
+      });
+    }
+
+    // Проверяем сколько дней прошло с момента создания программы
+    const programCreatedAt = new Date(userData.programData.createdAt);
+    const now = new Date();
+    const daysPassed = Math.floor((now - programCreatedAt) / (1000 * 60 * 60 * 24));
+    
+    console.log(`🔒 [PROGRAM ACCESS] userId: ${userId}, программа создана: ${userData.programData.createdAt}, дней прошло: ${daysPassed}`);
+
+    // Если прошло больше 3 дней - требуется премиум
+    if (daysPassed >= 3) {
+      return res.json({
+        hasAccess: false,
+        isPremium: false,
+        reason: 'trial_expired',
+        daysPassed,
+        trialDays: 3,
+        message: 'Пробный период (3 дня) истек. Необходимо подключить Premium для продолжения.'
+      });
+    }
+
+    // Пробный период еще действует
+    return res.json({
+      hasAccess: true,
+      isPremium: false,
+      reason: 'trial_period',
+      daysPassed,
+      daysLeft: 3 - daysPassed,
+      trialDays: 3,
+      message: `Пробный период. Осталось дней: ${3 - daysPassed}`
+    });
+
+  } catch (error) {
+    console.error('Ошибка проверки доступа к программе:', error);
+    res.status(500).json({ error: 'Ошибка при проверке доступа' });
+  }
+});
+
 // Эндпоинт для админской панели - статистика по квизу
 app.get('/api/admin/stats', async (req, res) => {
   try {

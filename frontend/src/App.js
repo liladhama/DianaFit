@@ -133,6 +133,7 @@ function App() {
   const [weekData, setWeekData] = useState(null);
   const [showQuiz, setShowQuiz] = useState(false); // Новый стейт для показа квиза
   const [weekDataError, setWeekDataError] = useState(null); // Стейт для ошибки загрузки программы
+  const [appUsageInfo, setAppUsageInfo] = useState(null); // Информация о днях использования
 
   // --- Логика показа уведомлений Дианы по дням недели ---
   useEffect(() => {
@@ -178,9 +179,14 @@ function App() {
         console.log('🔔 Ответ от сервера о статусе уведомления:', data);
         if (!data) return;
         if (data && !data.shouldShow) {
-          console.log('🔔 Уведомление уже показано сегодня, скрываем SplashScreen и показываем TodayBlock');
+          console.log('🔔 Уведомление уже показано сегодня, скрываем SplashScreen');
           setShowSplash(false); // Скрываем SplashScreen
-          setShowTodayBlock(true);
+          // Проверяем доступность TodayBlock
+          if (appUsageInfo?.canUseTodayBlock) {
+            setShowTodayBlock(true);
+          } else {
+            setShowTestWeek(true);
+          }
           return; // Уже показано
         }
 
@@ -387,10 +393,15 @@ function App() {
             console.log('🔔 [УВЕДОМЛЕНИЯ] Вчерашний день не найден в weekData.days');
           }
         } else {
-          // Дни недели без уведомлений - скрываем SplashScreen и показываем TodayBlock
-          console.log('🔔 [УВЕДОМЛЕНИЯ] День без уведомлений, скрываем SplashScreen и показываем TodayBlock');
+          // Дни недели без уведомлений - скрываем SplashScreen
+          console.log('🔔 [УВЕДОМЛЕНИЯ] День без уведомлений, скрываем SplashScreen');
           setShowSplash(false);
-          setShowTodayBlock(true);
+          // Проверяем доступность TodayBlock
+          if (appUsageInfo?.canUseTodayBlock) {
+            setShowTodayBlock(true);
+          } else {
+            setShowTestWeek(true);
+          }
         }
       })
       .catch(err => {
@@ -623,19 +634,45 @@ function App() {
       try {
         const res = await fetch(`https://dianafit.onrender.com/api/diana-limits/${tgUserId}`);
         const data = await res.json();
+        
+        console.log('📊 Получена информация о статусе пользователя:', data);
+        
+        // Устанавливаем информацию о днях использования
+        setAppUsageInfo({
+          canUseTodayBlock: data.canUseTodayBlock,
+          canUseWeeklySchedule: data.canUseWeeklySchedule,
+          daysUsed: data.daysUsed,
+          daysLeft: data.daysLeft,
+          trialExpired: data.trialExpired
+        });
+        
         if (data.isPremium) {
           setIsPremium(true);
           setUnlocked(true);
           localStorage.setItem('dianafit_premium', 'true');
-          console.log('� Премиум активен, все функции открыты!');
+          console.log('✅ Премиум активен, все функции открыты!');
         } else {
           setIsPremium(false);
           setUnlocked(false);
           localStorage.removeItem('dianafit_premium');
-          console.log('� Премиум неактивен, базовые функции.');
+          console.log('ℹ️ Премиум неактивен, базовые функции.');
+          
+          if (data.trialExpired) {
+            console.log(`⏰ Пробный период истек (${data.daysUsed} дней использования). TodayBlock недоступен.`);
+          } else {
+            console.log(`🆓 Пробный период: день ${data.daysUsed} из 3. Осталось ${data.daysLeft} дней.`);
+          }
         }
       } catch (e) {
         console.error('Ошибка проверки премиума:', e);
+        // При ошибке разрешаем доступ по умолчанию
+        setAppUsageInfo({
+          canUseTodayBlock: true,
+          canUseWeeklySchedule: true,
+          daysUsed: 0,
+          daysLeft: 3,
+          trialExpired: false
+        });
       }
     }
     checkPremium();
@@ -1962,7 +1999,13 @@ function App() {
           hasUncompletedTasks={dianaNotification && dianaNotification.type === 'motivation'}
           onClose={() => {
             setShowDianaNotification(false);
-            setShowTodayBlock(true);
+            // Проверяем доступность TodayBlock
+            if (appUsageInfo?.canUseTodayBlock) {
+              setShowTodayBlock(true);
+            } else {
+              // Если TodayBlock недоступен, показываем недельное расписание
+              setShowTestWeek(true);
+            }
           }}
         />
       ) : showProfile ? (
@@ -2015,7 +2058,7 @@ function App() {
           onClose={() => setShowPayment(false)}
           onPaymentSuccess={activatePremium}
         />
-      ) : (showTodayBlock && todayDay) || (showTodayBlock && answers && !weekData) ? (
+      ) : (showTodayBlock && todayDay && appUsageInfo?.canUseTodayBlock) || (showTodayBlock && answers && !weekData && appUsageInfo?.canUseTodayBlock) ? (
         (() => {
           console.log('🎯 App.js РЕНДЕР: Передаем данные в TodayBlock:', {
             todayDay: !!todayDay,
@@ -2027,7 +2070,9 @@ function App() {
             todayDayDate: todayDay?.date,
             answers: !!answers,
             programId,
-            fullTodayDay: todayDay
+            fullTodayDay: todayDay,
+            canUseTodayBlock: appUsageInfo?.canUseTodayBlock,
+            appUsageInfo
           });
           return null;
         })(),
@@ -2051,6 +2096,37 @@ function App() {
             }} 
           />
         </>
+      ) : (showTodayBlock && !appUsageInfo?.canUseTodayBlock) ? (
+        // Показываем недельное расписание если TodayBlock недоступен
+        <TestWeek 
+          isPremium={isPremium}
+          activatePremium={activatePremium}
+          setIsPaymentShown={setIsPaymentShown}
+          weekData={weekData}
+          answers={answers}
+          userAvatar={userAvatar}
+          onProfileClick={() => setShowProfile(true)}
+          onStartProgram={() => {
+            setShowTestWeek(false);
+            setShowToday(true);
+          }}
+          onShowTodayBlock={() => {
+            // Проверяем доступность TodayBlock
+            if (appUsageInfo?.canUseTodayBlock) {
+              setShowTestWeek(false);
+              setShowTodayBlock(true);
+            } else {
+              // Показываем уведомление о необходимости премиума
+              alert(`Пробный период (3 дня) истек. Для доступа к сегодняшнему дню необходимо оформить подписку.`);
+              setShowPayment(true);
+            }
+          }}
+          trialInfo={appUsageInfo ? {
+            daysUsed: appUsageInfo.daysUsed,
+            daysLeft: appUsageInfo.daysLeft,
+            trialExpired: appUsageInfo.trialExpired
+          } : null}
+        />
       ) : showQuiz ? (
         <StoryQuiz onFinish={handleQuizFinish} />
       ) : (

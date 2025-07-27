@@ -67,7 +67,7 @@ function generateWeeklyMeals(recipeNames, dietType = 'meat', daysCount = 7) {
   return weeklyMeals;
 }
 
-export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: propIsPremium, activatePremium, setIsPaymentShown, weekData, answers, userAvatar, onProfileClick }) {
+export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: propIsPremium, activatePremium, setIsPaymentShown, weekData, answers, userAvatar, onProfileClick, trialInfo }) {
   const [selectedDay, setSelectedDay] = useState(null);
   const [showPayment, setShowPayment] = useState(false);
   const [showDianaChat, setShowDianaChat] = useState(false);
@@ -334,13 +334,46 @@ export default function TestWeek({ onStartProgram, onShowTodayBlock, isPremium: 
         borderRadius: '10px',
         fontSize: '11px',
         fontWeight: '600',
-        marginBottom: 16,
+        marginBottom: trialInfo && !isPremium ? 8 : 16,
         textAlign: 'center',
         maxWidth: '150px',
         opacity: 0.9
       }}>
         {isPremium ? '✅ ПРЕМИУМ' : '🔒 БАЗОВЫЙ'}
       </div>
+
+      {/* Уведомление о пробном периоде */}
+      {trialInfo && !isPremium && (
+        <div style={{
+          background: trialInfo.trialExpired ? '#f44336' : '#2196F3',
+          color: 'white',
+          padding: '8px 16px',
+          borderRadius: '12px',
+          fontSize: '12px',
+          fontWeight: '600',
+          marginBottom: 16,
+          textAlign: 'center',
+          maxWidth: '280px',
+          opacity: 0.95,
+          boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+        }}>
+          {trialInfo.trialExpired ? (
+            <>
+              ⏰ Пробный период истек<br />
+              <span style={{ fontSize: '10px', opacity: 0.9 }}>
+                Для доступа к "Текущий день" нужна подписка
+              </span>
+            </>
+          ) : (
+            <>
+              🆓 Пробный период: день {trialInfo.daysUsed} из 3<br />
+              <span style={{ fontSize: '10px', opacity: 0.9 }}>
+                Осталось {trialInfo.daysLeft} {trialInfo.daysLeft === 1 ? 'день' : 'дня'}
+              </span>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Заголовок "ТРЕНИРОВОЧНАЯ НЕДЕЛЯ" */}
       <div style={{
