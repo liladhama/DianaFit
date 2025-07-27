@@ -145,6 +145,19 @@ function App() {
   const [weekDataError, setWeekDataError] = useState(null); // Стейт для ошибки загрузки программы
   const [showTrialExpiredModal, setShowTrialExpiredModal] = useState(false); // Стейт для модального окна истечения пробного периода
 
+  // Автоматический сброс флага justReturnedFromPayment через 5 секунд
+  useEffect(() => {
+    if (justReturnedFromPayment) {
+      console.log('🔄 [PAYMENT FLAG] Установлен таймер сброса флага justReturnedFromPayment');
+      const timer = setTimeout(() => {
+        console.log('🔄 [PAYMENT FLAG] Автоматический сброс флага justReturnedFromPayment');
+        setJustReturnedFromPayment(false);
+      }, 5000); // 5 секунд
+      
+      return () => clearTimeout(timer);
+    }
+  }, [justReturnedFromPayment]);
+
   // --- Логика показа уведомлений Дианы по дням недели ---
   useEffect(() => {
     console.log('🔔 [УВЕДОМЛЕНИЯ] useEffect сработал с параметрами:', { 
@@ -2159,7 +2172,9 @@ function App() {
               return;
             }
             
+            console.log('🔒 [PROGRAM ACCESS] Проверяем доступ к программе...');
             const accessData = await checkProgramAccess(tgUserId);
+            console.log('🔒 [PROGRAM ACCESS] Результат проверки:', accessData);
             
             if (!accessData.hasAccess && accessData.reason === 'trial_expired') {
               // Если пользователь только что вернулся с оплаты, не показываем модалку снова
@@ -2169,12 +2184,19 @@ function App() {
                 return; // Остаемся в TestWeek без показа модалки
               }
               
-              console.log('🔒 [PROGRAM ACCESS] Доступ запрещен, показываем уведомление о премиум');
-              setShowTrialExpiredModal(true);
+              console.log('🔒 [PROGRAM ACCESS] Доступ запрещен, НЕМЕДЛЕННО показываем уведомление о премиум');
+              // Используем setTimeout чтобы гарантировать, что состояние обновится
+              setTimeout(() => {
+                console.log('🔒 [PROGRAM ACCESS] Устанавливаем showTrialExpiredModal = true');
+                setShowTrialExpiredModal(true);
+                // Форсируем обновление компонента
+                console.log('🔒 [PROGRAM ACCESS] Модалка должна показаться!');
+              }, 10);
               return; // Остаемся в TestWeek
             }
             
             // Доступ разрешен - переходим в TodayBlock
+            console.log('✅ [PROGRAM ACCESS] Доступ разрешен, переходим в TodayBlock');
             setShowTestWeek(false);
             setShowTodayBlock(true);
             setJustReturnedFromPayment(false); // Сбрасываем флаг при успешном переходе
@@ -2246,7 +2268,10 @@ function App() {
       )}
 
       {/* Модальное окно об истечении пробного периода */}
-      {showTrialExpiredModal && (
+      {(() => {
+        console.log('🔍 [MODAL RENDER] showTrialExpiredModal:', showTrialExpiredModal);
+        return showTrialExpiredModal;
+      })() && (
         <div style={{
           position: 'fixed',
           top: 0,
