@@ -679,9 +679,32 @@ function App() {
         localStorage.setItem('dianafit_premium', 'true');
         console.log('🔥 App.js: Премиум доступ активирован на сервере!');
         
+        // Закрываем все модальные окна
+        setShowPayment(false);
+        setShowTrialExpiredModal(false);
+        
         // Перепроверяем доступ к программе после активации премиума
         const accessData = await checkProgramAccess(tgUserId);
         console.log('🔄 Проверка доступа к программе после активации премиума:', accessData);
+        
+        // После успешной активации премиума направляем пользователя в нужное место
+        if (answers && weekData) {
+          // Если есть программа, открываем TestWeek
+          setShowTestWeek(true);
+          setShowTodayBlock(false);
+          console.log('🎯 После активации премиума: открываем TestWeek');
+        } else if (answers) {
+          // Если есть только ответы квиза, но нет программы
+          setShowTestWeek(true);
+          setShowTodayBlock(false);
+          console.log('🎯 После активации премиума: открываем TestWeek (только ответы)');
+        } else {
+          // Если нет ни программы, ни ответов - возвращаем к началу
+          setShowSplash(true);
+          setShowTestWeek(false);
+          setShowTodayBlock(false);
+          console.log('🎯 После активации премиума: возвращаем к SplashScreen');
+        }
         
       } else {
         console.error('❌ Ошибка активации премиум на сервере:', data);
@@ -2088,6 +2111,14 @@ function App() {
               return;
             }
             
+            // Если локально уже активирован премиум - разрешаем доступ сразу
+            if (isPremium) {
+              console.log('✅ [PROGRAM ACCESS] Премиум активен локально, переходим в TodayBlock');
+              setShowTestWeek(false);
+              setShowTodayBlock(true);
+              return;
+            }
+            
             const accessData = await checkProgramAccess(tgUserId);
             
             if (!accessData.hasAccess && accessData.reason === 'trial_expired') {
@@ -2201,8 +2232,10 @@ function App() {
             }}>
               <button
                 onClick={() => {
+                  console.log('🎯 [MODAL] Нажата кнопка "Подключить Premium"');
                   setShowTrialExpiredModal(false);
                   setShowPayment(true);
+                  console.log('🎯 [MODAL] Модальное окно закрыто, страница оплаты открыта');
                 }}
                 style={{
                   backgroundColor: '#e74c3c',
