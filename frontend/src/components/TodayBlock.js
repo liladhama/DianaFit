@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/animations.css';
+import styles from './TodayBlock.module.css';
 import Confetti from 'react-confetti';
 import CongratsModal from './CongratsModal';
 import WheelPicker from './WheelPicker';
@@ -10,7 +11,6 @@ import DianaChatWrapper from './DianaChat';
 import ReasonModal from './ReasonModal';
 import ExerciseCard from './ExerciseCard';
 import MealCard from './MealCardNew';
-import MealBlock from './MealBlock';
 import { getWorkoutLocation, getDayId, getExerciseEnglishName, getVideoPathForExercise } from '../utils/videoUtils';
 import chatDianaIcon from '../assets/icons/chat-diana-icon.png';
 import { API_URL } from '../config/api';
@@ -90,58 +90,10 @@ const getCurrentDateString = () => {
   return `${days[now.getDay()]}, ${now.getDate()} ${months[now.getMonth()]}`;
 };
 
-// --- Стили компонентов ---
-const cardStyle = {
-  background: '#fff',
-  borderRadius: 16,
-  padding: 20,
-  marginBottom: 16,
-  boxShadow: '0 2px 12px rgba(0, 0, 0, 0.08)',
-  border: '1px solid #f0f0f0',
-  width: '100%',
-  boxSizing: 'border-box'
-};
-
-const headerStyle = {
-  fontSize: 20,
-  fontWeight: 700,
-  color: '#1a1a1a',
-  marginBottom: 16,
-  display: 'flex',
-  alignItems: 'center',
-  gap: 8,
-  lineHeight: 1.2
-};
-
-const checkboxButtonStyle = (completed) => ({
-  padding: '8px 16px',
-  borderRadius: 8,
-  border: '1px solid #e0e7ff',
-  background: completed ? '#e0e7ff' : '#fff',
-  color: completed ? '#2196f3' : '#666',
-  fontSize: 14,
-  fontWeight: 600,
-  cursor: 'pointer',
-  transition: 'all 0.2s ease',
-  marginTop: 8
-});
+// --- Стили вынесены в TodayBlock.module.css для лучшей производительности ---
 
 
-// --- Стили для спиннера (минимальный пример) ---
-const spinnerStyles = `
-@keyframes spinner-rotate { 100% { transform: rotate(360deg); } }
-.diana-spinner { width: 32px; height: 32px; border: 4px solid #e0e7ff; border-top: 4px solid #3b82f6; border-radius: 50%; animation: spinner-rotate 1s linear infinite; margin: 0 auto; }
-`;
-if (typeof document !== 'undefined' && !document.querySelector('#spinner-styles')) {
-  const style = document.createElement('style');
-  style.id = 'spinner-styles';
-  style.textContent = spinnerStyles;
-  document.head.appendChild(style);
-}
-
-
-
-
+// --- Стили вынесены в TodayBlock.module.css для лучшей производительности ---
 
 export default function TodayBlock({ day, answers, onBackToWeek, programId, isPremium, activatePremium, setIsPaymentShown, setShowPayment, userAvatar, onProfileClick }) {
   // Сначала определяем currentDay
@@ -186,7 +138,6 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   const [selectedMealOptionIdx, setSelectedMealOptionIdx] = useState(() => Array.isArray(currentDay.meals) ? currentDay.meals.map(() => 0) : []);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
-  const [tasks, setTasks] = useState([]);
   // ТОЧНО ТА ЖЕ ПРОСТАЯ ЛОГИКА КАК У УПРАЖНЕНИЙ - БЕЗ localStorage!
   const [completedMeals, setCompletedMeals] = useState([]);
   const [completedExercises, setCompletedExercises] = useState([]);
@@ -292,9 +243,6 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
   // Определяем, запущено ли на мобильном устройстве
   const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
   const hasTelegramWebApp = window.Telegram?.WebApp;
-  
-  const [aiAnalysis, setAiAnalysis] = useState('');
-  const [loadingAI, setLoadingAI] = useState(false);
   
   // Получаем случайную мотивационную цитату только один раз при монтировании
   const [todayQuote] = useState(() => motivationalQuotes[Math.floor(Math.random() * motivationalQuotes.length)]);
@@ -582,176 +530,13 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
     }
   };
 
-  async function handleExerciseChange(idx) {
-    const wasCompleted = completedExercises[idx];
-    const willBeCompleted = !wasCompleted;
 
-    // Если отмечаем как НЕ выполнено (было выполнено, становится не выполнено)
-    if (wasCompleted && !willBeCompleted) {
-      // Показываем модал с причинами
-      setReasonModalData({
-        type: 'workout',
-        index: idx,
-        itemName: currentDay.workout?.exercises[idx]?.name || `Упражнение ${idx + 1}`
-      });
-      setShowReasonModal(true);
-      return; // Не обновляем состояние сразу, ждем выбор причины
-    }
 
-    // Если отмечаем как выполнено - сразу обновляем
-    if (!wasCompleted && willBeCompleted) {
-      // Убираем причину, если была
-      const newReasons = { ...exerciseReasons };
-      delete newReasons[idx];
-      setExerciseReasons(newReasons);
-    }
 
-    const updated = completedExercises.map((v, i) => i === idx ? willBeCompleted : v);
-    setCompletedExercises(updated);
-    
-    // Добавляем тактильную обратную связь (вибрацию) при успешном выполнении
-    if (willBeCompleted && navigator.vibrate) {
-      navigator.vibrate(100); // 100ms вибрация при отметке как выполнено
-    }
-    
-    if (answers?.userId) {
-      try {
-        const payload = {
-          userId: answers.userId,
-          date: currentDay.date,
-          completedExercises: updated
-        };
 
-        // Добавляем причины невыполнения если есть
-        if (Object.keys(exerciseReasons).length > 0) {
-          payload.exerciseReasons = exerciseReasons;
-        }
 
-        await fetch(`${API_URL}/api/progress`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-        // ...лог убран...
-      } catch (error) {
-        console.error('❌ Ошибка обновления статуса упражнения:', error);
-      }
-    }
-  }
 
-  // Обработчик выбора состояния приема пищи (съел/не съел)
-  const handleMealComplete = async (idx, completed) => {
-    // ...лог убран...
-    
-    // Если отмечаем как НЕ съедено - показываем модал с причинами
-    if (!completed) {
-      setReasonModalData({
-        type: 'meal',
-        index: idx,
-        itemName: (Array.isArray(currentDay.meals) && currentDay.meals[idx]) ? (currentDay.meals[idx].type || currentDay.meals[idx].menu || currentDay.meals[idx].name) : `Прием пищи ${idx + 1}`
-      });
-      setShowReasonModal(true);
-      return;
-    }
 
-    // Если отмечаем как съедено - сразу обновляем
-    if (completed) {
-      // Убираем причину, если была
-      const newReasons = { ...mealReasons };
-      delete newReasons[idx];
-      setMealReasons(newReasons);
-    }
-
-    const updated = completedMeals.map((v, i) => i === idx ? completed : v);
-    setCompletedMeals(updated);
-    
-    // Явная отправка на backend с актуальным массивом
-    if (answers?.userId) {
-      try {
-        const tasksData = buildTasksWithMeals(updated);
-        // ...лог убран...
-        
-        await fetch(`${API_URL}/api/progress`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: answers.userId,
-            date: currentDay.date,
-            tasks: tasksData
-          })
-        });
-        // ...лог убран...
-      } catch (error) {
-        console.error('❌ Ошибка обновления статуса приема пищи:', error);
-      }
-    }
-  };
-
-  async function handleMealChange(idx) {
-    const wasCompleted = completedMeals[idx];
-    const willBeCompleted = !wasCompleted;
-
-    // Если отмечаем как НЕ съедено (было съедено, становится не съедено)
-    if (wasCompleted && !willBeCompleted) {
-      // Показываем модал с причинами
-      setReasonModalData({
-        type: 'meal',
-        index: idx,
-        itemName: (Array.isArray(currentDay.meals) && currentDay.meals[idx]) ? (currentDay.meals[idx].type || currentDay.meals[idx].menu || currentDay.meals[idx].name) : `Прием пищи ${idx + 1}`
-      });
-      setShowReasonModal(true);
-      return; // Не обновляем состояние сразу, ждем выбор причины
-    }
-
-    // Если отмечаем как съедено - сразу обновляем
-    if (!wasCompleted && willBeCompleted) {
-      // Убираем причину, если была
-      const newReasons = { ...mealReasons };
-      delete newReasons[idx];
-      setMealReasons(newReasons);
-    }
-
-    const updated = completedMeals.map((v, i) => i === idx ? willBeCompleted : v);
-    setCompletedMeals(updated);
-    
-    if (answers?.userId) {
-      try {
-        await fetch(`${API_URL}/api/progress`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId: answers.userId,
-            date: currentDay.date,
-            tasks: buildTasks()
-          })
-        });
-      } catch (error) {
-        console.error('❌ Ошибка обновления статуса приема пищи:', error);
-      }
-    }
-  }
-
-  async function handleAnalyzeClick() {
-    setLoadingAI(true);
-    setAiAnalysis('');
-    try {
-      const res = await fetch(`${API_URL}/api/calculate-plan`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          day,
-          completedExercises,
-          completedMeals,
-          feedback: 'analyze-today'
-        })
-      });
-      const data = await res.json();
-      setAiAnalysis(data.plan || 'Нет ответа от ИИ');
-    } catch (e) {
-      setAiAnalysis('Ошибка при обращении к ИИ');
-    }
-    setLoadingAI(false);
-  }
 
   // Функция для расчета общего процента выполнения дня
   const calculateDayCompletionPercentage = () => {
@@ -807,10 +592,8 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
       // ...лог убран...
       
       if (data && (Array.isArray(data.tasks) || data.completedMealsArr || data.completedExercises)) {
-        // Если tasks есть — используем их для tasks-based UI
+        // Если tasks есть — используем их для парсинга данных
         if (Array.isArray(data.tasks)) {
-          setTasks(data.tasks);
-          // ...лог убран...
           // Парсим задачи для восстановления статусов и причин
           const mealStates = [];
           const mealReasonsObj = {};
@@ -1454,7 +1237,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         
         {loadingPlan ? (
           // Показываем загрузку персонального плана
-          <div style={{ ...cardStyle, textAlign: 'center' }}>
+          <div className={`${styles.card}`} style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, color: '#1a1a1a' }}>
               📅 Загружаем ваш персональный план...
             </div>
@@ -1464,7 +1247,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           </div>
         ) : planError ? (
           // Показываем ошибку загрузки
-          <div style={{ ...cardStyle, textAlign: 'center' }}>
+          <div className={`${styles.card}`} style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 18, fontWeight: 600, marginBottom: 16, color: '#e74c3c' }}>
               ❌ Ошибка загрузки плана
             </div>
@@ -1488,7 +1271,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
           </div>
         ) : programStartsLater ? (
           // Показываем сообщение о том, что программа начнется позже
-          <div style={{ ...cardStyle, textAlign: 'center' }}>
+          <div className={`${styles.card} ${styles.centeredCard}`}>
             <div style={{ fontSize: 24, fontWeight: 700, marginBottom: 16, color: '#1a1a1a' }}>
               Программа начнется позже
             </div>
@@ -1511,7 +1294,7 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
         ) : (
           <>
             {/* 1. Заголовок с датой */}
-            <div style={{ ...cardStyle, textAlign: 'center', marginBottom: 24 }}>
+            <div className={`${styles.card} ${styles.centeredCard}`} style={{ marginBottom: 24 }}>
               <div style={{ fontSize: 14, color: '#666', marginBottom: 4 }}>Сегодня</div>
               <div style={{ fontSize: 24, fontWeight: 700, color: '#1a1a1a' }}>
                 {getCurrentDateString()}
@@ -1519,10 +1302,10 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
             </div>
 
             {/* 2. Блок шагов */}
-            <div style={{ ...cardStyle, marginBottom: 24 }}>
+            <div className={`${styles.card}`} style={{ marginBottom: 24 }}>
               <div
+                className={styles.sectionHeader}
                 style={{
-                  ...headerStyle,
                   cursor: 'pointer',
                   userSelect: 'none',
                   display: 'flex',
@@ -1651,10 +1434,10 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
             </div>
 
             {/* 3. Блок тренировки */}
-            <div style={cardStyle}>
+            <div className={styles.card}>
               <div 
+                className={styles.sectionHeader}
                 style={{
-                  ...headerStyle,
                   cursor: 'pointer',
                   userSelect: 'none',
                   display: 'flex',
@@ -1770,10 +1553,10 @@ export default function TodayBlock({ day, answers, onBackToWeek, programId, isPr
             </div>
 
             {/* 4. Блок питания — currentDay.meals + варианты из aiMeals */}
-            <div style={cardStyle}>
+            <div className={styles.card}>
               <div 
+                className={styles.sectionHeader}
                 style={{
-                  ...headerStyle,
                   cursor: 'pointer',
                   userSelect: 'none',
                   display: 'flex',
