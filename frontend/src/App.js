@@ -1833,8 +1833,8 @@ function App() {
           }}
         />
       )}
-      {/* SplashScreen показывается только в начале загрузки приложения */}
-      {showSplash ? (
+      {/* SplashScreen показывается только в начале загрузки приложения И когда НЕТ уведомлений */}
+      {showSplash && !showDianaNotification ? (
         <SplashScreen />
       ) : showVideoTest ? (
         <div>
@@ -1846,8 +1846,8 @@ function App() {
         </div>
       ) : null}
 
-      {/* Dev-кнопки для теста, показывать только в режиме разработки */}
-      {process.env.NODE_ENV === 'development' && showSplash && (
+      {/* Dev-кнопки для теста, показывать только в режиме разработки И когда НЕТ уведомлений */}
+      {process.env.NODE_ENV === 'development' && showSplash && !showDianaNotification && (
         <div>
           <button 
             onClick={() => setShowVideoTest(true)}
