@@ -122,11 +122,13 @@ function App() {
   const [showTestWeek, setShowTestWeek] = useState(false);
   const [showTodayBlock, setShowTodayBlock] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
+  const [justReturnedFromPayment, setJustReturnedFromPayment] = useState(false); // Флаг возврата с оплаты
   // Универсальная функция перехода на страницу оплаты
   function handleUnlock() {
     setShowTrialExpiredModal(false);
     setShowTestWeek(false);
     setShowPayment(true);
+    setJustReturnedFromPayment(false); // Сбрасываем флаг при переходе на оплату
     if (typeof setIsPaymentShown === 'function') setIsPaymentShown(true);
   }
   const [unlocked, setUnlocked] = useState(false);
@@ -2156,6 +2158,13 @@ function App() {
             const accessData = await checkProgramAccess(tgUserId);
             
             if (!accessData.hasAccess && accessData.reason === 'trial_expired') {
+              // Если пользователь только что вернулся с оплаты, не показываем модалку снова
+              if (justReturnedFromPayment) {
+                console.log('🔒 [PROGRAM ACCESS] Пробный период истек, но пользователь только что вернулся с оплаты - остаемся в TestWeek без модалки');
+                setJustReturnedFromPayment(false); // Сбрасываем флаг
+                return; // Остаемся в TestWeek без показа модалки
+              }
+              
               console.log('🔒 [PROGRAM ACCESS] Доступ запрещен, показываем уведомление о премиум');
               setShowTrialExpiredModal(true);
               return; // Остаемся в TestWeek
@@ -2164,6 +2173,7 @@ function App() {
             // Доступ разрешен - переходим в TodayBlock
             setShowTestWeek(false);
             setShowTodayBlock(true);
+            setJustReturnedFromPayment(false); // Сбрасываем флаг при успешном переходе
           }}
         />
       ) : showPayment ? (
@@ -2173,14 +2183,17 @@ function App() {
             // Проверяем доступ после закрытия страницы оплаты
             const accessData = await checkProgramAccess(tgUserId);
             if (!accessData.hasAccess && accessData.reason === 'trial_expired') {
-              console.log('🔒 [PAYMENT CLOSE] Пробный период истек, возвращаемся в TestWeek');
+              console.log('🔒 [PAYMENT CLOSE] Пробный период истек, возвращаемся в TestWeek БЕЗ модалки');
               setShowTestWeek(true);
               setShowTodayBlock(false);
-              setShowTrialExpiredModal(true);
+              // НЕ показываем модалку снова после возврата с оплаты
+              setShowTrialExpiredModal(false);
+              setJustReturnedFromPayment(true); // Устанавливаем флаг возврата с оплаты
             } else {
               console.log('✅ [PAYMENT CLOSE] Доступ есть, переходим в TodayBlock');
               setShowTestWeek(false);
               setShowTodayBlock(true);
+              setJustReturnedFromPayment(false);
             }
           }}
           onPaymentSuccess={activatePremium}
@@ -2299,6 +2312,7 @@ function App() {
               <button
                 onClick={() => {
                   setShowTrialExpiredModal(false);
+                  setJustReturnedFromPayment(true); // Устанавливаем флаг при закрытии модалки
                   // При закрытии модалки остаемся в TestWeek, не переходим в TodayBlock
                   console.log('🔒 [MODAL CLOSE] Модалка закрыта, остаемся в TestWeek');
                 }}
