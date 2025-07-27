@@ -2168,7 +2168,21 @@ function App() {
         />
       ) : showPayment ? (
         <PaymentPage
-          onClose={() => setShowPayment(false)}
+          onClose={async () => {
+            setShowPayment(false);
+            // Проверяем доступ после закрытия страницы оплаты
+            const accessData = await checkProgramAccess(tgUserId);
+            if (!accessData.hasAccess && accessData.reason === 'trial_expired') {
+              console.log('🔒 [PAYMENT CLOSE] Пробный период истек, возвращаемся в TestWeek');
+              setShowTestWeek(true);
+              setShowTodayBlock(false);
+              setShowTrialExpiredModal(true);
+            } else {
+              console.log('✅ [PAYMENT CLOSE] Доступ есть, переходим в TodayBlock');
+              setShowTestWeek(false);
+              setShowTodayBlock(true);
+            }
+          }}
           onPaymentSuccess={activatePremium}
         />
       ) : (showTodayBlock && todayDay) || (showTodayBlock && answers && !weekData) ? (
@@ -2283,7 +2297,11 @@ function App() {
                 Подключить Premium
               </button>
               <button
-                onClick={() => setShowTrialExpiredModal(false)}
+                onClick={() => {
+                  setShowTrialExpiredModal(false);
+                  // При закрытии модалки остаемся в TestWeek, не переходим в TodayBlock
+                  console.log('🔒 [MODAL CLOSE] Модалка закрыта, остаемся в TestWeek');
+                }}
                 style={{
                   backgroundColor: '#95a5a6',
                   color: 'white',
