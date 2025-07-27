@@ -230,7 +230,7 @@ const VideoPlayer = ({ location, dayId, exerciseName, title }) => {
           onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.9)'}
           onMouseLeave={(e) => e.target.style.backgroundColor = 'rgba(0, 0, 0, 0.7)'}
         >
-          {isFullscreen ? '⤵' : '⤢'} {isFullscreen ? 'Свернуть' : 'На весь экран'}
+          {isFullscreen ? '⤵' : '⤢'}
         </button>
       </div>
       
