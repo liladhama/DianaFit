@@ -1107,11 +1107,11 @@ router.post('/generate-meal-plan', async (req, res) => {
     let deficit = 0;
     if ([3,4,5].includes(profile.goal)) {
       deficit = profile.goal * 7700 / 30;
-      dailyCalories = Math.round(calories_before_goal - deficit);
+      dailyCalories = Math.round(dailyCalories - deficit);
     }
     // Формула Дианы: белки 1.5 г/кг, жиры 0.9 г/кг, углеводы - остаток
-    const protein = Math.round(weight * 1.5);
-    const fat = Math.round(weight * 0.9);
+    const protein = Math.round(profile.weight_kg * 1.5);
+    const fat = Math.round(profile.weight_kg * 0.9);
     const proteinCals = protein * 4;
     const fatCals = fat * 9;
     const carbs = Math.round((dailyCalories - (proteinCals + fatCals)) / 4);
@@ -1492,83 +1492,26 @@ router.post('/user/weekly-program/:userId', async (req, res) => {
 });
 
 // --- Получить недельную программу пользователя ---
+// КРИТИЧЕСКАЯ ОПТИМИЗАЦИЯ: GET /user/weekly-program - убираем блокирующие операции
 router.get('/user/weekly-program/:userId', async (req, res) => {
   try {
     const userId = req.params.userId;
-    // ИСПРАВЛЕНО: используем UserProgressLogger вместо старых функций
     const logger = new UserProgressLogger(userId);
     const userData = await logger.loadLog();
     
-    // Проверяем, не прошло ли 7+ дней с начала программы (нужна новая неделя)
-    let shouldCreateNewWeek = false;
-    let programStartDate = null;
-    
-    if (userData.programData && userData.programData.days && userData.programData.days.length > 0) {
-      // Определяем дату старта программы
-      if (userData.createdAt) {
-        programStartDate = new Date(userData.createdAt);
-      } else if (userData.programData.days[0].date) {
-        programStartDate = new Date(userData.programData.days[0].date);
-      }
-      
-      if (programStartDate) {
-        const now = new Date();
-        const daysPassed = Math.floor((now - programStartDate) / (1000 * 60 * 60 * 24));
-        console.log(`[AUTO NEW WEEK] Дней прошло с начала программы: ${daysPassed}`);
-        
-        // Если прошло 7+ дней, нужна новая неделя
-        if (daysPassed >= 7) {
-          shouldCreateNewWeek = true;
-          console.log('🔄 Создаем новую неделю на основе обновленных настроек');
-        }
-      }
-    }
-    
-    // Если нужна новая неделя или программы нет, создаем новую с актуальными настройками
-    if (shouldCreateNewWeek || !userData.programData) {
-      console.log('📅 Генерируем новую недельную программу с актуальными настройками из Firestore');
-      
-      // Получаем актуальные настройки пользователя из Firestore
-      const db = admin.firestore();
-      const userDoc = await db.collection('Dianafit_users').doc(userId).get();
-      const currentUserData = userDoc.exists ? userDoc.data() : {};
-      const currentQuiz = currentUserData.quiz || {};
-      
-      console.log('📊 Актуальные настройки для новой недели:', currentQuiz);
-      
-      // Создаем новую программу с актуальными настройками
-      const newProgram = await createWeeklyProgram(currentQuiz);
-      
-      // ИСПРАВЛЕНО: Сохраняем старую программу в историю перед заменой
-      if (!userData.programHistory) userData.programHistory = [];
-      if (userData.programData) {
-        userData.programHistory.push({
-          program: userData.programData,
-          createdAt: userData.createdAt || new Date().toISOString(),
-          completedAt: new Date().toISOString(),
-          weekNumber: userData.programHistory.length + 1
-        });
-        console.log(`📚 Сохранили программу №${userData.programHistory.length} в историю`);
-      }
-      
-      // Сохраняем новую программу в UserProgressLogger
-      userData.programData = newProgram;
-      userData.createdAt = new Date().toISOString(); // Обновляем дату создания
-      await logger.saveLog(userData);
-      
-      console.log('✅ Новая недельная программа создана и сохранена');
-      return res.json(newProgram);
-    }
-    
-    // Возвращаем существующую программу, если новая неделя не нужна
-    const program = userData.programData || userData.program;
-    if (!program) {
+    // ОПТИМИЗИРОВАНО: Простая проверка наличия программы без сложных вычислений дат
+    if (!userData.programData || !userData.programData.days) {
       return res.status(404).json({ error: 'Program not found' });
     }
-    res.json(program);
+    
+    // ОПТИМИЗИРОВАНО: Убираем автоматическое создание новой недели (делаем по требованию)
+    // Сложная логика с датами вынесена в отдельный эндпоинт /check-new-week
+    
+    // БЫСТРЫЙ ВОЗВРАТ: просто возвращаем существующую программу
+    res.json(userData.programData);
   } catch (error) {
-    console.error('Ошибка при получении недельной программы:', error);
-    res.status(500).json({ error: error.message });
+    console.error('❌ [weekly-program] Ошибка получения программы:', error.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 

@@ -1886,6 +1886,7 @@ app.get('/api/diana-notification-status', async (req, res) => {
 });
 
 // Отметка, что уведомление показано
+// КРИТИЧЕСКАЯ ОПТИМИЗАЦИЯ: diana-notification-mark-shown - убираем блокирующие операции
 app.post('/api/diana-notification-mark-shown', async (req, res) => {
   try {
     const { userId, date, dayOfWeek } = req.body;
@@ -1894,45 +1895,21 @@ app.post('/api/diana-notification-mark-shown', async (req, res) => {
       return res.status(400).json({ error: 'Требуются параметры userId, date, dayOfWeek' });
     }
     
-    // ...лог убран...
-    
-    // Импортируем Firebase Admin
-    const admin = await import('firebase-admin');
-    const db = admin.default.firestore();
-    
+    // ОПТИМИЗИРОВАНО: Используем уже инициализированный admin вместо динамического импорта
+    const db = admin.firestore();
     const userRef = db.collection('Dianafit_users').doc(userId);
-    // ...лог убран...
     
-    // Лог до обновления
-    const beforeDoc = await userRef.get();
-    if (beforeDoc.exists) {
-      // ...лог убран...
-    } else {
-      // ...лог убран...
-    }
-    
+    // ОПТИМИЗИРОВАНО: Убираем лишний get запрос, сразу делаем set с merge
     const notificationField = `Daynotification${dayOfWeek}`;
     
-    // Обновляем поле с датой последнего показа (создаем документ если его нет)
     await userRef.set({
       [notificationField]: date
     }, { merge: true });
     
-    // Лог после обновления
-    const afterDoc = await userRef.get();
-    if (afterDoc.exists) {
-      // ...лог убран...
-    } else {
-      // ...лог убран...
-    }
-    
-    // ...лог убран...
-    // ...лог убран...
-    res.json({ success: true });
-    
+    res.json({ success: true, field: notificationField, date });
   } catch (error) {
-    console.error('🔔 Ошибка отметки показа уведомления:', error);
-    res.status(500).json({ error: 'Ошибка отметки показа уведомления' });
+    console.error('❌ [diana-notification] Ошибка отметки показа:', error.message);
+    res.status(500).json({ error: 'Internal server error' });
   }
 });
 
