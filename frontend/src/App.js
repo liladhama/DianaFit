@@ -143,11 +143,13 @@ function App() {
       hasTodayDay: !!todayDay, 
       todayDayDate: todayDay?.date,
       hasTgUserId: !!tgUserId,
-      tgUserId: tgUserId
+      tgUserId: tgUserId,
+      showSplash: showSplash // Добавляем проверку статуса SplashScreen
     });
     
-    if (!weekData || !Array.isArray(weekData.days) || !todayDay || !tgUserId) {
-      console.log('🔔 [УВЕДОМЛЕНИЯ] Условия не выполнены, выходим из useEffect');
+    // ИСПРАВЛЕНИЕ: показываем уведомления только после скрытия SplashScreen
+    if (!weekData || !Array.isArray(weekData.days) || !todayDay || !tgUserId || showSplash) {
+      console.log('🔔 [УВЕДОМЛЕНИЯ] Условия не выполнены, выходим из useEffect. showSplash:', showSplash);
       return;
     }
     
@@ -384,7 +386,7 @@ function App() {
       .catch(err => {
         console.error('Ошибка при получении статуса уведомления Дианы:', err);
       });
-  }, [weekData, todayDay, tgUserId]);
+  }, [weekData, todayDay, tgUserId, showSplash]); // Добавили showSplash в зависимости
 
   // --- Сохраняем факт показа уведомления в Firestore ---
   useEffect(() => {
