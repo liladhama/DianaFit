@@ -193,7 +193,10 @@ function App() {
           setShowTodayBlock(false); // Явно отключаем TodayBlock
           // Показываем модалку только если пользователь НЕ вернулся с оплаты
           if (!justReturnedFromPayment) {
-            setShowTrialExpiredModal(true); // Показываем модалку премиума поверх TestWeek
+            setShowTrialExpiredModal({
+              open: true,
+              text: 'Для продолжения необходимо активировать премиум-доступ.'
+            }); // Показываем универсальную модалку поверх TestWeek
           }
           return; // Прерываем выполнение - никаких уведомлений
         }
@@ -588,8 +591,11 @@ function App() {
             console.log('🔒 [PROGRAM ACCESS] Пробный период истек, перенаправляем в TestWeek');
             setShowTestWeek(true);
             setIsLoadingUserData(false);
-            // Показываем модальное окно о необходимости премиум
-            setShowTrialExpiredModal(true);
+            // Показываем универсальное модальное окно о необходимости премиум
+            setShowTrialExpiredModal({
+              open: true,
+              text: 'Для продолжения необходимо активировать премиум-доступ.'
+            });
             return;
           }
           
@@ -619,8 +625,11 @@ function App() {
               console.log('🔒 [PROGRAM ACCESS] Пробный период истек, перенаправляем в TestWeek');
               setShowTestWeek(true);
               setIsLoadingUserData(false);
-              // Показываем модальное окно о необходимости премиум
-              setShowTrialExpiredModal(true);
+              // Показываем универсальное модальное окно о необходимости премиум
+              setShowTrialExpiredModal({
+                open: true,
+                text: 'Для продолжения необходимо активировать премиум-доступ.'
+              });
               return;
             }
             
@@ -658,8 +667,11 @@ function App() {
                   console.log('🔒 [PROGRAM ACCESS] Пробный период истек, перенаправляем в TestWeek (fallback)');
                   setShowTestWeek(true);
                   setIsLoadingUserData(false);
-                  // Показываем модальное окно о необходимости премиум
-                  setShowTrialExpiredModal(true);
+                  // Показываем универсальное модальное окно о необходимости премиум
+                  setShowTrialExpiredModal({
+                    open: true,
+                    text: 'Для продолжения необходимо активировать премиум-доступ.'
+                  });
                   return;
                 }
                 
@@ -682,8 +694,11 @@ function App() {
             console.log('🔒 [PROGRAM ACCESS] Пробный период истек, перенаправляем в TestWeek (fallback)');
             setShowTestWeek(true);
             setIsLoadingUserData(false);
-            // Показываем модальное окно о необходимости премиум
-            setShowTrialExpiredModal(true);
+            // Показываем универсальное модальное окно о необходимости премиум
+            setShowTrialExpiredModal({
+              open: true,
+              text: 'Для продолжения необходимо активировать премиум-доступ.'
+            });
             return;
           }
           
@@ -2320,7 +2335,7 @@ function App() {
               fontSize: '24px',
               fontWeight: '600'
             }}>
-              Пробный период истек
+              Необходим премиум-доступ
             </h2>
             <p style={{
               margin: '0 0 25px 0',
@@ -2328,7 +2343,7 @@ function App() {
               fontSize: '16px',
               lineHeight: '1.4'
             }}>
-              Ваш 3-дневный пробный период истек. Для продолжения использования программы необходимо подключить Premium подписку.
+              Для продолжения использования программы необходимо активировать премиум-доступ.
             </p>
             <div style={{
               display: 'flex',
