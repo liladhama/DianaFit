@@ -203,7 +203,12 @@ function App() {
         
         // Получаем первый день тренировок (начало цикла)
         const firstDayStr = weekData.days[0]?.date;
-        if (!firstDayStr) return;
+        if (!firstDayStr) {
+          console.log('🔔 [УВЕДОМЛЕНИЯ] Нет данных о первом дне, скрываем SplashScreen');
+          setShowSplash(false);
+          setShowTodayBlock(true);
+          return;
+        }
         const todayStr = todayDay.date;
         // Считаем номер дня с начала программы (0-based)
         const dayDiff = Math.floor((new Date(todayStr) - new Date(firstDayStr)) / (1000*60*60*24));
@@ -223,7 +228,12 @@ function App() {
           })
           .then(async (data) => {
             console.log('🔔 Ответ от сервера о статусе уведомления:', data);
-            if (!data) return;
+            if (!data) {
+              console.log('🔔 Нет данных от сервера, скрываем SplashScreen и показываем TodayBlock');
+              setShowSplash(false);
+              setShowTodayBlock(true);
+              return;
+            }
             if (data && !data.shouldShow) {
               console.log('🔔 Уведомление уже показано сегодня, скрываем SplashScreen и показываем TodayBlock');
               setShowSplash(false); // Скрываем SplashScreen
@@ -364,6 +374,8 @@ function App() {
                   // Если все задания выполнены - никаких уведомлений
                   if ((workoutCompleted || !isWorkoutDay) && mealsCompleted) {
                     console.log('🔔 [УВЕДОМЛЕНИЯ] Все задания выполнены вчера, уведомления не нужны');
+                    setShowSplash(false); // Скрываем SplashScreen
+                    setShowTodayBlock(true); // Показываем TodayBlock
                     return;
                   }
                   
@@ -376,6 +388,7 @@ function App() {
                     };
                     console.log('🔔 Устанавливаем общее уведомление (оба failed):', notification);
                     setDianaNotification(notification);
+                    setShowSplash(false); // Скрываем SplashScreen перед показом уведомления
                     setShowDianaNotification(true);
                   }
                   // Если есть невыполненное упражнение (только в тренировочный день)
@@ -386,6 +399,7 @@ function App() {
                     };
                     console.log('🔔 Устанавливаем уведомление по тренировкам:', notification);
                     setDianaNotification(notification);
+                    setShowSplash(false); // Скрываем SplashScreen перед показом уведомления
                     setShowDianaNotification(true);
                   }
                   // Если есть невыполненный приём пищи
@@ -396,6 +410,7 @@ function App() {
                     };
                     console.log('🔔 Устанавливаем уведомление по питанию:', notification);
                     setDianaNotification(notification);
+                    setShowSplash(false); // Скрываем SplashScreen перед показом уведомления
                     setShowDianaNotification(true);
                   }
                   // Если оба проигнорированы или один из них проигнорирован
@@ -416,6 +431,7 @@ function App() {
                     };
                     console.log('🔔 Устанавливаем мотивационное уведомление (ignored):', notification);
                     setDianaNotification(notification);
+                    setShowSplash(false); // Скрываем SplashScreen перед показом уведомления
                     setShowDianaNotification(true);
                   }
                   
@@ -428,10 +444,14 @@ function App() {
                   };
                   console.log('🔔 Устанавливаем fallback уведомление при ошибке:', notification);
                   setDianaNotification(notification);
+                  setShowSplash(false); // Скрываем SplashScreen перед показом уведомления
                   setShowDianaNotification(true);
                 }
               } else {
                 console.log('🔔 [УВЕДОМЛЕНИЯ] Вчерашний день не найден в weekData.days');
+                // Скрываем SplashScreen и показываем TodayBlock
+                setShowSplash(false);
+                setShowTodayBlock(true);
               }
             } else {
               // Дни недели без уведомлений - скрываем SplashScreen и показываем TodayBlock
@@ -442,6 +462,9 @@ function App() {
           })
           .catch(err => {
             console.error('Ошибка при получении статуса уведомления Дианы:', err);
+            // При ошибке получения статуса скрываем SplashScreen и показываем TodayBlock
+            setShowSplash(false);
+            setShowTodayBlock(true);
           });
         })
         .catch(err => {
@@ -871,16 +894,9 @@ function App() {
       window.Telegram.WebApp.expand();
     }
     
-    // Fallback таймер на 4 секунды, если уведомления не появились
-    const fallbackTimer = setTimeout(() => {
-      console.log('⏰ Fallback: скрываем SplashScreen через 4 секунды, если уведомления нет');
-      if (!showDianaNotification) {
-        setShowSplash(false);
-      }
-    }, 4000);
+    // Убираем fallback таймер - SplashScreen скрывается только когда определяется судьба уведомления
     
-    return () => clearTimeout(fallbackTimer);
-  }, [showDianaNotification]);
+  }, []);  // Убираем showDianaNotification из зависимостей
 
   // УДАЛЕН СТАРЫЙ useEffect - теперь используется только новая логика с Telegram userId и weekData
 
