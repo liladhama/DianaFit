@@ -295,7 +295,8 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
 
     if (notificationType === 'ai') {
       // AI анализ для 7-го дня (уже передан aiAnalysis)
-      setMessage(aiAnalysis || "Поздравляю с завершением недели! Ты большая молодец! 🎉");
+      const fullMessage = `${customMessage || 'Анализ недели от Дианы:'}\n\n${aiAnalysis || "Поздравляю с завершением недели! Ты большая молодец! 🎉"}`;
+      setMessage(fullMessage);
       setLoading(false);
       return;
     }
