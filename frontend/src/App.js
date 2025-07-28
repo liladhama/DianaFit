@@ -262,7 +262,7 @@ function App() {
                 }
                 setDianaNotification({
                   type: 'ai',
-                  text: 'Анализ недели от Дианы:',
+                  text: '', // Убираем заголовок, показываем только AI анализ
                   aiAnalysis: aiData?.message || aiData?.analysis || 'Нет данных анализа.'
                 });
                 setShowSplash(false); // Скрываем SplashScreen ПЕРЕД показом уведомления
@@ -270,7 +270,7 @@ function App() {
               } catch (err) {
                 setDianaNotification({
                   type: 'ai',
-                  text: 'Анализ недели от Дианы:',
+                  text: '', // Убираем заголовок, показываем только AI анализ  
                   aiAnalysis: 'Ошибка получения анализа ИИ.'
                 });
                 setShowSplash(false); // Скрываем SplashScreen ПЕРЕД показом уведомления

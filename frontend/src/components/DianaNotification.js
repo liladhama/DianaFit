@@ -208,8 +208,8 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
   useEffect(() => {
     if (!isVisible) return;
     
-    // Приоритет 1: Если передан кастомный текст - используем его (не зависит от пола)
-    if (customMessage) {
+    // Приоритет 1: Если передан кастомный текст БЕЗ AI анализа - используем его (не зависит от пола)
+    if (customMessage && notificationType !== 'ai') {
       setMessage(customMessage);
       setLoading(false);
       return;
@@ -294,9 +294,8 @@ const DianaNotification = ({ isVisible, onClose, userId, dayOfWeek, customMessag
     }
 
     if (notificationType === 'ai') {
-      // AI анализ для 7-го дня (уже передан aiAnalysis)
-      const fullMessage = `${customMessage || 'Анализ недели от Дианы:'}\n\n${aiAnalysis || "Поздравляю с завершением недели! Ты большая молодец! 🎉"}`;
-      setMessage(fullMessage);
+      // AI анализ для 7-го дня (показываем только текст от ИИ без заголовка)
+      setMessage(aiAnalysis || "Поздравляю с завершением недели! Ты большая молодец! 🎉");
       setLoading(false);
       return;
     }
