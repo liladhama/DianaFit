@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import SplashScreen from './components/SplashScreen';
 import StoryQuiz from './components/StoryQuiz';
 import ProfilePage from './components/ProfilePage';
@@ -111,6 +111,9 @@ const checkBackendHealth = async () => {
 };
 
 function App() {
+  // --- SplashScreen таймер ---
+  const splashTimerRef = useRef(null);
+
   // --- Состояния ---
   const [dianaNotification, setDianaNotification] = useState(null); // { type, text, aiAnalysis }
   const [showDianaNotification, setShowDianaNotification] = useState(false);
@@ -144,6 +147,39 @@ function App() {
   const [showQuiz, setShowQuiz] = useState(false); // Новый стейт для показа квиза
   const [weekDataError, setWeekDataError] = useState(null); // Стейт для ошибки загрузки программы
   const [showTrialExpiredModal, setShowTrialExpiredModal] = useState(false); // Стейт для модального окна истечения пробного периода
+
+  // --- SplashScreen строгая логика: показывать до уведомления либо максимум 4 секунды ---
+  useEffect(() => {
+    if (showSplash) {
+      // Запускаем таймер на 4 секунды
+      splashTimerRef.current = setTimeout(() => {
+        console.log('⏰ [SPLASH] Таймер 4 секунды истек, скрываем SplashScreen');
+        setShowSplash(false);
+        // Если это новый пользователь (нет answers и нет программы), запускаем квиз
+        if (!answers && !programId) {
+          console.log('👤 [SPLASH] Новый пользователь, запускаем квиз');
+          setShowQuiz(true);
+        }
+      }, 4000);
+    }
+    
+    return () => {
+      if (splashTimerRef.current) {
+        clearTimeout(splashTimerRef.current);
+      }
+    };
+  }, [showSplash, answers, programId]);
+
+  // Если пришло уведомление или TodayBlock, скрываем SplashScreen сразу
+  useEffect(() => {
+    if ((showDianaNotification || showTodayBlock) && showSplash) {
+      console.log('🔔 [SPLASH] Пришло уведомление/TodayBlock, скрываем SplashScreen немедленно');
+      setShowSplash(false);
+      if (splashTimerRef.current) {
+        clearTimeout(splashTimerRef.current);
+      }
+    }
+  }, [showDianaNotification, showTodayBlock, showSplash]);
 
   // Автоматический сброс флага justReturnedFromPayment через 5 секунд
   useEffect(() => {
@@ -212,14 +248,43 @@ function App() {
           setShowTodayBlock(true);
           return;
         }
+        
         const todayStr = todayDay.date;
-        // Считаем номер дня с начала программы (0-based)
-        const dayDiff = Math.floor((new Date(todayStr) - new Date(firstDayStr)) / (1000*60*60*24));
+        const actualTodayStr = new Date().toISOString().slice(0, 10); // Реальная сегодняшняя дата
+        
+        // ВАЖНО: Проверяем, началась ли программа
+        const programStartDate = new Date(firstDayStr);
+        const actualToday = new Date(actualTodayStr);
+        
+        if (actualToday < programStartDate) {
+          console.log('🔔 [УВЕДОМЛЕНИЯ] Программа еще не началась, уведомления не показываем:', {
+            actualToday: actualTodayStr + ' (сегодняшняя дата)',
+            programStartDate: firstDayStr + ' (дата начала программы из квиза)',
+            programStartsIn: Math.ceil((programStartDate - actualToday) / (1000*60*60*24)) + ' дней',
+            explanation: 'Пользователь выбрал будущую дату начала программы, ждем этой даты'
+          });
+          setShowSplash(false);
+          setShowTodayBlock(true);
+          return;
+        }
+        
+        // ИСПРАВЛЕНО: Считаем номер дня с начала программы, используя РЕАЛЬНУЮ дату
+        const dayDiff = Math.floor((new Date(actualTodayStr) - new Date(firstDayStr)) / (1000*60*60*24));
         const weekDay = (dayDiff % 7) + 1; // 1...7
 
+        console.log('🔔 [УВЕДОМЛЕНИЯ] Программа началась, рассчитываем уведомления:', {
+          firstDayStr: firstDayStr + ' (дата начала программы из квиза)',
+          todayStr: todayStr + ' (день из программы)',
+          actualTodayStr: actualTodayStr + ' (реальная сегодняшняя дата)',
+          dayDiff: dayDiff + ' (дней прошло с начала программы)',
+          weekDay: weekDay + ' (день недели в цикле 1-7)',
+          daysSinceProgramStart: dayDiff,
+          logicExplanation: 'Уведомления рассчитываются от РЕАЛЬНОЙ даты относительно даты начала программы из квиза'
+        });
+
         // Проверяем, было ли уже показано уведомление сегодня (через Firestore)
-        console.log('🔔 Проверяем статус уведомления для:', { userId: tgUserId, date: todayStr, weekDay });
-        fetch(`${API_URL}/api/diana-notification-status?userId=${tgUserId}&date=${todayStr}&dayOfWeek=${weekDay}`)
+        console.log('🔔 Проверяем статус уведомления для:', { userId: tgUserId, date: actualTodayStr, weekDay });
+        fetch(`${API_URL}/api/diana-notification-status?userId=${tgUserId}&date=${actualTodayStr}&dayOfWeek=${weekDay}`)
           .then(async res => {
             const contentType = res.headers.get('content-type') || '';
             if (!contentType.includes('application/json')) {
@@ -292,12 +357,13 @@ function App() {
             }
             // Дни 2-6 — мотивация при пропусках
             else if (weekDay >= 2 && weekDay <= 6) {
-              // Находим вчерашний день
-              const yesterdayDate = new Date(new Date(todayStr).getTime() - 86400000).toISOString().slice(0,10);
+              // ИСПРАВЛЕНО: Находим вчерашний день на основе РЕАЛЬНОЙ даты
+              const yesterdayDate = new Date(new Date(actualTodayStr).getTime() - 86400000).toISOString().slice(0,10);
               const yesterday = weekData.days.find(d => d.date === yesterdayDate);
               
               console.log('🔔 [УВЕДОМЛЕНИЯ] Проверяем данные о вчерашнем дне:', {
                 todayStr,
+                actualTodayStr,
                 yesterdayDate,
                 yesterdayFound: !!yesterday,
                 yesterdayIsWorkoutDay: yesterday?.isWorkoutDay,
@@ -482,15 +548,15 @@ function App() {
   useEffect(() => {
     if (showDianaNotification && dianaNotification && todayDay && tgUserId && weekData && Array.isArray(weekData.days)) {
       const firstDayStr = weekData.days[0]?.date;
-      const todayStr = todayDay.date;
-      const dayDiff = Math.floor((new Date(todayStr) - new Date(firstDayStr)) / (1000*60*60*24));
+      const actualTodayStr = new Date().toISOString().slice(0, 10); // Реальная сегодняшняя дата
+      const dayDiff = Math.floor((new Date(actualTodayStr) - new Date(firstDayStr)) / (1000*60*60*24));
       const weekDay = (dayDiff % 7) + 1;
       
-      console.log('🔔 Отмечаем уведомление как показанное:', { userId: tgUserId, date: todayDay.date, dayOfWeek: weekDay });
+      console.log('🔔 Отмечаем уведомление как показанное:', { userId: tgUserId, date: actualTodayStr, dayOfWeek: weekDay });
       fetch(`${API_URL}/api/diana-notification-mark-shown`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: tgUserId, date: todayDay.date, dayOfWeek: weekDay })
+        body: JSON.stringify({ userId: tgUserId, date: actualTodayStr, dayOfWeek: weekDay })
       })
       .then(res => {
         console.log('🔔 Результат отметки показа:', res.status);
@@ -724,13 +790,38 @@ function App() {
   useEffect(() => {
     if (weekData && Array.isArray(weekData.days)) {
       const todayStr = new Date().toISOString().slice(0, 10);
-      const foundDay = weekData.days.find(d => d.date === todayStr);
-      console.log('🗓️ Поиск текущего дня:', {
+      let foundDay = weekData.days.find(d => d.date === todayStr);
+      
+      // Если сегодняшний день не найден (программа начинается в будущем или прошлом)
+      if (!foundDay) {
+        // Найдем ближайший день из программы
+        const today = new Date(todayStr);
+        const programDays = weekData.days.map(d => ({
+          ...d,
+          dateObj: new Date(d.date),
+          diff: Math.abs(new Date(d.date) - today)
+        }));
+        
+        // Сортируем по близости к сегодняшней дате
+        programDays.sort((a, b) => a.diff - b.diff);
+        foundDay = programDays[0];
+        
+        console.log('🗓️ Сегодняшний день не найден в программе, используем ближайший:', {
+          todayStr,
+          foundDayDate: foundDay?.date,
+          programStartDate: weekData.days[0]?.date,
+          programEndDate: weekData.days[weekData.days.length - 1]?.date
+        });
+      }
+      
+      console.log('🗓️ Поиск дня для программы:', {
         todayStr,
         foundDay: !!foundDay,
+        foundDayDate: foundDay?.date,
         foundDayWorkout: foundDay?.workout?.title,
         allDates: weekData.days.map(d => d.date)
       });
+      
       setTodayDay(foundDay);
       if (foundDay && !showTodayBlock) setShowTodayBlock(true);
     } else {
@@ -1025,7 +1116,12 @@ function App() {
     
     console.log('🎯 Создаем демо программу локально');
     console.log('📋 Параметры:', { workoutsPerWeek, location, goal, level });
-    console.log('🔍 Debug quizAnswers.gym_or_home:', quizAnswers.gym_or_home);
+    console.log('� ВАЖНО - Дата начала программы из квиза:', {
+      startDateFromQuiz: quizAnswers.start_date,
+      startDateParsed: startDate.toISOString().slice(0, 10),
+      startDateReadable: startDate.toLocaleDateString('ru-RU')
+    });
+    console.log('�🔍 Debug quizAnswers.gym_or_home:', quizAnswers.gym_or_home);
     console.log('🔍 Debug location result:', location);
     console.log('🔍 Debug ВЕСЬ объект quizAnswers:', quizAnswers);
     
