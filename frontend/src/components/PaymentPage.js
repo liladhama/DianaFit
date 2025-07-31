@@ -10,6 +10,9 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
     // Получаем Telegram userId
     const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
     try {
+      console.log('🎯 Отправляем запрос на:', `${API_URL}/api/payment-link`);
+      console.log('🎯 Данные:', { userId: tgUserId });
+      
       // Запрос на backend для получения ссылки на оплату FreeKassa
       const res = await fetch(`${API_URL}/api/payment-link`, {
         method: 'POST',
@@ -20,7 +23,17 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
           phone: window.Telegram?.WebApp?.initDataUnsafe?.user?.phone || null
         })
       });
+      
+      console.log('🎯 Статус ответа:', res.status);
+      console.log('🎯 Headers ответа:', res.headers);
+      
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      
       const data = await res.json();
+      console.log('🎯 Данные ответа:', data);
+      
       if (data.paymentUrl) {
         console.log('🎯 Переходим на страницу оплаты FreeKassa:', data.paymentUrl);
         // Открываем ссылку оплаты в том же окне
@@ -29,6 +42,7 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
         alert('❌ Ошибка генерации ссылки оплаты: ' + (data.message || 'Неизвестная ошибка'));
       }
     } catch (e) {
+      console.error('🚨 Полная ошибка:', e);
       alert('❌ Ошибка соединения с сервером: ' + e.message);
     }
   }
