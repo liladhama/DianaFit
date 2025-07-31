@@ -1,25 +1,32 @@
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+const API_URL = process.env.REACT_APP_API_URL || 'https://dianafit.onrender.com';
 
 export default function PaymentSuccess() {
   const navigate = useNavigate();
   const [subscriptionStatus, setSubscriptionStatus] = useState('checking');
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     // Проверяем статус подписки через несколько секунд (чтобы webhook успел отработать)
     setTimeout(async () => {
       try {
         const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
-        // Здесь можно добавить запрос к API для проверки статуса подписки
-        // const response = await fetch(`API_URL/api/subscription/status/${userId}`);
-        // const data = await response.json();
-        
-        // Пока что просто обновляем localStorage
-        localStorage.setItem('dianafit_premium', 'true');
-        setSubscriptionStatus('activated');
+        const response = await fetch(`${API_URL}/api/subscription/status/${userId}`);
+        if (!response.ok) throw new Error('Ошибка запроса к серверу');
+        const data = await response.json();
+        if (data && data.status === 'active') {
+          localStorage.setItem('dianafit_premium', 'true');
+          setSubscriptionStatus('activated');
+        } else {
+          setSubscriptionStatus('not_activated');
+        }
       } catch (e) {
+        setError('Ошибка проверки подписки. Попробуйте позже.');
+        setSubscriptionStatus('not_activated');
         console.error('Ошибка проверки подписки:', e);
-        setSubscriptionStatus('activated'); // По умолчанию считаем что активирована
       }
     }, 3000);
   }, []);
@@ -27,13 +34,13 @@ export default function PaymentSuccess() {
   return (
     <div style={{ textAlign: 'center', marginTop: 60, padding: '0 20px' }}>
       <h1 style={{ color: '#4FC3F7', marginBottom: 20 }}>🎉 Оплата прошла успешно!</h1>
-      
+
       {subscriptionStatus === 'checking' && (
         <div style={{ marginBottom: 20 }}>
           <p>Активируем вашу подписку...</p>
-          <div style={{ 
-            border: '3px solid #4FC3F7', 
-            borderRadius: '50%', 
+          <div style={{
+            border: '3px solid #4FC3F7',
+            borderRadius: '50%',
             borderTop: '3px solid transparent',
             width: '40px',
             height: '40px',
@@ -42,7 +49,7 @@ export default function PaymentSuccess() {
           }} />
         </div>
       )}
-      
+
       {subscriptionStatus === 'activated' && (
         <div style={{ marginBottom: 20 }}>
           <p style={{ fontSize: 18, color: '#28a745', fontWeight: 'bold' }}>
@@ -53,7 +60,18 @@ export default function PaymentSuccess() {
           </p>
         </div>
       )}
-      
+
+      {subscriptionStatus === 'not_activated' && (
+        <div style={{ marginBottom: 20 }}>
+          <p style={{ fontSize: 18, color: '#e53935', fontWeight: 'bold' }}>
+            ❌ Не удалось активировать подписку.
+          </p>
+          <p style={{ color: '#666', marginTop: 10 }}>
+            {error || 'Попробуйте обновить страницу чуть позже.'}
+          </p>
+        </div>
+      )}
+
       <button
         style={{
           marginTop: 24,
@@ -76,7 +94,7 @@ export default function PaymentSuccess() {
           Вернуться в Telegram-бот
         </a>
       </div>
-      
+
       <style>
         {`
           @keyframes spin {
