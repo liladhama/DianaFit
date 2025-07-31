@@ -19,6 +19,7 @@ import client from 'prom-client';
 
 const app = express();
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Для парсинга form-data от FreeKassa
 
 // Настройка CORS сразу после создания app
 app.use(cors({
