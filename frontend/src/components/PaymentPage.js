@@ -16,7 +16,11 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
       // Запрос на backend для получения ссылки на оплату FreeKassa
       const res = await fetch(`${API_URL}/api/payment-link`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        mode: 'cors',
         body: JSON.stringify({ 
           userId: tgUserId,
           email: window.Telegram?.WebApp?.initDataUnsafe?.user?.email || null,
@@ -25,10 +29,12 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
       });
       
       console.log('🎯 Статус ответа:', res.status);
-      console.log('🎯 Headers ответа:', res.headers);
+      console.log('🎯 Response OK:', res.ok);
       
       if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
+        const errorText = await res.text();
+        console.error('🚨 Ошибка ответа:', errorText);
+        throw new Error(`HTTP error! status: ${res.status}, message: ${errorText}`);
       }
       
       const data = await res.json();
@@ -43,7 +49,14 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
       }
     } catch (e) {
       console.error('🚨 Полная ошибка:', e);
-      alert('❌ Ошибка соединения с сервером: ' + e.message);
+      console.error('🚨 Тип ошибки:', e.name);
+      console.error('🚨 Стек ошибки:', e.stack);
+      
+      if (e.name === 'TypeError' && e.message.includes('Failed to fetch')) {
+        alert('❌ Ошибка сети: Невозможно подключиться к серверу. Проверьте интернет-соединение или попробуйте позже.');
+      } else {
+        alert('❌ Ошибка соединения с сервером: ' + e.message);
+      }
     }
   }
 

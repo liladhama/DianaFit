@@ -77,8 +77,9 @@ app.post('/api/payment-link', async (req, res) => {
   if (email) params.append('em', email);
   if (phone) params.append('phone', phone);
   // success_url и fail_url — для редиректа после оплаты
-  params.append('success_url', `${process.env.FRONTEND_URL || 'https://dianafit.ru'}/payment-success`);
-  params.append('fail_url', `${process.env.FRONTEND_URL || 'https://dianafit.ru'}/payment-fail`);
+  const frontendUrl = (process.env.FRONTEND_URL || 'https://dianafit.ru').replace(/\/$/, '');
+  params.append('success_url', `${frontendUrl}/payment-success`);
+  params.append('fail_url', `${frontendUrl}/payment-fail`);
   const paymentUrl = `https://pay.fk.money/?${params.toString()}`;
   console.log('[FreeKassa] Ссылка оплаты:', paymentUrl);
   res.json({ paymentUrl });
