@@ -19,6 +19,15 @@ import client from 'prom-client';
 
 const app = express();
 app.use(express.json());
+
+// Настройка CORS сразу после создания app
+app.use(cors({
+  origin: true, // Разрешить все origins
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 const PORT = process.env.PORT || 3001;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -173,15 +182,6 @@ console.log('🚀 Старт приложения...');
 // ...удалено лишнее логирование...
 // ...удалено лишнее логирование...
 
-// Разрешить CORS для всех источников (для локальной отладки и Telegram)
-app.use(cors({
-  origin: true, // Разрешить все origins
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-
-app.use(express.json());
 app.use('/api', programApi);
 app.use('/api/recipes', recipeRouter);
 app.use('/api/progress', progressRouter);
