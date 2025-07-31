@@ -4,29 +4,28 @@ import dianaPayment from '../assets/payment/diana-payment.png';
 
 export default function PaymentPage({ onClose, onPaymentSuccess }) {
   
+  
   async function handlePayment() {
-    // Имитируем успешную оплату для тестирования
-    console.log('🎯 Тестовая оплата - активируем премиум доступ');
     // Получаем Telegram userId
     const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
     try {
-      // Запрос на backend для активации премиума
-      const res = await fetch(`https://dianafit.onrender.com/api/subscription/activate-premium`, {
+      // Запрос на backend для получения ссылки на оплату FreeKassa
+      const res = await fetch(`https://dianafit.onrender.com/api/payment-link`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId: tgUserId })
+        body: JSON.stringify({ 
+          userId: tgUserId,
+          email: window.Telegram?.WebApp?.initDataUnsafe?.user?.email || null,
+          phone: window.Telegram?.WebApp?.initDataUnsafe?.user?.phone || null
+        })
       });
       const data = await res.json();
-      if (data.success) {
-        console.log('✅ Премиум активирован на backend:', data);
-        alert('🎉 Премиум доступ активирован на месяц! Все функции открыты.');
-        
-        // Обновляем localStorage
-        localStorage.setItem('dianafit_premium', 'true');
-        
-        if (onPaymentSuccess) onPaymentSuccess();
+      if (data.paymentUrl) {
+        console.log('🎯 Переходим на страницу оплаты FreeKassa:', data.paymentUrl);
+        // Открываем ссылку оплаты в том же окне
+        window.location.href = data.paymentUrl;
       } else {
-        alert('❌ Ошибка активации премиума: ' + (data.message || 'Неизвестная ошибка'));
+        alert('❌ Ошибка генерации ссылки оплаты: ' + (data.message || 'Неизвестная ошибка'));
       }
     } catch (e) {
       alert('❌ Ошибка соединения с сервером: ' + e.message);
@@ -200,7 +199,7 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
             color: '#fff',
             letterSpacing: '0.5px'
           }}>
-            Оплатить 999 ₽
+            Оплатить 1000 ₽
           </div>
         </button>
         {/* Безопасный отступ под кнопкой для любых устройств */}

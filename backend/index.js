@@ -1,3 +1,6 @@
+
+
+import crypto from 'crypto';
 import subscriptionRouter from './routes/subscriptionRoutes.js';
 import * as subscriptionManager from './utils/subscriptionManager.js';
 import dotenv from 'dotenv';
@@ -46,6 +49,75 @@ app.use((req, res, next) => {
 app.get('/metrics', async (req, res) => {
   res.set('Content-Type', register.contentType);
   res.end(await register.metrics());
+});
+
+// --- FreeKassa SCI: генерация ссылки на оплату ---
+app.post('/api/payment-link', async (req, res) => {
+  const { userId, email, phone, lang = 'ru' } = req.body;
+  const merchant_id = process.env.FREEKASSA_MERCHANT_ID || '64270';
+  const amount = 1000;
+  const currency = 'RUB';
+  const secret1 = process.env.FREEKASSA_SECRET1 || 'k{wV{uh)=2SjLof';
+  const order_id = `${userId}_${Date.now()}`;
+  // Формируем подпись по документации: merchant_id:amount:secret1:currency:order_id
+  const sign = crypto.createHash('md5')
+    .update(`${merchant_id}:${amount}:${secret1}:${currency}:${order_id}`)
+    .digest('hex');
+  // Формируем ссылку
+  const params = new URLSearchParams({
+    m: merchant_id,
+    oa: amount,
+    o: order_id,
+    currency,
+    s: sign,
+    lang,
+    us_userid: userId
+  });
+  if (email) params.append('em', email);
+  if (phone) params.append('phone', phone);
+  // success_url и fail_url — для редиректа после оплаты
+  params.append('success_url', `${process.env.FRONTEND_URL || 'https://dianafit.ru'}/payment-success`);
+  params.append('fail_url', `${process.env.FRONTEND_URL || 'https://dianafit.ru'}/payment-fail`);
+  const paymentUrl = `https://pay.fk.money/?${params.toString()}`;
+  console.log('[FreeKassa] Ссылка оплаты:', paymentUrl);
+  res.json({ paymentUrl });
+});
+
+// --- FreeKassa webhook (notify) ---
+app.post('/api/payment/notify', async (req, res) => {
+  try {
+    // Проверка IP (по документации)
+    const allowedIPs = ['168.119.157.136', '168.119.60.227', '178.154.197.79', '51.250.54.238'];
+    const ip = req.headers['x-real-ip'] || req.connection.remoteAddress;
+    if (!allowedIPs.includes(ip)) {
+      console.error('[FreeKassa] Hacking attempt! IP:', ip);
+      return res.status(403).send('hacking attempt!');
+    }
+    const { MERCHANT_ID, AMOUNT, SIGN, MERCHANT_ORDER_ID, us_userid } = req.body;
+    const secret2 = process.env.FREEKASSA_SECRET2 || 'секрет2_из_кабинета';
+    // Проверка подписи
+    const expectedSign = crypto.createHash('md5')
+      .update(`${MERCHANT_ID}:${AMOUNT}:${secret2}:${MERCHANT_ORDER_ID}`)
+      .digest('hex');
+    if (SIGN !== expectedSign) {
+      console.error('[FreeKassa] wrong sign', SIGN, '!=', expectedSign);
+      return res.status(400).send('wrong sign');
+    }
+    // Получаем userId
+    let userId = us_userid || (MERCHANT_ORDER_ID ? MERCHANT_ORDER_ID.split('_')[0] : null);
+    if (!userId) {
+      console.error('[FreeKassa] Не удалось определить userId из уведомления!');
+      return res.status(400).send('userId not found');
+    }
+    // Активируем подписку
+    const subscriptionManager = await import('./utils/subscriptionManager.js');
+    const result = await subscriptionManager.default.activatePremium(userId);
+    console.log(`[FreeKassa] Подписка активирована для userId=${userId}:`, result);
+    res.send('YES');
+  } catch (e) {
+    console.error('[FreeKassa] Ошибка при активации подписки:', e);
+    res.status(500).send('error');
+  }
 });
 import recipeRouter from './routes/recipeRoutes.js';
 import progressRouter from './routes/progressRoutes.js';
