@@ -1,6 +1,7 @@
 import React from 'react';
 import "../styles/animations.css";
 import dianaPayment from '../assets/payment/diana-payment.png';
+import { API_URL } from '../config/api.js';
 
 export default function PaymentPage({ onClose, onPaymentSuccess }) {
   
@@ -10,7 +11,7 @@ export default function PaymentPage({ onClose, onPaymentSuccess }) {
     const tgUserId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
     try {
       // Запрос на backend для получения ссылки на оплату FreeKassa
-      const res = await fetch(`https://dianafit.onrender.com/api/payment-link`, {
+      const res = await fetch(`${API_URL}/api/payment-link`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
