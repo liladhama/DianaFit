@@ -18,6 +18,7 @@ import UserProgressLogger from './userProgressLogger.js';
 import client from 'prom-client';
 
 const app = express();
+app.use(express.json());
 const PORT = process.env.PORT || 3001;
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
