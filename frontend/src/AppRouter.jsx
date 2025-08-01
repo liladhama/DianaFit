@@ -1,7 +1,7 @@
 
 
 import React, { useEffect } from 'react';
-import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import App from './App';
 import PaymentSuccess from './pages/payment-success';
 import PaymentFail from './pages/payment-fail';
@@ -29,7 +29,7 @@ function NotFoundPage() {
 
 export default function AppRouter() {
   return (
-    <HashRouter>
+    <BrowserRouter>
       <RouteLogger />
       <Routes>
         <Route path="/" element={<App />} />
@@ -38,6 +38,6 @@ export default function AppRouter() {
         <Route path="/testweek" element={<TestWeek />} />
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
-    </HashRouter>
+    </BrowserRouter>
   );
 }
