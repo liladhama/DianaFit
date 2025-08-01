@@ -263,16 +263,34 @@ app.get('/api/subscription/status/:userId', async (req, res) => {
     }
     
     // Проверяем, активна ли подписка
-    const isActive = subscription.status === 'active' && 
-                    subscription.expiresAt && 
-                    new Date(subscription.expiresAt.toDate()) > new Date();
-    
+    // Универсальная обработка даты
+    let expiresDate = null;
+    if (subscription.expiresAt) {
+      if (typeof subscription.expiresAt === 'string') {
+        expiresDate = new Date(subscription.expiresAt);
+      } else if (typeof subscription.expiresAt.toDate === 'function') {
+        expiresDate = subscription.expiresAt.toDate();
+      } else {
+        expiresDate = subscription.expiresAt;
+      }
+    }
+    let startDate = null;
+    if (subscription.startDate) {
+      if (typeof subscription.startDate === 'string') {
+        startDate = new Date(subscription.startDate);
+      } else if (typeof subscription.startDate.toDate === 'function') {
+        startDate = subscription.startDate.toDate();
+      } else {
+        startDate = subscription.startDate;
+      }
+    }
+    const isActive = subscription.status === 'active' && expiresDate && expiresDate > new Date();
     res.json({
       status: isActive ? 'active' : 'inactive',
       subscription: {
         plan: subscription.plan,
-        startDate: subscription.startDate?.toDate(),
-        expiresAt: subscription.expiresAt?.toDate(),
+        startDate: startDate,
+        expiresAt: expiresDate,
         isActive: isActive
       }
     });
