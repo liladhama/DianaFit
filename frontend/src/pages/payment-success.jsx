@@ -1,6 +1,12 @@
 
+
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+
+function getMerchantOrderId() {
+  const params = new URLSearchParams(window.location.search);
+  return params.get('MERCHANT_ORDER_ID') || null;
+}
 
 const API_URL = process.env.REACT_APP_API_URL || 'https://dianafit.onrender.com';
 
@@ -13,7 +19,9 @@ export default function PaymentSuccess() {
     // Проверяем статус подписки через несколько секунд (чтобы webhook успел отработать)
     setTimeout(async () => {
       try {
-        const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
+        // Получаем userId из URL, если есть, иначе из Telegram WebApp
+        const merchantOrderId = getMerchantOrderId();
+        const userId = merchantOrderId || window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'demo_user_local_test';
         const response = await fetch(`${API_URL}/api/subscription/status/${userId}`);
         if (!response.ok) throw new Error('Ошибка запроса к серверу');
         const data = await response.json();
