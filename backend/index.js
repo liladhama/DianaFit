@@ -95,61 +95,55 @@ app.post('/api/payment-link', async (req, res) => {
   res.json({ paymentUrl });
 });
 
+
 // --- FreeKassa webhook (notify) ---
-app.post('/api/payment/notify', async (req, res) => {
+async function handleFreeKassaWebhook(req, res) {
   try {
-    console.log('[FreeKassa] Webhook получен:', req.body);
+    // Для GET-запроса параметры приходят через req.query, для POST — через req.body
+    const params = req.method === 'GET' ? req.query : req.body;
+    console.log(`[FreeKassa] Webhook (${req.method}) получен:`, params);
     console.log('[FreeKassa] Headers:', req.headers);
-    
     // Проверка IP (по документации)
     const allowedIPs = ['168.119.157.136', '168.119.60.227', '178.154.197.79', '51.250.54.238'];
     const ip = req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress;
     console.log('[FreeKassa] IP запроса:', ip);
-    
-    // Для Render может приходить через прокси, проверяем все варианты
     const ipToCheck = ip ? ip.split(',')[0].trim() : '';
     if (!allowedIPs.includes(ipToCheck) && process.env.NODE_ENV === 'production') {
       console.error('[FreeKassa] Hacking attempt! IP:', ipToCheck);
       return res.status(403).send('hacking attempt!');
     }
-    
-    const { MERCHANT_ID, AMOUNT, SIGN, MERCHANT_ORDER_ID, us_userid } = req.body;
+    const { MERCHANT_ID, AMOUNT, SIGN, MERCHANT_ORDER_ID, us_userid } = params;
     const secret2 = process.env.FREEKASSA_SECRET2 || 'X&c}B3t)=5PjFb(';
-    
     console.log('[FreeKassa] Проверяем подпись. MERCHANT_ID:', MERCHANT_ID, 'AMOUNT:', AMOUNT, 'ORDER_ID:', MERCHANT_ORDER_ID);
-    
     // Проверка подписи
     const expectedSign = crypto.createHash('md5')
       .update(`${MERCHANT_ID}:${AMOUNT}:${secret2}:${MERCHANT_ORDER_ID}`)
       .digest('hex');
-    
     console.log('[FreeKassa] Ожидаемая подпись:', expectedSign, 'Полученная:', SIGN);
-    
     if (SIGN !== expectedSign) {
       console.error('[FreeKassa] wrong sign', SIGN, '!=', expectedSign);
       return res.status(400).send('wrong sign');
     }
-    
     // Получаем userId
     let userId = us_userid || (MERCHANT_ORDER_ID ? MERCHANT_ORDER_ID.split('_')[0] : null);
     if (!userId) {
       console.error('[FreeKassa] Не удалось определить userId из уведомления!');
       return res.status(400).send('userId not found');
     }
-    
     console.log('[FreeKassa] Активируем подписку для userId:', userId);
-    
     // Активируем подписку
     const subscriptionManager = await import('./utils/subscriptionManager.js');
     const result = await subscriptionManager.default.activatePremium(userId);
     console.log(`[FreeKassa] Подписка активирована для userId=${userId}:`, result);
-    
     res.send('YES');
   } catch (e) {
     console.error('[FreeKassa] Ошибка при активации подписки:', e);
     res.status(500).send('error');
   }
-});
+}
+
+app.post('/api/payment/notify', handleFreeKassaWebhook);
+app.get('/api/payment/notify', handleFreeKassaWebhook);
 import recipeRouter from './routes/recipeRoutes.js';
 import progressRouter from './routes/progressRoutes.js';
 import mealPlanCalculator from './utils/mealPlanCalculator.js';
