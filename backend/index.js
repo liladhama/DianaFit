@@ -64,86 +64,227 @@ app.get('/metrics', async (req, res) => {
 
 // --- FreeKassa SCI: генерация ссылки на оплату ---
 app.post('/api/payment-link', async (req, res) => {
-  const { userId, email, phone, lang = 'ru' } = req.body;
-  const merchant_id = process.env.FREEKASSA_MERCHANT_ID || '64270';
-  const amount = 1000;
-  const currency = 'RUB';
-  const secret1 = process.env.FREEKASSA_SECRET1 || 'k{wV{uh)=2SjLof';
-  const order_id = `${userId}_${Date.now()}`;
-  // Формируем подпись по документации: merchant_id:amount:secret1:currency:order_id
-  const sign = crypto.createHash('md5')
-    .update(`${merchant_id}:${amount}:${secret1}:${currency}:${order_id}`)
-    .digest('hex');
-  // Формируем ссылку
-  const params = new URLSearchParams({
-    m: merchant_id,
-    oa: amount,
-    o: order_id,
-    currency,
-    s: sign,
-    lang,
-    us_userid: userId
-  });
-  if (email) params.append('em', email);
-  if (phone) params.append('phone', phone);
-  // success_url и fail_url — для редиректа после оплаты
-  const frontendUrl = (process.env.FRONTEND_URL || 'https://dianafit.ru').replace(/\/$/, '');
-  params.append('success_url', `${frontendUrl}/payment-success`);
-  params.append('fail_url', `${frontendUrl}/payment-fail`);
-  const paymentUrl = `https://pay.fk.money/?${params.toString()}`;
-  console.log('[FreeKassa] Ссылка оплаты:', paymentUrl);
-  res.json({ paymentUrl });
+  try {
+    const { userId, email, phone, lang = 'ru' } = req.body;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+    
+    const merchant_id = process.env.FREEKASSA_MERCHANT_ID || '64270';
+    const amount = '1000.00'; // Строка для точности
+    const currency = 'RUB';
+    const secret1 = process.env.FREEKASSA_SECRET1 || 'k{wV{uh)=2SjLof';
+    const order_id = `${userId}_${Date.now()}`;
+    
+    // Формируем подпись по документации FreeKassa: m:oa:secret1:currency:o
+    const signString = `${merchant_id}:${amount}:${secret1}:${currency}:${order_id}`;
+    const sign = crypto.createHash('md5').update(signString).digest('hex');
+    
+    console.log('[FreeKassa] Создание платежа:');
+    console.log('- merchant_id:', merchant_id);
+    console.log('- amount:', amount);
+    console.log('- currency:', currency);
+    console.log('- order_id:', order_id);
+    console.log('- sign_string:', signString);
+    console.log('- sign:', sign);
+    
+    // Формируем URL для оплаты
+    const params = new URLSearchParams({
+      m: merchant_id,           // ID магазина
+      oa: amount,              // Сумма
+      o: order_id,             // Номер заказа
+      currency: currency,       // Валюта
+      s: sign,                 // Подпись
+      lang: lang,              // Язык
+      us_userid: userId        // Дополнительный параметр - userId
+    });
+    
+    if (email) params.append('em', email);
+    if (phone) params.append('phone', phone);
+    
+    const paymentUrl = `https://pay.fk.money/?${params.toString()}`;
+    console.log('[FreeKassa] Ссылка оплаты сгенерирована:', paymentUrl);
+    
+    res.json({ 
+      success: true,
+      paymentUrl: paymentUrl,
+      order_id: order_id,
+      amount: amount,
+      currency: currency
+    });
+    
+  } catch (error) {
+    console.error('[FreeKassa] Ошибка создания ссылки оплаты:', error);
+    res.status(500).json({ 
+      error: 'Ошибка создания ссылки оплаты',
+      message: error.message 
+    });
+  }
 });
 
 
-// --- FreeKassa webhook (notify) ---
+// --- FreeKassa webhook (notify) - поддерживает GET и POST ---
 async function handleFreeKassaWebhook(req, res) {
   try {
-    // Для GET-запроса параметры приходят через req.query, для POST — через req.body
+    // Для GET параметры в req.query, для POST в req.body
     const params = req.method === 'GET' ? req.query : req.body;
-    console.log(`[FreeKassa] Webhook (${req.method}) получен:`, params);
+    
+    console.log(`[FreeKassa] Webhook ${req.method} получен:`, params);
     console.log('[FreeKassa] Headers:', req.headers);
-    // Проверка IP (по документации)
+    
+    // Проверка IP согласно документации FreeKassa
     const allowedIPs = ['168.119.157.136', '168.119.60.227', '178.154.197.79', '51.250.54.238'];
     const ip = req.headers['x-real-ip'] || req.headers['x-forwarded-for'] || req.connection.remoteAddress || req.socket.remoteAddress;
-    console.log('[FreeKassa] IP запроса:', ip);
     const ipToCheck = ip ? ip.split(',')[0].trim() : '';
+    
+    console.log('[FreeKassa] IP запроса:', ipToCheck);
+    
     if (!allowedIPs.includes(ipToCheck) && process.env.NODE_ENV === 'production') {
       console.error('[FreeKassa] Hacking attempt! IP:', ipToCheck);
       return res.status(403).send('hacking attempt!');
     }
-    const { MERCHANT_ID, AMOUNT, SIGN, MERCHANT_ORDER_ID, us_userid } = params;
+    
+    // Извлекаем параметры согласно документации FreeKassa
+    const { 
+      MERCHANT_ID, 
+      AMOUNT, 
+      SIGN, 
+      MERCHANT_ORDER_ID, 
+      us_userid,
+      intid,
+      P_EMAIL,
+      P_PHONE,
+      CUR_ID
+    } = params;
+    
     const secret2 = process.env.FREEKASSA_SECRET2 || 'X&c}B3t)=5PjFb(';
-    console.log('[FreeKassa] Проверяем подпись. MERCHANT_ID:', MERCHANT_ID, 'AMOUNT:', AMOUNT, 'ORDER_ID:', MERCHANT_ORDER_ID);
-    // Проверка подписи
-    const expectedSign = crypto.createHash('md5')
-      .update(`${MERCHANT_ID}:${AMOUNT}:${secret2}:${MERCHANT_ORDER_ID}`)
-      .digest('hex');
-    console.log('[FreeKassa] Ожидаемая подпись:', expectedSign, 'Полученная:', SIGN);
+    
+    console.log('[FreeKassa] Проверяем подпись:');
+    console.log('- MERCHANT_ID:', MERCHANT_ID);
+    console.log('- AMOUNT:', AMOUNT);
+    console.log('- MERCHANT_ORDER_ID:', MERCHANT_ORDER_ID);
+    console.log('- intid:', intid);
+    
+    // Проверка подписи по документации FreeKassa: MERCHANT_ID:AMOUNT:secret2:MERCHANT_ORDER_ID
+    const signString = `${MERCHANT_ID}:${AMOUNT}:${secret2}:${MERCHANT_ORDER_ID}`;
+    const expectedSign = crypto.createHash('md5').update(signString).digest('hex');
+    
+    console.log('- sign_string:', signString);
+    console.log('- expected_sign:', expectedSign);
+    console.log('- received_sign:', SIGN);
+    
     if (SIGN !== expectedSign) {
-      console.error('[FreeKassa] wrong sign', SIGN, '!=', expectedSign);
+      console.error('[FreeKassa] Wrong signature!', SIGN, '!=', expectedSign);
       return res.status(400).send('wrong sign');
     }
-    // Получаем userId
-    let userId = us_userid || (MERCHANT_ORDER_ID ? MERCHANT_ORDER_ID.split('_')[0] : null);
+    
+    // Определяем userId из параметров
+    let userId = us_userid;
+    if (!userId && MERCHANT_ORDER_ID) {
+      // Извлекаем userId из order_id (format: userId_timestamp)
+      userId = MERCHANT_ORDER_ID.split('_')[0];
+    }
+    
     if (!userId) {
-      console.error('[FreeKassa] Не удалось определить userId из уведомления!');
+      console.error('[FreeKassa] Не удалось определить userId!');
       return res.status(400).send('userId not found');
     }
+    
     console.log('[FreeKassa] Активируем подписку для userId:', userId);
-    // Активируем подписку
+    console.log('[FreeKassa] Сумма платежа:', AMOUNT, 'RUB');
+    console.log('[FreeKassa] ID транзакции FreeKassa:', intid);
+    
+    // Активируем премиум подписку
     const subscriptionManager = await import('./utils/subscriptionManager.js');
     const result = await subscriptionManager.default.activatePremium(userId);
-    console.log(`[FreeKassa] Подписка активирована для userId=${userId}:`, result);
+    
+    console.log(`[FreeKassa] ✅ Подписка активирована для userId=${userId}:`, result);
+    
+    // Сохраняем информацию о платеже в Firestore
+    try {
+      const admin = await import('firebase-admin');
+      const db = admin.default.firestore();
+      
+      await db.collection('payments').add({
+        userId: userId,
+        merchantOrderId: MERCHANT_ORDER_ID,
+        freekassaTransactionId: intid,
+        amount: parseFloat(AMOUNT),
+        currency: 'RUB',
+        paymentSystem: CUR_ID,
+        email: P_EMAIL || null,
+        phone: P_PHONE || null,
+        status: 'completed',
+        createdAt: new Date(),
+        processedAt: new Date()
+      });
+      
+      console.log('[FreeKassa] Информация о платеже сохранена в Firestore');
+    } catch (firestoreError) {
+      console.error('[FreeKassa] Ошибка сохранения в Firestore:', firestoreError);
+    }
+    
+    // Отправляем подтверждение согласно документации FreeKassa
     res.send('YES');
-  } catch (e) {
-    console.error('[FreeKassa] Ошибка при активации подписки:', e);
+    
+  } catch (error) {
+    console.error('[FreeKassa] Ошибка при обработке webhook:', error);
     res.status(500).send('error');
   }
 }
 
+// Регистрируем обработчики для GET и POST
 app.post('/api/payment/notify', handleFreeKassaWebhook);
 app.get('/api/payment/notify', handleFreeKassaWebhook);
+
+// --- Эндпоинт для проверки статуса подписки ---
+app.get('/api/subscription/status/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+    
+    console.log('[Subscription] Проверка статуса подписки для userId:', userId);
+    
+    // Используем subscriptionManager для проверки статуса
+    const subscriptionManager = await import('./utils/subscriptionManager.js');
+    const subscription = await subscriptionManager.default.getUserSubscription(userId);
+    
+    console.log('[Subscription] Результат проверки:', subscription);
+    
+    if (!subscription) {
+      return res.json({ 
+        status: 'inactive',
+        message: 'Подписка не найдена'
+      });
+    }
+    
+    // Проверяем, активна ли подписка
+    const isActive = subscription.status === 'active' && 
+                    subscription.expiresAt && 
+                    new Date(subscription.expiresAt.toDate()) > new Date();
+    
+    res.json({
+      status: isActive ? 'active' : 'inactive',
+      subscription: {
+        plan: subscription.plan,
+        startDate: subscription.startDate?.toDate(),
+        expiresAt: subscription.expiresAt?.toDate(),
+        isActive: isActive
+      }
+    });
+    
+  } catch (error) {
+    console.error('[Subscription] Ошибка проверки статуса подписки:', error);
+    res.status(500).json({ 
+      error: 'Ошибка проверки статуса подписки',
+      message: error.message 
+    });
+  }
+});
 import recipeRouter from './routes/recipeRoutes.js';
 import progressRouter from './routes/progressRoutes.js';
 import mealPlanCalculator from './utils/mealPlanCalculator.js';

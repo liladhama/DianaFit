@@ -189,6 +189,61 @@ export class SubscriptionManager {
     };
   }
 
+  // Получение полной информации о подписке пользователя (для API)
+  async getUserSubscription(userId) {
+    try {
+      userId = String(userId);
+      
+      // Сначала проверяем в legacy формате (userDataStorage)
+      const userData = await readUserData(userId);
+      const subscription = userData.subscription || {};
+      
+      if (subscription.premiumExpiresAt) {
+        const now = new Date();
+        const expireDate = new Date(subscription.premiumExpiresAt);
+        const isActive = now <= expireDate;
+        
+        return {
+          plan: 'premium',
+          status: isActive ? 'active' : 'expired',
+          startDate: subscription.premiumActivatedAt ? new Date(subscription.premiumActivatedAt) : null,
+          expiresAt: expireDate,
+          isActive: isActive,
+          source: 'legacy'
+        };
+      }
+      
+      // Проверяем в Firestore
+      const admin = await import('firebase-admin');
+      const db = admin.default.firestore();
+      
+      const subscriptionDoc = await db.collection('subscriptions').doc(userId).get();
+      
+      if (subscriptionDoc.exists) {
+        const data = subscriptionDoc.data();
+        const now = new Date();
+        const isActive = data.status === 'active' && 
+                        data.expiresAt && 
+                        data.expiresAt.toDate() > now;
+        
+        return {
+          plan: data.plan || 'premium',
+          status: isActive ? 'active' : 'expired',
+          startDate: data.startDate,
+          expiresAt: data.expiresAt,
+          isActive: isActive,
+          source: 'firestore'
+        };
+      }
+      
+      return null;
+      
+    } catch (error) {
+      console.error('[getUserSubscription] Ошибка:', error);
+      throw error;
+    }
+  }
+
   // Сохранение данных подписки
   async saveSubscriptionData(userId, subscription) {
     userId = String(userId);
