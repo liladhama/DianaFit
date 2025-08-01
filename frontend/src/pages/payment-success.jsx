@@ -34,7 +34,9 @@ export default function PaymentSuccess() {
         
         if (urlParams.merchantOrderId) {
           // MERCHANT_ORDER_ID имеет формат: userId_timestamp
-          userId = urlParams.merchantOrderId.split('_')[0];
+          // Берём всё до последнего подчеркивания
+          const idx = urlParams.merchantOrderId.lastIndexOf('_');
+          userId = idx > 0 ? urlParams.merchantOrderId.substring(0, idx) : urlParams.merchantOrderId;
         } else if (window.Telegram?.WebApp?.initDataUnsafe?.user?.id) {
           userId = window.Telegram.WebApp.initDataUnsafe.user.id.toString();
         }
